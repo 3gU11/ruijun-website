@@ -1,0 +1,88 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --ruijun-red: #e51b23;
+  --ruijun-ink: #0b0b0c;
+  --ruijun-paper: #f4f4f2;
+  --ruijun-muted: #707277;
+  --ruijun-line: #d5d6d4;
+  --ruijun-max: 1280px;
+  --ruijun-font-cn: "Noto Sans SC", "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+  --ruijun-font-latin: "Calibri Light", Calibri, "Helvetica Neue", Arial, sans-serif;
+  --background: #090909;
+  --foreground: #ffffff;
+  --card: #101010;
+  --card-foreground: #ffffff;
+  --popover: #101010;
+  --popover-foreground: #ffffff;
+  --primary: #d22323;
+  --primary-foreground: #ffffff;
+  --secondary: #242424;
+  --secondary-foreground: #ffffff;
+  --muted: #171717;
+  --muted-foreground: rgb(255 255 255 / 65%);
+  --accent: #242424;
+  --accent-foreground: #ffffff;
+  --destructive: #b91c1c;
+  --destructive-foreground: #ffffff;
+  --border: rgb(255 255 255 / 20%);
+  --input: rgb(255 255 255 / 25%);
+  --ring: #d22323;
+  --radius: 0.25rem;
+}
+
+html {
+  scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: var(--ruijun-red) transparent;
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+  background: var(--ruijun-paper);
+  color: var(--ruijun-ink);
+  font-family: var(--ruijun-font-cn);
+  font-size: 15px;
+  line-height: 1.65;
+  font-synthesis: none;
+  text-rendering: geometricPrecision;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+button, input, textarea, select { font: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+img, video { display: block; max-width: 100%; }
+a { color: inherit; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) + 2px);
+}

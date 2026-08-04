@@ -1,0 +1,12 @@
+{
+  "name": "directus-extension-ruijun-lead-workflow",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "directus:extension": {
+    "host": "^11.0.0",
+    "type": "hook",
+    "path": "dist/index.js",
+    "source": "dist/index.js"
+  }
+}

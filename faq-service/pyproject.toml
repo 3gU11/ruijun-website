@@ -1,0 +1,23 @@
+[project]
+name = "ruijun-faq-bff"
+version = "0.1.0"
+description = "Shared FastAPI FAQ gateway for the Ruijun website and repairsys"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.116,<1",
+  "httpx>=0.28,<1",
+  "redis>=6,<7",
+  "uvicorn[standard]>=0.35,<1",
+]
+
+[project.optional-dependencies]
+test = [
+  "fakeredis>=2.30,<3",
+  "pytest>=8,<9",
+  "pytest-asyncio>=1,<2",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+

@@ -1,0 +1,31 @@
+{
+  "name": "ruijun-cms",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "bootstrap": "directus bootstrap",
+    "start": "directus start",
+    "schema:apply": "node ./scripts/apply-directus-schema.mjs",
+    "bff:provision": "node ./scripts/provision-bff-service-account.mjs",
+    "audit:provision-reader": "node ./scripts/provision-content-audit-reader.mjs",
+    "audit:initialize-local": "node ./scripts/initialize-local-content-audit-reader.mjs",
+    "notifications:provision-worker": "node ./scripts/provision-notification-worker.mjs",
+    "notifications:initialize-local": "node ./scripts/initialize-local-notification-worker.mjs",
+    "bff:configure-local": "node ./scripts/configure-local-bff-token.mjs",
+    "runtime:verify": "npx --yes node@22 ./scripts/verify-local-cms-runtime.mjs",
+    "seed:drafts": "node ./scripts/seed-cms-drafts.mjs",
+    "seed:service-entries": "node ./scripts/seed-service-entry-drafts.mjs",
+    "seed:knowledge-drafts": "node ./scripts/import-faq-knowledge-drafts.mjs",
+    "report:knowledge-review": "node ./scripts/export-faq-technical-review.mjs",
+    "report:product-review": "node ./scripts/export-product-technical-review.mjs",
+    "report:service-content-review": "node ./scripts/export-service-content-review.mjs",
+    "notifications:run-once": "node ./scripts/run-lead-notification-worker.mjs",
+    "versioning:verify-e2e": "node ./scripts/verify-content-version-restore-e2e.mjs",
+    "media:verify-e2e": "node ./scripts/verify-media-asset-governance-e2e.mjs",
+    "test": "node --test ./test/*.test.mjs"
+  },
+  "dependencies": {
+    "directus": "11.7.2",
+    "sqlite3": "5.1.7"
+  }
+}

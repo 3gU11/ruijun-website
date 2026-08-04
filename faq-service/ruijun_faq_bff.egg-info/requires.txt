@@ -1,0 +1,9 @@
+fastapi<1,>=0.116
+httpx<1,>=0.28
+redis<7,>=6
+uvicorn[standard]<1,>=0.35
+
+[test]
+fakeredis<3,>=2.30
+pytest<9,>=8
+pytest-asyncio<2,>=1

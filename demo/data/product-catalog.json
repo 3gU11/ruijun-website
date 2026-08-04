@@ -1,0 +1,529 @@
+{
+  "schemaVersion": 1,
+  "sourceCapturedAt": "2026-07-31",
+  "publicationStatus": "draft",
+  "series": [
+    {
+      "code": "workstation",
+      "name": "灵动切割工作站",
+      "positioning": "无人化加工解决方案",
+      "capabilities": ["自动穿丝系统", "六轴协作机器人", "多工位零点夹具", "精密中走丝机床"],
+      "applicationScenario": "批量化精密零部件自动切割",
+      "configurationNotes": ["六轴协作机器人有多种方式可选", "多工位零点夹具有多种夹具可选", "精密中走丝机床有多种机型可选"],
+      "sourceUrl": "http://www.ksrjjx.com/proshow__2126.html"
+    },
+    {
+      "code": "fr-xs-auto",
+      "name": "FR-XS (Auto)",
+      "positioning": "自动穿丝系列",
+      "capabilities": ["自动穿丝", "伺服张力控制", "七轴交流伺服"],
+      "sourceUrl": "http://www.ksrjjx.com/proshow__2129.html"
+    },
+    {
+      "code": "fr-y",
+      "name": "FR-Y",
+      "positioning": "单边35度大摇摆系列",
+      "capabilities": ["四轴螺距补偿", "3.0控制系统", "屏显手持单元", "高精度摇摆装置"],
+      "sourceUrl": "http://www.ksrjjx.com/proshow__2127.html"
+    },
+    {
+      "code": "fl-xs",
+      "name": "FL-XS",
+      "positioning": "超大型高精度系列",
+      "capabilities": ["五轴数控", "四轴螺距补偿", "辅助上丝功能", "高强度承载设计"],
+      "sourceUrl": "http://www.ksrjjx.com/proshow__2123.html"
+    },
+    {
+      "code": "fr-pro",
+      "name": "FR (pro)",
+      "positioning": "伺服闭环系列",
+      "capabilities": ["五轴数控", "四轴螺距补偿", "3.0控制系统"],
+      "sourceUrl": "http://www.ksrjjx.com/proshow__2125.html",
+      "aliasesPendingReview": ["FR-XS (PRO)"]
+    },
+    {
+      "code": "ft-xs",
+      "name": "FT-XS",
+      "positioning": "机电一体机系列",
+      "capabilities": ["五轴伺服驱动", "机电一体化设计", "第四代新放电技术", "日本THK导轨丝杆"],
+      "sourceUrl": "http://www.ksrjjx.com/proshow__2119.html",
+      "aliasesPendingReview": ["FT（Pro）"]
+    },
+    {
+      "code": "fr-g",
+      "name": "FR-G",
+      "positioning": "混合标准系列",
+      "capabilities": ["四轴联动", "智能数据库", "加强型慢丝锥度结构"],
+      "sourceUrl": "http://www.ksrjjx.com/proshow__2122.html"
+    }
+  ],
+  "models": [
+    {
+      "code": "fr400xs-auto",
+      "name": "FR400XS (Auto)",
+      "seriesCode": "fr-xs-auto",
+      "parameters": {
+        "xyTravelMm": "400*290",
+        "maxWorkpieceMm": "500*650*220",
+        "maxWorkpieceWeightKg": 400,
+        "maxCuttingHeightMm": 200,
+        "machineDimensionsMm": "1200*1565*2350",
+        "machineWeightKg": 1900
+      },
+      "sourceDocument": "FR-XS（Auto）技术文件 / FR400XS（Auto）技术文件.pdf",
+      "detailPageEvidence": {
+        "sourceUrl": "http://www.ksrjjx.com/proshow__2129.html",
+        "observedParameters": { "maxWorkpieceMm": "500*650*200" },
+        "conflictsWithTechnicalPackage": ["maxWorkpieceMm"]
+      }
+    },
+    {
+      "code": "fr500xs-auto",
+      "name": "FR500XS (Auto)",
+      "seriesCode": "fr-xs-auto",
+      "parameters": {
+        "xyTravelMm": "500*350",
+        "maxWorkpieceMm": "570*770*220",
+        "maxWorkpieceWeightKg": 500,
+        "maxCuttingHeightMm": 200,
+        "machineDimensionsMm": "1345*1675*2350",
+        "machineWeightKg": 2200
+      },
+      "sourceDocument": "FR-XS（Auto）技术文件 / FR500XS（Auto）技术文件.pdf",
+      "detailPageEvidence": {
+        "sourceUrl": "http://www.ksrjjx.com/proshow__2129.html",
+        "observedParameters": { "maxWorkpieceMm": "570*770*200" },
+        "conflictsWithTechnicalPackage": ["maxWorkpieceMm"]
+      }
+    },
+    {
+      "code": "fr600xs-auto",
+      "name": "FR600XS (Auto)",
+      "seriesCode": "fr-xs-auto",
+      "parameters": {
+        "xyTravelMm": "600*400",
+        "maxWorkpieceMm": "650*900*220",
+        "maxWorkpieceWeightKg": 800,
+        "maxCuttingHeightMm": 200,
+        "machineDimensionsMm": "1590*1840*2350",
+        "machineWeightKg": 2750
+      },
+      "sourceDocument": "FR-XS（Auto）技术文件 / FR600XS（Auto）技术文件.pdf",
+      "detailPageEvidence": {
+        "sourceUrl": "http://www.ksrjjx.com/proshow__2129.html",
+        "observedParameters": { "maxWorkpieceMm": "650*900*200" },
+        "conflictsWithTechnicalPackage": ["maxWorkpieceMm"]
+      }
+    },
+    {
+      "code": "fr7055xs-auto",
+      "name": "FR7055XS (Auto)",
+      "seriesCode": "fr-xs-auto",
+      "parameters": {
+        "xyTravelMm": "700*550",
+        "maxWorkpieceMm": "810*1040*300",
+        "maxWorkpieceWeightKg": 1000,
+        "maxCuttingHeightMm": 300,
+        "machineDimensionsMm": "1800*2150*2475",
+        "machineWeightKg": 3250
+      },
+      "sourceDocument": "FR-XS（Auto）技术文件 / FR7055XS（Auto）技术文件.pdf",
+      "detailPageEvidence": {
+        "sourceUrl": "http://www.ksrjjx.com/proshow__2129.html",
+        "observedParameters": { "maxWorkpieceMm": "810*1040*300" },
+        "conflictsWithTechnicalPackage": []
+      }
+    },
+    {
+      "code": "fr8055xs-auto",
+      "name": "FR8055XS (Auto)",
+      "seriesCode": "fr-xs-auto",
+      "parameters": {
+        "xyTravelMm": "800*550",
+        "maxWorkpieceMm": "810*1135*300",
+        "maxWorkpieceWeightKg": 1200,
+        "maxCuttingHeightMm": 300,
+        "machineDimensionsMm": "1850*2150*2595",
+        "machineWeightKg": 3950
+      },
+      "sourceDocument": "FR-XS（Auto）技术文件 / FR8055XS（Auto）技术文件.pdf",
+      "detailPageEvidence": {
+        "sourceUrl": "http://www.ksrjjx.com/proshow__2129.html",
+        "observedParameters": { "maxWorkpieceMm": "810*1135*300" },
+        "conflictsWithTechnicalPackage": []
+      }
+    },
+    {
+      "code": "ft400s-pro",
+      "name": "FT400S（Pro）",
+      "seriesCode": "unmapped-ft-pro",
+      "seriesMappingStatus": "needs_product_owner_confirmation",
+      "parameters": {
+        "xyTravelMm": "400*300",
+        "zAxisTravelMm": 300,
+        "maxWorkpieceMm": "550*690*300",
+        "maxWorkpieceWeightKg": 350,
+        "maxTaperDegrees": 15,
+        "machineDimensionsMm": "1315*1665*2280",
+        "machineWeightKg": 1850
+      },
+      "sourceDocument": "FT（Pro）技术文件 / FT400S（Pro）技术文件.pdf"
+    },
+    {
+      "code": "ft500s-pro",
+      "name": "FT500S（Pro）",
+      "seriesCode": "unmapped-ft-pro",
+      "seriesMappingStatus": "needs_product_owner_confirmation",
+      "parameters": {
+        "xyTravelMm": "500*350",
+        "zAxisTravelMm": 300,
+        "maxWorkpieceMm": "570*770*300",
+        "maxWorkpieceWeightKg": 400,
+        "maxTaperDegrees": 15,
+        "machineDimensionsMm": "1635*1905*2320",
+        "machineWeightKg": 2100
+      },
+      "sourceDocument": "FT（Pro）技术文件 / FT500S（Pro）技术文件.pdf"
+    },
+    {
+      "code": "ft600s-pro",
+      "name": "FT600S（Pro）",
+      "seriesCode": "unmapped-ft-pro",
+      "seriesMappingStatus": "needs_product_owner_confirmation",
+      "parameters": {
+        "xyTravelMm": "600*400",
+        "zAxisTravelMm": 350,
+        "maxWorkpieceMm": "675*935*350",
+        "maxWorkpieceWeightKg": 500,
+        "maxTaperDegrees": 15,
+        "machineDimensionsMm": "1900*2195*2400",
+        "machineWeightKg": 2500
+      },
+      "sourceDocument": "FT（Pro）技术文件 / FT600S（Pro）技术文件.pdf"
+    },
+    {
+      "code": "ft7055s-pro",
+      "name": "FT7055S（Pro）",
+      "seriesCode": "unmapped-ft-pro",
+      "seriesMappingStatus": "needs_product_owner_confirmation",
+      "parameters": {
+        "xyTravelMm": "700*550",
+        "zAxisTravelMm": 350,
+        "maxWorkpieceMm": "810*1040*350",
+        "maxWorkpieceWeightKg": 650,
+        "maxTaperDegrees": 15,
+        "machineDimensionsMm": "2100*2380*2400",
+        "machineWeightKg": 3000
+      },
+      "sourceDocument": "FT（Pro）技术文件 / FT7055S（Pro）技术文件.pdf"
+    },
+    {
+      "code": "ft400xs",
+      "name": "FT400XS",
+      "seriesCode": "ft-xs",
+      "parameters": {
+        "xyTravelMm": "400*300",
+        "zAxisTravelMm": 350,
+        "maxWorkpieceMm": "550*690*350",
+        "maxWorkpieceWeightKg": 350,
+        "maxTaperDegrees": 15,
+        "machineDimensionsMm": "1315*1665*2280",
+        "machineWeightKg": 1850
+      },
+      "sourceDocument": "FT-XS 详情图 / FT400XS",
+      "sourceUrl": "http://www.ksrjjx.com/proshow__2119.html"
+    },
+    {
+      "code": "ft500xs",
+      "name": "FT500XS",
+      "seriesCode": "ft-xs",
+      "parameters": {
+        "xyTravelMm": "500*350",
+        "zAxisTravelMm": 350,
+        "maxWorkpieceMm": "570*770*350",
+        "maxWorkpieceWeightKg": 400,
+        "maxTaperDegrees": 15,
+        "machineDimensionsMm": "1635*1905*2320",
+        "machineWeightKg": 2100
+      },
+      "sourceDocument": "FT-XS 详情图 / FT500XS",
+      "sourceUrl": "http://www.ksrjjx.com/proshow__2119.html"
+    },
+    {
+      "code": "ft600xs",
+      "name": "FT600XS",
+      "seriesCode": "ft-xs",
+      "parameters": {
+        "xyTravelMm": "600*400",
+        "zAxisTravelMm": 400,
+        "maxWorkpieceMm": "675*935*400",
+        "maxWorkpieceWeightKg": 500,
+        "maxTaperDegrees": 15,
+        "machineDimensionsMm": "1900*2195*2400",
+        "machineWeightKg": 2500
+      },
+      "sourceDocument": "FT-XS 详情图 / FT600XS",
+      "sourceUrl": "http://www.ksrjjx.com/proshow__2119.html"
+    },
+    {
+      "code": "ft7055xs",
+      "name": "FT7055XS",
+      "seriesCode": "ft-xs",
+      "parameters": {
+        "xyTravelMm": "700*550",
+        "zAxisTravelMm": 400,
+        "maxWorkpieceMm": "810*1040*400",
+        "maxWorkpieceWeightKg": 650,
+        "maxTaperDegrees": 15,
+        "machineDimensionsMm": "2100*2380*2400",
+        "machineWeightKg": 3000
+      },
+      "sourceDocument": "FT-XS 详情图 / FT7055XS",
+      "sourceUrl": "http://www.ksrjjx.com/proshow__2119.html"
+    },
+    {
+      "code": "fl8560",
+      "name": "FL8560",
+      "seriesCode": "fl-xs",
+      "seriesMappingStatus": "needs_product_owner_confirmation",
+      "observedModelNames": ["FL8560XS", "FL8560"],
+      "parameters": {
+        "xyTravelMm": "850*600",
+        "zAxisTravelMm": 500,
+        "maxWorkpieceMm": "850*1250*500",
+        "maxWorkpieceWeightKg": 2500,
+        "maxTaperDegrees": 15,
+        "machineDimensionsMm": "2450*2250*2700",
+        "machineWeightKg": 6000
+      },
+      "sourceDocument": "FL 技术文件 / FL8560技术文件.pdf"
+    },
+    {
+      "code": "fl1180",
+      "name": "FL1180",
+      "seriesCode": "fl-xs",
+      "seriesMappingStatus": "needs_product_owner_confirmation",
+      "observedModelNames": ["FL1180XS", "FL1180"],
+      "parameters": {
+        "xyTravelMm": "1100*800",
+        "zAxisTravelMm": 500,
+        "maxWorkpieceMm": "1100*1500*500",
+        "maxWorkpieceWeightKg": 3000,
+        "maxTaperDegrees": 15,
+        "machineDimensionsMm": "2900*2800*2800",
+        "machineWeightKg": 8500
+      },
+      "sourceDocument": "FL 技术文件 / FL1180技术文件.pdf"
+    },
+    {
+      "code": "fl1390",
+      "name": "FL1390",
+      "seriesCode": "fl-xs",
+      "seriesMappingStatus": "needs_product_owner_confirmation",
+      "observedModelNames": ["FL1390XS", "FL1390"],
+      "parameters": {
+        "xyTravelMm": "1300*900",
+        "zAxisTravelMm": 500,
+        "maxWorkpieceMm": "1200*1750*500",
+        "maxWorkpieceWeightKg": 3500,
+        "maxTaperDegrees": 15,
+        "machineDimensionsMm": "2900*3300*2860",
+        "machineWeightKg": 10000
+      },
+      "sourceDocument": "FL 技术文件 / FL1390技术文件.pdf"
+    },
+    {
+      "code": "fl1610",
+      "name": "FL1610",
+      "seriesCode": "fl-xs",
+      "seriesMappingStatus": "needs_product_owner_confirmation",
+      "observedModelNames": ["FL1610XS", "FL1610"],
+      "parameters": {
+        "xyTravelMm": "1600*1000",
+        "zAxisTravelMm": 500,
+        "maxWorkpieceMm": "1420*2080*500",
+        "maxWorkpieceWeightKg": 4500,
+        "maxTaperDegrees": 15,
+        "machineDimensionsMm": "3300*3900*2900",
+        "machineWeightKg": 12500
+      },
+      "sourceDocument": "FL 技术文件 / FL1610技术文件.pdf"
+    },
+    {
+      "code": "fr8060y",
+      "name": "FR8060Y",
+      "seriesCode": "fr-y",
+      "parameters": {
+        "xyTravelMm": "850*600",
+        "zAxisTravelMm": 500,
+        "maxWorkpieceMm": "840*1190*500",
+        "maxWorkpieceWeightKg": 1600,
+        "maxTaperDegrees": 35,
+        "machineDimensionsMm": "2200*2670*2710",
+        "machineWeightKg": 6000
+      },
+      "sourceDocument": "FR-Y 详情图 / FR8060Y"
+    },
+    {
+      "code": "fr1080y",
+      "name": "FR1080Y",
+      "seriesCode": "fr-y",
+      "parameters": {
+        "xyTravelMm": "1100*800",
+        "zAxisTravelMm": 580,
+        "maxWorkpieceMm": "1100*1500*580",
+        "maxWorkpieceWeightKg": 3000,
+        "maxTaperDegrees": 35,
+        "machineDimensionsMm": "2560*3020*2800",
+        "machineWeightKg": 8500
+      },
+      "sourceDocument": "FR-Y 详情图 / FR1080Y"
+    },
+    {
+      "code": "fr400xs-pro",
+      "name": "FR400XS (Pro)",
+      "seriesCode": "fr-pro",
+      "parameters": {
+        "xyTravelMm": "400*300",
+        "zAxisTravelMm": 290,
+        "maxWorkpieceMm": "550*690*290",
+        "maxWorkpieceWeightKg": 400,
+        "maxTaperDegrees": 15,
+        "machineDimensionsMm": "1200*1565*2085",
+        "machineWeightKg": 1900
+      },
+      "sourceDocument": "FR (pro) 详情图 / FR400XS (Pro)"
+    },
+    {
+      "code": "fr500xs-pro",
+      "name": "FR500XS (Pro)",
+      "seriesCode": "fr-pro",
+      "parameters": {
+        "xyTravelMm": "500*350",
+        "zAxisTravelMm": 300,
+        "maxWorkpieceMm": "570*770*300",
+        "maxWorkpieceWeightKg": 500,
+        "maxTaperDegrees": 15,
+        "machineDimensionsMm": "1345*1675*2095",
+        "machineWeightKg": 2200
+      },
+      "sourceDocument": "FR (pro) 详情图 / FR500XS (Pro)"
+    },
+    {
+      "code": "fr600xs-pro",
+      "name": "FR600XS (Pro)",
+      "seriesCode": "fr-pro",
+      "parameters": {
+        "xyTravelMm": "600*400",
+        "zAxisTravelMm": 300,
+        "maxWorkpieceMm": "675*935*300",
+        "maxWorkpieceWeightKg": 800,
+        "maxTaperDegrees": 15,
+        "machineDimensionsMm": "1590*1840*2125",
+        "machineWeightKg": 2750
+      },
+      "sourceDocument": "FR (pro) 详情图 / FR600XS (Pro)"
+    },
+    {
+      "code": "fr7055xs-pro",
+      "name": "FR7055XS (Pro)",
+      "seriesCode": "fr-pro",
+      "parameters": {
+        "xyTravelMm": "700*550",
+        "zAxisTravelMm": 400,
+        "maxWorkpieceMm": "810*1040*400",
+        "maxWorkpieceWeightKg": 1000,
+        "maxTaperDegrees": 15,
+        "machineDimensionsMm": "1800*2150*2250",
+        "machineWeightKg": 3250
+      },
+      "sourceDocument": "FR (pro) 详情图 / FR7055XS (Pro)"
+    },
+    {
+      "code": "fr8055xs-pro",
+      "name": "FR8055XS (Pro)",
+      "seriesCode": "fr-pro",
+      "parameters": {
+        "xyTravelMm": "800*550",
+        "zAxisTravelMm": 400,
+        "maxWorkpieceMm": "810*1135*400",
+        "maxWorkpieceWeightKg": 1200,
+        "maxTaperDegrees": 15,
+        "machineDimensionsMm": "1850*2150*2300",
+        "machineWeightKg": 3950
+      },
+      "sourceDocument": "FR (pro) 详情图 / FR8055XS (Pro)"
+    },
+    {
+      "code": "fr8060xs-pro",
+      "name": "FR8060XS (Pro)",
+      "seriesCode": "fr-pro",
+      "parameters": {
+        "xyTravelMm": "850*600",
+        "zAxisTravelMm": 400,
+        "maxWorkpieceMm": "840*1190*400",
+        "maxWorkpieceWeightKg": 1400,
+        "maxTaperDegrees": 15,
+        "machineDimensionsMm": "2040*2250*2520",
+        "machineWeightKg": 4500
+      },
+      "sourceDocument": "FR (pro) 详情图 / FR8060XS (Pro)"
+    },
+    {
+      "code": "fr400g",
+      "name": "FR400G",
+      "seriesCode": "fr-g",
+      "optionalModelEvidence": ["FR400S"],
+      "parameters": {
+        "xyTravelMm": "400*300",
+        "zAxisTravelMm": 250,
+        "maxWorkpieceMm": "550*690*250",
+        "maxWorkpieceWeightKg": 350,
+        "maxTaperDegrees": 6
+      },
+      "sourceDocument": "FR-G 详情图 / FR400G"
+    },
+    {
+      "code": "fr500g",
+      "name": "FR500G",
+      "seriesCode": "fr-g",
+      "optionalModelEvidence": ["FR500S"],
+      "parameters": {
+        "xyTravelMm": "500*350",
+        "zAxisTravelMm": 250,
+        "maxWorkpieceMm": "570*770*250",
+        "maxWorkpieceWeightKg": 400,
+        "maxTaperDegrees": 6
+      },
+      "sourceDocument": "FR-G 详情图 / FR500G"
+    },
+    {
+      "code": "fr600g",
+      "name": "FR600G",
+      "seriesCode": "fr-g",
+      "optionalModelEvidence": ["FR600S"],
+      "parameters": {
+        "xyTravelMm": "600*400",
+        "zAxisTravelMm": 300,
+        "maxWorkpieceMm": "675*935*300",
+        "maxWorkpieceWeightKg": 500,
+        "maxTaperDegrees": 6
+      },
+      "sourceDocument": "FR-G 详情图 / FR600G"
+    },
+    {
+      "code": "fr7055g",
+      "name": "FR7055G",
+      "seriesCode": "fr-g",
+      "optionalModelEvidence": ["FR7055S"],
+      "parameters": {
+        "xyTravelMm": "700*550",
+        "zAxisTravelMm": 400,
+        "maxWorkpieceMm": "810*1040*400",
+        "maxWorkpieceWeightKg": 650,
+        "maxTaperDegrees": 6
+      },
+      "sourceDocument": "FR-G 详情图 / FR7055G"
+    }
+  ]
+}

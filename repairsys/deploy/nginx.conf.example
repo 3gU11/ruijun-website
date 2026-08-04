@@ -1,0 +1,75 @@
+server_tokens off;
+
+upstream repair_api {
+    server 127.0.0.1:3101;
+    keepalive 16;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name repair.example.com;
+
+    ssl_certificate /etc/letsencrypt/live/repair.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/repair.example.com/privkey.pem;
+    root /opt/repair-system/dist/client;
+    index client.html;
+    client_max_body_size 8m;
+
+    location /api/ {
+        proxy_pass http://repair_api;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /uploads/ {
+        proxy_pass http://repair_api;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location / {
+        try_files $uri $uri/ /client.html;
+    }
+}
+
+server {
+    listen 443 ssl http2;
+    server_name repair-admin.example.com;
+
+    ssl_certificate /etc/letsencrypt/live/repair-admin.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/repair-admin.example.com/privkey.pem;
+    root /opt/repair-system/dist/admin;
+    index admin.html;
+    client_max_body_size 8m;
+
+    # For stronger isolation, add an office/VPN IP allowlist here.
+    location /api/ {
+        proxy_pass http://repair_api;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /uploads/ {
+        proxy_pass http://repair_api;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location / {
+        try_files $uri $uri/ /admin.html;
+    }
+}
+
+server {
+    listen 80;
+    server_name repair.example.com repair-admin.example.com;
+    return 301 https://$host$request_uri;
+}

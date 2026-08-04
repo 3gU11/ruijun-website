@@ -1,0 +1,23 @@
+.env
+.env.*
+!.env.example
+!.env.dev.example
+
+tmp/
+logs/
+data/
+.playwright-cli/
+
+node_modules/
+dist/
+target/
+.idea/
+.vscode/
+
+*.log
+*.zip
+*.7z
+*.exe
+
+# Local reference repository, not part of this project.
+_reference_xunjian/

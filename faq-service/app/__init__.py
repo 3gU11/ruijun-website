@@ -1,0 +1,2 @@
+"""Ruijun shared FAQ BFF."""
+
