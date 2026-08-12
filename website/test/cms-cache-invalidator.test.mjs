@@ -22,6 +22,8 @@ test('CMS cache invalidator authenticates the private webhook and clears only af
 
   assert.deepEqual(invalidator.invalidate({ authorization: 'Bearer test-webhook-secret', collection: 'product_models' }), { invalidated: ['products'] });
   assert.deepEqual(cleared, ['products']);
+  assert.deepEqual(invalidator.invalidate({ authorization: 'Bearer test-webhook-secret', collection: 'product_release_snapshots' }), { invalidated: ['products'] });
+  assert.deepEqual(cleared, ['products', 'products']);
   assert.deepEqual(invalidator.invalidate({ authorization: 'Bearer test-webhook-secret', collection: 'pages' }), { invalidated: ['pages'] });
   assert.deepEqual(invalidator.invalidate({ authorization: 'Bearer test-webhook-secret', collection: 'service_resources' }), { invalidated: ['serviceContent'] });
   assert.deepEqual(invalidator.invalidate({ authorization: 'Bearer test-webhook-secret', collection: 'qualifications' }), { invalidated: ['evidence'] });

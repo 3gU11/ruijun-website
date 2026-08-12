@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 
 const allowedLeadTypes = new Set(['selection', 'quote', 'sample', 'partner', 'other']);
-const allowedSourcePages = new Set(['/', '/product/', '/product/detail/', '/manufacturing/', '/about/', '/service/']);
+const allowedSourcePages = new Set(['/', '/contact/', '/product/', '/product/detail/', '/manufacturing/', '/about/', '/service/']);
 
 export class LeadSubmissionError extends Error {
   constructor(code, message, cause) {

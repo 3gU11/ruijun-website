@@ -10,7 +10,7 @@
   --ruijun-muted: #707277;
   --ruijun-line: #d5d6d4;
   --ruijun-max: 1280px;
-  --ruijun-font-cn: "Noto Sans SC", "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+  --ruijun-font-cn: "AidianFengYaHei", "Microsoft YaHei Light", "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
   --ruijun-font-latin: "Calibri Light", Calibri, "Helvetica Neue", Arial, sans-serif;
   --background: #090909;
   --foreground: #ffffff;
@@ -36,8 +36,11 @@
 
 html {
   scroll-behavior: smooth;
-  scrollbar-width: thin;
-  scrollbar-color: var(--ruijun-red) transparent;
+  scrollbar-width: none;
+}
+
+html::-webkit-scrollbar {
+  display: none;
 }
 
 body {

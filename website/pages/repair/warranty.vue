@@ -1,0 +1,14 @@
+<script setup lang="ts">
+useSeoMeta({ title: '保修查询', description: '查询设备机器编号与零件编号对应的保修状态' });
+const form = reactive({ machineNo: '', serialNo: '', modelName: '' });
+const result = ref<any>(null); const loading = ref(false); const error = ref('');
+async function check() { error.value = ''; result.value = null; loading.value = true; try { result.value = await $fetch('/api/repair/warranty/check', { method: 'POST', body: form }); } catch (e: any) { error.value = e?.data?.message || '查询服务暂时不可用'; } finally { loading.value = false; } }
+const statusClass = computed(() => result.value?.inWarranty ? 'ok' : result.value ? 'warn' : '');
+</script>
+<template><RepairShell title="先确认设备的服务资格" intro="输入机器编号或零件编号，系统会根据售后档案返回保修判断。"><template #default>
+  <form class="form-panel" @submit.prevent="check"><div class="field"><label for="machineNo">机器编号 <span>*</span></label><input id="machineNo" v-model.trim="form.machineNo" required placeholder="请输入机器编号"></div><div class="field"><label for="serialNo">零件编号</label><input id="serialNo" v-model.trim="form.serialNo" placeholder="如已知，请一并输入"></div><div class="field"><label for="modelName">设备型号</label><input id="modelName" v-model.trim="form.modelName" placeholder="用于辅助核对"></div><button class="primary" :disabled="loading">{{ loading ? '查询中…' : '查询保修状态 →' }}</button><p v-if="error" class="error">{{ error }}</p></form>
+  <section v-if="result" class="result-panel" :class="statusClass"><p class="kicker">WARRANTY CHECK</p><h2>{{ result.result || '已完成核验' }}</h2><p>{{ result.suggestion }}</p><dl><div><dt>机器编号</dt><dd>{{ result.machineNo || form.machineNo }}</dd></div><div v-if="result.warrantyEnd"><dt>保修截止</dt><dd>{{ result.warrantyEnd }}</dd></div></dl><NuxtLink v-if="!result.inWarranty" class="text-link" :to="`/repair/new?model=${encodeURIComponent(form.modelName)}&machine=${encodeURIComponent(form.machineNo)}`">继续提交人工报修 →</NuxtLink></section>
+</template></RepairShell></template>
+<style scoped>
+.form-panel,.result-panel{max-width:760px;padding:34px;background:#fff}.form-panel{display:grid;grid-template-columns:1fr 1fr;gap:20px}.field{display:grid;gap:7px}.field label{font-size:13px;color:#555}.field label span{color:#e51b23}.field input{padding:13px;border:1px solid #ccc}.form-panel .primary{grid-column:1/-1;width:max-content}.error{grid-column:1/-1;color:#b11}.result-panel{margin-top:14px;border-left:4px solid #e51b23}.result-panel.ok{border-color:#2c8c5a}.result-panel h2{margin:8px 0;font-size:34px;font-weight:400}.result-panel p{color:#666}.kicker{color:#e51b23!important;font-size:11px;letter-spacing:.16em}.result-panel dl{display:flex;gap:40px;margin:28px 0 0}.result-panel dt{color:#888;font-size:12px}.result-panel dd{margin:4px 0 0}.text-link{display:inline-block;margin-top:25px;color:#e51b23;text-decoration:none}@media(max-width:650px){.form-panel{grid-template-columns:1fr}.form-panel .primary{grid-column:auto;width:100%}.result-panel dl{display:grid;gap:14px}}
+</style>

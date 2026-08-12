@@ -13,11 +13,11 @@ test('content audit reader receives read-only permissions only for product and s
   const permissions = [];
   const applier = createDirectusSchemaApplier({
     baseUrl: 'https://cms.example.test', accessToken: 'admin-token',
-    schemaPlan: { collections: [], fields: [], roles: [{ key: 'content_audit_reader', name: 'Content audit reader', admin: false }] },
+    schemaPlan: { collections: [], fields: [], roles: [{ key: 'content_audit_reader', name: '内容审核只读账号', admin: false }] },
     fetchImpl: async (url, options = {}) => {
       const request = { url: new URL(url), method: options.method || 'GET', body: options.body };
       if (request.url.pathname === '/collections') return Response.json({ data: [] });
-      if (request.url.pathname === '/roles') return Response.json({ data: [{ id: 'audit-role', name: 'Content audit reader' }] });
+      if (request.url.pathname === '/roles') return Response.json({ data: [{ id: 'audit-role', name: '内容审核只读账号' }] });
       if (request.url.pathname === '/policies') return Response.json({ data: [{ id: 'audit-policy', name: 'Ruijun content_audit_reader' }] });
       if (request.url.pathname === '/access') return Response.json({ data: [{ role: 'audit-role', policy: 'audit-policy' }] });
       if (request.url.pathname === '/permissions' && request.method === 'GET') return Response.json({ data: [] });
@@ -28,7 +28,7 @@ test('content audit reader receives read-only permissions only for product and s
 
   await applier.apply();
   assert.deepEqual(permissions.map((item) => [item.collection, item.action]).sort(), [
-    ['external_service_entries', 'read'], ['product_models', 'read'], ['product_series', 'read'], ['service_locations', 'read'], ['service_resources', 'read']
+    ['external_service_entries', 'read'], ['product_models', 'read'], ['product_parameters', 'read'], ['product_series', 'read'], ['service_locations', 'read'], ['service_resources', 'read']
   ]);
   assert.ok(permissions.every((item) => !item.fields.includes('lead_reference') && !item.fields.includes('phone')));
 });
@@ -40,7 +40,7 @@ test('content audit reader provisioner creates a separate non-admin account', as
     fetchImpl: async (url, options = {}) => {
       const request = { url: new URL(url), method: options.method || 'GET', body: options.body };
       calls.push(request);
-      if (request.url.pathname === '/roles') return Response.json({ data: [{ id: 'audit-role', name: 'Content audit reader', admin_access: false }] });
+      if (request.url.pathname === '/roles') return Response.json({ data: [{ id: 'audit-role', name: '内容审核只读账号', admin_access: false }] });
       if (request.url.pathname === '/users' && request.method === 'GET') return Response.json({ data: [] });
       if (request.url.pathname === '/users' && request.method === 'POST') return Response.json({ data: { id: 'audit-user' } });
       throw new Error(`Unexpected request ${request.method} ${request.url.pathname}`);

@@ -135,7 +135,9 @@ async function main() {
     const modelSlug = `e2e-media-${suffix.slice(0, 8)}`;
     const model = await editorApi.request('/items/product_models', {
       method: 'POST', body: {
-        series_code: 'E2E', model_code: `MEDIA-${suffix.slice(0, 8)}`, slug: modelSlug, name: 'E2E media model', media: [{ media_asset_id: assetId, alt: 'E2E 机床' }]
+        series_code: 'E2E', model_code: `MEDIA-${suffix.slice(0, 8)}`, slug: modelSlug, name: 'E2E media model',
+        parameters: { travel_mm: '400' }, source_document: 'media-governance-e2e',
+        media: [{ media_asset_id: assetId, alt: 'E2E 机床' }]
       }
     });
     modelId = model.data.id;

@@ -1,4 +1,4 @@
-const ROLE_NAME = 'Content audit reader';
+const ROLE_NAME = '内容审核只读账号';
 
 function urlFor(baseUrl, path) {
   return new URL(path.replace(/^\//, ''), `${baseUrl.replace(/\/$/, '')}/`);
@@ -17,7 +17,7 @@ export function createDirectusContentAuditReaderProvisioner({ baseUrl, adminToke
     async provision() {
       const roles = await request('/roles?limit=-1&fields=id,name');
       const role = Array.isArray(roles) ? roles.find((item) => item.name === ROLE_NAME) : null;
-      if (!role?.id) throw new Error('Content audit reader role is unavailable; apply the CMS schema before provisioning the service account');
+      if (!role?.id) throw new Error('内容审核只读账号不可用；请先应用 CMS 数据结构后再创建服务账号');
       const usersUrl = new URL(urlFor(baseUrl, '/users'));
       usersUrl.searchParams.set('filter[email][_eq]', serviceEmail);
       usersUrl.searchParams.set('limit', '1');
@@ -31,7 +31,7 @@ export function createDirectusContentAuditReaderProvisioner({ baseUrl, adminToke
         return { created: false, updated: true, userId: existing.id };
       }
       const created = await request('/users', { method: 'POST', body: JSON.stringify({ email: serviceEmail, ...payload }) });
-      if (!created?.id) throw new Error('Directus did not return the content audit reader user id');
+      if (!created?.id) throw new Error('Directus 未返回内容审核只读账号的用户编号');
       return { created: true, updated: false, userId: created.id };
     }
   };

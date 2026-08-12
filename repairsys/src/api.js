@@ -64,6 +64,10 @@ export const api = {
   createInstance: (payload) => request('/material-instances', { method: 'POST', body: JSON.stringify(payload) }),
   createBinding: (machineNo, payload) => request(`/machines/${machineNo}/bindings`, { method: 'POST', body: JSON.stringify(payload) }),
   warrantyCheck: (payload) => request('/warranty/check', { method: 'POST', body: JSON.stringify(payload) }),
+  resolveBoardQr: (token) => request(`/v1/boards/resolve/${encodeURIComponent(token)}`),
+  boardQrCodes: (serialNo = '') => request(`/v1/admin/board-codes${serialNo ? `?serialNo=${encodeURIComponent(serialNo)}` : ''}`),
+  issueBoardQr: (payload) => request('/v1/admin/board-codes', { method: 'POST', body: JSON.stringify(payload) }),
+  revokeBoardQr: (id) => request(`/v1/admin/board-codes/${encodeURIComponent(id)}/revoke`, { method: 'POST', body: JSON.stringify({}) }),
   syncTasks: () => request('/v8/sync-tasks'),
   createSyncTask: (payload) => request('/v8/sync-tasks', { method: 'POST', body: JSON.stringify(payload) })
 };

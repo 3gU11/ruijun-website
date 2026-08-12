@@ -1,30 +1,10 @@
 <script setup lang="ts">
-const open = defineModel<boolean>('open', { default: false });
 const route = useRoute();
-const dialog = ref<HTMLDialogElement>();
 const form = reactive({ name: '', phone: '', leadType: 'selection', requirement: '', consent: false });
 const selectedFiles = ref<File[]>([]);
 const submitting = ref(false);
 const status = ref('');
 const statusKind = ref<'idle' | 'error' | 'success'>('idle');
-
-function syncDialog() {
-  if (!dialog.value) return;
-  if (open.value && !dialog.value.open) dialog.value.showModal();
-  if (!open.value && dialog.value.open) dialog.value.close();
-}
-
-function close() {
-  open.value = false;
-}
-
-function onNativeClose() {
-  open.value = false;
-}
-
-function onBackdrop(event: MouseEvent) {
-  if (event.target === dialog.value) close();
-}
 
 function onFilesSelected(event: Event) {
   const input = event.target as HTMLInputElement;
@@ -93,17 +73,13 @@ async function submit() {
   }
 }
 
-watch(open, syncDialog);
-onMounted(syncDialog);
 </script>
 
 <template>
-  <dialog ref="dialog" class="lead-dialog" aria-labelledby="lead-dialog-title" @close="onNativeClose" @click="onBackdrop">
-    <section class="lead-dialog-panel">
-      <button class="lead-dialog-close" type="button" aria-label="关闭询盘窗口" @click="close">x</button>
-      <p class="lead-dialog-kicker">CONTACT RUIJUN</p>
+  <section class="lead-inquiry-form" aria-labelledby="lead-dialog-title">
+      <p class="lead-inquiry-kicker">CONTACT RUIJUN</p>
       <h2 id="lead-dialog-title">获取选型建议</h2>
-      <p class="lead-dialog-intro">留下加工任务与联系方式，销售顾问将据此与您沟通。</p>
+      <p class="lead-inquiry-intro">留下加工任务与联系方式，销售顾问将据此与您沟通。</p>
       <form @submit.prevent="submit">
         <label>附件（PDF、JPG、PNG、WebP，最多 3 个，每个不超过 10 MiB）<input name="attachments" type="file" accept="application/pdf,image/jpeg,image/png,image/webp" multiple @change="onFilesSelected"></label>
         <label>称呼<input v-model="form.name" name="name" autocomplete="name" maxlength="80" required></label>
@@ -122,18 +98,14 @@ onMounted(syncDialog);
         <p class="lead-dialog-status" :class="`is-${statusKind}`" role="status" aria-live="polite">{{ status }}</p>
         <button class="lead-dialog-submit" type="submit" :disabled="submitting">{{ submitting ? '提交中...' : '提交需求' }}</button>
       </form>
-    </section>
-  </dialog>
+  </section>
 </template>
 
 <style scoped>
-.lead-dialog { width: min(520px, calc(100vw - 32px)); padding: 0; color: #f7f8f8; background: rgb(19 22 24 / 88%); border: 1px solid rgb(255 255 255 / 27%); border-radius: 8px; box-shadow: 0 28px 80px rgb(0 0 0 / 52%); backdrop-filter: blur(20px); }
-.lead-dialog::backdrop { background: rgb(0 0 0 / 66%); backdrop-filter: blur(5px); }
-.lead-dialog-panel { position: relative; padding: 34px; }
-.lead-dialog-close { position: absolute; top: 12px; right: 12px; width: 34px; height: 34px; color: #fff; background: rgb(255 255 255 / 9%); border: 1px solid rgb(255 255 255 / 20%); border-radius: 50%; font-size: 18px; cursor: pointer; }
-.lead-dialog-kicker { margin: 0; color: #e84b42; font-size: 12px; }
+.lead-inquiry-form { color: #f7f8f8; }
+.lead-inquiry-kicker { margin: 0; color: #e84b42; font-size: 12px; }
 h2 { margin: 12px 0 8px; font-size: 32px; font-weight: 500; }
-.lead-dialog-intro { margin: 0 0 24px; color: rgb(255 255 255 / 70%); line-height: 1.65; }
+.lead-inquiry-intro { margin: 0 0 24px; color: rgb(255 255 255 / 70%); line-height: 1.65; }
 form { display: grid; gap: 15px; }
 label { display: grid; gap: 7px; color: rgb(255 255 255 / 83%); font-size: 13px; }
 input, select, textarea { box-sizing: border-box; width: 100%; padding: 11px 12px; color: #fff; background: rgb(255 255 255 / 8%); border: 1px solid rgb(255 255 255 / 20%); border-radius: 5px; font: inherit; }
@@ -147,5 +119,5 @@ input:focus, select:focus, textarea:focus { outline: 2px solid #f15a4f; outline-
 .lead-dialog-status.is-success { color: #83d6a8; }
 .lead-dialog-submit { min-height: 46px; color: #fff; background: #d93730; border: 0; border-radius: 5px; font: inherit; cursor: pointer; }
 .lead-dialog-submit:disabled { cursor: wait; opacity: .68; }
-@media (max-width: 520px) { .lead-dialog-panel { padding: 28px 22px; } h2 { font-size: 28px; } }
+@media (max-width: 520px) { h2 { font-size: 28px; } }
 </style>

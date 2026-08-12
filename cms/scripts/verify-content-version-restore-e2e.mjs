@@ -96,7 +96,7 @@ async function main() {
       method: 'POST',
       body: {
         series_code: 'E2E', model_code: `E2E-${suffix.slice(0, 8)}`,
-        name: initialName,
+        name: initialName, parameters: { travel_mm: '400' }, source_document: 'versioning-e2e',
         // The hook must discard forged publishing fields at creation time.
         status: 'published', publication_state: 'published'
       }
@@ -108,14 +108,29 @@ async function main() {
       method: 'PATCH', body: { name: changedName, status: 'review' }
     });
     assert(reviewing.data.status === 'review', 'Editor could not submit the draft for review');
+    const reviewerMutation = await reviewerApi.request(`/items/product_models/${productId}`, {
+      method: 'PATCH', body: { status: 'scheduled', name: 'Forged reviewer content' }, expected: [400]
+    });
+    assert(reviewerMutation.status === 400, 'Technical reviewer could mutate product content while approving it');
     const scheduled = await reviewerApi.request(`/items/product_models/${productId}`, {
       method: 'PATCH', body: { status: 'scheduled' }
     });
     assert(scheduled.data.status === 'scheduled', 'Technical reviewer could not schedule reviewed content');
+    const publisherMutation = await publisherApi.request(`/items/product_models/${productId}`, {
+      method: 'PATCH', body: { status: 'published', name: 'Forged publisher content' }, expected: [400]
+    });
+    assert(publisherMutation.status === 400, 'Publisher could mutate product content while publishing it');
     const published = await publisherApi.request(`/items/product_models/${productId}`, {
       method: 'PATCH', body: { status: 'published' }
     });
     assert(published.data.status === 'published' && published.data.publication_state === 'published', 'Publisher could not publish scheduled content');
+
+    const editorPublishedMutation = await editorApi.request(`/items/product_models/${productId}`, {
+      method: 'PATCH', body: { name: 'Forged editor change after publication' }, expected: [400, 403]
+    });
+    assert([400, 403].includes(editorPublishedMutation.status), 'Content editor was able to update published content');
+    const unchangedPublished = await admin.request(`/items/product_models/${productId}?fields=name,status,publication_state`);
+    assert(unchangedPublished.data.name === changedName && unchangedPublished.data.status === 'published', 'Rejected editor update changed published content');
 
     const versions = await admin.request(`/items/content_versions?filter[content_collection][_eq]=product_models&filter[content_item_id][_eq]=${encodeURIComponent(productId)}&sort=created_at&limit=-1`);
     for (const version of versions.data) createdVersionIds.push(version.id);

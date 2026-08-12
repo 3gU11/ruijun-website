@@ -25,7 +25,7 @@ test('notification hook accepts only the worker role and replaces the client pay
   const result = await callback(
     { status: 'processing', lock_token: 'worker-lock', attempts: 99 },
     { keys: ['job-1'] },
-    hookContext({ roleName: 'Notification worker service account', job: { id: 'job-1', status: 'pending', attempts: 0, activity_log: [] } })
+hookContext({ roleName: '通知任务服务账号', job: { id: 'job-1', status: 'pending', attempts: 0, activity_log: [] } })
   );
 
   assert.deepEqual(result.status, 'processing');
@@ -41,10 +41,10 @@ test('notification hook blocks sales roles and requires a manual note for manage
 
   await assert.rejects(
     callback({ status: 'resolved', manual_note: 'Handled' }, { keys: ['job-1'] }, hookContext({ roleName: 'Salesperson', job })),
-    /Your role cannot handle notification jobs/
+  /当前角色不能处理通知任务/
   );
   await assert.rejects(
-    callback({ status: 'resolved' }, { keys: ['job-1'] }, hookContext({ roleName: 'Notification manager', job })),
+callback({ status: 'resolved' }, { keys: ['job-1'] }, hookContext({ roleName: '通知管理员', job })),
     /manual handling note is required/
   );
 });

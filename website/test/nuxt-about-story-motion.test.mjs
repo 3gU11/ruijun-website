@@ -7,10 +7,30 @@ test('Nuxt about page joins the opening story into one desktop scroll compositio
   assert.match(page, /getStoryMotion/);
   assert.match(page, /ref="storySection" class="about-story"/);
   assert.match(page, /ref="storyBackdrop" class="about-story-backdrop"/);
+  assert.match(page, /const heroNumber = heroCopy\.querySelector<HTMLElement>\('strong'\)/);
+  assert.match(page, /gsap\.fromTo\(heroNumber, \{ autoAlpha: 0, x: -72 \}/);
+  assert.match(page, /gsap\.fromTo\(heroUnit, \{ autoAlpha: 0, x: 54 \}/);
+  assert.match(page, /gsap\.fromTo\(heroTitle, \{ autoAlpha: 0, y: 34 \}/);
   assert.match(page, /trigger: storySection\.value/);
   assert.match(page, /@media \(min-width: 901px\).*\.about-story-backdrop/s);
   assert.match(page, /height:200svh/);
   assert.match(page, /data-about-panel/);
+  assert.match(page, /class="legacy-copy"/);
+  assert.match(page, /ScrollTrigger\.create\(/);
+  assert.match(page, /trigger: legacySection,\s*start: 'top 88%',\s*end: 'bottom 16%',\s*scrub: 1\.2,\s*invalidateOnRefresh: true/s);
+  assert.match(page, /const sinceProgress =/);
+  assert.match(page, /const yearProgress =/);
+  assert.match(page, /autoAlpha: sinceProgress, y: \(1 - sinceProgress\) \* 18/);
+  assert.match(page, /autoAlpha: yearProgress, y: \(1 - yearProgress\) \* 18/);
+  assert.doesNotMatch(page, /gsap\.from\('\.about-reveal'/);
+  assert.match(page, /trigger: overview,\s*start: 'top 86%',\s*end: 'top 30%',\s*scrub: 1\.25/s);
+  assert.match(page, /trigger: overview,\s*start: 'top 48%',\s*end: 'bottom 48%',\s*scrub: 1\.35/s);
+  assert.match(page, /let aboutDisposed = false/);
+  assert.match(page, /if \(aboutDisposed\) return/);
+  assert.match(page, /aboutDisposed = true/);
+  assert.match(page, /\.about-story,\.about-overview\{background:#fbfaf7\}/);
+  assert.match(page, /\.about-story \.legacy\{isolation:isolate;contain:paint;clip-path:inset\(0\)\}/);
+  assert.match(page, /\.about-overview\{position:relative;z-index:2;isolation:isolate\}/);
 });
 
 test('Nuxt about page retains every legacy content chapter and its dedicated footer', async () => {
@@ -52,9 +72,12 @@ test('Nuxt about page retains every legacy content chapter and its dedicated foo
   assert.match(page, /onStopDelay: \.2/);
   assert.match(page, /window\.location\.hash === '#history'/);
   assert.match(page, /historyExitUnlockTimer/);
-  assert.match(page, /外贸：177 5111 9936/);
+  assert.match(page, /外贸：17751119936/);
   assert.match(page, /kylewuedm@gmail\.com/);
   assert.match(page, /你有量<br>我有价/);
+  assert.match(page, /专攻电加工卡脖子技术/);
+  assert.match(page, /我们拥有完善的售前、售中、售后服务！/);
+  assert.doesNotMatch(page, /Forerunner in/);
   assert.match(page, /client-domestic-/);
   assert.match(page, /client-global-/);
   assert.match(indicator, /关于我们页面段落导航/);

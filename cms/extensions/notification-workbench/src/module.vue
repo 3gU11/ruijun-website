@@ -3,7 +3,7 @@
     <div class="notification-workbench">
       <div class="toolbar">
         <div class="toolbar-copy">
-          <p class="eyebrow">NOTIFICATION EXCEPTIONS</p>
+          <p class="eyebrow">通知异常</p>
           <p>仅显示已达到人工处理状态的通知任务。操作说明会写入服务器审计记录。</p>
         </div>
         <button class="secondary-action" type="button" :disabled="loading" @click="loadJobs">刷新</button>
@@ -79,6 +79,7 @@ function errorMessage(reason, fallback) {
 }
 
 function formatTime(value) {
+  if (typeof value !== 'string' || !value.trim()) return '时间未知';
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? '时间未知' : date.toLocaleString('zh-CN', { hour12: false });
 }

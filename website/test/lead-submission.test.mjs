@@ -25,6 +25,16 @@ test('lead submission accepts only approved public fields and normalizes a valid
   });
 });
 
+test('lead submission accepts the standalone contact page as a source', async () => {
+  let created;
+  await submitLead({
+    payload: { ...validPayload, pagePath: '/contact/' },
+    store: { hasRecentPhone: async () => false, create: async (lead) => { created = lead; return { status: 'new' }; } },
+    idFactory: () => 'b1111111-1111-4111-8111-111111111111', now: () => new Date('2026-08-08T00:00:00.000Z')
+  });
+  assert.equal(created.pagePath, '/contact/');
+});
+
 test('lead submission requires consent and blocks repeated phone numbers', async () => {
   await assert.rejects(
     submitLead({ payload: { ...validPayload, consent: false }, store: {} }),

@@ -14,7 +14,8 @@ test('legacy catalog imports every series and model as a non-public draft', asyn
 
   assert.equal(payload.product_series.length, 7);
   assert.equal(payload.product_models.length, 29);
-  for (const record of [...payload.product_series, ...payload.product_models]) {
+  assert.equal(payload.product_parameters.length, 190);
+  for (const record of [...payload.product_series, ...payload.product_models, ...payload.product_parameters]) {
     assert.equal(record.status, 'draft');
     assert.equal(record.publication_state, 'unpublished');
     assert.ok(record.review_note);
@@ -29,6 +30,15 @@ test('legacy catalog import retains source evidence and flags conflicts for revi
   assert.equal(automatic.source_url, 'http://www.ksrjjx.com/proshow__2129.html');
   assert.match(automatic.source_document, /FR400XS/);
   assert.deepEqual(automatic.import_evidence.parameter_conflicts, ['maxWorkpieceMm']);
+  assert.deepEqual(automatic.import_evidence.structured_parameter_keys, Object.keys(automatic.parameters));
+  const travel = payload.product_parameters.find((parameter) => parameter.model_code === 'fr400xs-auto' && parameter.field_name === 'XY 行程');
+  assert.equal(travel.value, '400*290');
+  assert.equal(travel.unit, 'mm');
+  assert.equal(travel.import_evidence.source_key, 'xyTravelMm');
+  assert.equal(travel.source_document, automatic.source_document);
+  const conflictingParameter = payload.product_parameters.find((parameter) => parameter.model_code === 'fr400xs-auto' && parameter.import_evidence.source_key === 'maxWorkpieceMm');
+  assert.equal(conflictingParameter.import_evidence.parameter_conflict, true);
+  assert.match(conflictingParameter.review_note, /冲突/);
   assert.equal(unmapped.import_evidence.series_mapping_status, 'needs_product_owner_confirmation');
   assert.match(unmapped.review_note, /审核/);
 });

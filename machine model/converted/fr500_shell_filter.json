@@ -1,0 +1,14 @@
+{
+  "source": "D:\\CURSORpj\\gaunwang\\machine model\\converted\\fr500_corrected.glb",
+  "removed": [
+    {
+      "name": "FR-500_-8",
+      "dimensions": [
+        20.0,
+        55.600013732910156,
+        780.0001220703125
+      ]
+    }
+  ],
+  "output": "D:\\CURSORpj\\gaunwang\\machine model\\converted\\fr500_shell.glb"
+}

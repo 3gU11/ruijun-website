@@ -1,0 +1,12 @@
+{
+  "name": "ruijun-publication-readiness-endpoint",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "directus:extension": {
+    "host": "^11.0.0",
+    "type": "endpoint",
+    "path": "dist/index.js",
+    "source": "dist/index.js"
+  }
+}

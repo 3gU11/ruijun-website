@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus/es/components/message/index.mjs';
 import 'element-plus/es/components/message/style/css';
@@ -11,6 +11,7 @@ import {
   Close,
   Cpu,
   Document,
+  FullScreen,
   House,
   Monitor,
   Phone,
@@ -29,12 +30,25 @@ import { api, apiAssetUrl } from './api';
 import { createFaqConversation, faqAssistantMode, streamFaqMessage, submitFaqFeedback } from './faq-bff-client';
 import brandLogo from './assets/ruijun-logo.png';
 import RepairSelectionSummary from './client/components/RepairSelectionSummary.vue';
+import ServiceWorkspace from './client/components/ServiceWorkspace.vue';
+import ServiceTimeline from './client/components/ServiceTimeline.vue';
+import { useRepairMotion } from './client/composables/useRepairMotion';
 import { useRepairDraft } from './client/composables/useRepairDraft';
 import { clientRoutes } from './client/router';
+import { BrowserQRCodeReader } from '@zxing/browser';
 
 const route = useRoute();
 const router = useRouter();
-const officialSiteUrl = String(import.meta.env.VITE_OFFICIAL_SITE_URL || `${window.location.protocol}//${window.location.hostname}:4173/`).trim();
+const { playPageEntry } = useRepairMotion();
+const officialSiteUrl = String(import.meta.env.VITE_OFFICIAL_SITE_URL || `${window.location.protocol}//${window.location.hostname}:4300/`).trim();
+const officialServiceUrl = computed(() => {
+  try {
+    return new URL('/service', officialSiteUrl).toString();
+  } catch {
+    return officialSiteUrl;
+  }
+});
+const portalMenuOpen = ref(false);
 const ENTRY_CONTEXT_KEY = 'repair_entry_context_v1';
 const FAQ_CONTINUATION_KEY = 'repair_faq_continuation_v1';
 const SAFE_FAQ_SESSION_ID = /^[A-Za-z0-9_-]{20,80}$/;
@@ -82,6 +96,8 @@ const authDialog = ref(false);
 const authPrompt = ref('');
 const pendingAuthAction = ref('home');
 const clientView = computed(() => route.meta.clientView || 'home');
+const scannedBoardNo = computed(() => queryValue(route.query.boardNo));
+const scannedBoardMaterialCode = computed(() => queryValue(route.query.boardMaterialCode));
 const submittedRequest = ref(null);
 const successDialog = ref(false);
 const guideStep = ref(1);
@@ -95,6 +111,18 @@ const supplementPhotos = ref([]);
 const warrantyDialog = ref(false);
 const warrantyCheckLoading = ref(false);
 const quickWarrantyResult = ref(null);
+const boardQrResult = ref(null);
+const boardQrError = ref('');
+const boardQrLoading = ref(false);
+const boardWarrantyResult = ref(null);
+const boardWarrantyError = ref('');
+const boardWarrantyLoading = ref(false);
+const scanTokenInput = ref('');
+const scanInputError = ref('');
+const scanCameraActive = ref(false);
+const scanVideo = ref(null);
+let qrReader = null;
+let qrControls = null;
 const serviceGuideDialog = ref(false);
 const faqDialog = ref(false);
 const faqQuestion = ref('');
@@ -109,22 +137,6 @@ const faqMode = computed(() => faqAssistantMode(faqBffBaseUrl));
 const useFaqBff = computed(() => faqMode.value === 'bff' && faqBffAvailable.value);
 let faqAbortController = null;
 const catalogSearch = ref('');
-const supportScrollY = ref(0);
-let supportScrollFrame = 0;
-const supportParallaxStyle = computed(() => ({
-  '--support-parallax-slow': `${supportScrollY.value * 0.07}px`,
-  '--support-parallax-reverse': `${supportScrollY.value * -0.045}px`,
-  '--support-parallax-side': `${supportScrollY.value * 0.025}px`,
-  '--support-parallax-label': `${supportScrollY.value * -0.025}px`
-}));
-
-function updateSupportParallax() {
-  if (supportScrollFrame) return;
-  supportScrollFrame = window.requestAnimationFrame(() => {
-    supportScrollY.value = Math.min(window.scrollY, 900);
-    supportScrollFrame = 0;
-  });
-}
 
 const authForm = reactive({
   username: '',
@@ -200,6 +212,7 @@ const materialOptions = computed(() => {
   const modelConfig = photoConfigs.value.find((item) => item.code === guideForm.modelCode);
   return modelConfig?.photoItems || [];
 });
+const materialUsesFallback = computed(() => photoConfigs.value.find((item) => item.code === guideForm.modelCode)?.materialSource === 'repair-system:material-fallback');
 
 const currentVerificationIssues = computed(() =>
   guideForm.items.filter((item) => item.verification?.requiresManualReview)
@@ -462,11 +475,177 @@ function applyWarrantyDeepLink() {
     quickWarrantyForm.modelCode = selectedModel.code;
     quickWarrantyForm.modelName = selectedModel.name;
   }
-  warrantyDialog.value = true;
+}
+
+function extractBoardQrToken(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  try {
+    const url = new URL(raw);
+    const parts = url.pathname.split('/');
+    const markerIndex = parts.findIndex((part) => part === 'scan');
+    if (markerIndex >= 0) return decodeURIComponent(parts[markerIndex + 1] || '');
+  } catch {
+    // USB QR scanners may emit the opaque token without a URL.
+  }
+  return raw.replace(/^scan[/:]/i, '').trim();
+}
+
+async function resolveBoardQr(inputToken = '') {
+  if (clientView.value !== 'scan') return;
+  const token = extractBoardQrToken(inputToken || queryValue(route.params.token));
+  if (!token) {
+    if (route.params.token) boardQrError.value = '二维码内容无效，请检查标签后重试。';
+    return;
+  }
+  boardQrLoading.value = true;
+  boardQrResult.value = null;
+  boardQrError.value = '';
+  boardWarrantyResult.value = null;
+  boardWarrantyError.value = '';
+  try {
+    boardQrResult.value = await api.resolveBoardQr(token);
+    if (boardQrResult.value?.machine) {
+      boardWarrantyLoading.value = true;
+      try {
+        boardWarrantyResult.value = await api.warrantyCheck({
+          machineNo: boardQrResult.value.machine.machineNo,
+          serialNo: boardQrResult.value.boardId,
+          modelCode: boardQrResult.value.machine.modelCode,
+          materialCode: boardQrResult.value.material.code,
+          materialName: boardQrResult.value.material.name
+        });
+      } catch (error) {
+        boardWarrantyError.value = error.message || '保修状态暂时无法自动核验。';
+      } finally {
+        boardWarrantyLoading.value = false;
+      }
+
+      // A verified board label is a service-entry shortcut. Move the resolved
+      // identity into the repair draft before routing so the form is not
+      // rebuilt from untrusted URL query values.
+      startRepairFromBoard();
+    }
+  } catch (error) {
+    boardQrError.value = error.message || '二维码无效、已过期或已作废。';
+  } finally {
+    boardQrLoading.value = false;
+  }
+}
+
+function stopQrCamera() {
+  qrControls?.stop?.();
+  qrControls = null;
+  scanCameraActive.value = false;
+}
+
+async function submitQrScan(value = scanTokenInput.value) {
+  const token = extractBoardQrToken(value);
+  if (!/^[A-Za-z0-9_-]{32,128}$/.test(token)) {
+    scanInputError.value = '请输入完整二维码地址，或使用扫码枪重新扫描。';
+    return;
+  }
+  scanInputError.value = '';
+  stopQrCamera();
+  scanTokenInput.value = token;
+  await resolveBoardQr(token);
+}
+
+async function startQrCamera() {
+  scanInputError.value = '';
+  stopQrCamera();
+  scanCameraActive.value = true;
+  await nextTick();
+  try {
+    qrReader = new BrowserQRCodeReader();
+    qrControls = await qrReader.decodeFromVideoDevice(undefined, scanVideo.value, (result) => {
+      if (result) submitQrScan(result.getText());
+    });
+  } catch (error) {
+    stopQrCamera();
+    scanInputError.value = error?.name === 'NotAllowedError'
+      ? '浏览器拒绝了摄像头权限，请允许摄像头，或改用扫码枪/地址输入。'
+      : '当前电脑无法打开摄像头，请改用扫码枪或地址输入。';
+  }
+}
+
+async function handleQrImageChange(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  scanInputError.value = '';
+  try {
+    qrReader ||= new BrowserQRCodeReader();
+    const objectUrl = URL.createObjectURL(file);
+    try {
+      const result = await qrReader.decodeFromImageUrl(objectUrl);
+      await submitQrScan(result.getText());
+    } finally {
+      URL.revokeObjectURL(objectUrl);
+    }
+  } catch {
+    scanInputError.value = '图片中没有识别到有效二维码，请重新选择清晰图片。';
+  } finally {
+    event.target.value = '';
+  }
+}
+
+function startRepairFromBoard() {
+  const board = boardQrResult.value;
+  const machine = board?.machine;
+  if (!machine?.machineNo || !machine.modelCode || !board?.material?.code || !board?.boardId) return false;
+
+  const model = modelDictionary.value.find((item) => String(item.code).toLowerCase() === String(machine.modelCode).toLowerCase());
+  if (!model) {
+    boardQrError.value = '该板卡关联的机型不在当前服务目录中，无法自动创建维修申请。';
+    return false;
+  }
+
+  resetGuide();
+  selectedFamily.value = productGroups.value.find((group) => group.items.some((item) => item.code === model.code)) || null;
+  guideForm.modelCode = model.code;
+  guideForm.modelName = model.name;
+  guideForm.machineNo = machine.machineNo;
+
+  const material = materialOptions.value.find((item) => item.code === board.material.code);
+  if (!material) {
+    boardQrError.value = '该板卡物料尚未配置到对应机型的维修目录，请联系售后处理。';
+    return false;
+  }
+
+  guideForm.selectedMaterialCodes = [material.code];
+  guideForm.items = [{
+    materialCode: material.code,
+    positionCode: material.code,
+    materialType: material.type,
+    materialName: material.name,
+    spec: material.spec,
+    photoRequirement: material.shootingRequirement || '',
+    photoRequired: material.required,
+    boardNo: board.boardId,
+    serviceType: guideForm.warrantyScope === 'in' ? '维修' : '直接更换',
+    faultCategory: '',
+    faultPhenomenon: '',
+    verification: null
+  }];
+  guideStep.value = 3;
+  router.replace({ path: clientRoutes.request, query: { source: 'board_qr' } });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  return true;
+}
+
+function openWarrantyFromBoard() {
+  const board = boardQrResult.value;
+  if (board?.machine) {
+    quickWarrantyForm.modelCode = board.machine.modelCode || '';
+    quickWarrantyForm.modelName = modelDictionary.value.find((item) => item.code === board.machine.modelCode)?.name || board.machine.modelCode || '';
+    quickWarrantyForm.machineNo = board.machine.machineNo || '';
+    quickWarrantyResult.value = boardWarrantyResult.value;
+  }
+  navigateClient('warranty');
 }
 
 function navigateClient(view, replace = false) {
-  const target = clientRoutes[view] || clientRoutes.home;
+  const target = view === 'scan' ? '/scan' : clientRoutes[view] || clientRoutes.home;
   return replace ? router.replace(target) : router.push(target);
 }
 
@@ -526,12 +705,11 @@ async function submitAuth() {
     saveCurrentUser(user);
     const destination = pendingAuthAction.value;
     if (destination === 'request') guideStep.value = 5;
-    if (destination === 'warranty') warrantyDialog.value = true;
     authDialog.value = false;
     authPrompt.value = '';
     pendingAuthAction.value = 'home';
     await loadClientData();
-    await navigateClient(destination === 'warranty' ? 'home' : destination);
+    await navigateClient(destination);
     ElMessage.success('登录成功');
   } catch (error) {
     ElMessage.error(error.message || '账号操作失败');
@@ -621,7 +799,7 @@ function openWarrantyEntry() {
   quickWarrantyForm.modelCode = quickWarrantyForm.modelCode || model.code;
   quickWarrantyForm.modelName = modelDictionary.value.find((item) => item.code === quickWarrantyForm.modelCode)?.name || model.name;
   quickWarrantyResult.value = null;
-  warrantyDialog.value = true;
+  navigateClient('warranty');
 }
 
 function syncQuickWarrantyModel(modelCode) {
@@ -635,7 +813,6 @@ async function checkQuickWarranty() {
     return;
   }
   if (!currentUser.value) {
-    warrantyDialog.value = false;
     openAuth('warranty', `已保留 ${quickWarrantyForm.modelName || quickWarrantyForm.modelCode} 的核验信息，登录后继续。`);
     return;
   }
@@ -726,7 +903,7 @@ function toggleMaterial(material) {
     spec: material.spec,
     photoRequirement: material.shootingRequirement || '',
     photoRequired: material.required,
-    boardNo: '',
+    boardNo: scannedBoardMaterialCode.value === material.code ? scannedBoardNo.value : '',
     serviceType: guideForm.warrantyScope === 'in' ? '维修' : '直接替换',
     faultCategory: '',
     faultPhenomenon: '',
@@ -934,10 +1111,12 @@ async function submitGuideRequest() {
       details
     });
     submittedRequest.value = created;
-    successDialog.value = true;
+    successDialog.value = false;
     ElMessage.success(`维修申请已提交：${created.requestNo}`);
     resetGuide();
     await loadClientData();
+    await navigateClient('orders');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   } catch (error) {
     ElMessage.error(error.message || '提交失败，请检查信息后重试');
   } finally {
@@ -951,13 +1130,20 @@ watch(clientView, (view) => {
   openAuth('orders', '登录后即可查看审核、维修与寄回进度。');
 });
 
+watch(clientView, () => {
+  playPageEntry();
+});
+
+watch(guideStep, () => {
+  if (clientView.value === 'request') playPageEntry();
+});
+
 onMounted(async () => {
-  updateSupportParallax();
-  window.addEventListener('scroll', updateSupportParallax, { passive: true });
   loadCurrentUser();
   applyAccountToGuide();
   await loadPublicModelData();
   applyWarrantyDeepLink();
+  await resolveBoardQr();
   let restored = restoreDraft();
   if (restored && !modelDictionary.value.some((item) => item.code === guideForm.modelCode)) {
     resetGuide();
@@ -977,6 +1163,7 @@ onMounted(async () => {
   } finally {
     sessionReady.value = true;
   }
+  playPageEntry();
   if (clientView.value === 'orders' && !currentUser.value) {
     await navigateClient('home', true);
     openAuth('orders', '登录后即可查看审核、维修与寄回进度。');
@@ -985,13 +1172,33 @@ onMounted(async () => {
 
 onUnmounted(() => {
   faqAbortController?.abort();
-  window.removeEventListener('scroll', updateSupportParallax);
-  if (supportScrollFrame) window.cancelAnimationFrame(supportScrollFrame);
+  stopQrCamera();
 });
 </script>
 
 <template>
-  <div class="app-shell client-shell" v-loading="loading">
+  <div class="app-shell client-shell" :class="[`client-view-${clientView}`, { 'is-authenticated': currentUser }]" v-loading="loading">
+    <header class="repair-site-header">
+      <a class="repair-site-brand" :href="officialSiteUrl" aria-label="返回瑞钧智科官网">
+        <img :src="brandLogo" alt="瑞钧智科" />
+        <span></span>
+        <b>售后服务</b>
+      </a>
+      <button class="repair-site-menu-toggle" type="button" :aria-expanded="portalMenuOpen" aria-controls="repair-site-navigation" aria-label="打开维修服务导航" @click="portalMenuOpen = !portalMenuOpen">
+        <span aria-hidden="true"></span>
+      </button>
+      <nav id="repair-site-navigation" class="repair-site-navigation" :class="{ open: portalMenuOpen }" aria-label="维修服务导航">
+        <button type="button" :class="{ active: clientView === 'home' }" @click="portalMenuOpen = false; showClientHome()">服务首页</button>
+        <button type="button" :class="{ active: clientView === 'request' }" @click="portalMenuOpen = false; startNewRequest()">发起维修</button>
+        <button type="button" :class="{ active: clientView === 'orders' }" @click="portalMenuOpen = false; showMyRequests()">维修进度</button>
+        <a :href="officialServiceUrl">技术支持</a>
+      </nav>
+      <div class="repair-site-actions">
+        <a class="repair-site-return" :href="officialSiteUrl">返回官网 <span aria-hidden="true">→</span></a>
+        <button v-if="!currentUser" class="repair-site-login" type="button" @click="openAuth('home')">登录</button>
+        <button v-else class="repair-site-account" type="button" @click="showMyRequests">{{ currentUser.agent || currentUser.name }}</button>
+      </div>
+    </header>
     <header class="topbar client-topbar">
       <a class="client-brand" href="/support" aria-label="维修服务中心首页" @click.prevent="showClientHome">
         <img :src="brandLogo" alt="瑞钧智科" />
@@ -1021,8 +1228,74 @@ onUnmounted(() => {
     </header>
 
     <main class="client-content">
-      <div class="support-page" :style="supportParallaxStyle">
+      <div class="support-page">
+        <section v-if="clientView === 'request' || clientView === 'orders' || clientView === 'scan'" class="repair-route-ledger" :class="`is-${clientView}`">
+          <div class="repair-route-ledger-index">{{ clientView === 'request' ? '02' : clientView === 'orders' ? '03' : '04' }}</div>
+          <div class="repair-route-ledger-copy">
+            <p>{{ clientView === 'request' ? 'SERVICE REQUEST' : clientView === 'orders' ? 'SERVICE CASE FILE' : 'DEVICE IDENTITY' }}</p>
+            <strong>{{ clientView === 'request' ? '建立维修档案' : clientView === 'orders' ? '追踪服务进度' : '确认板卡与设备' }}</strong>
+          </div>
+          <div class="repair-route-ledger-track" aria-hidden="true">
+            <span class="is-done"></span><span :class="{ 'is-active': clientView === 'request' }"></span><span :class="{ 'is-active': clientView === 'orders' }"></span><span :class="{ 'is-active': clientView === 'scan' }"></span>
+          </div>
+        </section>
         <template v-if="clientView === 'home' && !currentUser">
+          <section class="repair-site-hero">
+            <div class="repair-site-hero-copy">
+              <p>RUIJUN / AFTER-SALES SERVICE</p>
+              <h1>设备维修服务</h1>
+              <strong>让每一次停机，都有清晰的处理路径。</strong>
+              <span>在线提交维修申请，核验保修状态，持续查看工厂处理与寄回进度。</span>
+              <div class="repair-site-hero-status" aria-label="维修服务节点">
+                <div><em>01</em><span>设备身份<br><b>机型与板卡</b></span></div>
+                <div><em>02</em><span>工厂处理<br><b>审核与检测</b></span></div>
+                <div><em>03</em><span>服务交付<br><b>寄回与归档</b></span></div>
+              </div>
+              <div class="repair-site-hero-actions">
+                <button type="button" class="repair-hero-qr-cta" aria-label="扫描二维码识别板卡" @click="navigateClient('scan')"><el-icon><FullScreen /></el-icon><span>扫码识别板卡</span><small>自动带入设备信息</small></button>
+                <span class="repair-hero-cta-kicker" aria-hidden="true">START HERE <i></i> 从这里开始</span>
+                <button type="button" class="is-primary repair-hero-cta" aria-label="从这里开始，发起维修申请" aria-describedby="repair-hero-cta-note" @click="startNewRequest"><span>发起维修申请</span> <span aria-hidden="true">→</span></button>
+                <button type="button" @click="serviceGuideDialog = true">了解服务流程</button>
+              </div>
+              <span id="repair-hero-cta-note" class="repair-hero-cta-note"><b>01</b> 选择设备后，按步骤完成物料与故障信息</span>
+            </div>
+            <aside class="repair-site-hero-panel" aria-label="维修服务入口">
+              <span>01</span>
+              <h2>从设备开始</h2>
+              <p>选择机型和物料，填写故障信息后即可提交工厂审核。</p>
+              <button type="button" @click="startNewRequest">开始申请 <el-icon><ArrowRight /></el-icon></button>
+              <small>已有关联申请？登录后查看维修进度</small>
+            </aside>
+          </section>
+          <section class="repair-site-device-section" aria-labelledby="repair-device-heading">
+            <div class="repair-site-section-heading">
+              <p>DEVICE SERVICE</p>
+              <h2 id="repair-device-heading">选择您的设备</h2>
+              <span>从机型开始，系统将引导完成物料、故障描述和保修核验。</span>
+            </div>
+            <div class="client-catalog-search repair-site-search">
+              <el-icon><Search /></el-icon>
+              <input v-model="catalogSearch" type="search" placeholder="搜索机型系列或具体型号" aria-label="搜索机型系列或具体型号" />
+            </div>
+            <div v-if="filteredProductGroups.length" class="client-product-selector repair-site-device-grid" aria-label="选择机床系列">
+              <button v-for="(group, index) in filteredProductGroups" :key="group.name" type="button" @click="openModelDialog(group)">
+                <span class="client-product-media">
+                  <img v-if="familyImage(group)" :src="familyImage(group)" :alt="`${group.name}机型`" />
+                  <el-icon v-else><component :is="modelIcon(index)" /></el-icon>
+                </span>
+                <strong>{{ group.name }}</strong>
+                <small>{{ group.items.length }} 个机型</small>
+              </button>
+            </div>
+            <el-empty v-else description="没有找到匹配的机型" :image-size="72" />
+          </section>
+          <section class="repair-site-service-band" aria-label="其他维修服务">
+            <button type="button" class="repair-site-qr-entry" @click="navigateClient('scan')"><span>04</span><strong>QR 识别</strong><small>使用扫码枪或摄像头识别板卡</small><el-icon><ArrowRight /></el-icon></button>
+            <div><p>SERVICE TOOLS</p><h2>服务支持</h2></div>
+            <button type="button" @click="showMyRequests"><span>01</span><strong>维修进度</strong><small>查看审核、维修与寄回状态</small><el-icon><ArrowRight /></el-icon></button>
+            <button type="button" @click="openWarrantyEntry"><span>02</span><strong>保修核验</strong><small>核对设备保修信息</small><el-icon><ArrowRight /></el-icon></button>
+            <button type="button" @click="openFaqAssistant"><span>03</span><strong>智能问答</strong><small>获取维修与售后指引</small><el-icon><ArrowRight /></el-icon></button>
+          </section>
           <section class="client-support-landing">
             <div class="client-support-brandmark"><img :src="brandLogo" alt="" /></div>
             <h1>瑞钧支持</h1>
@@ -1068,7 +1341,19 @@ onUnmounted(() => {
           </section>
         </template>
 
-        <section v-if="clientView === 'home' && currentUser" class="client-member-hero">
+        <ServiceWorkspace
+          v-if="clientView === 'home' && currentUser"
+          :user="currentUser"
+          :requests="myRequests"
+          :active-count="activeRequestCount"
+          :attention-count="attentionRequestCount"
+          :completed-count="completedRequestCount"
+          @create-request="startNewRequest"
+          @view-requests="showMyRequests"
+          @verify-warranty="openWarrantyEntry"
+        />
+
+        <section v-if="clientView === 'home' && currentUser" class="client-member-hero legacy-client-member-hero">
           <div class="client-member-intro">
             <div class="client-member-watermark" aria-hidden="true">
               <img :src="brandLogo" alt="" />
@@ -1095,11 +1380,80 @@ onUnmounted(() => {
           </div>
         </section>
 
-        <button v-if="clientView === 'home' && attentionRequestCount" type="button" class="client-attention-strip" @click="showMyRequests">
+        <button v-if="clientView === 'home' && attentionRequestCount" type="button" class="client-attention-strip legacy-client-member-content" @click="showMyRequests">
           <span><el-icon><Warning /></el-icon></span>
           <div><strong>{{ attentionRequestCount }} 个申请需要您处理</strong><small>工厂正在等待补充资料或确认，请及时查看。</small></div>
           <el-icon><ArrowRight /></el-icon>
         </button>
+
+        <section v-if="clientView === 'scan'" class="client-board-scan-result" aria-live="polite">
+          <p class="client-kicker">BOARD QR / SERVICE ENTRY</p>
+          <h1>确认设备身份</h1>
+          <div v-if="!route.params.token && !boardQrLoading && !boardQrResult" class="board-qr-entry-callout">
+            <div class="board-qr-scan-mark" aria-hidden="true"><i></i><i></i><i></i><i></i><span></span></div>
+            <div><strong>请将板卡二维码放入扫描框</strong><span>识别后会自动匹配所属设备、机型和物料，并进入维修申请。</span></div>
+          </div>
+          <div v-if="!route.params.token && !boardQrLoading && !boardQrResult" class="board-qr-entry-panel">
+            <p class="board-qr-entry-lead">PC 端可以使用扫码枪、摄像头，或粘贴二维码地址。</p>
+            <div class="board-qr-entry-actions">
+              <button type="button" class="board-qr-camera-button" @click="scanCameraActive ? stopQrCamera() : startQrCamera()">
+                {{ scanCameraActive ? '停止摄像头' : '打开摄像头扫码' }}
+              </button>
+              <label class="board-qr-upload-button">
+                <span>上传二维码图片</span>
+                <input type="file" accept="image/*" @change="handleQrImageChange" />
+              </label>
+            </div>
+            <video v-show="scanCameraActive" ref="scanVideo" class="board-qr-camera" autoplay muted playsinline></video>
+            <form class="board-qr-token-form" @submit.prevent="submitQrScan()">
+              <input v-model="scanTokenInput" type="text" autocomplete="off" placeholder="扫描枪输入或粘贴 /scan/二维码地址" aria-label="二维码地址或Token" />
+              <button type="submit">解析并进入维修</button>
+            </form>
+            <p v-if="scanInputError" class="client-board-scan-error">{{ scanInputError }}</p>
+          </div>
+          <p v-if="boardQrLoading">正在核验板卡信息...</p>
+          <p v-else-if="boardQrError" class="client-board-scan-error">{{ boardQrError }}</p>
+          <div v-if="boardQrError" class="board-scan-manual-action"><span>标签无法自动识别时，请由售后人员核验板卡编号与设备归属。</span><a href="tel:15050166844">联系人工核验</a></div>
+          <template v-else-if="boardQrResult">
+            <div class="board-identity-steps">
+              <article><span>01</span><div><small>板卡标签</small><strong>{{ boardQrResult.boardId }}</strong><p>二维码标签已验证。</p></div></article>
+              <article><span>02</span><div><small>物料信息</small><strong>{{ boardQrResult.material.name }}</strong><p>{{ boardQrResult.material.spec || boardQrResult.material.code }}</p></div></article>
+              <article :class="{ pending: !boardQrResult.machine }"><span>03</span><div><small>设备关系</small><strong>{{ boardQrResult.machine ? boardQrResult.machine.modelCode : '等待设备核验' }}</strong><p>{{ boardQrResult.machine ? boardQrResult.machine.machineNo : '该板卡尚未绑定设备，需要人工确认归属。' }}</p></div></article>
+              <article :class="{ pending: !boardWarrantyResult }"><span>04</span><div><small>保修结论</small><strong>{{ boardWarrantyLoading ? '正在核验保修' : boardWarrantyResult?.result || '等待人工核验' }}</strong><p>{{ boardWarrantyError || boardWarrantyResult?.suggestion || (boardQrResult.machine ? '等待保修系统返回核验结论。' : '设备未绑定，无法自动判断保修资格。') }}</p></div></article>
+            </div>
+            <div class="board-identity-actions"><div><span>下一步</span><strong>{{ boardQrResult.machine && boardWarrantyResult ? '以已识别的设备和板卡继续创建维修申请。' : '请先完成人工核验，再继续后续服务。' }}</strong></div><el-button v-if="boardQrResult.allowedActions?.includes('repair_new') && boardWarrantyResult" type="primary" @click="startRepairFromBoard">发起维修申请</el-button><el-button v-else @click="openWarrantyFromBoard">人工核验</el-button></div>
+          </template>
+          <el-button v-else @click="showClientHome">返回服务中心</el-button>
+        </section>
+
+        <section v-if="clientView === 'warranty'" class="warranty-identity-page" aria-labelledby="warranty-heading">
+          <header class="warranty-identity-heading">
+            <div><p>DEVICE IDENTITY</p><h1 id="warranty-heading">保修核验</h1><span>以设备型号和机床编号确认服务资格，并给出下一步处理路径。</span></div>
+            <button type="button" @click="showClientHome">返回服务中心</button>
+          </header>
+          <div class="warranty-identity-grid">
+            <section class="warranty-identity-form">
+              <p>核验设备</p>
+              <h2>确认设备身份</h2>
+              <el-form label-position="top">
+                <el-form-item label="设备型号"><el-select v-model="quickWarrantyForm.modelCode" filterable placeholder="选择型号" @change="syncQuickWarrantyModel"><el-option v-for="model in modelDictionary" :key="model.code" :label="`${model.name} (${model.code})`" :value="model.code" /></el-select></el-form-item>
+                <el-form-item label="机床编号"><el-input v-model="quickWarrantyForm.machineNo" placeholder="例如 RJ-MC-2025-001" @input="quickWarrantyResult = null" /></el-form-item>
+              </el-form>
+              <button type="button" :disabled="warrantyCheckLoading" @click="checkQuickWarranty">{{ warrantyCheckLoading ? '正在核验' : currentUser ? '核验保修状态' : '登录后核验' }}</button>
+            </section>
+            <section class="warranty-identity-result" aria-live="polite">
+              <template v-if="quickWarrantyResult">
+                <p>核验结果</p><h2>{{ quickWarrantyResult.result }}</h2><strong>{{ quickWarrantyResult.suggestion }}</strong>
+                <dl><div><dt>设备型号</dt><dd>{{ quickWarrantyForm.modelName || quickWarrantyForm.modelCode }}</dd></div><div><dt>机床编号</dt><dd>{{ quickWarrantyForm.machineNo }}</dd></div><div><dt>核验依据</dt><dd>{{ quickWarrantyResult.reasonCode || '系统档案核验' }}</dd></div><div v-if="quickWarrantyResult.deliveryDate"><dt>出库日期</dt><dd>{{ quickWarrantyResult.deliveryDate }}</dd></div><div v-if="quickWarrantyResult.warrantyEnd"><dt>保修截止</dt><dd>{{ quickWarrantyResult.warrantyEnd }}</dd></div><div v-if="quickWarrantyResult.binding"><dt>绑定关系</dt><dd>{{ [quickWarrantyResult.binding.modelName, quickWarrantyResult.binding.materialName, quickWarrantyResult.binding.positionName].filter(Boolean).join(' · ') }}</dd></div></dl>
+                <div class="warranty-result-actions"><button type="button" @click="startNewRequest">发起维修申请</button><a v-if="quickWarrantyResult.requiresManualReview" href="tel:15050166844">联系人工核验</a></div>
+              </template>
+              <template v-else>
+                <p>等待核验</p><h2>设备服务资格</h2><strong>填写设备编号后，系统会显示保修结论和建议的服务方式。</strong>
+                <div class="warranty-identity-placeholder"><span>01</span><span>设备身份</span><span>02</span><span>保修结论</span><span>03</span><span>服务路径</span></div>
+              </template>
+            </section>
+          </div>
+        </section>
 
         <section v-if="clientView === 'request'" class="client-view-heading">
           <button type="button" title="返回服务中心" aria-label="返回服务中心" @click="showClientHome"><el-icon><House /></el-icon></button>
@@ -1144,18 +1498,20 @@ onUnmounted(() => {
           <div class="section-title">
             <div>
               <h2>选择维修物料</h2>
-              <p>以下为该机型配置的可维修部件，可多选；图片与说明由机型字典统一维护。</p>
+              <p v-if="materialUsesFallback">该机型尚未维护专属物料清单。以下是售后通用物料，提交后由工厂审核确认实际维修对象。</p>
+              <p v-else>以下为该机型配置的可维修部件，可多选；图片与说明由机型字典统一维护。</p>
             </div>
           </div>
-          <div class="material-grid">
+          <div v-if="materialOptions.length" class="material-grid">
             <button v-for="material in materialOptions" :key="material.code" :class="['material-card', { selected: guideForm.selectedMaterialCodes.includes(material.code) }]" @click="toggleMaterial(material)">
               <strong>{{ material.name }}</strong>
               <span>{{ material.type }} · {{ material.spec || material.code }}</span>
             </button>
           </div>
+          <div v-else class="material-empty-state"><strong>暂时没有可选物料</strong><span>请联系售后确认设备物料，或返回上一步更换机型。</span><a href="tel:15050166844">联系售后</a></div>
           <div class="inline-actions" style="margin-top: 18px">
             <el-button @click="guideStep = 1">上一步</el-button>
-            <el-button type="primary" :icon="ArrowRight" @click="goItemDetail">下一步</el-button>
+            <el-button type="primary" :icon="ArrowRight" :disabled="!materialOptions.length" @click="goItemDetail">下一步</el-button>
           </div>
         </section>
 
@@ -1286,7 +1642,7 @@ onUnmounted(() => {
         </div>
 
         <template v-if="clientView === 'home' && currentUser">
-          <div class="client-member-content">
+          <div class="client-member-content legacy-client-member-content">
             <section class="client-active-services">
               <div class="client-member-section-head">
                 <div><p class="client-kicker">RECENT SERVICE</p><h2>最近服务</h2><span>聚焦当前设备的审核、维修和寄回状态。</span></div>
@@ -1351,7 +1707,7 @@ onUnmounted(() => {
             </aside>
           </div>
 
-          <section class="client-process-band">
+          <section class="client-process-band legacy-client-member-content">
             <div class="client-process-band-heading"><p class="client-kicker">SERVICE JOURNEY</p><h2>从申请到寄回</h2></div>
             <div class="client-process-band-list">
               <div><em>01</em><span><strong>选择设备</strong><small>确认机型与物料</small></span></div>
@@ -1362,61 +1718,40 @@ onUnmounted(() => {
           </section>
         </template>
 
-        <section v-if="clientView === 'orders'" class="my-orders client-orders-page">
-          <div class="my-orders-toggle">
-            <div>
-              <p class="client-kicker">SERVICE HISTORY</p>
-              <h2>我的维修申请</h2>
-              <p>查看当前账号提交的全部申请与工厂处理进度。</p>
-            </div>
-            <div class="my-orders-summary">
-              <strong>{{ myRequests.length }}</strong>
-              <span>全部申请</span>
-            </div>
-          </div>
-          <div class="my-orders-body">
-            <div class="inline-actions my-orders-actions">
-              <el-button :icon="Refresh" @click="loadClientData">刷新进度</el-button>
-            </div>
-            <div v-if="myRequests.length" class="my-order-list">
-              <div v-for="request in myRequests" :key="request.requestNo" class="my-order-card">
-                <div class="my-order-head">
-                  <div>
-                    <strong>{{ request.requestNo }}</strong>
-                    <span>{{ request.customerName }} · {{ request.machineNo }}</span>
-                  </div>
-                  <el-tag :type="statusTag(request.status)">{{ request.status }}</el-tag>
-                </div>
-                <div class="order-progress-scroll">
-                  <el-steps :active="progressActive(request.status)" finish-status="success" simple>
-                    <el-step title="已提交" />
-                    <el-step title="审核" />
-                    <el-step title="维修" />
-                    <el-step title="待寄回" />
-                    <el-step title="已寄回" />
-                    <el-step title="完成" />
-                  </el-steps>
-                </div>
-                <div class="my-order-detail">
-                  <span>代理商：{{ request.agent }}</span>
-                  <span>联系人：{{ request.contact }} / {{ request.phone }}</span>
-                  <span>地址：{{ request.address || '未填写' }}</span>
-                  <span v-for="detail in request.details || []" :key="detail.id">
-                    {{ detail.materialName || detail.materialType }} · {{ detail.boardNo || detail.serialNo }} ·
-                    <el-tag size="small" :type="statusTag(detail.warrantyResult)">{{ detail.warrantyResult }}</el-tag>
-                  </span>
-                </div>
-                <el-alert v-if="request.status === '待补充资料'" type="warning" :closable="false" show-icon title="工厂审核要求补充机床铭牌和零件编号照片" />
-                <div v-if="request.status === '待补充资料'" class="inline-actions">
-                  <el-button type="primary" :icon="Picture" @click="openSupplement(request)">补充核对照片</el-button>
-                </div>
-              </div>
-            </div>
-            <el-empty v-else description="当前账号还没有提交过维修申请" :image-size="80" />
-          </div>
-        </section>
+        <ServiceTimeline
+          v-if="clientView === 'orders'"
+          :requests="myRequests"
+          :status-tag="statusTag"
+          @refresh="loadClientData"
+          @supplement="openSupplement"
+        />
       </div>
     </main>
+
+    <footer class="repair-site-footer">
+      <div class="repair-site-footer-brand">
+        <img :src="brandLogo" alt="瑞钧智科" />
+        <p>瑞钧智科售后服务中心</p>
+        <span>为设备维修、保修核验与服务进度提供在线入口。</span>
+      </div>
+      <div class="repair-site-footer-links">
+        <strong>维修服务</strong>
+        <button type="button" @click="startNewRequest">发起维修申请</button>
+        <button type="button" @click="showMyRequests">查询维修进度</button>
+        <button type="button" @click="openWarrantyEntry">保修状态核验</button>
+      </div>
+      <div class="repair-site-footer-links">
+        <strong>技术支持</strong>
+        <a :href="officialServiceUrl">服务支持</a>
+        <a :href="officialSiteUrl">返回瑞钧官网</a>
+        <button type="button" @click="openFaqAssistant">智能服务问答</button>
+      </div>
+      <div class="repair-site-footer-contact">
+        <span>售后服务热线</span>
+        <a href="tel:15050166844">150 5016 6844</a>
+        <small>工作日 08:30 - 17:30</small>
+      </div>
+    </footer>
 
     <el-dialog v-model="faqDialog" width="560px" title="AI 服务问答" append-to-body>
       <p class="client-dialog-intro">描述设备、保修或维修进度问题。未解决时仍可直接提交维修申请。</p>

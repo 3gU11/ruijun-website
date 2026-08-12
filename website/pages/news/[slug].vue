@@ -1,7 +1,8 @@
 <script setup lang="ts">
 const route = useRoute();
 const slug = computed(() => String(route.params.slug || ''));
-const { data: response } = await useFetch(() => `/api/public/v1/articles/${encodeURIComponent(slug.value)}`, { watch: [slug], default: () => ({ data: null as Record<string, unknown> | null }) });
+const { data: response, error: responseError } = await useFetch(() => `/api/public/v1/articles/${encodeURIComponent(slug.value)}`, { watch: [slug], default: () => ({ data: null as Record<string, unknown> | null }) });
+if (responseError.value?.statusCode === 410) throw createError({ statusCode: 410, statusMessage: 'Article is no longer published', fatal: true });
 const article = computed(() => response.value?.data || null);
 useSeoMeta({ title: () => String(article.value?.title || '文章详情'), description: () => String(article.value?.summary || '瑞钧智科新闻与技术媒体信息。') });
 </script>

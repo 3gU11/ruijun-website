@@ -1,0 +1,3884 @@
+﻿{
+    "source":  "D:\\CURSORpj\\gaunwang\\新网站关于瑞钧.psd",
+    "document":  {
+                     "name":  "新网站关于瑞钧.psd",
+                     "width":  3840,
+                     "height":  16695,
+                     "resolution":  350
+                 },
+    "textLayers":  [
+                       {
+                           "path":  "关于瑞钧/历程 /创新中走丝 （初代研发）",
+                           "name":  "创新中走丝 （初代研发）",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  2757,
+                                          "top":  6227,
+                                          "right":  3274,
+                                          "bottom":  6414
+                                      },
+                           "text":  "创新中走丝\r（初代研发）",
+                           "font":  "SimSun",
+                           "size":  18,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  2754,
+                                            "y":  6299.3987933635
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/历程 /2003",
+                           "name":  "2003",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  2865,
+                                          "top":  6108,
+                                          "right":  3152,
+                                          "bottom":  6194
+                                      },
+                           "text":  "2003",
+                           "font":  "ArialMT",
+                           "size":  23.999997907366073,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  2862,
+                                            "y":  6192.43197586727
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/历程 /成立丰华数控 （公司始创）",
+                           "name":  "成立丰华数控 （公司始创）",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  2015,
+                                          "top":  5557,
+                                          "right":  2515,
+                                          "bottom":  5723
+                                      },
+                           "text":  "成立丰华数控\r（公司始创）",
+                           "font":  "SimSun",
+                           "size":  16.000000174386159,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  2012,
+                                            "y":  5621.4410256410265
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/历程 /1997",
+                           "name":  "1997",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  2137,
+                                          "top":  5449,
+                                          "right":  2393,
+                                          "bottom":  5526
+                                      },
+                           "text":  "1997",
+                           "font":  "Calibri-Light",
+                           "size":  23.999997907366073,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  2127,
+                                            "y":  5524.4772247360488
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/历程 /The Development  History of Ruijun  Zhike\u0027s Mid Speed  Wire Man",
+                           "name":  "The Development  History of Ruijun  Zhike\u0027s Mid Speed  Wire Man",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  523,
+                                          "top":  5686,
+                                          "right":  1665,
+                                          "bottom":  6207
+                                      },
+                           "text":  "The Development \rHistory of Ruijun \rZhike\u0027s Mid Speed \rWire Manufacturing",
+                           "font":  "Calibri-Light",
+                           "size":  23.999997907366073,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "1",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  523,
+                                            "y":  5765.4374057315235
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/愿景/累计用户20000+",
+                           "name":  "累计用户20000+",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  1101,
+                                          "top":  3554,
+                                          "right":  2065,
+                                          "bottom":  3658
+                                      },
+                           "text":  "累计用户20000+",
+                           "font":  "AidianFengYaHei",
+                           "size":  23.999997907366073,
+                           "leading":  9,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  1096,
+                                            "y":  3646.4828133262818
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/愿景/我们拥有完全自主的产品设计、研发！  我们拥有全产业链制造能力！  我们拥有技术一流的员工团队！  我们拥有先进的精良设备！ ",
+                           "name":  "我们拥有完全自主的产品设计、研发！  我们拥有全产业链制造能力！  我们拥有技术一流的员工团队！  我们拥有先进的精良设备！ ",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  2642,
+                                          "top":  3725,
+                                          "right":  3388,
+                                          "bottom":  4052
+                                      },
+                           "text":  "我们拥有完全自主的产品设计、研发！\r\r我们拥有全产业链制造能力！\r\r我们拥有技术一流的员工团队！\r\r我们拥有先进的精良设备！\r\r我们拥有保证产品质量的严谨章程！\r\r我们拥有完善的售前、售中、售后服务！",
+                           "font":  "AidianFengYaHei",
+                           "size":  8.00000008719308,
+                           "leading":  6.0000006539481028,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  2640,
+                                            "y":  3756.46377578001
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/愿景/愿景：成为一家为客户创造更大价值的企业 精神：专注、专业、诚信、创新",
+                           "name":  "愿景：成为一家为客户创造更大价值的企业 精神：专注、专业、诚信、创新",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  2191,
+                                          "top":  3524,
+                                          "right":  3399,
+                                          "bottom":  3647
+                                      },
+                           "text":  "愿景：成为一家为客户创造更大价值的企业\r精神：专注、专业、诚信、创新",
+                           "font":  "AidianFengYaHei",
+                           "size":  11.999998953683036,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  2189,
+                                            "y":  3570.6816499206775
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/企业简介/    瑞钧智科是一家专业研发、制造与销售电火花周边系统及数控机 床的高新技术企业。     公司始创于1997年，是国内较早",
+                           "name":  "    瑞钧智科是一家专业研发、制造与销售电火花周边系统及数控机 床的高新技术企业。     公司始创于1997年，是国内较早",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  415,
+                                          "top":  4187,
+                                          "right":  1910,
+                                          "bottom":  4927
+                                      },
+                           "text":  "    瑞钧智科是一家专业研发、制造与销售电火花周边系统及数控机\r床的高新技术企业。\r    公司始创于1997年，是国内较早制造数控放电机床的企业之一 。\r目前在江苏昆山、常熟共建有 100000 M2 制造基地，常熟工厂以工\r业4.0为核心，集办公、工程研发、自动化生产、恒温车间、物联仓储、\r绿色节能于一体，打造现代化“未来工厂”。投入一百多台套数控工作\r母机，可年产上万台套中走丝线切割机床。\r    公司一直致力于攻克电加工卡脖子技术，为客户解决加工难题并提\r供智能化中走丝线切割机床。产品深得客户青睐，目前已成长为行业头\r部企业。",
+                           "font":  "AidianFengYaHei",
+                           "size":  9,
+                           "leading":  16.000000174386159,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  414,
+                                            "y":  4222.4130089899527
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/厂区风貌/厂区风貌",
+                           "name":  "厂区风貌",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  414,
+                                          "top":  7435,
+                                          "right":  619,
+                                          "bottom":  7479
+                                      },
+                           "text":  "厂区风貌",
+                           "font":  "AidianFengYaHei",
+                           "size":  9.9999999128069188,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  412,
+                                            "y":  7473.4806980433632
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/认证证书/认证证书",
+                           "name":  "认证证书",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  414,
+                                          "top":  8185,
+                                          "right":  618,
+                                          "bottom":  8230
+                                      },
+                           "text":  "认证证书",
+                           "font":  "AidianFengYaHei",
+                           "size":  9.9999999128069188,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  412,
+                                            "y":  8224.4806980433623
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/专利证书/专利证书 (79件专利，发明9件）",
+                           "name":  "专利证书 (79件专利，发明9件）",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  386,
+                                          "top":  10035,
+                                          "right":  1131,
+                                          "bottom":  10079
+                                      },
+                           "text":  "专利证书 (79件专利，发明9件）",
+                           "font":  "AidianFengYaHei",
+                           "size":  9.9999999128069188,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  384,
+                                            "y":  10073.929138022209
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/荣誉证书/荣誉证书",
+                           "name":  "荣誉证书",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  411,
+                                          "top":  9350,
+                                          "right":  615,
+                                          "bottom":  9394
+                                      },
+                           "text":  "荣誉证书",
+                           "font":  "AidianFengYaHei",
+                           "size":  9.9999999128069188,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  409,
+                                            "y":  9389
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/国外客户/国外客户",
+                           "name":  "国外客户",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  456,
+                                          "top":  13864,
+                                          "right":  658,
+                                          "bottom":  13908
+                                      },
+                           "text":  "国外客户",
+                           "font":  "AidianFengYaHei",
+                           "size":  9.9999999128069188,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  453,
+                                            "y":  13903.240057498804
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/众多世界知名品牌厂家和供应商合作",
+                           "name":  "众多世界知名品牌厂家和供应商合作",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  474,
+                                          "top":  11235,
+                                          "right":  1320,
+                                          "bottom":  11279
+                                      },
+                           "text":  "众多世界知名品牌厂家和供应商合作",
+                           "font":  "AidianFengYaHei",
+                           "size":  9.9999999128069188,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  472,
+                                            "y":  11274.212266411116
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/国内客户/国内客户",
+                           "name":  "国内客户",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  456,
+                                          "top":  13208,
+                                          "right":  658,
+                                          "bottom":  13252
+                                      },
+                           "text":  "国内客户",
+                           "font":  "AidianFengYaHei",
+                           "size":  9.9999999128069188,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  453,
+                                            "y":  13247.240057498804
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/BANNER/菜单导航 /组 2 拷贝/EN",
+                           "name":  "EN",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  3002,
+                                          "top":  33,
+                                          "right":  3042,
+                                          "bottom":  59
+                                      },
+                           "text":  "EN",
+                           "font":  "AidianFengYaHei",
+                           "size":  7.0000001743861606,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  3001,
+                                            "y":  58
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/BANNER/菜单导航 /组 1 拷贝/GET IN TOUCH",
+                           "name":  "GET IN TOUCH",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  3105,
+                                          "top":  39,
+                                          "right":  3234,
+                                          "bottom":  52
+                                      },
+                           "text":  "GET IN TOUCH",
+                           "font":  "AidianFengYaHei",
+                           "size":  3.9999992588588169,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  3105,
+                                            "y":  51.9100898418892
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/BANNER/菜单导航 /导航菜单 拷贝/服务支持",
+                           "name":  "服务支持",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  2704,
+                                          "top":  35,
+                                          "right":  2848,
+                                          "bottom":  67
+                                      },
+                           "text":  "服务支持",
+                           "font":  "AidianFengYaHei",
+                           "size":  7.0000001743861606,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  2703,
+                                            "y":  62.984664198836526
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/BANNER/菜单导航 /导航菜单 拷贝/关于瑞钧",
+                           "name":  "关于瑞钧",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  2505,
+                                          "top":  36,
+                                          "right":  2649,
+                                          "bottom":  67
+                                      },
+                           "text":  "关于瑞钧",
+                           "font":  "AidianFengYaHei",
+                           "size":  7.0000001743861606,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  2503.9999999999995,
+                                            "y":  62.984664198836526
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/BANNER/菜单导航 /导航菜单 拷贝/视频新闻",
+                           "name":  "视频新闻",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  2307,
+                                          "top":  35,
+                                          "right":  2450,
+                                          "bottom":  67
+                                      },
+                           "text":  "视频新闻",
+                           "font":  "AidianFengYaHei",
+                           "size":  7.0000001743861606,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  2306,
+                                            "y":  62.984664198836526
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/BANNER/菜单导航 /导航菜单 拷贝/先进制造",
+                           "name":  "先进制造",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  2109,
+                                          "top":  35,
+                                          "right":  2253,
+                                          "bottom":  67
+                                      },
+                           "text":  "先进制造",
+                           "font":  "AidianFengYaHei",
+                           "size":  7.0000001743861606,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  2108,
+                                            "y":  62.984664198836526
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/BANNER/菜单导航 /导航菜单 拷贝/产品展示",
+                           "name":  "产品展示",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  1913,
+                                          "top":  35,
+                                          "right":  2056,
+                                          "bottom":  67
+                                      },
+                           "text":  "产品展示",
+                           "font":  "AidianFengYaHei",
+                           "size":  7.0000001743861606,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  1912,
+                                            "y":  62.984664198836526
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/BANNER/菜单导航 /导航菜单 拷贝/网站主页",
+                           "name":  "网站主页",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  1716,
+                                          "top":  36,
+                                          "right":  1858,
+                                          "bottom":  67
+                                      },
+                           "text":  "网站主页",
+                           "font":  "AidianFengYaHei",
+                           "size":  7.0000001743861606,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  1714,
+                                            "y":  62.984664198836526
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/BANNER/BANNER文字/1997",
+                           "name":  "1997",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  2242,
+                                          "top":  2904,
+                                          "right":  2839,
+                                          "bottom":  3073
+                                      },
+                           "text":  "1997",
+                           "font":  "AidianFengYaHei",
+                           "size":  47.999998953683033,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  2229,
+                                            "y":  3073
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/BANNER/BANNER文字/Since",
+                           "name":  "Since",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  2216,
+                                          "top":  2447,
+                                          "right":  3507,
+                                          "bottom":  2802
+                                      },
+                           "text":  "Since",
+                           "font":  "AidianFengYaHei",
+                           "size":  100.00000069754464,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  2192,
+                                            "y":  2800
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/BANNER/BANNER文字/专攻电加工卡脖子技术 为客户创造最大价值",
+                           "name":  "专攻电加工卡脖子技术 为客户创造最大价值",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  2139,
+                                          "top":  1138,
+                                          "right":  2874,
+                                          "bottom":  1282
+                                      },
+                           "text":  "专攻电加工卡脖子技术\r为客户创造最大价值",
+                           "font":  "AidianFengYaHei",
+                           "size":  14.000000348772321,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  2136,
+                                            "y":  1193
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/BANNER/BANNER文字/年深耕线切割制造",
+                           "name":  "年深耕线切割制造",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  2346,
+                                          "top":  1010,
+                                          "right":  3016,
+                                          "bottom":  1080
+                                      },
+                           "text":  "年深耕线切割制造",
+                           "font":  "AidianFengYaHei",
+                           "size":  16.000000174386159,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  2343,
+                                            "y":  1072
+                                        }
+                       },
+                       {
+                           "path":  "关于瑞钧/BANNER/BANNER文字/30 ",
+                           "name":  "30 ",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  2133,
+                                          "top":  967,
+                                          "right":  2300,
+                                          "bottom":  1072
+                                      },
+                           "text":  "30 ",
+                           "font":  "AidianFengYaHei",
+                           "size":  29.999998953683036,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  2126,
+                                            "y":  1072
+                                        }
+                       },
+                       {
+                           "path":  "压底/外贸邮箱：kylewuedm@gmail.com",
+                           "name":  "外贸邮箱：kylewuedm@gmail.com",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  549,
+                                          "top":  16271,
+                                          "right":  1289,
+                                          "bottom":  16312
+                                      },
+                           "text":  "外贸邮箱：kylewuedm@gmail.com",
+                           "font":  "AidianFengYaHei",
+                           "size":  9,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  547,
+                                            "y":  16307
+                                        }
+                       },
+                       {
+                           "path":  "压底/国内邮箱：ksrjjx@126.com",
+                           "name":  "国内邮箱：ksrjjx@126.com",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  556,
+                                          "top":  16206,
+                                          "right":  1158,
+                                          "bottom":  16247
+                                      },
+                           "text":  "国内邮箱：ksrjjx@126.com",
+                           "font":  "AidianFengYaHei",
+                           "size":  9,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  553,
+                                            "y":  16242
+                                        }
+                       },
+                       {
+                           "path":  "压底/批量采购/15050166844",
+                           "name":  "15050166844",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  3030,
+                                          "top":  16207,
+                                          "right":  3360,
+                                          "bottom":  16239
+                                      },
+                           "text":  "15050166844",
+                           "font":  "AidianFengYaHei",
+                           "size":  9,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  3028,
+                                            "y":  16239.061343204652
+                                        }
+                       },
+                       {
+                           "path":  "压底/批量采购/你有量 我有价",
+                           "name":  "你有量 我有价",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  3110,
+                                          "top":  16023,
+                                          "right":  3293,
+                                          "bottom":  16146
+                                      },
+                           "text":  "你有量\r我有价",
+                           "font":  "AidianFengYaHei",
+                           "size":  11.999998953683036,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  3109,
+                                            "y":  16070.081438392386
+                                        }
+                       },
+                       {
+                           "path":  "压底/批量采购/大批量采购",
+                           "name":  "大批量采购",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  3067,
+                                          "top":  15930,
+                                          "right":  3324,
+                                          "bottom":  15974
+                                      },
+                           "text":  "大批量采购",
+                           "font":  "AidianFengYaHei",
+                           "size":  9.9999999128069188,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  3065,
+                                            "y":  15969.081438392386
+                                        }
+                       },
+                       {
+                           "path":  "压底/热线：13738375470 外贸：17751119936",
+                           "name":  "热线：13738375470 外贸：17751119936",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  549,
+                                          "top":  16011,
+                                          "right":  1017,
+                                          "bottom":  16103
+                                      },
+                           "text":  "热线：13738375470\r外贸：17751119936",
+                           "font":  "AidianFengYaHei",
+                           "size":  9,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  547,
+                                            "y":  16046
+                                        }
+                       },
+                       {
+                           "path":  "压底/昆山工厂：江苏省苏州市昆山市巴城苏杭路88号",
+                           "name":  "昆山工厂：江苏省苏州市昆山市巴城苏杭路88号",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  547,
+                                          "top":  15864,
+                                          "right":  1559,
+                                          "bottom":  15904
+                                      },
+                           "text":  "昆山工厂：江苏省苏州市昆山市巴城苏杭路88号",
+                           "font":  "AidianFengYaHei",
+                           "size":  9,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  543,
+                                            "y":  15899
+                                        }
+                       },
+                       {
+                           "path":  "压底/常熟工厂：江苏省苏州市常熟市沙家浜儒浜路78号",
+                           "name":  "常熟工厂：江苏省苏州市常熟市沙家浜儒浜路78号",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  545,
+                                          "top":  15798,
+                                          "right":  1607,
+                                          "bottom":  15838
+                                      },
+                           "text":  "常熟工厂：江苏省苏州市常熟市沙家浜儒浜路78号",
+                           "font":  "AidianFengYaHei",
+                           "size":  9,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  543,
+                                            "y":  15833
+                                        }
+                       },
+                       {
+                           "path":  "压底/先进制造/CNC车间",
+                           "name":  "CNC车间",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  2482,
+                                          "top":  15413,
+                                          "right":  2637,
+                                          "bottom":  15448
+                                      },
+                           "text":  "CNC车间",
+                           "font":  "AidianFengYaHei",
+                           "size":  8.00000008719308,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  2481,
+                                            "y":  15444.5
+                                        }
+                       },
+                       {
+                           "path":  "压底/先进制造/装配车间",
+                           "name":  "装配车间",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  2482,
+                                          "top":  15521,
+                                          "right":  2645,
+                                          "bottom":  15556
+                                      },
+                           "text":  "装配车间",
+                           "font":  "AidianFengYaHei",
+                           "size":  8.00000008719308,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  2481,
+                                            "y":  15552.5
+                                        }
+                       },
+                       {
+                           "path":  "压底/先进制造/钣金车间",
+                           "name":  "钣金车间",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  2482,
+                                          "top":  15467,
+                                          "right":  2645,
+                                          "bottom":  15503
+                                      },
+                           "text":  "钣金车间",
+                           "font":  "AidianFengYaHei",
+                           "size":  8.00000008719308,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  2481,
+                                            "y":  15498.5
+                                        }
+                       },
+                       {
+                           "path":  "压底/先进制造/先进智造",
+                           "name":  "先进智造",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  2483,
+                                          "top":  15262,
+                                          "right":  2811,
+                                          "bottom":  15332
+                                      },
+                           "text":  "先进智造",
+                           "font":  "AidianFengYaHei",
+                           "size":  16.000000174386159,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  2479.9999999999995,
+                                            "y":  15324
+                                        }
+                       },
+                       {
+                           "path":  "压底/关于我们/品牌发展历程",
+                           "name":  "品牌发展历程",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  3090,
+                                          "top":  15476,
+                                          "right":  3338,
+                                          "bottom":  15511
+                                      },
+                           "text":  "品牌发展历程",
+                           "font":  "AidianFengYaHei",
+                           "size":  8.00000008719308,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  3087,
+                                            "y":  15507
+                                        }
+                       },
+                       {
+                           "path":  "压底/关于我们/荣誉资质认证 ",
+                           "name":  "荣誉资质认证 ",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  3090,
+                                          "top":  15419,
+                                          "right":  3339,
+                                          "bottom":  15455
+                                      },
+                           "text":  "荣誉资质认证\r",
+                           "font":  "AidianFengYaHei",
+                           "size":  8.00000008719308,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  3088,
+                                            "y":  15450.5
+                                        }
+                       },
+                       {
+                           "path":  "压底/关于我们/关于我们",
+                           "name":  "关于我们",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  3089,
+                                          "top":  15262,
+                                          "right":  3415,
+                                          "bottom":  15332
+                                      },
+                           "text":  "关于我们",
+                           "font":  "AidianFengYaHei",
+                           "size":  16.000000174386159,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  3086,
+                                            "y":  15324
+                                        }
+                       },
+                       {
+                           "path":  "压底/产品中心/FL-XS(pro)",
+                           "name":  "FL-XS(pro)",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  1860,
+                                          "top":  15720,
+                                          "right":  2076,
+                                          "bottom":  15754
+                                      },
+                           "text":  "FL-XS(pro)",
+                           "font":  "AidianFengYaHei",
+                           "size":  8.00000008719308,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  1858.5,
+                                            "y":  15750.5
+                                        }
+                       },
+                       {
+                           "path":  "压底/产品中心/FR-Y(pro)",
+                           "name":  "FR-Y(pro)",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  1860,
+                                          "top":  15658,
+                                          "right":  2052,
+                                          "bottom":  15692
+                                      },
+                           "text":  "FR-Y(pro)",
+                           "font":  "AidianFengYaHei",
+                           "size":  8.00000008719308,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  1858.5,
+                                            "y":  15688.5
+                                        }
+                       },
+                       {
+                           "path":  "压底/产品中心/FT-XS(pro)",
+                           "name":  "FT-XS(pro)",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  1860,
+                                          "top":  15601,
+                                          "right":  2080,
+                                          "bottom":  15635
+                                      },
+                           "text":  "FT-XS(pro)",
+                           "font":  "AidianFengYaHei",
+                           "size":  8.00000008719308,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  1858.5,
+                                            "y":  15631.5
+                                        }
+                       },
+                       {
+                           "path":  "压底/产品中心/FR-XS(pro)",
+                           "name":  "FR-XS(pro)",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  1860,
+                                          "top":  15539,
+                                          "right":  2078,
+                                          "bottom":  15573
+                                      },
+                           "text":  "FR-XS(pro)",
+                           "font":  "AidianFengYaHei",
+                           "size":  8.00000008719308,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  1858.5,
+                                            "y":  15569.5
+                                        }
+                       },
+                       {
+                           "path":  "压底/产品中心/FR-XS(AUTO)",
+                           "name":  "FR-XS(AUTO)",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  1860,
+                                          "top":  15475,
+                                          "right":  2121,
+                                          "bottom":  15509
+                                      },
+                           "text":  "FR-XS(AUTO)",
+                           "font":  "AidianFengYaHei",
+                           "size":  8.00000008719308,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  1858.5,
+                                            "y":  15505.5
+                                        }
+                       },
+                       {
+                           "path":  "压底/产品中心/产品中心",
+                           "name":  "产品中心",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  1853,
+                                          "top":  15262,
+                                          "right":  2180,
+                                          "bottom":  15332
+                                      },
+                           "text":  "产品中心",
+                           "font":  "AidianFengYaHei",
+                           "size":  16.000000174386159,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  1850,
+                                            "y":  15324
+                                        }
+                       },
+                       {
+                           "path":  "压底/灵动切割工作站",
+                           "name":  "灵动切割工作站",
+                           "kind":  2,
+                           "visible":  true,
+                           "opacity":  100,
+                           "bounds":  {
+                                          "left":  1857,
+                                          "top":  15405,
+                                          "right":  2149,
+                                          "bottom":  15440
+                                      },
+                           "text":  "灵动切割工作站",
+                           "font":  "AidianFengYaHei",
+                           "size":  8.00000008719308,
+                           "leading":  null,
+                           "tracking":  100,
+                           "kerning":  null,
+                           "justification":  "",
+                           "autoLeading":  null,
+                           "position":  {
+                                            "x":  1855.5,
+                                            "y":  15436
+                                        }
+                       }
+                   ],
+    "layers":  [
+                   {
+                       "path":  "关于瑞钧/历程 /导轮",
+                       "name":  "导轮",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  1500,
+                                      "top":  5885,
+                                      "right":  2985,
+                                      "bottom":  6059
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/历程 /创新中走丝 （初代研发）",
+                       "name":  "创新中走丝 （初代研发）",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2757,
+                                      "top":  6227,
+                                      "right":  3274,
+                                      "bottom":  6414
+                                  },
+                       "text":  "创新中走丝\r（初代研发）",
+                       "font":  "SimSun",
+                       "size":  18,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  2754,
+                                        "y":  6299.3987933635
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/历程 /2003",
+                       "name":  "2003",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2865,
+                                      "top":  6108,
+                                      "right":  3152,
+                                      "bottom":  6194
+                                  },
+                       "text":  "2003",
+                       "font":  "ArialMT",
+                       "size":  23.999997907366073,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  2862,
+                                        "y":  6192.43197586727
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/历程 /成立丰华数控 （公司始创）",
+                       "name":  "成立丰华数控 （公司始创）",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2015,
+                                      "top":  5557,
+                                      "right":  2515,
+                                      "bottom":  5723
+                                  },
+                       "text":  "成立丰华数控\r（公司始创）",
+                       "font":  "SimSun",
+                       "size":  16.000000174386159,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  2012,
+                                        "y":  5621.4410256410265
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/历程 /1997",
+                       "name":  "1997",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2137,
+                                      "top":  5449,
+                                      "right":  2393,
+                                      "bottom":  5526
+                                  },
+                       "text":  "1997",
+                       "font":  "Calibri-Light",
+                       "size":  23.999997907366073,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  2127,
+                                        "y":  5524.4772247360488
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/历程 /The Development  History of Ruijun  Zhike\u0027s Mid Speed  Wire Man",
+                       "name":  "The Development  History of Ruijun  Zhike\u0027s Mid Speed  Wire Man",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  523,
+                                      "top":  5686,
+                                      "right":  1665,
+                                      "bottom":  6207
+                                  },
+                       "text":  "The Development \rHistory of Ruijun \rZhike\u0027s Mid Speed \rWire Manufacturing",
+                       "font":  "Calibri-Light",
+                       "size":  23.999997907366073,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "1",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  523,
+                                        "y":  5765.4374057315235
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/历程 /半圆弧",
+                       "name":  "半圆弧",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  1292,
+                                      "top":  6653,
+                                      "right":  2564,
+                                      "bottom":  7061
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/历程 /小箭头",
+                       "name":  "小箭头",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  1818,
+                                      "top":  6609,
+                                      "right":  2041,
+                                      "bottom":  6697
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/历程 /白色底纹",
+                       "name":  "白色底纹",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  -2,
+                                      "top":  5154,
+                                      "right":  3838,
+                                      "bottom":  7072
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/愿景/累计用户20000+",
+                       "name":  "累计用户20000+",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  1101,
+                                      "top":  3554,
+                                      "right":  2065,
+                                      "bottom":  3658
+                                  },
+                       "text":  "累计用户20000+",
+                       "font":  "AidianFengYaHei",
+                       "size":  23.999997907366073,
+                       "leading":  9,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  1096,
+                                        "y":  3646.4828133262818
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/愿景/我们拥有完全自主的产品设计、研发！  我们拥有全产业链制造能力！  我们拥有技术一流的员工团队！  我们拥有先进的精良设备！ ",
+                       "name":  "我们拥有完全自主的产品设计、研发！  我们拥有全产业链制造能力！  我们拥有技术一流的员工团队！  我们拥有先进的精良设备！ ",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2642,
+                                      "top":  3725,
+                                      "right":  3388,
+                                      "bottom":  4052
+                                  },
+                       "text":  "我们拥有完全自主的产品设计、研发！\r\r我们拥有全产业链制造能力！\r\r我们拥有技术一流的员工团队！\r\r我们拥有先进的精良设备！\r\r我们拥有保证产品质量的严谨章程！\r\r我们拥有完善的售前、售中、售后服务！",
+                       "font":  "AidianFengYaHei",
+                       "size":  8.00000008719308,
+                       "leading":  6.0000006539481028,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  2640,
+                                        "y":  3756.46377578001
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/愿景/愿景：成为一家为客户创造更大价值的企业 精神：专注、专业、诚信、创新",
+                       "name":  "愿景：成为一家为客户创造更大价值的企业 精神：专注、专业、诚信、创新",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2191,
+                                      "top":  3524,
+                                      "right":  3399,
+                                      "bottom":  3647
+                                  },
+                       "text":  "愿景：成为一家为客户创造更大价值的企业\r精神：专注、专业、诚信、创新",
+                       "font":  "AidianFengYaHei",
+                       "size":  11.999998953683036,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  2189,
+                                        "y":  3570.6816499206775
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/企业简介/大楼2",
+                       "name":  "大楼2",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2067,
+                                      "top":  4186,
+                                      "right":  3398,
+                                      "bottom":  4936
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/企业简介/    瑞钧智科是一家专业研发、制造与销售电火花周边系统及数控机 床的高新技术企业。     公司始创于1997年，是国内较早",
+                       "name":  "    瑞钧智科是一家专业研发、制造与销售电火花周边系统及数控机 床的高新技术企业。     公司始创于1997年，是国内较早",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  415,
+                                      "top":  4187,
+                                      "right":  1910,
+                                      "bottom":  4927
+                                  },
+                       "text":  "    瑞钧智科是一家专业研发、制造与销售电火花周边系统及数控机\r床的高新技术企业。\r    公司始创于1997年，是国内较早制造数控放电机床的企业之一 。\r目前在江苏昆山、常熟共建有 100000 M2 制造基地，常熟工厂以工\r业4.0为核心，集办公、工程研发、自动化生产、恒温车间、物联仓储、\r绿色节能于一体，打造现代化“未来工厂”。投入一百多台套数控工作\r母机，可年产上万台套中走丝线切割机床。\r    公司一直致力于攻克电加工卡脖子技术，为客户解决加工难题并提\r供智能化中走丝线切割机床。产品深得客户青睐，目前已成长为行业头\r部企业。",
+                       "font":  "AidianFengYaHei",
+                       "size":  9,
+                       "leading":  16.000000174386159,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  414,
+                                        "y":  4222.4130089899527
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/厂区风貌/厂区风貌",
+                       "name":  "厂区风貌",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  414,
+                                      "top":  7435,
+                                      "right":  619,
+                                      "bottom":  7479
+                                  },
+                       "text":  "厂区风貌",
+                       "font":  "AidianFengYaHei",
+                       "size":  9.9999999128069188,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  412,
+                                        "y":  7473.4806980433632
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/厂区风貌/广场",
+                       "name":  "广场",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2874,
+                                      "top":  7528,
+                                      "right":  3666,
+                                      "bottom":  7974
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/厂区风貌/大楼2",
+                       "name":  "大楼2",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2050,
+                                      "top":  7528,
+                                      "right":  2842,
+                                      "bottom":  7974
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/厂区风貌/大楼1",
+                       "name":  "大楼1",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  1222,
+                                      "top":  7528,
+                                      "right":  2014,
+                                      "bottom":  7974
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/厂区风貌/大楼",
+                       "name":  "大楼",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  397,
+                                      "top":  7528,
+                                      "right":  1189,
+                                      "bottom":  7974
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/认证证书/认证证书",
+                       "name":  "认证证书",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  414,
+                                      "top":  8185,
+                                      "right":  618,
+                                      "bottom":  8230
+                                  },
+                       "text":  "认证证书",
+                       "font":  "AidianFengYaHei",
+                       "size":  9.9999999128069188,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  412,
+                                        "y":  8224.4806980433623
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/认证证书/ISO 45001-英文",
+                       "name":  "ISO 45001-英文",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2839,
+                                      "top":  8291,
+                                      "right":  3204,
+                                      "bottom":  8807
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/认证证书/MIC-TUV认证_00",
+                       "name":  "MIC-TUV认证_00",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  3261,
+                                      "top":  8279,
+                                      "right":  3626,
+                                      "bottom":  8795
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/认证证书/ISO 14001-英文",
+                       "name":  "ISO 14001-英文",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2382,
+                                      "top":  8279,
+                                      "right":  2778,
+                                      "bottom":  8838
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/认证证书/ISO 14001",
+                       "name":  "ISO 14001",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  1882,
+                                      "top":  8279,
+                                      "right":  2278,
+                                      "bottom":  8838
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/认证证书/ISO 9001-英文",
+                       "name":  "ISO 9001-英文",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  1386,
+                                      "top":  8279,
+                                      "right":  1782,
+                                      "bottom":  8838
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/认证证书/ISO 9001",
+                       "name":  "ISO 9001",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  392,
+                                      "top":  8279,
+                                      "right":  788,
+                                      "bottom":  8838
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/认证证书/ISO 45001",
+                       "name":  "ISO 45001",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  865,
+                                      "top":  8279,
+                                      "right":  1261,
+                                      "bottom":  8838
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/专利证书/专利证书 (79件专利，发明9件）",
+                       "name":  "专利证书 (79件专利，发明9件）",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  386,
+                                      "top":  10035,
+                                      "right":  1131,
+                                      "bottom":  10079
+                                  },
+                       "text":  "专利证书 (79件专利，发明9件）",
+                       "font":  "AidianFengYaHei",
+                       "size":  9.9999999128069188,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  384,
+                                        "y":  10073.929138022209
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/专利证书/一种穿丝导管升降式对接机构--发明专利证书_01",
+                       "name":  "一种穿丝导管升降式对接机构--发明专利证书_01",
+                       "kind":  17,
+                       "visible":  false,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  3210,
+                                      "top":  10103,
+                                      "right":  3590,
+                                      "bottom":  10640
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/专利证书/苏州瑞钧智能科技有限公司--2025212386891一种带有防护结构的线切割机床--实用新型证书_01",
+                       "name":  "苏州瑞钧智能科技有限公司--2025212386891一种带有防护结构的线切割机床--实用新型证书_01",
+                       "kind":  17,
+                       "visible":  false,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  3210,
+                                      "top":  10103,
+                                      "right":  3590,
+                                      "bottom":  10640
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/专利证书/苏州瑞钧智能科技有限公司--2025207734194一种走丝线切割用辅助夹具--实用新型证书_01",
+                       "name":  "苏州瑞钧智能科技有限公司--2025207734194一种走丝线切割用辅助夹具--实用新型证书_01",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  3210,
+                                      "top":  10103,
+                                      "right":  3590,
+                                      "bottom":  10640
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/专利证书/苏州瑞钧智能科技有限公司--202520121281X一种快速定位的穿丝线切割机--实用新型证书_01",
+                       "name":  "苏州瑞钧智能科技有限公司--202520121281X一种快速定位的穿丝线切割机--实用新型证书_01",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2804,
+                                      "top":  10103,
+                                      "right":  3184,
+                                      "bottom":  10640
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/专利证书/一种高防护性线切割钼丝筒--发明专利证书_01",
+                       "name":  "一种高防护性线切割钼丝筒--发明专利证书_01",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2396,
+                                      "top":  10103,
+                                      "right":  2776,
+                                      "bottom":  10640
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/专利证书/一种中走丝切割用喷液机构",
+                       "name":  "一种中走丝切割用喷液机构",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  1981,
+                                      "top":  10103,
+                                      "right":  2358,
+                                      "bottom":  10636
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/专利证书/一种用于线切割机床的导丝机",
+                       "name":  "一种用于线切割机床的导丝机",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  1564,
+                                      "top":  10099,
+                                      "right":  1953,
+                                      "bottom":  10648
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/专利证书/一种精密中走丝线切割机床",
+                       "name":  "一种精密中走丝线切割机床",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  1167,
+                                      "top":  10099,
+                                      "right":  1556,
+                                      "bottom":  10648
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/专利证书/一种穿丝线切割机床放丝回卷检测机构",
+                       "name":  "一种穿丝线切割机床放丝回卷检测机构",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  765,
+                                      "top":  10099,
+                                      "right":  1154,
+                                      "bottom":  10648
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/专利证书/一种中走丝线切割机床用导丝机构",
+                       "name":  "一种中走丝线切割机床用导丝机构",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  363,
+                                      "top":  10099,
+                                      "right":  752,
+                                      "bottom":  10648
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/荣誉证书/荣誉证书",
+                       "name":  "荣誉证书",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  411,
+                                      "top":  9350,
+                                      "right":  615,
+                                      "bottom":  9394
+                                  },
+                       "text":  "荣誉证书",
+                       "font":  "AidianFengYaHei",
+                       "size":  9.9999999128069188,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  409,
+                                        "y":  9389
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/荣誉证书/4隐形冠军",
+                       "name":  "4隐形冠军",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  1704,
+                                      "top":  9449,
+                                      "right":  2319,
+                                      "bottom":  9859
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/荣誉证书/3专精特新",
+                       "name":  "3专精特新",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2356,
+                                      "top":  9449,
+                                      "right":  2971,
+                                      "bottom":  9859
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/荣誉证书/3A",
+                       "name":  "3A",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  3023,
+                                      "top":  9448,
+                                      "right":  3640,
+                                      "bottom":  9860
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/荣誉证书/2江苏省企业技术中心",
+                       "name":  "2江苏省企业技术中心",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  1042,
+                                      "top":  9449,
+                                      "right":  1657,
+                                      "bottom":  9859
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/荣誉证书/1高新技术企业",
+                       "name":  "1高新技术企业",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  380,
+                                      "top":  9449,
+                                      "right":  995,
+                                      "bottom":  9859
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/客户供应商",
+                       "name":  "客户供应商",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  449,
+                                      "top":  11386,
+                                      "right":  3365,
+                                      "bottom":  12483
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/鸟瞰图",
+                       "name":  "鸟瞰图",
+                       "kind":  17,
+                       "visible":  false,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  1536,
+                                      "top":  11443,
+                                      "right":  2328,
+                                      "bottom":  11889
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/国外客户/国外客户",
+                       "name":  "国外客户",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  456,
+                                      "top":  13864,
+                                      "right":  658,
+                                      "bottom":  13908
+                                  },
+                       "text":  "国外客户",
+                       "font":  "AidianFengYaHei",
+                       "size":  9.9999999128069188,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  453,
+                                        "y":  13903.240057498804
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/国外客户/7",
+                       "name":  "7",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2778,
+                                      "top":  13957,
+                                      "right":  3320,
+                                      "bottom":  14363
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/国外客户/俄罗斯",
+                       "name":  "俄罗斯",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2198,
+                                      "top":  13957,
+                                      "right":  2740,
+                                      "bottom":  14363
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/国外客户/13",
+                       "name":  "13",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  1601,
+                                      "top":  13957,
+                                      "right":  2143,
+                                      "bottom":  14363
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/国外客户/12",
+                       "name":  "12",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  1017,
+                                      "top":  13957,
+                                      "right":  1559,
+                                      "bottom":  14363
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/国外客户/11",
+                       "name":  "11",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  437,
+                                      "top":  13957,
+                                      "right":  979,
+                                      "bottom":  14363
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/众多世界知名品牌厂家和供应商合作",
+                       "name":  "众多世界知名品牌厂家和供应商合作",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  474,
+                                      "top":  11235,
+                                      "right":  1320,
+                                      "bottom":  11279
+                                  },
+                       "text":  "众多世界知名品牌厂家和供应商合作",
+                       "font":  "AidianFengYaHei",
+                       "size":  9.9999999128069188,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  472,
+                                        "y":  11274.212266411116
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/国内客户/国内客户",
+                       "name":  "国内客户",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  456,
+                                      "top":  13208,
+                                      "right":  658,
+                                      "bottom":  13252
+                                  },
+                       "text":  "国内客户",
+                       "font":  "AidianFengYaHei",
+                       "size":  9.9999999128069188,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  453,
+                                        "y":  13247.240057498804
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/国内客户/14",
+                       "name":  "14",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2788,
+                                      "top":  13307,
+                                      "right":  3333,
+                                      "bottom":  13716
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/国内客户/13",
+                       "name":  "13",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2204,
+                                      "top":  13307,
+                                      "right":  2749,
+                                      "bottom":  13716
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/国内客户/12",
+                       "name":  "12",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  1613,
+                                      "top":  13307,
+                                      "right":  2158,
+                                      "bottom":  13716
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/国内客户/11",
+                       "name":  "11",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  1022,
+                                      "top":  13307,
+                                      "right":  1567,
+                                      "bottom":  13716
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/国内客户/10",
+                       "name":  "10",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  439,
+                                      "top":  13307,
+                                      "right":  984,
+                                      "bottom":  13716
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/背景 拷贝 4",
+                       "name":  "背景 拷贝 4",
+                       "kind":  3,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  -12,
+                                      "top":  12876,
+                                      "right":  3852,
+                                      "bottom":  14788
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/背景 拷贝 3",
+                       "name":  "背景 拷贝 3",
+                       "kind":  3,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  -12,
+                                      "top":  10948,
+                                      "right":  3852,
+                                      "bottom":  12860
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/背景 拷贝 2",
+                       "name":  "背景 拷贝 2",
+                       "kind":  3,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  -12,
+                                      "top":  7092,
+                                      "right":  3852,
+                                      "bottom":  9004
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/背景 拷贝",
+                       "name":  "背景 拷贝",
+                       "kind":  3,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  -12,
+                                      "top":  9022,
+                                      "right":  3852,
+                                      "bottom":  10934
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/背景",
+                       "name":  "背景",
+                       "kind":  3,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  -12,
+                                      "top":  3244,
+                                      "right":  3852,
+                                      "bottom":  5156
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/BANNER/菜单导航 /组 2 拷贝/EN",
+                       "name":  "EN",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  3002,
+                                      "top":  33,
+                                      "right":  3042,
+                                      "bottom":  59
+                                  },
+                       "text":  "EN",
+                       "font":  "AidianFengYaHei",
+                       "size":  7.0000001743861606,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  3001,
+                                        "y":  58
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/BANNER/菜单导航 /组 2 拷贝/圆角矩形 5 拷贝",
+                       "name":  "圆角矩形 5 拷贝",
+                       "kind":  3,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2977,
+                                      "top":  16,
+                                      "right":  3067,
+                                      "bottom":  77
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/BANNER/菜单导航 /组 1 拷贝/GET IN TOUCH",
+                       "name":  "GET IN TOUCH",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  3105,
+                                      "top":  39,
+                                      "right":  3234,
+                                      "bottom":  52
+                                  },
+                       "text":  "GET IN TOUCH",
+                       "font":  "AidianFengYaHei",
+                       "size":  3.9999992588588169,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  3105,
+                                        "y":  51.9100898418892
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/BANNER/菜单导航 /组 1 拷贝/三角形 1 拷贝",
+                       "name":  "三角形 1 拷贝",
+                       "kind":  3,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  3246,
+                                      "top":  36,
+                                      "right":  3293,
+                                      "bottom":  54
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/BANNER/菜单导航 /组 1 拷贝/圆角矩形 5",
+                       "name":  "圆角矩形 5",
+                       "kind":  3,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  3091,
+                                      "top":  16,
+                                      "right":  3305,
+                                      "bottom":  77
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/BANNER/菜单导航 /LOGO 拷贝",
+                       "name":  "LOGO 拷贝",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  441,
+                                      "top":  8,
+                                      "right":  682,
+                                      "bottom":  87
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/BANNER/菜单导航 /导航菜单 拷贝/服务支持",
+                       "name":  "服务支持",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2704,
+                                      "top":  35,
+                                      "right":  2848,
+                                      "bottom":  67
+                                  },
+                       "text":  "服务支持",
+                       "font":  "AidianFengYaHei",
+                       "size":  7.0000001743861606,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  2703,
+                                        "y":  62.984664198836526
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/BANNER/菜单导航 /导航菜单 拷贝/关于瑞钧",
+                       "name":  "关于瑞钧",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2505,
+                                      "top":  36,
+                                      "right":  2649,
+                                      "bottom":  67
+                                  },
+                       "text":  "关于瑞钧",
+                       "font":  "AidianFengYaHei",
+                       "size":  7.0000001743861606,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  2503.9999999999995,
+                                        "y":  62.984664198836526
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/BANNER/菜单导航 /导航菜单 拷贝/视频新闻",
+                       "name":  "视频新闻",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2307,
+                                      "top":  35,
+                                      "right":  2450,
+                                      "bottom":  67
+                                  },
+                       "text":  "视频新闻",
+                       "font":  "AidianFengYaHei",
+                       "size":  7.0000001743861606,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  2306,
+                                        "y":  62.984664198836526
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/BANNER/菜单导航 /导航菜单 拷贝/先进制造",
+                       "name":  "先进制造",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2109,
+                                      "top":  35,
+                                      "right":  2253,
+                                      "bottom":  67
+                                  },
+                       "text":  "先进制造",
+                       "font":  "AidianFengYaHei",
+                       "size":  7.0000001743861606,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  2108,
+                                        "y":  62.984664198836526
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/BANNER/菜单导航 /导航菜单 拷贝/产品展示",
+                       "name":  "产品展示",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  1913,
+                                      "top":  35,
+                                      "right":  2056,
+                                      "bottom":  67
+                                  },
+                       "text":  "产品展示",
+                       "font":  "AidianFengYaHei",
+                       "size":  7.0000001743861606,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  1912,
+                                        "y":  62.984664198836526
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/BANNER/菜单导航 /导航菜单 拷贝/网站主页",
+                       "name":  "网站主页",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  1716,
+                                      "top":  36,
+                                      "right":  1858,
+                                      "bottom":  67
+                                  },
+                       "text":  "网站主页",
+                       "font":  "AidianFengYaHei",
+                       "size":  7.0000001743861606,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  1714,
+                                        "y":  62.984664198836526
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/BANNER/菜单导航 /矩形 7",
+                       "name":  "矩形 7",
+                       "kind":  3,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  -12,
+                                      "top":  -18,
+                                      "right":  3840,
+                                      "bottom":  114
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "关于瑞钧/BANNER/BANNER文字/1997",
+                       "name":  "1997",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2242,
+                                      "top":  2904,
+                                      "right":  2839,
+                                      "bottom":  3073
+                                  },
+                       "text":  "1997",
+                       "font":  "AidianFengYaHei",
+                       "size":  47.999998953683033,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  2229,
+                                        "y":  3073
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/BANNER/BANNER文字/Since",
+                       "name":  "Since",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2216,
+                                      "top":  2447,
+                                      "right":  3507,
+                                      "bottom":  2802
+                                  },
+                       "text":  "Since",
+                       "font":  "AidianFengYaHei",
+                       "size":  100.00000069754464,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  2192,
+                                        "y":  2800
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/BANNER/BANNER文字/专攻电加工卡脖子技术 为客户创造最大价值",
+                       "name":  "专攻电加工卡脖子技术 为客户创造最大价值",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2139,
+                                      "top":  1138,
+                                      "right":  2874,
+                                      "bottom":  1282
+                                  },
+                       "text":  "专攻电加工卡脖子技术\r为客户创造最大价值",
+                       "font":  "AidianFengYaHei",
+                       "size":  14.000000348772321,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  2136,
+                                        "y":  1193
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/BANNER/BANNER文字/年深耕线切割制造",
+                       "name":  "年深耕线切割制造",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2346,
+                                      "top":  1010,
+                                      "right":  3016,
+                                      "bottom":  1080
+                                  },
+                       "text":  "年深耕线切割制造",
+                       "font":  "AidianFengYaHei",
+                       "size":  16.000000174386159,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  2343,
+                                        "y":  1072
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/BANNER/BANNER文字/30 ",
+                       "name":  "30 ",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2133,
+                                      "top":  967,
+                                      "right":  2300,
+                                      "bottom":  1072
+                                  },
+                       "text":  "30 ",
+                       "font":  "AidianFengYaHei",
+                       "size":  29.999998953683036,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  2126,
+                                        "y":  1072
+                                    }
+                   },
+                   {
+                       "path":  "关于瑞钧/BANNER/BANNER",
+                       "name":  "BANNER",
+                       "kind":  1,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  0,
+                                      "top":  0,
+                                      "right":  3839,
+                                      "bottom":  3244
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "压底/地址小图标",
+                       "name":  "地址小图标",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  404,
+                                      "top":  15800,
+                                      "right":  471,
+                                      "bottom":  15900
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "压底/邮箱图标",
+                       "name":  "邮箱图标",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  390,
+                                      "top":  16220,
+                                      "right":  483,
+                                      "bottom":  16285
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "压底/电话图标",
+                       "name":  "电话图标",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  392,
+                                      "top":  16008,
+                                      "right":  482,
+                                      "bottom":  16097
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "压底/外贸邮箱：kylewuedm@gmail.com",
+                       "name":  "外贸邮箱：kylewuedm@gmail.com",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  549,
+                                      "top":  16271,
+                                      "right":  1289,
+                                      "bottom":  16312
+                                  },
+                       "text":  "外贸邮箱：kylewuedm@gmail.com",
+                       "font":  "AidianFengYaHei",
+                       "size":  9,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  547,
+                                        "y":  16307
+                                    }
+                   },
+                   {
+                       "path":  "压底/国内邮箱：ksrjjx@126.com",
+                       "name":  "国内邮箱：ksrjjx@126.com",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  556,
+                                      "top":  16206,
+                                      "right":  1158,
+                                      "bottom":  16247
+                                  },
+                       "text":  "国内邮箱：ksrjjx@126.com",
+                       "font":  "AidianFengYaHei",
+                       "size":  9,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  553,
+                                        "y":  16242
+                                    }
+                   },
+                   {
+                       "path":  "压底/批量采购/15050166844",
+                       "name":  "15050166844",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  3030,
+                                      "top":  16207,
+                                      "right":  3360,
+                                      "bottom":  16239
+                                  },
+                       "text":  "15050166844",
+                       "font":  "AidianFengYaHei",
+                       "size":  9,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  3028,
+                                        "y":  16239.061343204652
+                                    }
+                   },
+                   {
+                       "path":  "压底/批量采购/你有量 我有价",
+                       "name":  "你有量 我有价",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  3110,
+                                      "top":  16023,
+                                      "right":  3293,
+                                      "bottom":  16146
+                                  },
+                       "text":  "你有量\r我有价",
+                       "font":  "AidianFengYaHei",
+                       "size":  11.999998953683036,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  3109,
+                                        "y":  16070.081438392386
+                                    }
+                   },
+                   {
+                       "path":  "压底/批量采购/大批量采购",
+                       "name":  "大批量采购",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  3067,
+                                      "top":  15930,
+                                      "right":  3324,
+                                      "bottom":  15974
+                                  },
+                       "text":  "大批量采购",
+                       "font":  "AidianFengYaHei",
+                       "size":  9.9999999128069188,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  3065,
+                                        "y":  15969.081438392386
+                                    }
+                   },
+                   {
+                       "path":  "压底/批量采购/圆角矩形 6",
+                       "name":  "圆角矩形 6",
+                       "kind":  3,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2976,
+                                      "top":  15879,
+                                      "right":  3420,
+                                      "bottom":  16308
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "压底/热线：13738375470 外贸：17751119936",
+                       "name":  "热线：13738375470 外贸：17751119936",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  549,
+                                      "top":  16011,
+                                      "right":  1017,
+                                      "bottom":  16103
+                                  },
+                       "text":  "热线：13738375470\r外贸：17751119936",
+                       "font":  "AidianFengYaHei",
+                       "size":  9,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  547,
+                                        "y":  16046
+                                    }
+                   },
+                   {
+                       "path":  "压底/昆山工厂：江苏省苏州市昆山市巴城苏杭路88号",
+                       "name":  "昆山工厂：江苏省苏州市昆山市巴城苏杭路88号",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  547,
+                                      "top":  15864,
+                                      "right":  1559,
+                                      "bottom":  15904
+                                  },
+                       "text":  "昆山工厂：江苏省苏州市昆山市巴城苏杭路88号",
+                       "font":  "AidianFengYaHei",
+                       "size":  9,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  543,
+                                        "y":  15899
+                                    }
+                   },
+                   {
+                       "path":  "压底/常熟工厂：江苏省苏州市常熟市沙家浜儒浜路78号",
+                       "name":  "常熟工厂：江苏省苏州市常熟市沙家浜儒浜路78号",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  545,
+                                      "top":  15798,
+                                      "right":  1607,
+                                      "bottom":  15838
+                                  },
+                       "text":  "常熟工厂：江苏省苏州市常熟市沙家浜儒浜路78号",
+                       "font":  "AidianFengYaHei",
+                       "size":  9,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  543,
+                                        "y":  15833
+                                    }
+                   },
+                   {
+                       "path":  "压底/先进制造/CNC车间",
+                       "name":  "CNC车间",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2482,
+                                      "top":  15413,
+                                      "right":  2637,
+                                      "bottom":  15448
+                                  },
+                       "text":  "CNC车间",
+                       "font":  "AidianFengYaHei",
+                       "size":  8.00000008719308,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  2481,
+                                        "y":  15444.5
+                                    }
+                   },
+                   {
+                       "path":  "压底/先进制造/装配车间",
+                       "name":  "装配车间",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2482,
+                                      "top":  15521,
+                                      "right":  2645,
+                                      "bottom":  15556
+                                  },
+                       "text":  "装配车间",
+                       "font":  "AidianFengYaHei",
+                       "size":  8.00000008719308,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  2481,
+                                        "y":  15552.5
+                                    }
+                   },
+                   {
+                       "path":  "压底/先进制造/钣金车间",
+                       "name":  "钣金车间",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2482,
+                                      "top":  15467,
+                                      "right":  2645,
+                                      "bottom":  15503
+                                  },
+                       "text":  "钣金车间",
+                       "font":  "AidianFengYaHei",
+                       "size":  8.00000008719308,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  2481,
+                                        "y":  15498.5
+                                    }
+                   },
+                   {
+                       "path":  "压底/先进制造/先进智造",
+                       "name":  "先进智造",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  2483,
+                                      "top":  15262,
+                                      "right":  2811,
+                                      "bottom":  15332
+                                  },
+                       "text":  "先进智造",
+                       "font":  "AidianFengYaHei",
+                       "size":  16.000000174386159,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  2479.9999999999995,
+                                        "y":  15324
+                                    }
+                   },
+                   {
+                       "path":  "压底/关于我们/品牌发展历程",
+                       "name":  "品牌发展历程",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  3090,
+                                      "top":  15476,
+                                      "right":  3338,
+                                      "bottom":  15511
+                                  },
+                       "text":  "品牌发展历程",
+                       "font":  "AidianFengYaHei",
+                       "size":  8.00000008719308,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  3087,
+                                        "y":  15507
+                                    }
+                   },
+                   {
+                       "path":  "压底/关于我们/荣誉资质认证 ",
+                       "name":  "荣誉资质认证 ",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  3090,
+                                      "top":  15419,
+                                      "right":  3339,
+                                      "bottom":  15455
+                                  },
+                       "text":  "荣誉资质认证\r",
+                       "font":  "AidianFengYaHei",
+                       "size":  8.00000008719308,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  3088,
+                                        "y":  15450.5
+                                    }
+                   },
+                   {
+                       "path":  "压底/关于我们/关于我们",
+                       "name":  "关于我们",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  3089,
+                                      "top":  15262,
+                                      "right":  3415,
+                                      "bottom":  15332
+                                  },
+                       "text":  "关于我们",
+                       "font":  "AidianFengYaHei",
+                       "size":  16.000000174386159,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  3086,
+                                        "y":  15324
+                                    }
+                   },
+                   {
+                       "path":  "压底/产品中心/FL-XS(pro)",
+                       "name":  "FL-XS(pro)",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  1860,
+                                      "top":  15720,
+                                      "right":  2076,
+                                      "bottom":  15754
+                                  },
+                       "text":  "FL-XS(pro)",
+                       "font":  "AidianFengYaHei",
+                       "size":  8.00000008719308,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  1858.5,
+                                        "y":  15750.5
+                                    }
+                   },
+                   {
+                       "path":  "压底/产品中心/FR-Y(pro)",
+                       "name":  "FR-Y(pro)",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  1860,
+                                      "top":  15658,
+                                      "right":  2052,
+                                      "bottom":  15692
+                                  },
+                       "text":  "FR-Y(pro)",
+                       "font":  "AidianFengYaHei",
+                       "size":  8.00000008719308,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  1858.5,
+                                        "y":  15688.5
+                                    }
+                   },
+                   {
+                       "path":  "压底/产品中心/FT-XS(pro)",
+                       "name":  "FT-XS(pro)",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  1860,
+                                      "top":  15601,
+                                      "right":  2080,
+                                      "bottom":  15635
+                                  },
+                       "text":  "FT-XS(pro)",
+                       "font":  "AidianFengYaHei",
+                       "size":  8.00000008719308,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  1858.5,
+                                        "y":  15631.5
+                                    }
+                   },
+                   {
+                       "path":  "压底/产品中心/FR-XS(pro)",
+                       "name":  "FR-XS(pro)",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  1860,
+                                      "top":  15539,
+                                      "right":  2078,
+                                      "bottom":  15573
+                                  },
+                       "text":  "FR-XS(pro)",
+                       "font":  "AidianFengYaHei",
+                       "size":  8.00000008719308,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  1858.5,
+                                        "y":  15569.5
+                                    }
+                   },
+                   {
+                       "path":  "压底/产品中心/FR-XS(AUTO)",
+                       "name":  "FR-XS(AUTO)",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  1860,
+                                      "top":  15475,
+                                      "right":  2121,
+                                      "bottom":  15509
+                                  },
+                       "text":  "FR-XS(AUTO)",
+                       "font":  "AidianFengYaHei",
+                       "size":  8.00000008719308,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  1858.5,
+                                        "y":  15505.5
+                                    }
+                   },
+                   {
+                       "path":  "压底/产品中心/产品中心",
+                       "name":  "产品中心",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  1853,
+                                      "top":  15262,
+                                      "right":  2180,
+                                      "bottom":  15332
+                                  },
+                       "text":  "产品中心",
+                       "font":  "AidianFengYaHei",
+                       "size":  16.000000174386159,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  1850,
+                                        "y":  15324
+                                    }
+                   },
+                   {
+                       "path":  "压底/灵动切割工作站",
+                       "name":  "灵动切割工作站",
+                       "kind":  2,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  1857,
+                                      "top":  15405,
+                                      "right":  2149,
+                                      "bottom":  15440
+                                  },
+                       "text":  "灵动切割工作站",
+                       "font":  "AidianFengYaHei",
+                       "size":  8.00000008719308,
+                       "leading":  null,
+                       "tracking":  100,
+                       "kerning":  null,
+                       "justification":  "",
+                       "autoLeading":  null,
+                       "position":  {
+                                        "x":  1855.5,
+                                        "y":  15436
+                                    }
+                   },
+                   {
+                       "path":  "压底/瑞钧中走丝",
+                       "name":  "瑞钧中走丝",
+                       "kind":  17,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  417,
+                                      "top":  15261,
+                                      "right":  1377,
+                                      "bottom":  15387
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   },
+                   {
+                       "path":  "压底/底",
+                       "name":  "底",
+                       "kind":  3,
+                       "visible":  true,
+                       "opacity":  100,
+                       "bounds":  {
+                                      "left":  -31,
+                                      "top":  14826,
+                                      "right":  3863,
+                                      "bottom":  16711
+                                  },
+                       "text":  null,
+                       "font":  null,
+                       "size":  null,
+                       "leading":  null,
+                       "tracking":  null,
+                       "kerning":  null,
+                       "justification":  null,
+                       "autoLeading":  null,
+                       "position":  null
+                   }
+               ],
+    "exportedAt":  "2026-08-04T16:48:04.7522230+08:00"
+}

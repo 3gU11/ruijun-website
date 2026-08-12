@@ -8,8 +8,8 @@ test('service entry drafts preserve all repair routes as unpublished CMS configu
 
   assert.deepEqual(entries.map((entry) => entry.entry_type), ['support', 'request', 'warranty', 'requests']);
   assert.deepEqual(entries.map((entry) => entry.url), [
-    'https://repair.example.test/support', 'https://repair.example.test/repair/new',
-    'https://repair.example.test/warranty', 'https://repair.example.test/requests'
+    'https://repair.example.test/service', 'https://repair.example.test/repair/new',
+    'https://repair.example.test/repair/warranty', 'https://repair.example.test/repair/requests'
   ]);
   assert.ok(entries.every((entry) => entry.status === 'draft' && entry.publication_state === 'unpublished'));
   assert.ok(entries.every((entry) => entry.enabled === false));

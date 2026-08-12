@@ -1,0 +1,15 @@
+{
+  "name": "ruijun-knowledge-review-workbench",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "directus-extension build"
+  },
+  "directus:extension": {
+    "host": "^11.0.0",
+    "type": "module",
+    "path": "dist/index.js",
+    "source": "src/index.js"
+  }
+}

@@ -1,5 +1,5 @@
 export function text(value, fallback = '未填写') {
-  const normalized = typeof value === 'string' ? value.trim() : '';
+  const normalized = value == null ? '' : String(value).trim();
   return normalized || fallback;
 }
 
@@ -38,6 +38,18 @@ export function assessProductSeries(series) {
   if (!text(series?.source_document, '') && !text(series?.source_url, '')) issues.push('来源文件或地址');
   const aliases = values(evidence.aliases_pending_review);
   if (aliases.length) issues.push(`待确认系列别名：${aliases.join('、')}`);
+  return issues;
+}
+
+export function assessProductParameter(parameter) {
+  const evidence = record(parameter?.import_evidence);
+  const issues = [];
+  if (!text(parameter?.model_code, '')) issues.push('型号编码');
+  if (!text(parameter?.field_name, '')) issues.push('参数字段');
+  if (!text(parameter?.value, '')) issues.push('参数值');
+  if (!text(parameter?.source_document, '') && !text(parameter?.source_url, '')) issues.push('来源文件或地址');
+  if (!text(evidence.source_key, '')) issues.push('原始参数键');
+  if (evidence.parameter_conflict === true) issues.push('参数来源冲突待技术确认');
   return issues;
 }
 

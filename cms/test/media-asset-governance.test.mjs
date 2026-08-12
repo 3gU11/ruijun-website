@@ -42,10 +42,13 @@ test('reviewable content has an explicit, backwards-compatible media asset refer
   assert.deepEqual(collectMediaAssetReferenceIds({
     cover_asset: 'cover-asset',
     media: [{ media_asset_id: 'machine-asset', alt: '机床' }],
-    assets: [{ media_asset_id: 'certificate-asset', alt: '证书' }]
-  }), ['cover-asset', 'machine-asset', 'certificate-asset']);
+    assets: [{ media_asset_id: 'certificate-asset', alt: '证书' }],
+    brand: { logo_asset: 'brand-logo-asset' }
+  }), ['cover-asset', 'machine-asset', 'certificate-asset', 'brand-logo-asset']);
 
   assert.throws(() => collectMediaAssetReferenceIds({ media: [{ path: '/assets/legacy.jpg' }] }),
+    (error) => error instanceof MediaAssetGovernanceError && error.code === 'MEDIA_REFERENCE_INVALID');
+  assert.throws(() => collectMediaAssetReferenceIds({ brand: { logo_asset: { id: 'not-an-id' } } }),
     (error) => error instanceof MediaAssetGovernanceError && error.code === 'MEDIA_REFERENCE_INVALID');
 });
 
@@ -67,4 +70,15 @@ test('content entering review or publication cannot reference missing, draft, or
   assert.throws(() => assertPublishedMediaReferences(record, available),
     (error) => error instanceof MediaAssetGovernanceError && error.code === 'MEDIA_NOT_PUBLISHED');
   assert.doesNotThrow(() => assertPublishedMediaReferences({ status: 'draft', media: [{ path: '/assets/legacy.jpg' }] }, available));
+});
+
+test('site settings Logo is governed as a protected media reference', () => {
+  const draftLogo = new Map([['brand-logo', { id: 'brand-logo', status: 'draft', publication_state: 'unpublished' }]]);
+  assert.throws(() => assertPublishedMediaReferences(
+    { status: 'review', brand: { logo_asset: 'brand-logo' } }, draftLogo
+  ), (error) => error instanceof MediaAssetGovernanceError && error.code === 'MEDIA_NOT_PUBLISHED');
+  assert.doesNotThrow(() => assertPublishedMediaReferences(
+    { status: 'published', brand: JSON.stringify({ logo_asset: 'brand-logo' }) },
+    new Map([['brand-logo', { id: 'brand-logo', status: 'published', publication_state: 'published' }]])
+  ));
 });

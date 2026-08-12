@@ -13,7 +13,7 @@ test('local content audit initialization creates the reader with a generated tok
       if (request.url.pathname === '/auth/login') return Response.json({ data: { access_token: 'admin-session' } });
       if (request.url.pathname === '/collections') return Response.json({ data: [] });
       if (request.url.pathname.startsWith('/fields/')) return Response.json({ data: [] });
-      if (request.url.pathname === '/roles' && request.method === 'GET') return Response.json({ data: [{ id: 'audit-role', name: 'Content audit reader' }] });
+if (request.url.pathname === '/roles' && request.method === 'GET') return Response.json({ data: [{ id: 'audit-role', name: '内容审核只读账号' }] });
       if (request.url.pathname === '/roles') return Response.json({ data: { id: 'role-created' } });
       if (request.url.pathname === '/policies' && request.method === 'GET') return Response.json({ data: [] });
       if (request.url.pathname === '/policies') return Response.json({ data: { id: 'policy-created' } });

@@ -18,6 +18,7 @@ target/
 *.zip
 *.7z
 *.exe
+.certs/
 
 # Local reference repository, not part of this project.
 _reference_xunjian/

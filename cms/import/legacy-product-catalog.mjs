@@ -1,6 +1,17 @@
 const DRAFT = Object.freeze({ status: 'draft', publication_state: 'unpublished' });
 const CATALOG_SOURCE = 'demo/data/product-catalog.json';
 
+const PARAMETER_DEFINITIONS = Object.freeze({
+  xyTravelMm: Object.freeze({ group_name: '运动参数', field_name: 'XY 行程', unit: 'mm' }),
+  zAxisTravelMm: Object.freeze({ group_name: '运动参数', field_name: 'Z 轴行程', unit: 'mm' }),
+  maxWorkpieceMm: Object.freeze({ group_name: '工作范围', field_name: '最大工件尺寸', unit: 'mm' }),
+  maxWorkpieceWeightKg: Object.freeze({ group_name: '工作范围', field_name: '最大工件重量', unit: 'kg' }),
+  maxCuttingHeightMm: Object.freeze({ group_name: '工作范围', field_name: '最大切割厚度', unit: 'mm' }),
+  maxTaperDegrees: Object.freeze({ group_name: '切割能力', field_name: '最大锥度', unit: '°' }),
+  machineDimensionsMm: Object.freeze({ group_name: '设备尺寸', field_name: '机床外形尺寸', unit: 'mm' }),
+  machineWeightKg: Object.freeze({ group_name: '设备尺寸', field_name: '机床重量', unit: 'kg' })
+});
+
 function seriesReviewNote(series) {
   const aliases = series.aliasesPendingReview?.length
     ? `，存在待审核别名：${series.aliasesPendingReview.join('、')}`
@@ -21,6 +32,60 @@ function sourceUrlFor(model, seriesByCode) {
     ?? model.detailPageEvidence?.sourceUrl
     ?? seriesByCode.get(model.seriesCode)?.sourceUrl
     ?? null;
+}
+
+function parameterValue(value) {
+  if (value == null) return '';
+  if (typeof value === 'string') return value.trim();
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+  return JSON.stringify(value);
+}
+
+function parameterReviewNote(model, key) {
+  const conflicts = model.detailPageEvidence?.conflictsWithTechnicalPackage ?? [];
+  const conflictNote = conflicts.includes(key)
+    ? `；详情页与技术文件对该参数存在冲突（${key}），需由技术审核人确认`
+    : '';
+  return `已从旧官网资料导入产品参数草稿，尚未完成技术审核${conflictNote}。不得公开发布。`;
+}
+
+function buildProductParameterDrafts(model, seriesByCode) {
+  const parameters = model.parameters && typeof model.parameters === 'object' && !Array.isArray(model.parameters)
+    ? model.parameters
+    : {};
+  const sourceDocument = model.sourceDocument ?? CATALOG_SOURCE;
+  const sourceUrl = sourceUrlFor(model, seriesByCode);
+  const observedParameters = model.detailPageEvidence?.observedParameters ?? {};
+  return Object.entries(parameters).flatMap(([key, rawValue], index) => {
+    const value = parameterValue(rawValue);
+    if (!value) return [];
+    const definition = PARAMETER_DEFINITIONS[key] ?? {
+      group_name: '其他参数',
+      field_name: key,
+      unit: null
+    };
+    return [{
+      ...DRAFT,
+      model_code: model.code,
+      group_name: definition.group_name,
+      field_name: definition.field_name,
+      value,
+      unit: definition.unit,
+      sort_order: index + 1,
+      test_conditions: null,
+      source_url: sourceUrl,
+      source_document: sourceDocument,
+      review_note: parameterReviewNote(model, key),
+      import_evidence: {
+        catalog_source: CATALOG_SOURCE,
+        source_key: key,
+        raw_value: rawValue,
+        model_name: model.name ?? null,
+        detail_page_observed_value: Object.hasOwn(observedParameters, key) ? observedParameters[key] : null,
+        parameter_conflict: (model.detailPageEvidence?.conflictsWithTechnicalPackage ?? []).includes(key)
+      }
+    }];
+  });
 }
 
 export function buildLegacyProductDraftImport(catalog) {
@@ -64,9 +129,14 @@ export function buildLegacyProductDraftImport(catalog) {
       observed_model_names: model.observedModelNames ?? [],
       parameter_conflicts: model.detailPageEvidence?.conflictsWithTechnicalPackage ?? [],
       detail_page_observed_parameters: model.detailPageEvidence?.observedParameters ?? {},
+      structured_parameter_keys: Object.keys(model.parameters ?? {}),
       catalog_source: CATALOG_SOURCE
     }
   }));
 
-  return { product_series, product_models };
+  const product_parameters = catalog.models.flatMap((model) => buildProductParameterDrafts(model, seriesByCode));
+
+  return { product_series, product_models, product_parameters };
 }
+
+export { PARAMETER_DEFINITIONS };

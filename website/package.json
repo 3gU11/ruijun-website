@@ -3,9 +3,14 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "predev": "node ./scripts/sync-demo-assets.mjs",
     "dev": "nuxt dev",
+    "predev:local": "node ./scripts/sync-demo-assets.mjs",
+    "dev:local": "nuxt dev --dotenv .env.local --host 0.0.0.0 --port 4173",
+    "prebuild": "node ./scripts/sync-demo-assets.mjs",
     "build": "nuxt build",
     "start": "node .output/server/index.mjs",
+    "start:local": "powershell -ExecutionPolicy Bypass -File ./scripts/run-local-website.ps1",
     "test": "node --test ./test/*.test.mjs"
   },
   "dependencies": {

@@ -1,25 +1,46 @@
 import { buildDirectusSchemaPlan } from '../schema/directus-schema-plan.mjs';
 
 const editableContentCollections = new Set([
-  'pages', 'product_series', 'product_models', 'product_parameters', 'case_studies', 'articles',
-  'manufacturing_evidence', 'qualifications', 'milestones', 'service_resources', 'service_locations',
-  'knowledge_items', 'external_service_entries', 'site_settings', 'media_assets'
+  'pages', 'repair_page_configs', 'product_series', 'case_studies', 'articles', 'manufacturing_evidence', 'qualifications',
+  'milestones', 'service_locations'
 ]);
+
+// Directus roles have no stable machine key. Keep old display names only as a
+// one-way migration map so Chinese UI labels do not create duplicate roles.
+const legacyRoleNames = Object.freeze({
+  review_manager: ['技术审核人员', '品牌审核人员', '发布人员'],
+  content_audit_reader: ['Content audit reader'],
+  notification_worker: ['Notification worker service account'],
+  notification_manager: ['Notification manager']
+});
+
+const contentEditorFieldsByCollection = Object.freeze(
+  Object.fromEntries(
+    [...Map.groupBy(buildDirectusSchemaPlan().fields, (field) => field.collection)]
+      .filter(([collection]) => collection !== 'product_release_snapshots')
+      .map(([collection, fields]) => [collection, fields.map((field) => field.field)])
+  )
+);
+const contentEditorUpdateFilter = Object.freeze({ status: { _in: ['draft', 'rejected', 'unpublished'] } });
 
 const roleCollectionScopes = Object.freeze({
   content_editor: [...editableContentCollections],
-  technical_reviewer: ['product_series', 'product_models', 'product_parameters', 'service_resources', 'knowledge_items', 'media_assets'],
-  brand_reviewer: ['pages', 'articles', 'case_studies', 'manufacturing_evidence', 'qualifications', 'milestones', 'service_locations', 'external_service_entries', 'site_settings', 'media_assets'],
-  publisher: [...editableContentCollections],
+  review_manager: [...editableContentCollections],
   sales_user: ['leads'],
-  read_only_manager: [...editableContentCollections, 'leads', 'lead_notification_jobs', 'service_entry_clicks'],
+  read_only_manager: [...editableContentCollections, 'content_versions', 'lead_notification_jobs', 'service_entry_clicks'],
   content_audit_reader: ['product_series', 'product_models', 'service_resources', 'service_locations', 'external_service_entries']
 });
 
 const bffPublicReadFields = Object.freeze({
   pages: ['slug', 'title', 'language', 'sections', 'seo', 'status', 'publication_state', 'published_at'],
+  repair_page_configs: ['page_key', 'title', 'intro', 'hero_asset', 'model_cards', 'action_cards', 'process_steps', 'notices', 'faq_refs', 'seo', 'language', 'status', 'publication_state', 'published_at'],
   product_series: ['series_code', 'slug', 'name', 'positioning', 'scenarios', 'capabilities', 'cover_asset', 'sort_order', 'language', 'status', 'publication_state', 'published_at'],
   product_models: ['series_code', 'model_code', 'slug', 'name', 'parameters', 'configuration', 'media', 'resources', 'case_studies', 'status', 'publication_state', 'published_at'],
+  product_parameters: ['model_code', 'group_name', 'field_name', 'value', 'unit', 'sort_order', 'status', 'publication_state', 'published_at'],
+  product_release_snapshots: [
+    'release_key', 'version', 'source_hash', 'snapshot', 'release_note', 'published_by', 'published_at',
+    'status', 'publication_state', 'restored_from_release_id', 'restored_from_version', 'restore_note'
+  ],
   external_service_entries: ['entry_type', 'url', 'enabled', 'open_mode', 'fallback_phone', 'health_status', 'status', 'publication_state', 'published_at'],
   service_resources: ['source_key', 'type', 'applicable_models', 'version', 'language', 'asset', 'updated_at', 'status', 'publication_state', 'published_at'],
   service_locations: ['source_key', 'region', 'city', 'service_scope', 'contact', 'business_status', 'valid_until', 'status', 'publication_state', 'published_at'],
@@ -45,6 +66,23 @@ const notificationJobFields = Object.freeze([
   'lock_token', 'locked_by', 'locked_at', 'handled_by', 'handled_at', 'manual_note', 'activity_log', 'date_created', 'date_updated'
 ]);
 
+const notificationManagerReadFields = Object.freeze([
+  'id', 'lead_reference', 'delivery_channel', 'attempts', 'next_attempt_at', 'sent_at', 'last_error', 'status',
+  'handled_by', 'handled_at', 'manual_note', 'activity_log', 'date_created', 'date_updated'
+]);
+const notificationManagerUpdateFields = Object.freeze([
+  'status', 'manual_note', 'handled_by', 'handled_at', 'lock_token', 'locked_by', 'locked_at',
+  'next_attempt_at', 'last_error', 'sent_at', 'activity_log'
+]);
+const lifecycleTransitionFields = Object.freeze([
+  'status', 'review_note', 'publication_state', 'published_at', 'reviewed_by', 'reviewed_at',
+  'published_by', 'publication_log'
+]);
+const contentVersionReadFields = Object.freeze([
+  'id', 'content_collection', 'content_item_id', 'source_status', 'source_publication_state', 'snapshot',
+  'changed_fields', 'action', 'actor', 'created_at', 'restore_note', 'restored_by', 'restored_at', 'status', 'publication_state'
+]);
+
 const bffDedupeFields = Object.freeze(['key_hash', 'expires_at', 'status', 'publication_state']);
 
 const bffUploadSessionFields = Object.freeze([
@@ -54,6 +92,7 @@ const bffServiceEntryClickFields = Object.freeze(['entry_type', 'source_page']);
 const contentAuditReadFields = Object.freeze({
   product_series: ['id', 'series_code', 'name', 'source_url', 'source_document', 'review_note', 'import_evidence', 'status', 'publication_state'],
   product_models: ['id', 'series_code', 'model_code', 'name', 'parameters', 'source_url', 'source_document', 'review_note', 'import_evidence', 'status', 'publication_state'],
+  product_parameters: ['id', 'model_code', 'group_name', 'field_name', 'value', 'unit', 'sort_order', 'test_conditions', 'source_url', 'source_document', 'review_note', 'import_evidence', 'status', 'publication_state'],
   service_resources: ['id', 'source_key', 'type', 'applicable_models', 'version', 'language', 'asset', 'updated_at', 'source_url', 'source_document', 'review_note', 'status', 'publication_state'],
   service_locations: ['id', 'source_key', 'region', 'city', 'service_scope', 'contact', 'business_status', 'valid_until', 'source_url', 'source_document', 'review_note', 'status', 'publication_state'],
   external_service_entries: ['id', 'entry_type', 'url', 'enabled', 'open_mode', 'fallback_phone', 'health_status', 'source_document', 'review_note', 'status', 'publication_state']
@@ -106,19 +145,48 @@ function permissionSpecs(roleKey, policyId) {
       policy: policyId, collection, action: 'read', permissions: {}, validation: {}, fields
     }));
   }
-  if (roleKey === 'notification_worker' || roleKey === 'notification_manager') {
+  if (roleKey === 'notification_worker') {
     return [
       { policy: policyId, collection: 'lead_notification_jobs', action: 'read', permissions: {}, validation: {}, fields: notificationJobFields },
       { policy: policyId, collection: 'lead_notification_jobs', action: 'update', permissions: {}, validation: {}, fields: notificationJobFields }
     ];
   }
+  if (roleKey === 'notification_manager') {
+    return [
+      { policy: policyId, collection: 'lead_notification_jobs', action: 'read', permissions: {}, validation: {}, fields: notificationManagerReadFields },
+      { policy: policyId, collection: 'lead_notification_jobs', action: 'update', permissions: {}, validation: {}, fields: notificationManagerUpdateFields }
+    ];
+  }
   if (roleKey === 'content_editor') {
     return [
-      ...roleCollectionScopes.content_editor.flatMap((collection) => ['read', 'create', 'update'].map((action) => ({
-        policy: policyId, collection, action, permissions: {}, validation: {}, fields: ['*']
-      }))),
+      ...roleCollectionScopes.content_editor.flatMap((collection) => {
+        const fields = contentEditorFieldsByCollection[collection];
+        const readFields = ['id', ...fields];
+        return [
+          { policy: policyId, collection, action: 'read', permissions: {}, validation: {}, fields: readFields },
+          { policy: policyId, collection, action: 'create', permissions: {}, validation: {}, fields },
+          { policy: policyId, collection, action: 'update', permissions: contentEditorUpdateFilter, validation: {}, fields }
+        ];
+      }),
       { policy: policyId, collection: 'directus_files', action: 'create', permissions: {}, validation: {}, fields: publicCandidateFileFields },
       { policy: policyId, collection: 'directus_files', action: 'read', permissions: { uploaded_by: { _eq: '$CURRENT_USER' } }, validation: {}, fields: publicCandidateFileFields }
+    ];
+  }
+  if (roleKey === 'review_manager') {
+    return roleCollectionScopes[roleKey].flatMap((collection) => [
+      { policy: policyId, collection, action: 'read', permissions: {}, validation: {}, fields: ['*'] },
+      { policy: policyId, collection, action: 'update', permissions: {}, validation: {}, fields: lifecycleTransitionFields }
+    ].concat({ policy: policyId, collection: 'content_versions', action: 'read', permissions: {}, validation: {}, fields: contentVersionReadFields }));
+  }
+  if (roleKey === 'read_only_manager') {
+    return [
+      ...[...editableContentCollections].map((collection) => ({
+        policy: policyId, collection, action: 'read', permissions: {}, validation: {}, fields: ['*']
+      })),
+      { policy: policyId, collection: 'product_release_snapshots', action: 'read', permissions: {}, validation: {}, fields: ['*'] },
+      { policy: policyId, collection: 'content_versions', action: 'read', permissions: {}, validation: {}, fields: contentVersionReadFields },
+      { policy: policyId, collection: 'lead_notification_jobs', action: 'read', permissions: {}, validation: {}, fields: notificationManagerReadFields },
+      { policy: policyId, collection: 'service_entry_clicks', action: 'read', permissions: {}, validation: {}, fields: bffServiceEntryClickFields }
     ];
   }
   const actions = roleKey === 'read_only_manager' || roleKey === 'content_audit_reader' ? ['read'] : ['read', 'create', 'update'];
@@ -131,6 +199,8 @@ function permissionSpecs(roleKey, policyId) {
     fields: ['*']
   })));
 }
+
+export { permissionSpecs };
 
 export function createDirectusSchemaApplier({ baseUrl, accessToken, fetchImpl = fetch, schemaPlan = buildDirectusSchemaPlan() }) {
   if (!baseUrl || !accessToken) throw new TypeError('baseUrl and accessToken are required');
@@ -157,11 +227,24 @@ export function createDirectusSchemaApplier({ baseUrl, accessToken, fetchImpl = 
   async function applyCollections() {
     const response = await request('/collections');
     if (!response.ok) throw new Error(`Unable to list collections: ${response.status}`);
-    const existing = new Set((Array.isArray(response.data) ? response.data : []).map((collection) => collection.collection));
-    const result = { created: 0, skipped: 0 };
+    const existing = new Map((Array.isArray(response.data) ? response.data : []).map((collection) => [collection.collection, collection]));
+    const result = { created: 0, updated: 0, skipped: 0 };
     for (const collection of schemaPlan.collections) {
-      if (existing.has(collection.collection)) {
-        result.skipped += 1;
+      const current = existing.get(collection.collection);
+      if (current) {
+        const desiredTranslations = collection.meta?.translations || [];
+        const currentTranslations = current.meta?.translations || [];
+        const desiredNote = collection.meta?.note;
+        if (current.meta && (JSON.stringify(currentTranslations) !== JSON.stringify(desiredTranslations) || current.meta?.note !== desiredNote)) {
+          const updateResponse = await request(`/collections/${encodeURIComponent(collection.collection)}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ meta: { translations: desiredTranslations, note: desiredNote } })
+          });
+          if (!updateResponse.ok) throw new Error(`Unable to update collection ${collection.collection}: ${updateResponse.status}`);
+          result.updated += 1;
+        } else {
+          result.skipped += 1;
+        }
       } else {
         await create('/collections', collection, `collection ${collection.collection}`);
         result.created += 1;
@@ -183,7 +266,9 @@ export function createDirectusSchemaApplier({ baseUrl, accessToken, fetchImpl = 
           const managesStatusChoices = field.field === 'status' && field.meta?.options?.choices;
           const managesJsonCasting = field.type === 'json'
             && JSON.stringify(current.meta?.special || []) !== JSON.stringify(field.meta?.special || []);
-          if (managesStatusChoices || managesJsonCasting) {
+          const managesTranslations = field.meta?.translations
+            && JSON.stringify(current.meta?.translations || []) !== JSON.stringify(field.meta.translations);
+          if (managesStatusChoices || managesJsonCasting || managesTranslations) {
             const updateResponse = await request(`/fields/${encodeURIComponent(collection)}/${encodeURIComponent(field.field)}`, {
               method: 'PATCH', body: JSON.stringify({ meta: field.meta })
             });
@@ -204,7 +289,7 @@ export function createDirectusSchemaApplier({ baseUrl, accessToken, fetchImpl = 
     const response = await request('/roles');
     if (!response.ok) throw new Error(`Unable to list roles: ${response.status}`);
     const rolesByName = new Map((Array.isArray(response.data) ? response.data : []).map((role) => [role.name, role]));
-    const result = { created: 0, skipped: 0, rolesByKey: new Map() };
+    const result = { created: 0, updated: 0, migrated: 0, skipped: 0, rolesByKey: new Map() };
     for (const role of schemaPlan.roles) {
       // Directus owns the Administrator role and prevents a custom role from acquiring admin access.
       if (role.key === 'system_admin') {
@@ -212,12 +297,40 @@ export function createDirectusSchemaApplier({ baseUrl, accessToken, fetchImpl = 
         continue;
       }
       let directusRole = rolesByName.get(role.name);
+      const legacyRoles = (legacyRoleNames[role.key] || []).map((name) => rolesByName.get(name)).filter(Boolean);
+      const legacyRole = legacyRoles[0];
       if (!directusRole) {
-        directusRole = await create('/roles', { name: role.name, admin_access: role.admin }, `role ${role.key}`);
-        if (!directusRole?.id) throw new Error(`Created role ${role.key} did not return an id`);
-        result.created += 1;
+        if (legacyRole) {
+          const updateRole = await request(`/roles/${encodeURIComponent(legacyRole.id)}`, { method: 'PATCH', body: JSON.stringify({ name: role.name, admin_access: role.admin }) });
+          if (!updateRole.ok) throw new Error(`Unable to rename legacy role ${role.key}: ${updateRole.status}`);
+          directusRole = { ...legacyRole, name: role.name };
+          rolesByName.delete(legacyRole.name);
+          rolesByName.set(role.name, directusRole);
+          result.updated += 1;
+        } else {
+          directusRole = await create('/roles', { name: role.name, admin_access: role.admin }, `role ${role.key}`);
+          if (!directusRole?.id) throw new Error(`Created role ${role.key} did not return an id`);
+          result.created += 1;
+        }
       } else {
         result.skipped += 1;
+      }
+      // Multiple retired roles now map to one review-management role. Rename
+      // the first when needed, then move users from every remaining legacy role.
+      for (const retiredRole of legacyRoles) {
+        if (retiredRole.id === directusRole.id) continue;
+        const usersQuery = new URLSearchParams({ fields: 'id,role', limit: '-1' });
+        usersQuery.set('filter[role][_eq]', retiredRole.id);
+        const usersResponse = await request(`/users?${usersQuery.toString()}`);
+        if (!usersResponse.ok) throw new Error(`Unable to list users for legacy role ${role.key}: ${usersResponse.status}`);
+        for (const user of Array.isArray(usersResponse.data) ? usersResponse.data : []) {
+          const updateUser = await request(`/users/${encodeURIComponent(user.id)}`, { method: 'PATCH', body: JSON.stringify({ role: directusRole.id }) });
+          if (!updateUser.ok) throw new Error(`Unable to migrate user ${user.id} from legacy role ${role.key}: ${updateUser.status}`);
+        }
+        const removeLegacy = await request(`/roles/${encodeURIComponent(retiredRole.id)}`, { method: 'DELETE' });
+        if (!removeLegacy.ok) throw new Error(`Unable to remove legacy role ${role.key}: ${removeLegacy.status}`);
+        rolesByName.delete(retiredRole.name);
+        result.migrated += 1;
       }
       result.rolesByKey.set(role.key, directusRole);
     }
@@ -262,11 +375,17 @@ export function createDirectusSchemaApplier({ baseUrl, accessToken, fetchImpl = 
       return permissionSpecs(role.key, policy.id);
     });
     const desiredKeys = new Set(desired.map((permission) => `${permission.policy}:${permission.collection}:${permission.action}`));
+    const managedPolicyIds = new Set([...policiesByKey.values()].map((policy) => policy.id));
     const existing = new Map();
     const duplicateIds = [];
+    const obsoleteIds = [];
     for (const permission of Array.isArray(response.data) ? response.data : []) {
-      const key = `${permission.policy ?? permission.role}:${permission.collection}:${permission.action}`;
-      if (!desiredKeys.has(key)) continue;
+      const policyId = permission.policy ?? permission.role;
+      const key = `${policyId}:${permission.collection}:${permission.action}`;
+      if (!desiredKeys.has(key)) {
+        if (managedPolicyIds.has(policyId) && permission.id) obsoleteIds.push(permission.id);
+        continue;
+      }
       if (existing.has(key)) {
         if (permission.id) duplicateIds.push(permission.id);
       } else {
@@ -279,6 +398,11 @@ export function createDirectusSchemaApplier({ baseUrl, accessToken, fetchImpl = 
       if (!deleteResponse.ok) throw new Error(`Unable to remove duplicate permission ${id}: ${deleteResponse.status}`);
     }
     if (duplicateIds.length) result.deduplicated = duplicateIds.length;
+    for (const id of obsoleteIds) {
+      const deleteResponse = await request(`/permissions/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      if (!deleteResponse.ok) throw new Error(`Unable to remove obsolete permission ${id}: ${deleteResponse.status}`);
+    }
+    if (obsoleteIds.length) result.removed = obsoleteIds.length;
     for (const role of schemaPlan.roles) {
       if (role.key === 'system_admin') continue;
       const policy = policiesByKey.get(role.key);
@@ -317,7 +441,7 @@ export function createDirectusSchemaApplier({ baseUrl, accessToken, fetchImpl = 
       const roles = await applyRoles();
       const policies = await applyPolicies(roles.rolesByKey);
       const permissions = await applyPermissions(policies.policiesByKey);
-      return { collections, fields, roles: { created: roles.created, skipped: roles.skipped }, policies: { created: policies.created, attached: policies.attached }, permissions };
+      return { collections, fields, roles: { created: roles.created, updated: roles.updated, migrated: roles.migrated, skipped: roles.skipped }, policies: { created: policies.created, attached: policies.attached }, permissions };
     }
   };
 }

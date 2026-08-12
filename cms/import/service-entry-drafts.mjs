@@ -1,8 +1,8 @@
 const serviceRoutes = Object.freeze([
-  ['support', '/support'],
+  ['support', '/service'],
   ['request', '/repair/new'],
-  ['warranty', '/warranty'],
-  ['requests', '/requests']
+  ['warranty', '/repair/warranty'],
+  ['requests', '/repair/requests']
 ]);
 
 function normalizedBaseUrl(value) {

@@ -5,13 +5,14 @@ import test from 'node:test';
 const root = new URL('../', import.meta.url);
 
 test('repairsys loads Element Plus components on demand instead of registering the whole library and icon set', async () => {
-  const [bootstrap, clientApp, adminApp, clientConfig, adminConfig, packageJson] = await Promise.all([
+  const [bootstrap, clientApp, adminApp, clientConfig, adminConfig, packageJson, styles] = await Promise.all([
     readFile(new URL('src/bootstrap.js', root), 'utf8'),
     readFile(new URL('src/ClientApp.vue', root), 'utf8'),
     readFile(new URL('src/AdminApp.vue', root), 'utf8'),
     readFile(new URL('vite.client.config.js', root), 'utf8'),
     readFile(new URL('vite.admin.config.js', root), 'utf8'),
-    readFile(new URL('package.json', root), 'utf8')
+    readFile(new URL('package.json', root), 'utf8'),
+    readFile(new URL('src/styles.css', root), 'utf8')
   ]);
 
   assert.doesNotMatch(bootstrap, /import ElementPlus from 'element-plus'/);
@@ -30,4 +31,6 @@ test('repairsys loads Element Plus components on demand instead of registering t
   }
 
   assert.match(packageJson, /"unplugin-vue-components"/);
+  assert.match(styles, /\.client-shell\s*\{[\s\S]*--client-primary:\s*#d22323/);
+  assert.match(styles, /\.client-shell\s*\{[\s\S]*--client-ink:\s*#0b0b0c/);
 });

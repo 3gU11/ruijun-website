@@ -21,5 +21,6 @@ test('notification workbench is a Directus module limited to authenticated notif
   assert.match(module, /manual_sent/);
   assert.match(module, /resolved/);
   assert.match(module, /manual_note/);
+  assert.match(module, /typeof value !== 'string' \|\| !value\.trim\(\)/);
   assert.doesNotMatch(module, /CMS_NOTIFICATION_WORKER_TOKEN|CMS_BFF_TOKEN|ADMIN_PASSWORD/);
 });

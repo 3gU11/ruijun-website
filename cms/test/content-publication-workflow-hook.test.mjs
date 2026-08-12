@@ -41,7 +41,7 @@ test('content publication hook prevents a reviewer from approving content outsid
   const hooks = new Map();
   registerContentPublicationWorkflowHook({ filter: (event, handler) => hooks.set(event, handler) });
   await assert.rejects(
-    hooks.get('pages.items.update')({ status: 'scheduled' }, { keys: ['page-1'] }, hookContext({ roleName: '技术审核人员', record: { id: 'page-1', status: 'review', publication_state: 'unpublished' } })),
+    hooks.get('product_models.items.update')({ status: 'scheduled' }, { keys: ['page-1'] }, hookContext({ roleName: '审核管理', record: { id: 'page-1', status: 'review', publication_state: 'unpublished' } })),
     /cannot review this content type/
   );
 });
@@ -55,7 +55,7 @@ test('content publication hook forces newly created content to a draft and block
   assert.equal(created.status, 'draft');
   assert.equal(created.publication_state, 'unpublished');
   await assert.rejects(
-    hooks.get('articles.items.create')({ title: 'Forbidden' }, {}, hookContext({ roleName: '品牌审核人员', record: null })),
+    hooks.get('articles.items.create')({ title: 'Forbidden' }, {}, hookContext({ roleName: '审核管理', record: null })),
     /cannot create publishable content/
   );
 });
@@ -84,7 +84,7 @@ test('content publication hook rejects a media asset whose declared metadata doe
   await assert.rejects(
     hooks.get('media_assets.items.create')(
       { file_id: 'file-1', original_file_name: 'machine.webp', mime_type: 'image/webp', byte_size: 2_000, usage_scope: 'product', copyright_status: 'authorized' },
-      {}, hookContext({ roleName: '内容编辑', record: null, file: { id: 'file-1', filename_download: 'machine.webp', type: 'image/webp', filesize: 1_024 } })
+      {}, hookContext({ roleName: '系统管理员', record: null, file: { id: 'file-1', filename_download: 'machine.webp', type: 'image/webp', filesize: 1_024 } })
     ),
     /metadata does not match/
   );
@@ -105,4 +105,19 @@ test('content publication hook revalidates the actual file whenever a media asse
     ),
     /metadata does not match/
   );
+});
+
+test('content publication hook rejects final publication blockers before writing a version', async () => {
+  const hooks = new Map();
+  registerContentPublicationWorkflowHook({ filter: (event, handler) => hooks.set(event, handler) });
+  const context = hookContext({
+    roleName: '系统管理员',
+    record: { id: 'page-1', status: 'scheduled', publication_state: 'unpublished', slug: 'home', title: '首页', language: 'zh-CN', sections: '[]', seo: '{}', source_document: 'home.md' }
+  });
+
+  await assert.rejects(
+    hooks.get('pages.items.update')({ status: 'published' }, { keys: ['page-1'] }, context),
+    /not ready for publication/
+  );
+  assert.deepEqual(context.versions, []);
 });

@@ -19,7 +19,19 @@ function publicSection(section, mediaAssets) {
       return asset ? [{ ...asset }] : [];
     })
     : [];
-  return { ...copy, ...(media.length ? { media } : {}) };
+  const safeRepairItems = (value) => Array.isArray(value) ? value.flatMap((item) => {
+    if (!item || typeof item !== 'object') return [];
+    const label = typeof item.label === 'string' ? item.label.trim().slice(0, 120) : '';
+    const title = typeof item.title === 'string' ? item.title.trim().slice(0, 120) : '';
+    const query = typeof item.query === 'string' ? item.query.trim().slice(0, 240) : '';
+    const image = typeof item.image === 'string' && (/^\//.test(item.image) || /^https:\/\//i.test(item.image)) ? item.image : '';
+    const number = typeof item.number === 'string' ? item.number.trim().slice(0, 8) : '';
+    if (!label && !title) return [];
+    return [{ ...(label ? { label } : {}), ...(title ? { title } : {}), ...(query ? { query } : {}), ...(image ? { image } : {}), ...(number ? { number } : {}) }];
+  }) : [];
+  const repairModels = safeRepairItems(section.repair_models);
+  const repairActions = safeRepairItems(section.repair_actions);
+  return { ...copy, ...(media.length ? { media } : {}), ...(repairModels.length ? { repairModels } : {}), ...(repairActions.length ? { repairActions } : {}) };
 }
 
 async function publicPage(record, mediaAssetResolver) {

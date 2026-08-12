@@ -2,14 +2,31 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
-test('Nuxt header measures the first visual panel and expands only after the opening sequence', async () => {
+test('Nuxt header reserves its compact state for landing-page opening sequences', async () => {
   const component = await readFile(new URL('../components/SiteHeader.vue', import.meta.url), 'utf8');
   const aboutPage = await readFile(new URL('../pages/about.vue', import.meta.url), 'utf8');
+  assert.match(component, /isHomeRoute/);
+  assert.match(component, /const headerEntryRoutes = new Set\(\['\/product', '\/manufacturing', '\/news', '\/about', '\/service'\]\)/);
+  assert.match(component, /function startWideEntry\(\)/);
+  assert.match(component, /entryWideTimer = window\.setTimeout\(\(\) => \{ isEntryWide\.value = false; \}, 420\)/);
+  assert.match(component, /compactPanelSelectors/);
+  assert.match(component, /const videoNewsNavigation = \{ label: '视频新闻', href: '\/news' \}/);
+  assert.match(component, /items\.some\(\(item\) => item\.href === videoNewsNavigation\.href\)/);
+  assert.match(component, /'\/product'/);
+  assert.match(component, /'\/manufacturing'/);
+  assert.match(component, /'\/about'/);
+  assert.match(component, /'\/service'/);
+  assert.match(component, /'\/news': '\.news-page > \.news-hero'/);
   assert.match(component, /getHeaderLifecycle/);
+  assert.match(component, /ruijun:header-wide/);
+  assert.match(component, /isWide\.value = true/);
   assert.match(component, /ref="headerElement"/);
   assert.match(component, /class="site-header".*isWide/s);
-  assert.match(component, /nextElementSibling/);
+  assert.match(component, /right: max\(4\.8%, calc\(\(100% - 1554px\) \/ 2\)\); left: max\(4\.8%, calc\(\(100% - 1554px\) \/ 2\)\)/);
   assert.match(component, /\.site-header\.is-wide/);
+  assert.match(component, /\.site-header\.is-hero-locked \{ top: 0; right: 0; left: 0; padding-right: 6\.2%; padding-left: 6\.2%; border-right: 0; border-left: 0; border-radius: 0; opacity: 0; pointer-events: none; transform: translateY\(-22px\); \}/);
+  assert.match(component, /\.site-header\.is-hero-entered-wide \{ top: 0; right: 0; left: 0; padding-right: 6\.2%; padding-left: 6\.2%; border-right: 0; border-left: 0; border-radius: 0; \}/);
+  assert.match(component, /\.site-header\.is-entry-wide \{ top: 0; right: 0; left: 0; padding-right: 6\.2%; padding-left: 6\.2%; border-right: 0; border-left: 0; border-radius: 0; \}/);
   assert.match(component, /@media \(max-width: 760px\).*position: relative/s);
   assert.match(aboutPage, /\.about-page \{ overflow-x: clip; overflow-y: visible;/);
 });

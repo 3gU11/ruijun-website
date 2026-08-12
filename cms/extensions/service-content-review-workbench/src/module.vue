@@ -3,7 +3,7 @@
     <div class="review-page">
       <header class="toolbar">
         <div>
-          <p class="eyebrow">SERVICE REVIEW</p>
+          <p class="eyebrow">服务内容审核</p>
           <h2>服务支持内容审核准备</h2>
           <p>仅显示当前账号可读取的资料、网点与售后入口审核状态；请在原生内容详情中补全并走既有审核流程。</p>
         </div>

@@ -12,6 +12,7 @@ const cacheByCollection = Object.freeze({
   product_series: ['products'],
   product_models: ['products'],
   product_parameters: ['products'],
+  product_release_snapshots: ['products'],
   articles: ['articles'],
   site_settings: ['navigation'],
   external_service_entries: ['serviceEntries'],

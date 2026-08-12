@@ -5,13 +5,16 @@ import { fileURLToPath } from 'node:url';
 import mysql from 'mysql2/promise';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const dbPath = resolve(__dirname, '../data/db.json');
+const dbPath = process.env.REPAIR_DB_PATH
+  ? resolve(process.env.REPAIR_DB_PATH)
+  : resolve(__dirname, '../data/db.json');
 const photoSnapshotPath = resolve(__dirname, '../data/v8-photo-config.snapshot.json');
 const bindingSnapshotPath = resolve(__dirname, '../data/v8-machine-bindings.snapshot.json');
 const useMysql = String(process.env.USE_MYSQL || '').toLowerCase() === 'true';
 
 let pool;
 let schemaReady = false;
+let schemaPreparing;
 let photoSnapshot;
 let bindingSnapshot;
 
@@ -58,6 +61,8 @@ async function ensureIndex(db, table, indexName, definition) {
 
 async function ensureMysqlSchema() {
   if (schemaReady || !useMysql) return;
+  if (schemaPreparing) return schemaPreparing;
+  schemaPreparing = (async () => {
   const db = mysqlPool();
   await ensureColumn(db, 'users', 'username', 'VARCHAR(80) NULL');
   await ensureColumn(db, 'users', 'password', 'VARCHAR(120) NULL');
@@ -139,9 +144,40 @@ async function ensureMysqlSchema() {
       INDEX idx_role_permissions_role (role_id)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS board_qr_codes (
+      id VARCHAR(40) PRIMARY KEY,
+      token_hash VARCHAR(86) NOT NULL,
+      serial_no VARCHAR(120) NOT NULL,
+      status VARCHAR(20) NOT NULL DEFAULT 'active',
+      issued_at DATETIME NOT NULL,
+      expires_at DATETIME NULL,
+      revoked_at DATETIME NULL,
+      created_by VARCHAR(120) NOT NULL DEFAULT '',
+      UNIQUE KEY uk_board_qr_token_hash (token_hash),
+      INDEX idx_board_qr_serial (serial_no),
+      INDEX idx_board_qr_status (status)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
+  await db.query(`
+    CREATE TABLE IF NOT EXISTS board_qr_scan_audits (
+      id VARCHAR(40) PRIMARY KEY,
+      code_id VARCHAR(40) NULL,
+      token_fingerprint VARCHAR(40) NOT NULL,
+      outcome VARCHAR(20) NOT NULL,
+      source VARCHAR(40) NOT NULL DEFAULT 'repair_portal',
+      scanned_at DATETIME NOT NULL,
+      INDEX idx_board_qr_audit_code (code_id),
+      INDEX idx_board_qr_audit_time (scanned_at)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+  `);
   await migrateSplitAccounts(db);
   await seedDefaultAuth(db);
   schemaReady = true;
+  })().finally(() => {
+    schemaPreparing = undefined;
+  });
+  return schemaPreparing;
 }
 
 async function seedDefaultAuth(db) {
@@ -333,6 +369,8 @@ const seed = {
   syncTasks: [
     { id: 'SYNC-0001', source: 'V8 示例数据', target: '基础档案', status: '成功', successCount: 20, failCount: 0, summary: '初始化机床、物料、物料实例和绑定关系', createdAt: now() }
   ],
+  boardQrCodes: [],
+  boardQrScanAudits: [],
   operationLogs: [
     { id: 'LOG-0001', action: '初始化示例数据', operator: '系统', targetNo: 'repair_system', note: '已写入第一期基础业务数据', createdAt: now() }
   ]
@@ -343,7 +381,10 @@ function readJsonDb() {
     mkdirSync(dirname(dbPath), { recursive: true });
     writeFileSync(dbPath, JSON.stringify(seed, null, 2), 'utf8');
   }
-  return JSON.parse(readFileSync(dbPath, 'utf8'));
+  const data = JSON.parse(readFileSync(dbPath, 'utf8'));
+  data.boardQrCodes ||= [];
+  data.boardQrScanAudits ||= [];
+  return data;
 }
 
 function writeJsonDb(db) {
@@ -484,6 +525,8 @@ async function loadMysqlDb() {
     [roles],
     [rolePermissions],
     [syncTasks],
+    [boardQrCodes],
+    [boardQrScanAudits],
     [logs]
   ] = await Promise.all([
     db.query('SELECT * FROM users ORDER BY created_at, id'),
@@ -502,6 +545,8 @@ async function loadMysqlDb() {
     db.query('SELECT * FROM roles ORDER BY role_id'),
     db.query('SELECT * FROM role_permissions ORDER BY role_id, permission_code'),
     db.query('SELECT * FROM v8_sync_tasks ORDER BY created_at DESC, id DESC'),
+    db.query('SELECT * FROM board_qr_codes ORDER BY issued_at DESC, id DESC'),
+    db.query('SELECT * FROM board_qr_scan_audits ORDER BY scanned_at DESC, id DESC'),
     db.query('SELECT * FROM operation_logs ORDER BY created_at DESC, id DESC')
   ]);
 
@@ -637,6 +682,24 @@ async function loadMysqlDb() {
       summary: row.summary || '',
       createdAt: row.created_at
     })),
+    boardQrCodes: boardQrCodes.map((row) => ({
+      id: row.id,
+      tokenHash: row.token_hash,
+      serialNo: row.serial_no,
+      status: row.status,
+      issuedAt: row.issued_at,
+      expiresAt: dateOrEmpty(row.expires_at),
+      revokedAt: dateOrEmpty(row.revoked_at),
+      createdBy: row.created_by || ''
+    })),
+    boardQrScanAudits: boardQrScanAudits.map((row) => ({
+      id: row.id,
+      codeId: row.code_id || '',
+      tokenFingerprint: row.token_fingerprint,
+      outcome: row.outcome,
+      source: row.source,
+      scannedAt: row.scanned_at
+    })),
     operationLogs: logs.map((row) => ({
       id: row.id,
       action: row.action,
@@ -675,6 +738,8 @@ async function saveMysqlDb(data) {
     await conn.query('DELETE FROM role_permissions');
     await conn.query('DELETE FROM roles');
     await conn.query('DELETE FROM v8_sync_tasks');
+    await conn.query('DELETE FROM board_qr_scan_audits');
+    await conn.query('DELETE FROM board_qr_codes');
     await conn.query('DELETE FROM operation_logs');
     await conn.query('SET FOREIGN_KEY_CHECKS = 1');
 
@@ -883,6 +948,16 @@ async function saveMysqlDb(data) {
     );
     await executeMany(
       conn,
+      'INSERT INTO board_qr_codes (id, token_hash, serial_no, status, issued_at, expires_at, revoked_at, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      (data.boardQrCodes || []).map((item) => [item.id, item.tokenHash, item.serialNo, item.status || 'active', item.issuedAt || timestamp(), nullIfEmpty(item.expiresAt), nullIfEmpty(item.revokedAt), item.createdBy || ''])
+    );
+    await executeMany(
+      conn,
+      'INSERT INTO board_qr_scan_audits (id, code_id, token_fingerprint, outcome, source, scanned_at) VALUES (?, ?, ?, ?, ?, ?)',
+      (data.boardQrScanAudits || []).map((item) => [item.id, nullIfEmpty(item.codeId), item.tokenFingerprint, item.outcome, item.source || 'repair_portal', item.scannedAt || timestamp()])
+    );
+    await executeMany(
+      conn,
       'INSERT INTO operation_logs (id, action, operator, target_no, note, created_at) VALUES (?, ?, ?, ?, ?, ?)',
       data.operationLogs.map((item) => [item.id, item.action, item.operator || '系统', item.targetNo || '', item.note || '', item.createdAt || timestamp()])
     );
@@ -954,7 +1029,84 @@ function inferModelSeries(modelName) {
   return prefix ? `${prefix} 系列` : '其他机型';
 }
 
+function v8Value(row, keys) {
+  for (const key of keys) {
+    if (row?.[key] !== undefined && row?.[key] !== null && String(row[key]).trim() !== '') return row[key];
+  }
+  return '';
+}
+
+function v8RowEnabled(row) {
+  const enabled = v8Value(row, ['enabled', 'is_enabled', 'active', 'is_active']);
+  if (enabled !== '') return ![0, false, '0', 'false', 'disabled', 'inactive', '停用'].includes(typeof enabled === 'string' ? enabled.trim().toLowerCase() : enabled);
+  const status = String(v8Value(row, ['status', 'model_status']) || '').trim().toLowerCase();
+  return !['disabled', 'inactive', '停用', '禁用', 'deleted', 'deleted_at'].includes(status);
+}
+
+export function mapV8ModelDictionaryRows(rows = []) {
+  const models = rows
+    .filter((row) => v8RowEnabled(row))
+    .map((row) => {
+      // V8's rjfinshed.model_dictionary uses model_name as its canonical unique model key.
+      const code = String(v8Value(row, ['model_code', 'code', 'model_no', 'model', 'model_name']) || '').trim();
+      const name = String(v8Value(row, ['model_name', 'name', 'display_name']) || code).trim();
+      if (!code || !name) return null;
+      const series = String(v8Value(row, ['model_family', 'series', 'model_series', 'series_name']) || code.match(/^([A-Za-z]+)/)?.[1] || '').trim();
+      return {
+        id: String(v8Value(row, ['source_id', 'model_id', 'id']) || code),
+        code,
+        name,
+        series,
+        sortOrder: Number(v8Value(row, ['sort_order', 'display_order', 'order_no']) || 0),
+        source: 'V8:model_dictionary',
+        photoItems: []
+      };
+    })
+    .filter(Boolean)
+    .sort((left, right) => left.sortOrder - right.sortOrder || left.name.localeCompare(right.name, 'zh-CN'));
+  return models.map((model, index) => ({ ...model, sortOrder: model.sortOrder || index + 1 }));
+}
+
+export function attachMaterialFallback(models = [], materials = []) {
+  const fallbackMaterials = materials.map((material, index) => ({
+    code: material.materialCode,
+    name: material.name,
+    type: material.type || '维修物料',
+    spec: material.spec || material.materialCode,
+    shootingRequirement: '',
+    required: false,
+    ocrEnabled: false,
+    ocrProfile: '',
+    sortOrder: index + 1
+  }));
+  return models.map((model) => ({
+    ...model,
+    // model_dictionary provides the canonical model name, not its service-material mapping.
+    photoItems: fallbackMaterials,
+    materialSource: 'repair-system:material-fallback'
+  }));
+}
+
+async function loadV8ModelDictionary() {
+  if (!useMysql) return [];
+  const schema = String(process.env.MODEL_DICTIONARY_SCHEMA || '').trim();
+  const table = String(process.env.MODEL_DICTIONARY_TABLE || '').trim();
+  if (!schema || !table || !/^[A-Za-z0-9_]+$/.test(schema) || !/^[A-Za-z0-9_]+$/.test(table)) return [];
+  try {
+    const [rows] = await mysqlPool().query(`SELECT * FROM \`${schema}\`.\`${table}\``);
+    return mapV8ModelDictionaryRows(rows);
+  } catch (error) {
+    console.warn(`V8 model_dictionary unavailable; using local model fallback: ${error.message}`);
+    return [];
+  }
+}
+
 export async function loadModelDictionary() {
+  const v8Models = await loadV8ModelDictionary();
+  if (v8Models.length) {
+    const db = await loadDb();
+    return attachMaterialFallback(v8Models, db.materials);
+  }
   const snapshot = readPhotoSnapshot();
   if (snapshot) return snapshot.models.map((model) => expandPhotoModel(model, snapshot));
 

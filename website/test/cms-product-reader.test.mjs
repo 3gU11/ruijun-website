@@ -89,6 +89,35 @@ test('Nuxt CMS product reader exposes only the requested published product model
   assert.equal(requestedUrl.searchParams.get('filter[slug][_eq]'), 'fr400xs');
 });
 
+test('Nuxt CMS product reader merges only published independent parameters into the same public model version', async () => {
+  const requests = [];
+  const reader = createCmsProductReader({
+    seriesEndpoint: '',
+    modelsEndpoint: 'https://cms.example.test/items/product_models',
+    parametersEndpoint: 'https://cms.example.test/items/product_parameters',
+    now: () => Date.parse('2026-08-01T00:00:00.000Z'),
+    fetchImpl: async (url) => {
+      const request = new URL(url);
+      requests.push(request);
+      if (request.pathname.endsWith('/product_parameters')) {
+        return Response.json({ data: [
+          { model_code: 'fr400xs', field_name: 'XY 行程', value: '400*290', status: 'published', publication_state: 'published', published_at: '2026-07-31T00:00:00.000Z' },
+          { model_code: 'fr400xs', field_name: '最大工件尺寸', value: 'draft-value', status: 'draft', publication_state: 'unpublished' }
+        ] });
+      }
+      return Response.json({ data: [{ ...publishedModel, slug: 'fr400xs', parameters: { xyTravelMm: 'legacy-value' } }] });
+    }
+  });
+
+  const result = await reader.getModel('fr400xs');
+
+  assert.deepEqual(result.data?.parameters, { xyTravelMm: '400*290' });
+  const parameterRequest = requests.find((request) => request.pathname.endsWith('/product_parameters'));
+  assert.equal(parameterRequest.searchParams.get('filter[status][_eq]'), 'published');
+  assert.equal(parameterRequest.searchParams.get('filter[publication_state][_eq]'), 'published');
+  assert.doesNotMatch(parameterRequest.searchParams.get('fields'), /import_evidence/);
+});
+
 test('Nuxt CMS product reader exposes only safe, displayable resources, case studies, and media for a published model', async () => {
   const reader = createCmsProductReader({
     seriesEndpoint: '', modelsEndpoint: 'https://cms.example.test/items/product_models',
@@ -140,4 +169,54 @@ test('Nuxt CMS product reader sends a configured server-only CMS token upstream'
   } });
   await reader.listSeries();
   assert.equal(headers.Authorization, 'Bearer server-only-token');
+});
+
+test('Nuxt CMS product reader uses one published product release snapshot for lists, details, and parameters', async () => {
+  const release = {
+    release_key: 'main', version: 4, source_hash: 'hash', status: 'published', publication_state: 'published',
+    published_at: '2026-07-31T00:00:00.000Z',
+    snapshot: {
+      schema_version: 1,
+      series: [{ series_code: 'fr-xs', slug: 'fr-xs', name: 'FR-XS', sort_order: 1 }],
+      models: [{ series_code: 'fr-xs', model_code: 'fr400xs', slug: 'fr400xs', name: 'FR400XS', parameters: { legacy: 'old' } }],
+      parameters: [{ model_code: 'fr400xs', field_name: 'XY 行程', value: '400*290', sort_order: 1 }]
+    }
+  };
+  const requests = [];
+  const reader = createCmsProductReader({
+    seriesEndpoint: 'https://cms.example.test/items/product_series',
+    modelsEndpoint: 'https://cms.example.test/items/product_models',
+    parametersEndpoint: 'https://cms.example.test/items/product_parameters',
+    releaseEndpoint: 'https://cms.example.test/items/product_release_snapshots',
+    now: () => Date.parse('2026-08-01T00:00:00.000Z'),
+    fetchImpl: async (url) => {
+      requests.push(new URL(url));
+      if (new URL(url).pathname.endsWith('product_release_snapshots')) return Response.json({ data: [release] });
+      throw new Error('release should prevent legacy product reads');
+    }
+  });
+
+  assert.equal((await reader.listSeries()).data[0].name, 'FR-XS');
+  assert.equal((await reader.listProducts()).data[0].parameters.xyTravelMm, '400*290');
+  assert.equal((await reader.getModel('fr400xs')).data.parameters.xyTravelMm, '400*290');
+  assert.equal(requests.filter((url) => url.pathname.endsWith('product_release_snapshots')).length, 1);
+  assert.equal(requests.some((url) => url.pathname.endsWith('product_parameters')), false);
+});
+
+test('Nuxt CMS product reader does not fall back to independently published rows when release snapshots are configured', async () => {
+  const requests = [];
+  const reader = createCmsProductReader({
+    seriesEndpoint: 'https://cms.example.test/items/product_series',
+    modelsEndpoint: 'https://cms.example.test/items/product_models',
+    releaseEndpoint: 'https://cms.example.test/items/product_release_snapshots',
+    fetchImpl: async (url) => {
+      const request = new URL(url);
+      requests.push(request);
+      if (request.pathname.endsWith('product_release_snapshots')) return Response.json({ data: [] });
+      return Response.json({ data: [publishedModel] });
+    }
+  });
+
+  assert.deepEqual(await reader.listProducts(), { data: [], cache: 'unavailable', source: 'cms' });
+  assert.equal(requests.some((url) => url.pathname.endsWith('product_models')), false);
 });

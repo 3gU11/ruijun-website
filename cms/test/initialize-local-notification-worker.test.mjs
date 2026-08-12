@@ -13,7 +13,7 @@ test('local notification initialization obtains an admin session, creates a work
       if (request.url.pathname === '/auth/login') return Response.json({ data: { access_token: 'admin-session' } });
       if (request.url.pathname === '/collections') return Response.json({ data: [] });
       if (request.url.pathname.startsWith('/fields/')) return Response.json({ data: [] });
-      if (request.url.pathname === '/roles' && request.method === 'GET') return Response.json({ data: [{ id: 'worker-role', name: 'Notification worker service account' }] });
+if (request.url.pathname === '/roles' && request.method === 'GET') return Response.json({ data: [{ id: 'worker-role', name: '通知任务服务账号' }] });
       if (request.url.pathname === '/roles') return Response.json({ data: { id: 'role-created' } });
       if (request.url.pathname === '/policies' && request.method === 'GET') return Response.json({ data: [] });
       if (request.url.pathname === '/policies') return Response.json({ data: { id: 'policy-created' } });

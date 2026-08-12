@@ -19,9 +19,11 @@ test('CMS compose baseline keeps Directus, MySQL, and object storage private by 
 
 test('CMS environment template requires secrets rather than committing credentials', async () => {
   const environment = await readFile(new URL('.env.example', root), 'utf8');
-  for (const key of ['DIRECTUS_KEY', 'DIRECTUS_SECRET', 'DIRECTUS_ADMIN_EMAIL', 'DIRECTUS_ADMIN_PASSWORD', 'MYSQL_PASSWORD', 'MINIO_ROOT_PASSWORD']) {
+  for (const key of ['DIRECTUS_KEY', 'DIRECTUS_SECRET', 'DIRECTUS_ADMIN_EMAIL', 'DIRECTUS_ADMIN_PASSWORD', 'MYSQL_PASSWORD', 'MINIO_ROOT_PASSWORD', 'CMS_WEBHOOK_SECRET']) {
     assert.match(environment, new RegExp(`^${key}=<REPLACE_ME>$`, 'm'));
   }
+  assert.match(environment, /^WEBSITE_CACHE_INVALIDATION_URL=https:\/\//m);
+  assert.match(environment, /^PRODUCT_RELEASE_CACHE_INVALIDATION_TIMEOUT_MS=5000$/m);
 });
 
 test('Windows local development template keeps SQLite data and secrets outside version control', async () => {
@@ -33,8 +35,37 @@ test('Windows local development template keeps SQLite data and secrets outside v
   assert.match(environment, /^DB_FILENAME=\.\/data\/directus\.db$/m);
   assert.match(environment, /^KEY=<REPLACE_ME>$/m);
   assert.match(environment, /^SECRET=<REPLACE_ME>$/m);
+  assert.match(environment, /^CMS_WEBHOOK_SECRET=<REPLACE_ME>$/m);
+  assert.match(environment, /^WEBSITE_CACHE_INVALIDATION_URL=http:\/\/127\.0\.0\.1:4173\/api\/internal\/v1\/cms\/cache-invalidate$/m);
   assert.match(gitignore, /^\.env\.local$/m);
   assert.match(gitignore, /^data\/$/m);
   assert.match(readme, /Node\.js 22 LTS/);
   assert.match(readme, /npm install/);
+});
+
+test('publication rehearsal is explicitly local-only and cleans temporary records', async () => {
+  const packageJson = JSON.parse(await readFile(new URL('package.json', root), 'utf8'));
+  const script = await readFile(new URL('scripts/verify-content-publication-e2e.mjs', root), 'utf8');
+  assert.equal(packageJson.scripts['publication:verify-e2e'], 'node ./scripts/verify-content-publication-e2e.mjs');
+  assert.match(script, /RFC1918 HTTP URL/);
+  assert.match(script, /e2e-publication-/);
+  assert.match(script, /Temporary publication article was not fully cleaned/);
+  assert.doesNotMatch(script, /CMS_BFF_TOKEN|CMS_WRITE_TOKEN/);
+});
+
+test('CMS demo seed is marked, draft-only, and has a deterministic cleanup command', async () => {
+  const packageJson = JSON.parse(await readFile(new URL('package.json', root), 'utf8'));
+  const script = await readFile(new URL('scripts/seed-cms-demo.mjs', root), 'utf8');
+  assert.equal(packageJson.scripts['demo:seed'], 'node ./scripts/seed-cms-demo.mjs');
+  assert.equal(packageJson.scripts['demo:cleanup'], 'node ./scripts/seed-cms-demo.mjs --cleanup');
+  assert.match(script, /DEMO-CMS-CONTENT/);
+  assert.match(script, /DEMO-NOTIFICATION-MANUAL-REVIEW/);
+  assert.match(script, /status: 'draft'/);
+  assert.match(script, /repair_page_configs/);
+  assert.match(script, /page_key: 'repair_home'/);
+  assert.match(script, /action: '01'/);
+  assert.match(script, /publication_state: 'unpublished'/);
+  assert.match(script, /process\.exit\(0\)/);
+  assert.match(script, /Delete children first/);
+  assert.doesNotMatch(script, /status: 'published'/);
 });

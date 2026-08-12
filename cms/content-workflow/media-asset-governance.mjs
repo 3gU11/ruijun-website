@@ -64,6 +64,21 @@ function asList(value, fieldName) {
   return value;
 }
 
+function asObject(value, fieldName) {
+  if (value == null) return {};
+  if (typeof value === 'string') {
+    try {
+      return asObject(JSON.parse(value), fieldName);
+    } catch {
+      throw new MediaAssetGovernanceError('MEDIA_REFERENCE_INVALID', `${fieldName} must be a JSON object`);
+    }
+  }
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    throw new MediaAssetGovernanceError('MEDIA_REFERENCE_INVALID', `${fieldName} must be an object`);
+  }
+  return value;
+}
+
 export function assertMediaAssetUpload(payload) {
   const fileName = requiredText(payload?.filename_download, 'filename_download');
   const mimeType = requiredText(payload?.type, 'type').toLowerCase();
@@ -118,6 +133,12 @@ export function collectMediaAssetReferenceIds(record) {
       if (!mediaAssetId) throw new MediaAssetGovernanceError('MEDIA_REFERENCE_INVALID', `${field} entries must include media_asset_id`);
       references.push(mediaAssetId);
     }
+  }
+  const brand = asObject(record?.brand, 'brand');
+  if (brand.logo_asset != null && brand.logo_asset !== '') {
+    const logoAssetId = assetIdText(brand.logo_asset);
+    if (!logoAssetId) throw new MediaAssetGovernanceError('MEDIA_REFERENCE_INVALID', 'brand.logo_asset must be a media asset id');
+    references.push(logoAssetId);
   }
   return [...new Set(references)];
 }

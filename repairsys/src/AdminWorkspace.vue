@@ -11,6 +11,7 @@ const props = defineProps({
   initialAdmin: { type: Object, default: null }
 });
 const emit = defineEmits(['logout']);
+const repairClientUrl = String(import.meta.env.VITE_REPAIR_CLIENT_URL || window.location.origin).replace(/\/$/, '');
 
 const AdminMasterDataPanel = defineAsyncComponent(() => import('./admin/AdminMasterDataPanel.vue'));
 const AdminReportsPanel = defineAsyncComponent(() => import('./admin/AdminReportsPanel.vue'));
@@ -28,6 +29,7 @@ const requests = ref([]);
 const workOrders = ref([]);
 const master = ref({ users: [], clientAccounts: [], adminUsers: [], machines: [], materials: [], materialInstances: [], bindings: [], logs: [] });
 const syncTasks = ref([]);
+const boardQrCodes = ref([]);
 const modelDictionary = ref([]);
 const machineBindingSource = ref({ available: false, source: '', deliveryDateColumn: '', rows: [] });
 const adminUsers = ref([]);
@@ -77,6 +79,7 @@ const materialForm = reactive({ materialCode: 'MAT-NEW-', name: '', type: '板�
 const instanceForm = reactive({ serialNo: '', materialCode: 'MAT-MAIN-BOARD', batchNo: '', flowNo: '', status: '备用' });
 const bindingForm = reactive({ machineNo: 'RJ-MC-2025-001', serialNo: 'PCB-SPARE-009', position: '电柜备用位', source: '人工新增' });
 const syncForm = reactive({ source: 'V8 Excel 导入', target: '机床/物料/绑定关系', successCount: 0, failCount: 0, summary: '记录一次模拟同步任务' });
+const boardQrForm = reactive({ serialNo: '', expiresAt: '' });
 const requestFilters = reactive({ dateRange: [], keyword: '' });
 const orderFilters = reactive({ dateRange: [], keyword: '' });
 const accountFilters = reactive({ keyword: '' });
@@ -579,12 +582,13 @@ async function loadAll() {
   if (!currentAdmin.value) return;
   loading.value = true;
   try {
-    const [overviewData, requestData, orderData, masterData, syncData, models, bindingSource, adminUserData, roleData] = await Promise.all([
+    const [overviewData, requestData, orderData, masterData, syncData, boardCodeData, models, bindingSource, adminUserData, roleData] = await Promise.all([
       hasPermission('REPORT_LOG') ? api.overview() : Promise.resolve({ status: {}, warrantyStats: {}, byAgent: [], byMaterialType: {}, bySourceChannel: {}, recentLogs: [] }),
       hasPermission('REQUEST_REVIEW') ? api.requests() : Promise.resolve([]),
       hasPermission('WORK_ORDER') ? api.workOrders() : Promise.resolve([]),
       api.masterData(),
       hasPermission('MASTER_DATA') ? api.syncTasks() : Promise.resolve([]),
+      hasPermission('MASTER_DATA') ? api.boardQrCodes() : Promise.resolve([]),
       api.modelDictionary(),
       hasPermission('MASTER_DATA') ? api.machineComponentBindings() : Promise.resolve({ available: false, source: '', rows: [] }),
       hasPermission('ADMIN_USER_MANAGE') ? api.adminUsers() : Promise.resolve([]),
@@ -595,6 +599,7 @@ async function loadAll() {
     workOrders.value = orderData;
     master.value = masterData;
     syncTasks.value = syncData;
+    boardQrCodes.value = boardCodeData;
     modelDictionary.value = models;
     machineBindingSource.value = bindingSource;
     adminUsers.value = adminUserData || [];
@@ -603,6 +608,28 @@ async function loadAll() {
     permissionCatalog.value = roleData.permissionCatalog || masterData.permissionCatalog || [];
   } finally {
     loading.value = false;
+  }
+}
+
+async function issueBoardQr() {
+  if (!boardQrForm.serialNo) return ElMessage.warning('请选择需要贴标的板卡实例');
+  try {
+    const issued = await api.issueBoardQr({ serialNo: boardQrForm.serialNo, expiresAt: boardQrForm.expiresAt });
+    await loadAll();
+    await ElMessageBox.alert(`请复制并打印二维码地址：\n${repairClientUrl}${issued.scanPath}`, '二维码已签发', { confirmButtonText: '关闭' });
+  } catch (error) {
+    ElMessage.error(error.message || '二维码签发失败');
+  }
+}
+
+async function revokeBoardQr(id) {
+  try {
+    await ElMessageBox.confirm('作废后该标签将无法再解析，是否继续？', '作废二维码', { type: 'warning' });
+    await api.revokeBoardQr(id);
+    await loadAll();
+    ElMessage.success('二维码已作废');
+  } catch (error) {
+    if (error !== 'cancel' && error !== 'close') ElMessage.error(error.message || '二维码作废失败');
   }
 }
 
@@ -1178,10 +1205,14 @@ onMounted(async () => {
               :binding-form="bindingForm"
               :sync-form="syncForm"
               :sync-tasks="syncTasks"
+              :board-qr-codes="boardQrCodes"
+              :board-qr-form="boardQrForm"
               @create-material="createMaterial"
               @create-instance="createInstance"
               @create-binding="createBinding"
               @create-sync-task="createSyncTask"
+              @issue-board-qr="issueBoardQr"
+              @revoke-board-qr="revokeBoardQr"
             />
           </el-tab-pane>
 

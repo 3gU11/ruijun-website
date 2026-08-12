@@ -3,7 +3,7 @@
     <div class="lead-workbench">
       <div class="toolbar">
         <div class="toolbar-copy">
-          <p class="eyebrow">SALES INBOX</p>
+          <p class="eyebrow">销售线索</p>
           <p>显示当前账号有权限查看的未领取线索和本人线索。</p>
         </div>
         <button class="secondary-action" type="button" :disabled="loading" @click="loadLeads">刷新</button>

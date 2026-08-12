@@ -67,3 +67,32 @@ test('Nuxt CMS article detail does not expose stale or draft data when no valid 
 
   assert.deepEqual(await reader.get('draft-news'), { data: null, cache: 'fresh', source: 'cms' });
 });
+
+test('Nuxt CMS article reader resolves only published cover media and never exposes a bare media id', async () => {
+  const requests = [];
+  const article = { slug: 'media-news', title: 'Media news', status: 'published', publication_state: 'published', cover_asset: 17 };
+  const reader = createCmsArticleReader({
+    endpoint: 'https://cms.example.test/items/articles',
+    mediaAssetsEndpoint: 'https://cms.example.test/items/media_assets',
+    publicAssetBaseUrl: 'https://cdn.example.test',
+    fetchImpl: async (url) => {
+      const request = new URL(url);
+      requests.push(request);
+      if (request.pathname.endsWith('/media_assets')) {
+        return Response.json({ data: [{ id: 17, file_id: 'approved-cover', alt_text: 'Approved cover', status: 'published', publication_state: 'published' }, { id: 18, file_id: 'draft-cover', status: 'draft', publication_state: 'unpublished' }] });
+      }
+      return Response.json({ data: [article] });
+    }
+  });
+
+  const result = await reader.get('media-news');
+  assert.equal(result.data.cover_asset, 'https://cdn.example.test/assets/approved-cover');
+  assert.equal(requests.some((request) => request.pathname.endsWith('/media_assets') && request.searchParams.get('filter[status][_eq]') === 'published'), true);
+
+  const unresolved = createCmsArticleReader({
+    endpoint: 'https://cms.example.test/items/articles', mediaAssetsEndpoint: 'https://cms.example.test/items/media_assets',
+    publicAssetBaseUrl: 'https://cdn.example.test', fetchImpl: async (url) => new URL(url).pathname.endsWith('/media_assets')
+      ? Response.json({ data: [] }) : Response.json({ data: [article] })
+  });
+  assert.equal((await unresolved.get('media-news')).data.cover_asset, null);
+});

@@ -3,7 +3,7 @@
     <div class="analytics-page">
       <header class="toolbar">
         <div>
-          <p class="eyebrow">SERVICE ENTRY ATTRIBUTION</p>
+          <p class="eyebrow">服务入口归因</p>
           <h2>官网到售后系统的匿名入口点击</h2>
           <p>仅汇总入口类型和来源页面，不显示客户、设备或问题内容。</p>
         </div>

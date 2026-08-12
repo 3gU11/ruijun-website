@@ -12,11 +12,12 @@ async function fetchCollection({ baseUrl, accessToken, collection, fields, fetch
 
 export async function fetchProductReviewRecords({ baseUrl, accessToken, fetchImpl = fetch }) {
   const common = ['id', 'source_url', 'source_document', 'review_note', 'status', 'publication_state', 'import_evidence'];
-  const [series, models] = await Promise.all([
+  const [series, models, parameters] = await Promise.all([
     fetchCollection({ baseUrl, accessToken, collection: 'product_series', fields: [...common, 'series_code', 'name'], fetchImpl }),
-    fetchCollection({ baseUrl, accessToken, collection: 'product_models', fields: [...common, 'series_code', 'model_code', 'name', 'parameters'], fetchImpl })
+    fetchCollection({ baseUrl, accessToken, collection: 'product_models', fields: [...common, 'series_code', 'model_code', 'name', 'parameters'], fetchImpl }),
+    fetchCollection({ baseUrl, accessToken, collection: 'product_parameters', fields: [...common, 'model_code', 'group_name', 'field_name', 'value', 'unit', 'sort_order', 'test_conditions'], fetchImpl })
   ]);
-  return { series, models };
+  return { series, models, parameters };
 }
 
 if (import.meta.main) {

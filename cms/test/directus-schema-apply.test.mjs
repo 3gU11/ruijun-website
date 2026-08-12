@@ -1,8 +1,50 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-const { createDirectusSchemaApplier } = await import('../scripts/apply-directus-schema.mjs');
+const { createDirectusSchemaApplier, permissionSpecs } = await import('../scripts/apply-directus-schema.mjs');
+
+test('Directus role permissions keep lifecycle transitions separate from content mutation', () => {
+  const reviewer = permissionSpecs('review_manager', 'review-policy');
+  const manager = permissionSpecs('notification_manager', 'notification-policy');
+  const readOnly = permissionSpecs('read_only_manager', 'readonly-policy');
+  const contentWorkflowFields = new Set([
+    'status', 'review_note', 'publication_state', 'published_at', 'reviewed_by', 'reviewed_at',
+    'published_by', 'publication_log'
+  ]);
+
+  assert.ok(reviewer.every((permission) => permission.action === 'read' || permission.fields.every((field) => contentWorkflowFields.has(field))));
+  assert.ok(reviewer.filter((permission) => permission.action === 'update').every((permission) => permission.fields.includes('status') && permission.fields.includes('review_note')));
+  assert.deepEqual(manager.find((permission) => permission.action === 'update').fields, [
+    'status', 'manual_note', 'handled_by', 'handled_at', 'lock_token', 'locked_by', 'locked_at',
+    'next_attempt_at', 'last_error', 'sent_at', 'activity_log'
+  ]);
+  assert.ok(!manager.find((permission) => permission.action === 'read').fields.includes('lock_token'));
+  assert.ok(!readOnly.some((permission) => permission.collection === 'leads'));
+  assert.deepEqual(readOnly.find((permission) => permission.collection === 'service_entry_clicks').fields, ['entry_type', 'source_page']);
+  assert.ok(readOnly.some((permission) => permission.collection === 'content_versions' && permission.action === 'read'));
+});
 const { buildDirectusSchemaPlan } = await import('../schema/directus-schema-plan.mjs');
+
+test('Directus content editor permissions use contract fields and only update editable lifecycle states', () => {
+  const plan = buildDirectusSchemaPlan();
+  const expectedFields = Map.groupBy(plan.fields, (field) => field.collection);
+  const managedCollections = plan.roles.find((role) => role.key === 'content_editor').manage_collections;
+  const permissions = permissionSpecs('content_editor', 'editor-policy');
+
+  for (const collection of managedCollections) {
+    const collectionPermissions = permissions.filter((permission) => permission.collection === collection);
+    assert.deepEqual(collectionPermissions.map((permission) => permission.action), ['read', 'create', 'update']);
+    const contractFields = expectedFields.get(collection).map((field) => field.field);
+    const read = collectionPermissions.find((permission) => permission.action === 'read');
+    const create = collectionPermissions.find((permission) => permission.action === 'create');
+    const update = collectionPermissions.find((permission) => permission.action === 'update');
+    assert.deepEqual(read.fields, ['id', ...contractFields]);
+    assert.deepEqual(create.fields, contractFields);
+    assert.deepEqual(update.fields, contractFields);
+    assert.deepEqual(update.permissions, { status: { _in: ['draft', 'rejected', 'unpublished'] } });
+    assert.ok(collectionPermissions.every((permission) => !permission.fields.includes('*')));
+  }
+});
 
 test('Directus schema applier creates only missing collections, fields, roles, and permissions', async () => {
   const calls = [];
@@ -30,13 +72,74 @@ test('Directus schema applier creates only missing collections, fields, roles, a
   assert.equal(result.collections.created, buildDirectusSchemaPlan().collections.length - 1);
   assert.equal(result.collections.skipped, 1);
   assert.equal(result.fields.skipped, 1);
-  assert.equal(result.roles.created, 9);
+  assert.equal(result.roles.created, 7);
   assert.equal(result.roles.skipped, 2);
   assert.ok(result.permissions.created > 0);
   assert.ok(calls.some((call) => call.method === 'POST' && call.url.pathname === '/collections'));
   assert.ok(calls.some((call) => call.method === 'POST' && call.url.pathname === '/fields/pages'));
   assert.ok(calls.some((call) => call.method === 'POST' && call.url.pathname === '/permissions'));
   assert.ok(calls.every((call) => call.headers?.Authorization === 'Bearer server-only-token'));
+});
+
+test('Directus schema applier updates native collection translations without changing API keys', async () => {
+  const calls = [];
+  const applier = createDirectusSchemaApplier({
+    baseUrl: 'https://cms.example.test',
+    accessToken: 'server-only-token',
+    schemaPlan: {
+      collections: [{
+        collection: 'pages',
+        meta: { translations: [{ language: 'zh-CN', translation: '页面' }] },
+        schema: {}
+      }],
+      fields: [],
+      roles: []
+    },
+    fetchImpl: async (url, options = {}) => {
+      const request = { url: new URL(url), method: options.method || 'GET', body: options.body };
+      calls.push(request);
+      if (request.url.pathname === '/collections' && request.method === 'GET') {
+        return Response.json({ data: [{ collection: 'pages', meta: { translations: null } }] });
+      }
+      if (request.url.pathname === '/collections/pages' && request.method === 'PATCH') return Response.json({ data: {} });
+      if (request.url.pathname === '/roles' || request.url.pathname === '/policies' || request.url.pathname === '/permissions') return Response.json({ data: [] });
+      if (request.url.pathname === '/access') return Response.json({ data: [] });
+      throw new Error(`Unexpected request ${request.method} ${request.url.pathname}`);
+    }
+  });
+
+  const result = await applier.apply();
+  const update = calls.find((call) => call.method === 'PATCH' && call.url.pathname === '/collections/pages');
+  assert.equal(result.collections.updated, 1);
+  assert.deepEqual(JSON.parse(update.body), { meta: { translations: [{ language: 'zh-CN', translation: '页面' }] } });
+});
+
+test('Directus schema applier migrates legacy English roles to the Chinese role without duplicates', async () => {
+  const calls = [];
+  const applier = createDirectusSchemaApplier({
+    baseUrl: 'https://cms.example.test', accessToken: 'server-only-token',
+    schemaPlan: { collections: [], fields: [], roles: [{ key: 'notification_manager', name: '通知管理员', admin: false }] },
+    fetchImpl: async (url, options = {}) => {
+      const request = { url: new URL(url), method: options.method || 'GET', body: options.body };
+      calls.push(request);
+      if (request.url.pathname === '/collections') return Response.json({ data: [] });
+      if (request.url.pathname === '/roles' && request.method === 'GET') return Response.json({ data: [{ id: 'legacy-role', name: 'Notification manager' }, { id: 'current-role', name: '通知管理员' }] });
+      if (request.url.pathname === '/users' && request.method === 'GET') return Response.json({ data: [{ id: 'manager-user', role: 'legacy-role' }] });
+      if (request.url.pathname === '/users/manager-user' && request.method === 'PATCH') return Response.json({ data: { id: 'manager-user' } });
+      if (request.url.pathname === '/roles/legacy-role' && request.method === 'DELETE') return Response.json({ data: null });
+      if (request.url.pathname === '/policies' && request.method === 'GET') return Response.json({ data: [{ id: 'manager-policy', name: 'Ruijun notification_manager' }] });
+      if (request.url.pathname === '/access' && request.method === 'GET') return Response.json({ data: [{ role: 'current-role', policy: 'manager-policy' }] });
+      if (request.url.pathname === '/permissions' && request.method === 'GET') return Response.json({ data: [] });
+      if (request.url.pathname === '/permissions' && request.method === 'POST') return Response.json({ data: {} });
+      throw new Error(`Unexpected request ${request.method} ${request.url.pathname}`);
+    }
+  });
+
+  const result = await applier.apply();
+  assert.equal(result.roles.created, 0);
+  assert.equal(result.roles.migrated, 1);
+  assert.deepEqual(JSON.parse(calls.find((call) => call.url.pathname === '/users/manager-user').body), { role: 'current-role' });
+  assert.ok(calls.some((call) => call.method === 'DELETE' && call.url.pathname === '/roles/legacy-role'));
 });
 
 test('Directus schema applier fails closed on a rejected schema write', async () => {
@@ -213,7 +316,7 @@ test('Directus schema applier recognizes Directus 11 policy permissions and does
   assert.equal(writes.filter((request) => request.url.pathname === '/permissions' && request.method === 'POST').length, 0);
 });
 
-test('Directus schema applier removes only duplicate managed policy permissions', async () => {
+test('Directus schema applier removes duplicate and obsolete permissions only from managed policies', async () => {
   const deletes = [];
   const applier = createDirectusSchemaApplier({
     baseUrl: 'https://cms.example.test', accessToken: 'server-only-token',
@@ -228,6 +331,7 @@ test('Directus schema applier removes only duplicate managed policy permissions'
         { id: 'keep-read', policy: 'policy-1', collection: 'leads', action: 'read' },
         { id: 'remove-read', policy: 'policy-1', collection: 'leads', action: 'read' },
         { id: 'keep-update', policy: 'policy-1', collection: 'leads', action: 'update' },
+        { id: 'remove-create', policy: 'policy-1', collection: 'leads', action: 'create' },
         { id: 'unmanaged', policy: 'other-policy', collection: 'leads', action: 'read' }
       ] });
       if (request.method === 'DELETE') deletes.push(request.url.pathname);
@@ -237,7 +341,8 @@ test('Directus schema applier removes only duplicate managed policy permissions'
 
   const result = await applier.apply();
   assert.equal(result.permissions.deduplicated, 1);
-  assert.deepEqual(deletes, ['/permissions/remove-read']);
+  assert.equal(result.permissions.removed, 1);
+  assert.deepEqual(deletes.sort(), ['/permissions/remove-create', '/permissions/remove-read']);
 });
 
 test('Directus schema applier grants the website BFF only published-content reads and lead creation', async () => {
@@ -269,7 +374,7 @@ test('Directus schema applier grants the website BFF only published-content read
   const clickPermission = permissionRequests.find((permission) => permission.collection === 'service_entry_clicks');
   assert.deepEqual({ action: clickPermission.action, fields: clickPermission.fields }, { action: 'create', fields: ['entry_type', 'source_page'] });
   const publicReads = permissionRequests.filter((permission) => permission.action === 'read' && !['lead_dedupe_keys', 'lead_upload_sessions'].includes(permission.collection));
-  assert.deepEqual(publicReads.map((permission) => permission.collection).sort(), ['articles', 'external_service_entries', 'manufacturing_evidence', 'media_assets', 'milestones', 'pages', 'product_models', 'product_series', 'qualifications', 'service_locations', 'service_resources', 'site_settings']);
+  assert.deepEqual(publicReads.map((permission) => permission.collection).sort(), ['articles', 'external_service_entries', 'manufacturing_evidence', 'media_assets', 'milestones', 'pages', 'product_models', 'product_parameters', 'product_release_snapshots', 'product_series', 'qualifications', 'repair_page_configs', 'service_locations', 'service_resources', 'site_settings']);
   assert.ok(publicReads.every((permission) => permission.permissions.status._eq === 'published' && permission.permissions.publication_state._eq === 'published'));
   assert.ok(publicReads.some((permission) => permission.collection === 'service_resources' && permission.fields.includes('asset')));
   assert.ok(publicReads.some((permission) => permission.collection === 'service_locations' && permission.fields.includes('business_status')));
@@ -306,7 +411,9 @@ test('Directus schema applier grants read-only managers click-record visibility 
   await applier.apply();
 
   const clickPermission = permissionRequests.find((permission) => permission.collection === 'service_entry_clicks');
-  assert.deepEqual({ action: clickPermission.action, fields: clickPermission.fields }, { action: 'read', fields: ['*'] });
+  assert.deepEqual({ action: clickPermission.action, fields: clickPermission.fields }, { action: 'read', fields: ['entry_type', 'source_page'] });
+  assert.ok(!permissionRequests.some((permission) => permission.collection === 'leads'));
+  assert.ok(permissionRequests.some((permission) => permission.collection === 'content_versions'));
   assert.ok(permissionRequests.every((permission) => permission.action === 'read'));
 });
 

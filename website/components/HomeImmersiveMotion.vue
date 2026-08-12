@@ -5,6 +5,8 @@ const labels = ['首页', '选择瑞钧', '三大理由', '产品中心', '发�
 const activePanel = ref(0);
 const indicatorVisible = ref(false);
 const indicatorProgress = ref(0);
+const HERO_INTRO_LOCK_MS = 4000;
+const HERO_HEADER_FULL_WIDTH_HOLD_MS = 420;
 let cleanupMotion: (() => void) | undefined;
 let jumpPanel: (index: number) => void = () => {};
 
@@ -58,10 +60,41 @@ onMounted(async () => {
   let historyCursorPulseActive = false;
   let gestureDistance = 0;
   let animating = false;
+  let heroInputLocked = false;
   let hideTimer = 0;
+  let heroLockTimer = 0;
+  let heroHeaderTimer = 0;
   let observer: any;
 
   const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(value, max));
+  const setHeaderWide = (wide: boolean) => {
+    header?.classList.toggle('is-wide', wide);
+    window.dispatchEvent(new CustomEvent('ruijun:header-wide', { detail: wide }));
+  };
+
+  const setHeroInputLocked = (locked: boolean) => {
+    heroInputLocked = locked;
+    header?.classList.toggle('is-hero-locked', locked);
+    if (locked) indicatorVisible.value = false;
+  };
+
+  const releaseHeroInputLock = () => {
+    window.clearTimeout(heroLockTimer);
+    if (!header) {
+      setHeroInputLocked(false);
+      return;
+    }
+    header.classList.add('is-hero-entered-wide');
+    setHeroInputLocked(false);
+    window.clearTimeout(heroHeaderTimer);
+    heroHeaderTimer = window.setTimeout(() => header.classList.remove('is-hero-entered-wide'), HERO_HEADER_FULL_WIDTH_HOLD_MS);
+  };
+
+  const startHeroInputLock = () => {
+    window.clearTimeout(heroLockTimer);
+    setHeroInputLocked(true);
+    heroLockTimer = window.setTimeout(releaseHeroInputLock, HERO_INTRO_LOCK_MS);
+  };
 
   function revealIndicator() {
     if (!desktop.matches) return;
@@ -76,10 +109,25 @@ onMounted(async () => {
   }
 
   function setIntroStage(index: number, showHeading = true) {
+    const previousIndex = introStageIndex;
     introStageIndex = clamp(index, 0, introItems.length);
     intro.classList.toggle('intro-heading-visible', showHeading);
     introItems.forEach((_, itemIndex) => intro.classList.remove(`intro-stage-${itemIndex + 1}`));
     if (introStageIndex) intro.classList.add(`intro-stage-${introStageIndex}`);
+    if (!desktop.matches) return;
+
+    introItems.forEach((item, itemIndex) => {
+      const visible = itemIndex < introStageIndex;
+      const entering = visible && itemIndex >= previousIndex;
+      gsap.killTweensOf(item);
+      if (!visible) {
+        gsap.set(item, { autoAlpha: 0, y: 38, rotation: -8, transformOrigin: '100% 100%' });
+      } else if (entering) {
+        gsap.fromTo(item, { autoAlpha: 0, y: 38, rotation: -8, transformOrigin: '100% 100%' }, { autoAlpha: 1, y: 0, rotation: 0, duration: .96, ease: 'power3.out', overwrite: true });
+      } else {
+        gsap.set(item, { autoAlpha: 1, y: 0, rotation: 0, transformOrigin: '100% 100%' });
+      }
+    });
   }
 
   function machineRect(element: HTMLElement, relativeTo?: HTMLElement) {
@@ -250,7 +298,7 @@ onMounted(async () => {
   function setActive(index: number, animate = true) {
     panelIndex = clamp(index, 0, panels.length - 1);
     activePanel.value = panelIndex;
-    header?.classList.toggle('is-wide', panelIndex > 0);
+    setHeaderWide(panelIndex > 0);
     panels.forEach((panel, index) => {
       panel.classList.toggle('is-active', index === panelIndex);
       panel.classList.toggle('is-before', index < panelIndex);
@@ -265,7 +313,7 @@ onMounted(async () => {
   }
 
   function goToPanel(index: number, options: { reasonIndex?: number; historyProgress?: number } = {}) {
-    if (!desktop.matches || animating) return;
+    if (!desktop.matches || heroInputLocked || animating) return;
     const next = clamp(index, 0, panels.length - 1);
     if (next === panelIndex) {
       if (options.reasonIndex != null) setReason(options.reasonIndex);
@@ -313,6 +361,7 @@ onMounted(async () => {
   }
 
   function handleGesture(instance: any) {
+    if (heroInputLocked) return;
     revealIndicator();
     const delta = instance.deltaY;
     if (!Number.isFinite(delta) || !delta) return;
@@ -333,7 +382,10 @@ onMounted(async () => {
   }
 
   function onKeydown(event: KeyboardEvent) {
-    if (!desktop.matches || animating || document.querySelector('dialog[open]')) return;
+    if (!desktop.matches || document.querySelector('dialog[open]')) return;
+    const navigationKeys = ['ArrowDown', 'ArrowRight', 'PageDown', ' ', 'ArrowUp', 'ArrowLeft', 'PageUp'];
+    if (heroInputLocked && navigationKeys.includes(event.key)) { event.preventDefault(); return; }
+    if (animating) return;
     if (['ArrowDown', 'ArrowRight', 'PageDown', ' '].includes(event.key)) { event.preventDefault(); moveForward(); }
     if (['ArrowUp', 'ArrowLeft', 'PageUp'].includes(event.key)) { event.preventDefault(); moveBackward(); }
   }
@@ -346,7 +398,7 @@ onMounted(async () => {
       historyWheelCursor.style.removeProperty('--wire-length');
       gsap.set([...slides, historyTrack, historyCopy, historyCursor, historyOrbitRing, historyWheelCursor, historyWheel], { clearProps: 'transform,opacity,visibility' });
       slides.forEach(slide => slide.removeAttribute('aria-hidden'));
-      header?.classList.toggle('is-wide', window.scrollY >= hero.offsetHeight - 1);
+      setHeaderWide(window.scrollY >= hero.offsetHeight - 1);
     }
     updateIndicator();
     setupObserver();
@@ -375,6 +427,9 @@ onMounted(async () => {
   setActive(0, false);
   updateIndicator();
   setupObserver();
+  const heroVideo = hero.querySelector<HTMLVideoElement>('video');
+  heroVideo?.addEventListener('playing', startHeroInputLock);
+  if (heroVideo && !heroVideo.paused && !heroVideo.ended) startHeroInputLock();
 
   cleanupMotion = () => {
     anchors.forEach(link => link.removeEventListener('click', onAnchorClick));
@@ -382,6 +437,11 @@ onMounted(async () => {
     window.removeEventListener('resize', onResize);
     window.removeEventListener('scroll', updateIndicator);
     window.clearTimeout(hideTimer);
+    window.clearTimeout(heroLockTimer);
+    window.clearTimeout(heroHeaderTimer);
+    heroVideo?.removeEventListener('playing', startHeroInputLock);
+    header?.classList.remove('is-hero-entered-wide');
+    setHeroInputLocked(false);
     observer?.kill();
     gsap.killTweensOf([window, reasonMotion, historyMotion, historyCursor, historyOrbitRing, historyWheelCursor, historyWheel, morph, morphBg, morphImage]);
     document.body.classList.remove('immersive-scroll-ready');

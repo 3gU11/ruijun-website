@@ -9,15 +9,35 @@ defineProps({
   instanceForm: { type: Object, required: true },
   bindingForm: { type: Object, required: true },
   syncForm: { type: Object, required: true },
-  syncTasks: { type: Array, required: true }
+  syncTasks: { type: Array, required: true },
+  boardQrCodes: { type: Array, required: true },
+  boardQrForm: { type: Object, required: true }
 });
 
-defineEmits(['create-material', 'create-instance', 'create-binding', 'create-sync-task']);
+defineEmits(['create-material', 'create-instance', 'create-binding', 'create-sync-task', 'issue-board-qr', 'revoke-board-qr']);
 </script>
 
 <template>
   <div class="tab-body split">
     <div>
+      <div class="panel board-qr-codes">
+        <div class="section-title"><div><h2>板卡二维码</h2><p>二维码只对应板卡实例，不包含客户资料。</p></div></div>
+        <div class="form-row">
+          <el-select v-model="boardQrForm.serialNo" filterable placeholder="选择板卡实例">
+            <el-option v-for="item in master.materialInstances" :key="item.serialNo" :label="`${item.serialNo} ${item.material?.name || ''}`" :value="item.serialNo" />
+          </el-select>
+          <el-date-picker v-model="boardQrForm.expiresAt" value-format="YYYY-MM-DD HH:mm:ss" type="datetime" placeholder="有效期（可选）" style="width: 100%" />
+        </div>
+        <div class="inline-actions" style="margin: 12px 0"><el-button type="primary" :icon="Plus" @click="$emit('issue-board-qr')">签发二维码</el-button></div>
+        <el-table :data="boardQrCodes" height="240">
+          <el-table-column prop="id" label="编号" min-width="95" />
+          <el-table-column prop="serialNo" label="板卡编号" min-width="130" />
+          <el-table-column prop="issuedAt" label="签发时间" min-width="145" />
+          <el-table-column prop="expiresAt" label="有效期" min-width="145"><template #default="{ row }">{{ row.expiresAt || '长期有效' }}</template></el-table-column>
+          <el-table-column label="状态" width="85"><template #default="{ row }"><el-tag :type="row.status === 'active' ? 'success' : 'info'">{{ row.status === 'active' ? '有效' : '已作废' }}</el-tag></template></el-table-column>
+          <el-table-column label="操作" width="90"><template #default="{ row }"><el-button v-if="row.status === 'active'" text type="danger" @click="$emit('revoke-board-qr', row.id)">作废</el-button></template></el-table-column>
+        </el-table>
+      </div>
       <div class="panel">
         <div class="section-title"><h2>新增物料档案</h2></div>
         <el-form label-position="top">

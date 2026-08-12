@@ -22,5 +22,11 @@ test('Nuxt service page consumes the public service resource and location APIs w
   assert.match(source, /\/api\/public\/v1\/service-entry-clicks/);
   assert.match(source, /window\.open\(pendingExit\.value\.url, '_blank', 'noopener,noreferrer'\)/);
   assert.match(source, /service-exit-dialog button:not\(\.cancel\)/);
+  assert.match(source, /const selectedSupportModel = ref<string \| null>\(null\)/);
+  assert.match(source, /function selectSupportModel\(model: string\)/);
+  assert.match(source, /id="support-actions" class="psd-action-panel"/);
+  assert.doesNotMatch(source, /v-if="selectedSupportModel" id="support-actions"/);
+  assert.match(source, /@click="openModelServiceAction\(action\)"/);
+  assert.match(source, /:aria-pressed="selectedSupportModel === model\.label"/);
   assert.doesNotMatch(source, /CMS_SERVICE_(?:RESOURCES|LOCATIONS)_URL/);
 });

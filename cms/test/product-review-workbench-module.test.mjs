@@ -18,7 +18,9 @@ test('product review workbench is a read-only Directus module using the current 
   assert.match(module, /useApi/);
   assert.match(module, /\/items\/product_series/);
   assert.match(module, /\/items\/product_models/);
+  assert.match(module, /\/items\/product_parameters/);
   assert.match(module, /assessProductModel/);
+  assert.match(module, /assessProductParameter/);
   assert.match(module, /assessProductSeries/);
   assert.doesNotMatch(module, /api\.(post|patch|put|delete)/);
   assert.doesNotMatch(module, /CMS_BFF_TOKEN|CMS_WRITE_TOKEN|ADMIN_PASSWORD|phone|machine|fault/i);

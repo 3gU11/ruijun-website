@@ -1,4 +1,4 @@
-const WORKER_ROLE_NAME = 'Notification worker service account';
+const WORKER_ROLE_NAME = '通知任务服务账号';
 
 function urlFor(baseUrl, path) {
   return new URL(path.replace(/^\//, ''), `${baseUrl.replace(/\/$/, '')}/`);
@@ -21,7 +21,7 @@ export function createDirectusNotificationWorkerProvisioner({ baseUrl, adminToke
     async provision() {
       const roles = await request('/roles?limit=-1&fields=id,name');
       const workerRole = Array.isArray(roles) ? roles.find((role) => role.name === WORKER_ROLE_NAME) : null;
-      if (!workerRole?.id) throw new Error('Notification worker role is unavailable; apply the CMS schema before provisioning the service account');
+      if (!workerRole?.id) throw new Error('通知任务服务账号不可用；请先应用 CMS 数据结构后再创建服务账号');
 
       const usersUrl = new URL(urlFor(baseUrl, '/users'));
       usersUrl.searchParams.set('filter[email][_eq]', serviceEmail);
@@ -39,7 +39,7 @@ export function createDirectusNotificationWorkerProvisioner({ baseUrl, adminToke
       }
 
       const created = await request('/users', { method: 'POST', body: JSON.stringify({ email: serviceEmail, ...payload }) });
-      if (!created?.id) throw new Error('Directus did not return the notification worker user id');
+      if (!created?.id) throw new Error('Directus 未返回通知任务服务账号的用户编号');
       return { created: true, updated: false, userId: created.id };
     }
   };

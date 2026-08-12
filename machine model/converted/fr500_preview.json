@@ -1,0 +1,3518 @@
+{
+  "source": "D:\\CURSORpj\\gaunwang\\machine_model.step",
+  "object_count": 439,
+  "objects": [
+    {
+      "index": 0,
+      "source_name": "Part__Feature064",
+      "source_label": "压铆螺母M022",
+      "mesh_name": "Mesh_0000",
+      "mesh_label": "M022",
+      "facets": 432
+    },
+    {
+      "index": 1,
+      "source_name": "Part__Feature059",
+      "source_label": "压铆螺母M021",
+      "mesh_name": "Mesh_0001",
+      "mesh_label": "M021",
+      "facets": 432
+    },
+    {
+      "index": 2,
+      "source_name": "Part__Feature062",
+      "source_label": "FR-500床身新右后侧盖板焊件-2-2023-03-25",
+      "mesh_name": "Mesh_0002",
+      "mesh_label": "FR-500_-2-2023-03-25",
+      "facets": 120
+    },
+    {
+      "index": 3,
+      "source_name": "Part__Feature068",
+      "source_label": "压铆螺母M023",
+      "mesh_name": "Mesh_0003",
+      "mesh_label": "M023",
+      "facets": 432
+    },
+    {
+      "index": 4,
+      "source_name": "Part__Feature060",
+      "source_label": "FR-500床身新左侧门焊板-4-2022-11-001",
+      "mesh_name": "Mesh_0004",
+      "mesh_label": "FR-500_-4-2022-11-001",
+      "facets": 164
+    },
+    {
+      "index": 5,
+      "source_name": "Part__Feature063",
+      "source_label": "FR-500床身新右后侧盖板焊件-3-2023-03-25",
+      "mesh_name": "Mesh_0005",
+      "mesh_label": "FR-500_-3-2023-03-25",
+      "facets": 752
+    },
+    {
+      "index": 6,
+      "source_name": "Part__Feature061",
+      "source_label": "FR-500床身右后侧盖板焊件-1（自动穿丝）",
+      "mesh_name": "Mesh_0006",
+      "mesh_label": "FR-500_-1",
+      "facets": 4676
+    },
+    {
+      "index": 7,
+      "source_name": "Part__Feature065",
+      "source_label": "FR-500床身新右后侧盖板焊件-6",
+      "mesh_name": "Mesh_0007",
+      "mesh_label": "FR-500_-6",
+      "facets": 88
+    },
+    {
+      "index": 8,
+      "source_name": "Part__Feature066",
+      "source_label": "FR-500床身新右后侧盖板焊件-001",
+      "mesh_name": "Mesh_0008",
+      "mesh_label": "FR-500_-001",
+      "facets": 88
+    },
+    {
+      "index": 9,
+      "source_name": "Part__Feature067",
+      "source_label": "FR-500床身新右后侧盖板焊件-4-2023-03-25",
+      "mesh_name": "Mesh_0009",
+      "mesh_label": "FR-500_-4-2023-03-25",
+      "facets": 180
+    },
+    {
+      "index": 10,
+      "source_name": "Part__Feature072",
+      "source_label": "FR-500床身盖板卡件片焊件007",
+      "mesh_name": "Mesh_0010",
+      "mesh_label": "FR-500_007",
+      "facets": 240
+    },
+    {
+      "index": 11,
+      "source_name": "Part__Feature075",
+      "source_label": "压铆螺母M027",
+      "mesh_name": "Mesh_0011",
+      "mesh_label": "M027",
+      "facets": 432
+    },
+    {
+      "index": 12,
+      "source_name": "Part__Feature069",
+      "source_label": "压铆螺母M024",
+      "mesh_name": "Mesh_0012",
+      "mesh_label": "M024",
+      "facets": 432
+    },
+    {
+      "index": 13,
+      "source_name": "Part__Feature074",
+      "source_label": "压铆螺母M026",
+      "mesh_name": "Mesh_0013",
+      "mesh_label": "M026",
+      "facets": 432
+    },
+    {
+      "index": 14,
+      "source_name": "Part__Feature070",
+      "source_label": "FR-500床身新右前侧盖板焊件-002",
+      "mesh_name": "Mesh_0014",
+      "mesh_label": "FR-500_-002",
+      "facets": 164
+    },
+    {
+      "index": 15,
+      "source_name": "Part__Feature077",
+      "source_label": "FR-500床身新左后侧盖板焊件-1-2023-03-23",
+      "mesh_name": "Mesh_0015",
+      "mesh_label": "FR-500_-1-2023-03-23",
+      "facets": 1356
+    },
+    {
+      "index": 16,
+      "source_name": "Part__Feature071",
+      "source_label": "FR-500床身盖板卡件片焊件006",
+      "mesh_name": "Mesh_0016",
+      "mesh_label": "FR-500_006",
+      "facets": 240
+    },
+    {
+      "index": 17,
+      "source_name": "Part__Feature073",
+      "source_label": "压铆螺母M025",
+      "mesh_name": "Mesh_0017",
+      "mesh_label": "M025",
+      "facets": 432
+    },
+    {
+      "index": 18,
+      "source_name": "Part__Feature076",
+      "source_label": "FR-机器标牌",
+      "mesh_name": "Mesh_0018",
+      "mesh_label": "FR-",
+      "facets": 604
+    },
+    {
+      "index": 19,
+      "source_name": "Part__Feature081",
+      "source_label": "压铆螺母M028",
+      "mesh_name": "Mesh_0019",
+      "mesh_label": "M028",
+      "facets": 432
+    },
+    {
+      "index": 20,
+      "source_name": "Part__Feature083",
+      "source_label": "压铆螺母M030",
+      "mesh_name": "Mesh_0020",
+      "mesh_label": "M030",
+      "facets": 432
+    },
+    {
+      "index": 21,
+      "source_name": "Part__Feature084",
+      "source_label": "FR-500床身新右前侧盖板焊件-003",
+      "mesh_name": "Mesh_0021",
+      "mesh_label": "FR-500_-003",
+      "facets": 164
+    },
+    {
+      "index": 22,
+      "source_name": "Part__Feature080",
+      "source_label": "FR-500床身新右后侧盖板焊件-4-2023-03-001",
+      "mesh_name": "Mesh_0022",
+      "mesh_label": "FR-500_-4-2023-03-001",
+      "facets": 180
+    },
+    {
+      "index": 23,
+      "source_name": "Part__Feature086",
+      "source_label": "压铆螺母M032",
+      "mesh_name": "Mesh_0023",
+      "mesh_label": "M032",
+      "facets": 432
+    },
+    {
+      "index": 24,
+      "source_name": "Part__Feature079",
+      "source_label": "FR-500床身新左后侧盖板焊件-3-2023-03-25",
+      "mesh_name": "Mesh_0024",
+      "mesh_label": "FR-500_-3-2023-03-25",
+      "facets": 608
+    },
+    {
+      "index": 25,
+      "source_name": "Part__Feature078",
+      "source_label": "FR-500床身新左后侧盖板焊件-2-2023-03-25",
+      "mesh_name": "Mesh_0025",
+      "mesh_label": "FR-500_-2-2023-03-25",
+      "facets": 124
+    },
+    {
+      "index": 26,
+      "source_name": "Part__Feature082",
+      "source_label": "压铆螺母M029",
+      "mesh_name": "Mesh_0026",
+      "mesh_label": "M029",
+      "facets": 432
+    },
+    {
+      "index": 27,
+      "source_name": "Part__Feature085",
+      "source_label": "压铆螺母M031",
+      "mesh_name": "Mesh_0027",
+      "mesh_label": "M031",
+      "facets": 432
+    },
+    {
+      "index": 28,
+      "source_name": "Part__Feature",
+      "source_label": "FR-500床身新前盖板焊件-1-2022-11-21",
+      "mesh_name": "Mesh_0028",
+      "mesh_label": "FR-500_-1-2022-11-21",
+      "facets": 972
+    },
+    {
+      "index": 29,
+      "source_name": "Part__Feature034",
+      "source_label": "FR-500床身新左前侧盖板焊件-1-2023-05-08",
+      "mesh_name": "Mesh_0029",
+      "mesh_label": "FR-500_-1-2023-05-08",
+      "facets": 484
+    },
+    {
+      "index": 30,
+      "source_name": "Part__Feature037",
+      "source_label": "FR-500床身新左前侧盖板焊件-7-2022-10-25",
+      "mesh_name": "Mesh_0030",
+      "mesh_label": "FR-500_-7-2022-10-25",
+      "facets": 404
+    },
+    {
+      "index": 31,
+      "source_name": "Part__Feature033",
+      "source_label": "FR-500床身新后盖板焊件-6-2022-09-17",
+      "mesh_name": "Mesh_0031",
+      "mesh_label": "FR-500_-6-2022-09-17",
+      "facets": 180
+    },
+    {
+      "index": 32,
+      "source_name": "Part__Feature038",
+      "source_label": "FB450X床身左前侧盖板焊件-4",
+      "mesh_name": "Mesh_0032",
+      "mesh_label": "FB450X_-4",
+      "facets": 220
+    },
+    {
+      "index": 33,
+      "source_name": "Part__Feature031",
+      "source_label": "压铆螺母M010",
+      "mesh_name": "Mesh_0033",
+      "mesh_label": "M010",
+      "facets": 432
+    },
+    {
+      "index": 34,
+      "source_name": "Part__Feature032",
+      "source_label": "FR-500床身新后盖板焊件-4-2023-04-21",
+      "mesh_name": "Mesh_0034",
+      "mesh_label": "FR-500_-4-2023-04-21",
+      "facets": 180
+    },
+    {
+      "index": 35,
+      "source_name": "Part__Feature035",
+      "source_label": "FR-500床身新左前侧盖板焊件-6-2022-11-21",
+      "mesh_name": "Mesh_0035",
+      "mesh_label": "FR-500_-6-2022-11-21",
+      "facets": 610
+    },
+    {
+      "index": 36,
+      "source_name": "Part__Feature036",
+      "source_label": "FR-500床身新左前侧盖板焊件-2-2023-01-001",
+      "mesh_name": "Mesh_0036",
+      "mesh_label": "FR-500_-2-2023-01-001",
+      "facets": 1784
+    },
+    {
+      "index": 37,
+      "source_name": "Part__Feature041",
+      "source_label": "FR-500床身盖板卡件片焊件004",
+      "mesh_name": "Mesh_0037",
+      "mesh_label": "FR-500_004",
+      "facets": 240
+    },
+    {
+      "index": 38,
+      "source_name": "Part__Feature046",
+      "source_label": "压铆螺母M013",
+      "mesh_name": "Mesh_0038",
+      "mesh_label": "M013",
+      "facets": 432
+    },
+    {
+      "index": 39,
+      "source_name": "Part__Feature044",
+      "source_label": "压铆螺母M012",
+      "mesh_name": "Mesh_0039",
+      "mesh_label": "M012",
+      "facets": 432
+    },
+    {
+      "index": 40,
+      "source_name": "Part__Feature042",
+      "source_label": "FR-500床身盖板卡件片焊件005",
+      "mesh_name": "Mesh_0040",
+      "mesh_label": "FR-500_005",
+      "facets": 240
+    },
+    {
+      "index": 41,
+      "source_name": "Part__Feature043",
+      "source_label": "压铆螺母M011",
+      "mesh_name": "Mesh_0041",
+      "mesh_label": "M011",
+      "facets": 432
+    },
+    {
+      "index": 42,
+      "source_name": "Part__Feature039",
+      "source_label": "FR-500床身新左前侧盖板焊件-001",
+      "mesh_name": "Mesh_0042",
+      "mesh_label": "FR-500_-001",
+      "facets": 180
+    },
+    {
+      "index": 43,
+      "source_name": "Part__Feature040",
+      "source_label": "FR-500床身盖板卡件片焊件003",
+      "mesh_name": "Mesh_0043",
+      "mesh_label": "FR-500_003",
+      "facets": 240
+    },
+    {
+      "index": 44,
+      "source_name": "Part__Feature045",
+      "source_label": "FR-500床身新左前侧盖板焊件-3-2022-10-25",
+      "mesh_name": "Mesh_0044",
+      "mesh_label": "FR-500_-3-2022-10-25",
+      "facets": 792
+    },
+    {
+      "index": 45,
+      "source_name": "Part__Feature051",
+      "source_label": "压铆螺母M017",
+      "mesh_name": "Mesh_0045",
+      "mesh_label": "M017",
+      "facets": 432
+    },
+    {
+      "index": 46,
+      "source_name": "Part__Feature048",
+      "source_label": "压铆螺母M015",
+      "mesh_name": "Mesh_0046",
+      "mesh_label": "M015",
+      "facets": 432
+    },
+    {
+      "index": 47,
+      "source_name": "Part__Feature054",
+      "source_label": "压铆螺母M018",
+      "mesh_name": "Mesh_0047",
+      "mesh_label": "M018",
+      "facets": 432
+    },
+    {
+      "index": 48,
+      "source_name": "Part__Feature056",
+      "source_label": "FR-500床身新左侧门焊板-4-2022-11-21",
+      "mesh_name": "Mesh_0048",
+      "mesh_label": "FR-500_-4-2022-11-21",
+      "facets": 164
+    },
+    {
+      "index": 49,
+      "source_name": "Part__Feature050",
+      "source_label": "压铆螺母M016",
+      "mesh_name": "Mesh_0049",
+      "mesh_label": "M016",
+      "facets": 432
+    },
+    {
+      "index": 50,
+      "source_name": "Part__Feature047",
+      "source_label": "压铆螺母M014",
+      "mesh_name": "Mesh_0050",
+      "mesh_label": "M014",
+      "facets": 432
+    },
+    {
+      "index": 51,
+      "source_name": "Part__Feature049",
+      "source_label": "FR-500床身新右前侧盖板焊件-001",
+      "mesh_name": "Mesh_0051",
+      "mesh_label": "FR-500_-001",
+      "facets": 164
+    },
+    {
+      "index": 52,
+      "source_name": "Part__Feature052",
+      "source_label": "FR-500床身新左前侧盖板焊件-002",
+      "mesh_name": "Mesh_0052",
+      "mesh_label": "FR-500_-002",
+      "facets": 164
+    },
+    {
+      "index": 53,
+      "source_name": "Part__Feature053",
+      "source_label": "FR-500床身新左侧门焊板-1-2022-11-21",
+      "mesh_name": "Mesh_0053",
+      "mesh_label": "FR-500_-1-2022-11-21",
+      "facets": 1908
+    },
+    {
+      "index": 54,
+      "source_name": "Part__Feature055",
+      "source_label": "压铆螺母M019",
+      "mesh_name": "Mesh_0054",
+      "mesh_label": "M019",
+      "facets": 432
+    },
+    {
+      "index": 55,
+      "source_name": "Part__Feature057",
+      "source_label": "FR-500床身新左侧门焊板-1-2022-11-001",
+      "mesh_name": "Mesh_0055",
+      "mesh_label": "FR-500_-1-2022-11-001",
+      "facets": 1908
+    },
+    {
+      "index": 56,
+      "source_name": "Part__Feature058",
+      "source_label": "压铆螺母M020",
+      "mesh_name": "Mesh_0056",
+      "mesh_label": "M020",
+      "facets": 432
+    },
+    {
+      "index": 57,
+      "source_name": "Part__Feature020",
+      "source_label": "压铆螺母M004",
+      "mesh_name": "Mesh_0057",
+      "mesh_label": "M004",
+      "facets": 432
+    },
+    {
+      "index": 58,
+      "source_name": "Part__Feature021",
+      "source_label": "压铆螺母M005",
+      "mesh_name": "Mesh_0058",
+      "mesh_label": "M005",
+      "facets": 432
+    },
+    {
+      "index": 59,
+      "source_name": "Part__Feature018",
+      "source_label": "FR-500床身新右前侧盖板焊件-6",
+      "mesh_name": "Mesh_0059",
+      "mesh_label": "FR-500_-6",
+      "facets": 164
+    },
+    {
+      "index": 60,
+      "source_name": "Part__Feature023",
+      "source_label": "FR-500床身新左前侧盖板焊件-9",
+      "mesh_name": "Mesh_0060",
+      "mesh_label": "FR-500_-9",
+      "facets": 164
+    },
+    {
+      "index": 61,
+      "source_name": "Part__Feature017",
+      "source_label": "压铆螺母M002",
+      "mesh_name": "Mesh_0061",
+      "mesh_label": "M002",
+      "facets": 432
+    },
+    {
+      "index": 62,
+      "source_name": "Part__Feature026",
+      "source_label": "FR-500床身新后盖板焊件-2-2023-03-25",
+      "mesh_name": "Mesh_0062",
+      "mesh_label": "FR-500_-2-2023-03-25",
+      "facets": 152
+    },
+    {
+      "index": 63,
+      "source_name": "Part__Feature019",
+      "source_label": "压铆螺母M003",
+      "mesh_name": "Mesh_0063",
+      "mesh_label": "M003",
+      "facets": 432
+    },
+    {
+      "index": 64,
+      "source_name": "Part__Feature022",
+      "source_label": "压铆螺母M006",
+      "mesh_name": "Mesh_0064",
+      "mesh_label": "M006",
+      "facets": 432
+    },
+    {
+      "index": 65,
+      "source_name": "Part__Feature030",
+      "source_label": "压铆螺母M009",
+      "mesh_name": "Mesh_0065",
+      "mesh_label": "M009",
+      "facets": 432
+    },
+    {
+      "index": 66,
+      "source_name": "Part__Feature027",
+      "source_label": "FR-500床身新后盖板焊件-3-2023-03-25",
+      "mesh_name": "Mesh_0066",
+      "mesh_label": "FR-500_-3-2023-03-25",
+      "facets": 152
+    },
+    {
+      "index": 67,
+      "source_name": "Part__Feature024",
+      "source_label": "FR-500床身新左前侧盖板焊件-2-2023-01-02",
+      "mesh_name": "Mesh_0067",
+      "mesh_label": "FR-500_-2-2023-01-02",
+      "facets": 1784
+    },
+    {
+      "index": 68,
+      "source_name": "Part__Feature025",
+      "source_label": "FR-500床身新后盖板焊件-1-2022-11-21",
+      "mesh_name": "Mesh_0068",
+      "mesh_label": "FR-500_-1-2022-11-21",
+      "facets": 1532
+    },
+    {
+      "index": 69,
+      "source_name": "Part__Feature028",
+      "source_label": "压铆螺母M007",
+      "mesh_name": "Mesh_0069",
+      "mesh_label": "M007",
+      "facets": 432
+    },
+    {
+      "index": 70,
+      "source_name": "Part__Feature029",
+      "source_label": "压铆螺母M008",
+      "mesh_name": "Mesh_0070",
+      "mesh_label": "M008",
+      "facets": 432
+    },
+    {
+      "index": 71,
+      "source_name": "Part__Feature231",
+      "source_label": "FR-500新油槽后盖板-1-2023-03-23",
+      "mesh_name": "Mesh_0071",
+      "mesh_label": "FR-500_-1-2023-03-23",
+      "facets": 1196
+    },
+    {
+      "index": 72,
+      "source_name": "Part__Feature227",
+      "source_label": "FR-500新油槽接水盘焊板-4-2023-11-18",
+      "mesh_name": "Mesh_0072",
+      "mesh_label": "FR-500_-4-2023-11-18",
+      "facets": 808
+    },
+    {
+      "index": 73,
+      "source_name": "Part__Feature232",
+      "source_label": "FR-500新立柱前侧盖焊件-1-2023-04-25",
+      "mesh_name": "Mesh_0073",
+      "mesh_label": "FR-500_-1-2023-04-25",
+      "facets": 1340
+    },
+    {
+      "index": 74,
+      "source_name": "Part__Feature236",
+      "source_label": "FR-500新立柱前门横臂焊板-1-2022-11-21",
+      "mesh_name": "Mesh_0074",
+      "mesh_label": "FR-500_-1-2022-11-21",
+      "facets": 264
+    },
+    {
+      "index": 75,
+      "source_name": "Part__Feature228",
+      "source_label": "宝塔接头",
+      "mesh_name": "Mesh_0075",
+      "mesh_label": "part_0075",
+      "facets": 3178
+    },
+    {
+      "index": 76,
+      "source_name": "Part__Feature230",
+      "source_label": "FR-500油槽垫铁",
+      "mesh_name": "Mesh_0076",
+      "mesh_label": "FR-500",
+      "facets": 888
+    },
+    {
+      "index": 77,
+      "source_name": "Part__Feature229",
+      "source_label": "FR-500新油槽接水盘焊板-5-2023-03-23",
+      "mesh_name": "Mesh_0077",
+      "mesh_label": "FR-500_-5-2023-03-23",
+      "facets": 776
+    },
+    {
+      "index": 78,
+      "source_name": "Part__Feature233",
+      "source_label": "FR-500新立柱前侧盖焊件-2-2022-12-17",
+      "mesh_name": "Mesh_0078",
+      "mesh_label": "FR-500_-2-2022-12-17",
+      "facets": 696
+    },
+    {
+      "index": 79,
+      "source_name": "Part__Feature235",
+      "source_label": "FR-500新立柱前门板-2022-12-17",
+      "mesh_name": "Mesh_0079",
+      "mesh_label": "FR-500_-2022-12-17",
+      "facets": 2948
+    },
+    {
+      "index": 80,
+      "source_name": "Part__Feature234",
+      "source_label": "FR-500新立柱前侧盖焊件-3",
+      "mesh_name": "Mesh_0080",
+      "mesh_label": "FR-500_-3",
+      "facets": 28
+    },
+    {
+      "index": 81,
+      "source_name": "Part__Feature242",
+      "source_label": "压铆螺母M047",
+      "mesh_name": "Mesh_0081",
+      "mesh_label": "M047",
+      "facets": 432
+    },
+    {
+      "index": 82,
+      "source_name": "Part__Feature244",
+      "source_label": "FR-500新立柱线架接水盘焊板-1",
+      "mesh_name": "Mesh_0082",
+      "mesh_label": "FR-500_-1",
+      "facets": 424
+    },
+    {
+      "index": 83,
+      "source_name": "Part__Feature239",
+      "source_label": "FR-400立柱悬臂锁紧焊板-1",
+      "mesh_name": "Mesh_0083",
+      "mesh_label": "FR-400_-1",
+      "facets": 620
+    },
+    {
+      "index": 84,
+      "source_name": "Part__Feature240",
+      "source_label": "压铆螺母M4",
+      "mesh_name": "Mesh_0084",
+      "mesh_label": "M4",
+      "facets": 432
+    },
+    {
+      "index": 85,
+      "source_name": "Part__Feature238",
+      "source_label": "FR-500前门手柄",
+      "mesh_name": "Mesh_0085",
+      "mesh_label": "FR-500",
+      "facets": 308
+    },
+    {
+      "index": 86,
+      "source_name": "Part__Feature237",
+      "source_label": "FR-500新立柱前门横臂焊板-2-2022-10-25",
+      "mesh_name": "Mesh_0086",
+      "mesh_label": "FR-500_-2-2022-10-25",
+      "facets": 648
+    },
+    {
+      "index": 87,
+      "source_name": "Part__Feature241",
+      "source_label": "压铆螺母M046",
+      "mesh_name": "Mesh_0087",
+      "mesh_label": "M046",
+      "facets": 432
+    },
+    {
+      "index": 88,
+      "source_name": "Part__Feature243",
+      "source_label": "压铆螺母M048",
+      "mesh_name": "Mesh_0088",
+      "mesh_label": "M048",
+      "facets": 432
+    },
+    {
+      "index": 89,
+      "source_name": "Part__Feature246",
+      "source_label": "FR-500新立柱线架接水盘焊板-3",
+      "mesh_name": "Mesh_0089",
+      "mesh_label": "FR-500_-3",
+      "facets": 608
+    },
+    {
+      "index": 90,
+      "source_name": "Part__Feature247",
+      "source_label": "FR-500新立柱线架接水盘焊板-6",
+      "mesh_name": "Mesh_0090",
+      "mesh_label": "FR-500_-6",
+      "facets": 400
+    },
+    {
+      "index": 91,
+      "source_name": "Part__Feature253",
+      "source_label": "FR-500新立柱背包焊板-3-2022-10-15",
+      "mesh_name": "Mesh_0091",
+      "mesh_label": "FR-500_-3-2022-10-15",
+      "facets": 1920
+    },
+    {
+      "index": 92,
+      "source_name": "Part__Feature249",
+      "source_label": "FR-500新立柱镜面板-2022-12-17",
+      "mesh_name": "Mesh_0092",
+      "mesh_label": "FR-500_-2022-12-17",
+      "facets": 2792
+    },
+    {
+      "index": 93,
+      "source_name": "Part__Feature245",
+      "source_label": "FR-500新立柱线架接水盘焊板-2",
+      "mesh_name": "Mesh_0093",
+      "mesh_label": "FR-500_-2",
+      "facets": 164
+    },
+    {
+      "index": 94,
+      "source_name": "Part__Feature251",
+      "source_label": "FR-500新立柱背包焊板-1-2023-01-06",
+      "mesh_name": "Mesh_0094",
+      "mesh_label": "FR-500_-1-2023-01-06",
+      "facets": 6484
+    },
+    {
+      "index": 95,
+      "source_name": "Part__Feature252",
+      "source_label": "FR-500新立柱背包焊板-2-2022-09-16",
+      "mesh_name": "Mesh_0095",
+      "mesh_label": "FR-500_-2-2022-09-16",
+      "facets": 476
+    },
+    {
+      "index": 96,
+      "source_name": "Part__Feature250",
+      "source_label": "FR-500新立柱头罩下盖板-2-2023-04-21",
+      "mesh_name": "Mesh_0096",
+      "mesh_label": "FR-500_-2-2023-04-21",
+      "facets": 1678
+    },
+    {
+      "index": 97,
+      "source_name": "Part__Feature248",
+      "source_label": "FR-500接水盘缓冲垫",
+      "mesh_name": "Mesh_0097",
+      "mesh_label": "FR-500",
+      "facets": 12
+    },
+    {
+      "index": 98,
+      "source_name": "Part__Feature254",
+      "source_label": "FR-500新立柱背包焊板-6",
+      "mesh_name": "Mesh_0098",
+      "mesh_label": "FR-500_-6",
+      "facets": 460
+    },
+    {
+      "index": 99,
+      "source_name": "Part__Feature425",
+      "source_label": "FR-500钼丝桶新围板左侧盖板焊件-1-2022-11-21",
+      "mesh_name": "Mesh_0099",
+      "mesh_label": "FR-500_-1-2022-11-21",
+      "facets": 696
+    },
+    {
+      "index": 100,
+      "source_name": "Part__Feature427",
+      "source_label": "FR-500钼丝桶新后围焊板-2-2022-09-002",
+      "mesh_name": "Mesh_0100",
+      "mesh_label": "FR-500_-2-2022-09-002",
+      "facets": 324
+    },
+    {
+      "index": 101,
+      "source_name": "Part__Feature431",
+      "source_label": "压铆螺母M079",
+      "mesh_name": "Mesh_0101",
+      "mesh_label": "M079",
+      "facets": 432
+    },
+    {
+      "index": 102,
+      "source_name": "Part__Feature428",
+      "source_label": "压铆螺母M077",
+      "mesh_name": "Mesh_0102",
+      "mesh_label": "M077",
+      "facets": 432
+    },
+    {
+      "index": 103,
+      "source_name": "Part__Feature430",
+      "source_label": "FR-500新钼丝桶水槽焊板",
+      "mesh_name": "Mesh_0103",
+      "mesh_label": "FR-500",
+      "facets": 912
+    },
+    {
+      "index": 104,
+      "source_name": "Part__Feature423",
+      "source_label": "FT-7055钼丝桶围板移动后门",
+      "mesh_name": "Mesh_0104",
+      "mesh_label": "FT-7055",
+      "facets": 504
+    },
+    {
+      "index": 105,
+      "source_name": "Part__Feature424",
+      "source_label": "FT-7055钼丝桶围板移动后门001",
+      "mesh_name": "Mesh_0105",
+      "mesh_label": "FT-7055_001",
+      "facets": 504
+    },
+    {
+      "index": 106,
+      "source_name": "Part__Feature426",
+      "source_label": "FR-500钼丝桶新后围焊板-2-2022-09-001",
+      "mesh_name": "Mesh_0106",
+      "mesh_label": "FR-500_-2-2022-09-001",
+      "facets": 324
+    },
+    {
+      "index": 107,
+      "source_name": "Part__Feature429",
+      "source_label": "压铆螺母M078",
+      "mesh_name": "Mesh_0107",
+      "mesh_label": "M078",
+      "facets": 432
+    },
+    {
+      "index": 108,
+      "source_name": "Part__Feature435",
+      "source_label": "FR-500钼丝桶新钣金滑板-1-2022-09-26",
+      "mesh_name": "Mesh_0108",
+      "mesh_label": "FR-500_-1-2022-09-26",
+      "facets": 1664
+    },
+    {
+      "index": 109,
+      "source_name": "Part__Feature432",
+      "source_label": "压铆螺母M080",
+      "mesh_name": "Mesh_0109",
+      "mesh_label": "M080",
+      "facets": 432
+    },
+    {
+      "index": 110,
+      "source_name": "Part__Feature434",
+      "source_label": "水管接头",
+      "mesh_name": "Mesh_0110",
+      "mesh_label": "part_0110",
+      "facets": 3178
+    },
+    {
+      "index": 111,
+      "source_name": "Part__Feature439",
+      "source_label": "FR-500钼丝桶新钣金滑板-003",
+      "mesh_name": "Mesh_0111",
+      "mesh_label": "FR-500_-003",
+      "facets": 312
+    },
+    {
+      "index": 112,
+      "source_name": "Part__Feature433",
+      "source_label": "压铆螺母M081",
+      "mesh_name": "Mesh_0112",
+      "mesh_label": "M081",
+      "facets": 432
+    },
+    {
+      "index": 113,
+      "source_name": "Part__Feature438",
+      "source_label": "FR-500钼丝桶新钣金滑板-002",
+      "mesh_name": "Mesh_0113",
+      "mesh_label": "FR-500_-002",
+      "facets": 312
+    },
+    {
+      "index": 114,
+      "source_name": "Part__Feature436",
+      "source_label": "FR-500钼丝桶新钣金滑板-2",
+      "mesh_name": "Mesh_0114",
+      "mesh_label": "FR-500_-2",
+      "facets": 312
+    },
+    {
+      "index": 115,
+      "source_name": "Part__Feature437",
+      "source_label": "FR-500钼丝桶新钣金滑板-001",
+      "mesh_name": "Mesh_0115",
+      "mesh_label": "FR-500_-001",
+      "facets": 312
+    },
+    {
+      "index": 116,
+      "source_name": "Part__Feature440",
+      "source_label": "hex nuts, style 1-grades ab gb_PreviewCfg",
+      "mesh_name": "Mesh_0116",
+      "mesh_label": "hex_nuts_style_1-grades_ab_gb_PreviewCfg",
+      "facets": 528
+    },
+    {
+      "index": 117,
+      "source_name": "Part__Feature311",
+      "source_label": "FT - 400 _X2_59347F69987676D6540E63216761_X0_001",
+      "mesh_name": "Mesh_0117",
+      "mesh_label": "FT_-_400__X2_59347F69987676D6540E63216761_X0_001",
+      "facets": 604
+    },
+    {
+      "index": 118,
+      "source_name": "Part__Feature312",
+      "source_label": "FT-400 _X2_7ACB67F159347F69_X0_LED_X2_706F53616263_X0_",
+      "mesh_name": "Mesh_0118",
+      "mesh_label": "FT-400__X2_7ACB67F159347F69_X0_LED_X2_706F53616263_X0",
+      "facets": 696
+    },
+    {
+      "index": 119,
+      "source_name": "Part__Feature318",
+      "source_label": "FR-500新立柱后盖焊板-3-2022-12-17",
+      "mesh_name": "Mesh_0119",
+      "mesh_label": "FR-500_-3-2022-12-17",
+      "facets": 704
+    },
+    {
+      "index": 120,
+      "source_name": "Part__Feature314",
+      "source_label": "FT - 400 _X2_59347F69630994AE5F00517356FA5B9A7247_X0_",
+      "mesh_name": "Mesh_0120",
+      "mesh_label": "FT_-_400__X2_59347F69630994AE5F00517356FA5B9A7247_X0",
+      "facets": 768
+    },
+    {
+      "index": 121,
+      "source_name": "Part__Feature320",
+      "source_label": "FR-500新立柱后盖焊板-001",
+      "mesh_name": "Mesh_0121",
+      "mesh_label": "FR-500_-001",
+      "facets": 28
+    },
+    {
+      "index": 122,
+      "source_name": "Part__Feature313",
+      "source_label": "FT - 400 _X2_59347F694E0B5B8988C56761_X0_",
+      "mesh_name": "Mesh_0122",
+      "mesh_label": "FT_-_400__X2_59347F694E0B5B8988C56761_X0",
+      "facets": 1136
+    },
+    {
+      "index": 123,
+      "source_name": "Part__Feature315",
+      "source_label": "FR-500头罩右侧连接弯板-2022-12-09",
+      "mesh_name": "Mesh_0123",
+      "mesh_label": "FR-500_-2022-12-09",
+      "facets": 1044
+    },
+    {
+      "index": 124,
+      "source_name": "Part__Feature316",
+      "source_label": "FR-500新立柱底板连接弯板",
+      "mesh_name": "Mesh_0124",
+      "mesh_label": "FR-500",
+      "facets": 872
+    },
+    {
+      "index": 125,
+      "source_name": "Part__Feature317",
+      "source_label": "FR-500新立柱后盖焊板-1-2022-12-17",
+      "mesh_name": "Mesh_0125",
+      "mesh_label": "FR-500_-1-2022-12-17",
+      "facets": 2460
+    },
+    {
+      "index": 126,
+      "source_name": "Part__Feature319",
+      "source_label": "FR-500新立柱后盖焊板-4",
+      "mesh_name": "Mesh_0126",
+      "mesh_label": "FR-500_-4",
+      "facets": 28
+    },
+    {
+      "index": 127,
+      "source_name": "Part__Feature325",
+      "source_label": "钼丝桶小水槽",
+      "mesh_name": "Mesh_0127",
+      "mesh_label": "part_0127",
+      "facets": 948
+    },
+    {
+      "index": 128,
+      "source_name": "Part__Feature324",
+      "source_label": "FR-750运丝配件1",
+      "mesh_name": "Mesh_0128",
+      "mesh_label": "FR-750_1",
+      "facets": 1264
+    },
+    {
+      "index": 129,
+      "source_name": "Part__Feature329",
+      "source_label": "FR-750左排楼钣金2",
+      "mesh_name": "Mesh_0129",
+      "mesh_label": "FR-750_2",
+      "facets": 32
+    },
+    {
+      "index": 130,
+      "source_name": "Part__Feature323",
+      "source_label": "FR-500新立柱背包门板-2022-12-001",
+      "mesh_name": "Mesh_0130",
+      "mesh_label": "FR-500_-2022-12-001",
+      "facets": 1168
+    },
+    {
+      "index": 131,
+      "source_name": "Part__Feature326",
+      "source_label": "宝塔接头001",
+      "mesh_name": "Mesh_0131",
+      "mesh_label": "001",
+      "facets": 3178
+    },
+    {
+      "index": 132,
+      "source_name": "Part__Feature322",
+      "source_label": "FR-500新立柱后盖焊板-003",
+      "mesh_name": "Mesh_0132",
+      "mesh_label": "FR-500_-003",
+      "facets": 28
+    },
+    {
+      "index": 133,
+      "source_name": "Part__Feature321",
+      "source_label": "FR-500新立柱后盖焊板-002",
+      "mesh_name": "Mesh_0133",
+      "mesh_label": "FR-500_-002",
+      "facets": 28
+    },
+    {
+      "index": 134,
+      "source_name": "Part__Feature327",
+      "source_label": "FR-750右排楼钣金",
+      "mesh_name": "Mesh_0134",
+      "mesh_label": "FR-750",
+      "facets": 1060
+    },
+    {
+      "index": 135,
+      "source_name": "Part__Feature328",
+      "source_label": "FR-750左排楼钣金1",
+      "mesh_name": "Mesh_0135",
+      "mesh_label": "FR-750_1",
+      "facets": 1116
+    },
+    {
+      "index": 136,
+      "source_name": "Part__Feature332",
+      "source_label": "FR-750左排楼钣金002",
+      "mesh_name": "Mesh_0136",
+      "mesh_label": "FR-750_002",
+      "facets": 288
+    },
+    {
+      "index": 137,
+      "source_name": "Part__Feature331",
+      "source_label": "FR-750左排楼钣金3",
+      "mesh_name": "Mesh_0137",
+      "mesh_label": "FR-750_3",
+      "facets": 288
+    },
+    {
+      "index": 138,
+      "source_name": "Part__Feature337",
+      "source_label": "FR-750钼丝桶钣金8-1-3",
+      "mesh_name": "Mesh_0138",
+      "mesh_label": "FR-750_8-1-3",
+      "facets": 324
+    },
+    {
+      "index": 139,
+      "source_name": "Part__Feature333",
+      "source_label": "FR-750钼丝桶钣金8-1",
+      "mesh_name": "Mesh_0139",
+      "mesh_label": "FR-750_8-1",
+      "facets": 1604
+    },
+    {
+      "index": 140,
+      "source_name": "Part__Feature334",
+      "source_label": "FR-750钼丝桶钣金8-1-1",
+      "mesh_name": "Mesh_0140",
+      "mesh_label": "FR-750_8-1-1",
+      "facets": 344
+    },
+    {
+      "index": 141,
+      "source_name": "Part__Feature336",
+      "source_label": "FR-750钼丝桶钣金8-1-2",
+      "mesh_name": "Mesh_0141",
+      "mesh_label": "FR-750_8-1-2",
+      "facets": 308
+    },
+    {
+      "index": 142,
+      "source_name": "Part__Feature330",
+      "source_label": "FR-750左排楼钣金001",
+      "mesh_name": "Mesh_0142",
+      "mesh_label": "FR-750_001",
+      "facets": 32
+    },
+    {
+      "index": 143,
+      "source_name": "Part__Feature335",
+      "source_label": "FR-750钼丝桶钣金8-1-001",
+      "mesh_name": "Mesh_0143",
+      "mesh_label": "FR-750_8-1-001",
+      "facets": 344
+    },
+    {
+      "index": 144,
+      "source_name": "Part__Feature338",
+      "source_label": "FR-750钼丝桶钣金8-1-4",
+      "mesh_name": "Mesh_0144",
+      "mesh_label": "FR-750_8-1-4",
+      "facets": 236
+    },
+    {
+      "index": 145,
+      "source_name": "Part__Feature341",
+      "source_label": "钼丝桶钣金支撑板3",
+      "mesh_name": "Mesh_0145",
+      "mesh_label": "3",
+      "facets": 416
+    },
+    {
+      "index": 146,
+      "source_name": "Part__Feature339",
+      "source_label": "FR-750钼丝桶钣金9-1",
+      "mesh_name": "Mesh_0146",
+      "mesh_label": "FR-750_9-1",
+      "facets": 1536
+    },
+    {
+      "index": 147,
+      "source_name": "Part__Feature346",
+      "source_label": "FT-600上牌楼转接板1",
+      "mesh_name": "Mesh_0147",
+      "mesh_label": "FT-600_1",
+      "facets": 2736
+    },
+    {
+      "index": 148,
+      "source_name": "Part__Feature340",
+      "source_label": "FR-750钼丝桶钣金9-1-1",
+      "mesh_name": "Mesh_0148",
+      "mesh_label": "FR-750_9-1-1",
+      "facets": 88
+    },
+    {
+      "index": 149,
+      "source_name": "Part__Feature342",
+      "source_label": "钼丝桶钣金调节板1",
+      "mesh_name": "Mesh_0149",
+      "mesh_label": "1",
+      "facets": 400
+    },
+    {
+      "index": 150,
+      "source_name": "Part__Feature345",
+      "source_label": "钼丝桶钣金调节板2-a",
+      "mesh_name": "Mesh_0150",
+      "mesh_label": "2-a",
+      "facets": 400
+    },
+    {
+      "index": 151,
+      "source_name": "Part__Feature343",
+      "source_label": "钼丝桶钣金调节板1-a",
+      "mesh_name": "Mesh_0151",
+      "mesh_label": "1-a",
+      "facets": 400
+    },
+    {
+      "index": 152,
+      "source_name": "Part__Feature344",
+      "source_label": "钼丝桶钣金调节板2",
+      "mesh_name": "Mesh_0152",
+      "mesh_label": "2",
+      "facets": 400
+    },
+    {
+      "index": 153,
+      "source_name": "Part__Feature347",
+      "source_label": "FT-600上牌楼转接板2",
+      "mesh_name": "Mesh_0153",
+      "mesh_label": "FT-600_2",
+      "facets": 280
+    },
+    {
+      "index": 154,
+      "source_name": "Part__Feature349",
+      "source_label": "FT-600滑盖挡板2",
+      "mesh_name": "Mesh_0154",
+      "mesh_label": "FT-600_2",
+      "facets": 208
+    },
+    {
+      "index": 155,
+      "source_name": "Part__Feature348",
+      "source_label": "FT-600滑盖挡板1",
+      "mesh_name": "Mesh_0155",
+      "mesh_label": "FT-600_1",
+      "facets": 816
+    },
+    {
+      "index": 156,
+      "source_name": "Part__Feature356",
+      "source_label": "FR-500钼丝桶新滑座盖板焊件-2",
+      "mesh_name": "Mesh_0156",
+      "mesh_label": "FR-500_-2",
+      "facets": 888
+    },
+    {
+      "index": 157,
+      "source_name": "Part__Feature352",
+      "source_label": "FT-600滑盖挡板4",
+      "mesh_name": "Mesh_0157",
+      "mesh_label": "FT-600_4",
+      "facets": 164
+    },
+    {
+      "index": 158,
+      "source_name": "Part__Feature351",
+      "source_label": "FT-600滑盖挡板6",
+      "mesh_name": "Mesh_0158",
+      "mesh_label": "FT-600_6",
+      "facets": 752
+    },
+    {
+      "index": 159,
+      "source_name": "Part__Feature350",
+      "source_label": "FT-600滑盖挡板3",
+      "mesh_name": "Mesh_0159",
+      "mesh_label": "FT-600_3",
+      "facets": 88
+    },
+    {
+      "index": 160,
+      "source_name": "Part__Feature353",
+      "source_label": "FT-600滑盖挡板5",
+      "mesh_name": "Mesh_0160",
+      "mesh_label": "FT-600_5",
+      "facets": 164
+    },
+    {
+      "index": 161,
+      "source_name": "Part__Feature354",
+      "source_label": "钼丝桶钣金支撑板3-A",
+      "mesh_name": "Mesh_0161",
+      "mesh_label": "3-A",
+      "facets": 504
+    },
+    {
+      "index": 162,
+      "source_name": "Part__Feature355",
+      "source_label": "FR-500钼丝桶新滑座盖板焊件-1",
+      "mesh_name": "Mesh_0162",
+      "mesh_label": "FR-500_-1",
+      "facets": 520
+    },
+    {
+      "index": 163,
+      "source_name": "Part__Feature359",
+      "source_label": "FR-500钼丝桶新滑座盖板焊件-5",
+      "mesh_name": "Mesh_0163",
+      "mesh_label": "FR-500_-5",
+      "facets": 12
+    },
+    {
+      "index": 164,
+      "source_name": "Part__Feature362",
+      "source_label": "FT-600钼丝桶钣金6-6",
+      "mesh_name": "Mesh_0164",
+      "mesh_label": "FT-600_6-6",
+      "facets": 104
+    },
+    {
+      "index": 165,
+      "source_name": "Part__Feature365",
+      "source_label": "FR-600钼丝桶滑座盖板焊件-11（自动穿丝）",
+      "mesh_name": "Mesh_0165",
+      "mesh_label": "FR-600_-11",
+      "facets": 628
+    },
+    {
+      "index": 166,
+      "source_name": "Part__Feature363",
+      "source_label": "FR-500钼丝桶新滑座盖板焊件-001",
+      "mesh_name": "Mesh_0166",
+      "mesh_label": "FR-500_-001",
+      "facets": 12
+    },
+    {
+      "index": 167,
+      "source_name": "Part__Feature357",
+      "source_label": "FR-500钼丝桶新滑座盖板焊件-3",
+      "mesh_name": "Mesh_0167",
+      "mesh_label": "FR-500_-3",
+      "facets": 184
+    },
+    {
+      "index": 168,
+      "source_name": "Part__Feature358",
+      "source_label": "FR-500钼丝桶新滑座盖板焊件-4",
+      "mesh_name": "Mesh_0168",
+      "mesh_label": "FR-500_-4",
+      "facets": 144
+    },
+    {
+      "index": 169,
+      "source_name": "Part__Feature360",
+      "source_label": "FR-500钼丝桶新滑座盖板焊件-6",
+      "mesh_name": "Mesh_0169",
+      "mesh_label": "FR-500_-6",
+      "facets": 240
+    },
+    {
+      "index": 170,
+      "source_name": "Part__Feature361",
+      "source_label": "FR-500钼丝桶滑座盖板焊件-5",
+      "mesh_name": "Mesh_0170",
+      "mesh_label": "FR-500_-5",
+      "facets": 328
+    },
+    {
+      "index": 171,
+      "source_name": "Part__Feature364",
+      "source_label": "FR-600钼丝桶滑座盖板焊件-10（自动穿丝）",
+      "mesh_name": "Mesh_0171",
+      "mesh_label": "FR-600_-10",
+      "facets": 572
+    },
+    {
+      "index": 172,
+      "source_name": "Part__Feature366",
+      "source_label": "FR-500钼丝桶新滑座盖板焊件-002",
+      "mesh_name": "Mesh_0172",
+      "mesh_label": "FR-500_-002",
+      "facets": 12
+    },
+    {
+      "index": 173,
+      "source_name": "Part__Feature093",
+      "source_label": "FR-500皮囊固定弯板-8",
+      "mesh_name": "Mesh_0173",
+      "mesh_label": "FR-500_-8",
+      "facets": 1636
+    },
+    {
+      "index": 174,
+      "source_name": "Part__Feature088",
+      "source_label": "FR-500床身盖板卡件片焊件008",
+      "mesh_name": "Mesh_0174",
+      "mesh_label": "FR-500_008",
+      "facets": 240
+    },
+    {
+      "index": 175,
+      "source_name": "Part__Feature090",
+      "source_label": "FR-500床身新钣金托板-1-2022-09-26",
+      "mesh_name": "Mesh_0175",
+      "mesh_label": "FR-500_-1-2022-09-26",
+      "facets": 1220
+    },
+    {
+      "index": 176,
+      "source_name": "Part__Feature087",
+      "source_label": "压铆螺母M033",
+      "mesh_name": "Mesh_0176",
+      "mesh_label": "M033",
+      "facets": 432
+    },
+    {
+      "index": 177,
+      "source_name": "Part__Feature091",
+      "source_label": "FR-500床身新钣金托板-1-2022-09-001",
+      "mesh_name": "Mesh_0177",
+      "mesh_label": "FR-500_-1-2022-09-001",
+      "facets": 1220
+    },
+    {
+      "index": 178,
+      "source_name": "Part__Feature089",
+      "source_label": "FR-500床身盖板卡件片焊件009",
+      "mesh_name": "Mesh_0178",
+      "mesh_label": "FR-500_009",
+      "facets": 240
+    },
+    {
+      "index": 179,
+      "source_name": "Part__Feature092",
+      "source_label": "FR-500皮囊固定弯板-7",
+      "mesh_name": "Mesh_0179",
+      "mesh_label": "FR-500_-7",
+      "facets": 1024
+    },
+    {
+      "index": 180,
+      "source_name": "Part__Feature099",
+      "source_label": "FR-500皮囊固定焊板-1",
+      "mesh_name": "Mesh_0180",
+      "mesh_label": "FR-500_-1",
+      "facets": 12
+    },
+    {
+      "index": 181,
+      "source_name": "Part__Feature101",
+      "source_label": "FR-500皮囊固定焊管-001",
+      "mesh_name": "Mesh_0181",
+      "mesh_label": "FR-500_-001",
+      "facets": 160
+    },
+    {
+      "index": 182,
+      "source_name": "Part__Feature098",
+      "source_label": "FR-500皮囊固定焊管-2",
+      "mesh_name": "Mesh_0182",
+      "mesh_label": "FR-500_-2",
+      "facets": 160
+    },
+    {
+      "index": 183,
+      "source_name": "Part__Feature095",
+      "source_label": "FR-500皮囊固定弯板-9",
+      "mesh_name": "Mesh_0183",
+      "mesh_label": "FR-500_-9",
+      "facets": 420
+    },
+    {
+      "index": 184,
+      "source_name": "Part__Feature097",
+      "source_label": "FR-500皮囊固定弯板-10",
+      "mesh_name": "Mesh_0184",
+      "mesh_label": "FR-500_-10",
+      "facets": 808
+    },
+    {
+      "index": 185,
+      "source_name": "Part__Feature096",
+      "source_label": "FR-500皮囊固定焊管-1",
+      "mesh_name": "Mesh_0185",
+      "mesh_label": "FR-500_-1",
+      "facets": 160
+    },
+    {
+      "index": 186,
+      "source_name": "Part__Feature094",
+      "source_label": "FR-500皮囊固定弯板-6",
+      "mesh_name": "Mesh_0186",
+      "mesh_label": "FR-500_-6",
+      "facets": 76
+    },
+    {
+      "index": 187,
+      "source_name": "Part__Feature100",
+      "source_label": "FR-500皮囊固定弯板-11",
+      "mesh_name": "Mesh_0187",
+      "mesh_label": "FR-500_-11",
+      "facets": 420
+    },
+    {
+      "index": 188,
+      "source_name": "Part__Feature105",
+      "source_label": "FR-500中拖电机盖板",
+      "mesh_name": "Mesh_0188",
+      "mesh_label": "FR-500",
+      "facets": 392
+    },
+    {
+      "index": 189,
+      "source_name": "Part__Feature107",
+      "source_label": "FR-500床身新钣金托板-2-2022-09-001",
+      "mesh_name": "Mesh_0189",
+      "mesh_label": "FR-500_-2-2022-09-001",
+      "facets": 1376
+    },
+    {
+      "index": 190,
+      "source_name": "Part__Feature103",
+      "source_label": "FR-500皮囊固定焊板-001",
+      "mesh_name": "Mesh_0190",
+      "mesh_label": "FR-500_-001",
+      "facets": 12
+    },
+    {
+      "index": 191,
+      "source_name": "Part__Feature106",
+      "source_label": "FR-500床身新钣金托板-2-2022-09-26",
+      "mesh_name": "Mesh_0191",
+      "mesh_label": "FR-500_-2-2022-09-26",
+      "facets": 1376
+    },
+    {
+      "index": 192,
+      "source_name": "Part__Feature104",
+      "source_label": "FR-500皮囊固定焊管-002",
+      "mesh_name": "Mesh_0192",
+      "mesh_label": "FR-500_-002",
+      "facets": 160
+    },
+    {
+      "index": 193,
+      "source_name": "Part__Feature102",
+      "source_label": "FR-500皮囊固定弯板-12",
+      "mesh_name": "Mesh_0193",
+      "mesh_label": "FR-500_-12",
+      "facets": 252
+    },
+    {
+      "index": 194,
+      "source_name": "Part__Feature113",
+      "source_label": "压铆螺母M034",
+      "mesh_name": "Mesh_0194",
+      "mesh_label": "M034",
+      "facets": 432
+    },
+    {
+      "index": 195,
+      "source_name": "Part__Feature114",
+      "source_label": "压铆螺母M035",
+      "mesh_name": "Mesh_0195",
+      "mesh_label": "M035",
+      "facets": 432
+    },
+    {
+      "index": 196,
+      "source_name": "Part__Feature108",
+      "source_label": "FT-500新床身盖板连接弯板",
+      "mesh_name": "Mesh_0196",
+      "mesh_label": "FT-500",
+      "facets": 632
+    },
+    {
+      "index": 197,
+      "source_name": "Part__Feature109",
+      "source_label": "FT-500新床身盖板连接弯板001",
+      "mesh_name": "Mesh_0197",
+      "mesh_label": "FT-500_001",
+      "facets": 632
+    },
+    {
+      "index": 198,
+      "source_name": "Part__Feature111",
+      "source_label": "FR-500床身新拖链盖板-2022-09-26",
+      "mesh_name": "Mesh_0198",
+      "mesh_label": "FR-500_-2022-09-26",
+      "facets": 668
+    },
+    {
+      "index": 199,
+      "source_name": "Part__Feature112",
+      "source_label": "FR-500床身压条-3",
+      "mesh_name": "Mesh_0199",
+      "mesh_label": "FR-500_-3",
+      "facets": 324
+    },
+    {
+      "index": 200,
+      "source_name": "Part__Feature110",
+      "source_label": "FR-500床身新拖链弯板-2022-10-15",
+      "mesh_name": "Mesh_0200",
+      "mesh_label": "FR-500_-2022-10-15",
+      "facets": 1232
+    },
+    {
+      "index": 201,
+      "source_name": "Part__Feature006",
+      "source_label": "FR-500床身新右前侧盖板焊件-1-2022-10-25",
+      "mesh_name": "Mesh_0201",
+      "mesh_label": "FR-500_-1-2022-10-25",
+      "facets": 484
+    },
+    {
+      "index": 202,
+      "source_name": "Part__Feature013",
+      "source_label": "FR-500床身新左前侧盖板焊件-5",
+      "mesh_name": "Mesh_0202",
+      "mesh_label": "FR-500_-5",
+      "facets": 180
+    },
+    {
+      "index": 203,
+      "source_name": "Part__Feature003",
+      "source_label": "FR-500床身新前盖板焊件-4-2023-03-25",
+      "mesh_name": "Mesh_0203",
+      "mesh_label": "FR-500_-4-2023-03-25",
+      "facets": 180
+    },
+    {
+      "index": 204,
+      "source_name": "Part__Feature143",
+      "source_label": "FR-500中拖板新钣金焊板-14",
+      "mesh_name": "Mesh_0204",
+      "mesh_label": "FR-500_-14",
+      "facets": 164
+    },
+    {
+      "index": 205,
+      "source_name": "Part__Feature144",
+      "source_label": "FR-500中拖板新钣金焊板-002",
+      "mesh_name": "Mesh_0205",
+      "mesh_label": "FR-500_-002",
+      "facets": 164
+    },
+    {
+      "index": 206,
+      "source_name": "Part__Feature145",
+      "source_label": "FR-500中拖板新钣金焊板-003",
+      "mesh_name": "Mesh_0206",
+      "mesh_label": "FR-500_-003",
+      "facets": 164
+    },
+    {
+      "index": 207,
+      "source_name": "Part__Feature152",
+      "source_label": "FR-500中拖板新钣金支架焊板-2-2022-10-15",
+      "mesh_name": "Mesh_0207",
+      "mesh_label": "FR-500_-2-2022-10-15",
+      "facets": 2292
+    },
+    {
+      "index": 208,
+      "source_name": "Part__Feature149",
+      "source_label": "FR-500中拖方孔盖板",
+      "mesh_name": "Mesh_0208",
+      "mesh_label": "FR-500",
+      "facets": 468
+    },
+    {
+      "index": 209,
+      "source_name": "Part__Feature150",
+      "source_label": "FR-500中拖方孔盖板001",
+      "mesh_name": "Mesh_0209",
+      "mesh_label": "FR-500_001",
+      "facets": 468
+    },
+    {
+      "index": 210,
+      "source_name": "Part__Feature146",
+      "source_label": "FR-500中拖板新钣金焊板-004",
+      "mesh_name": "Mesh_0210",
+      "mesh_label": "FR-500_-004",
+      "facets": 164
+    },
+    {
+      "index": 211,
+      "source_name": "Part__Feature151",
+      "source_label": "FR-500中拖板新钣金支架焊板-1-2022-10-15",
+      "mesh_name": "Mesh_0211",
+      "mesh_label": "FR-500_-1-2022-10-15",
+      "facets": 1352
+    },
+    {
+      "index": 212,
+      "source_name": "Part__Feature147",
+      "source_label": "FR-500中拖板新钣金焊板-7-2022-11-17",
+      "mesh_name": "Mesh_0212",
+      "mesh_label": "FR-500_-7-2022-11-17",
+      "facets": 88
+    },
+    {
+      "index": 213,
+      "source_name": "Part__Feature148",
+      "source_label": "FR-500中拖板新钣金焊板-7-2022-11-001",
+      "mesh_name": "Mesh_0213",
+      "mesh_label": "FR-500_-7-2022-11-001",
+      "facets": 88
+    },
+    {
+      "index": 214,
+      "source_name": "Part__Feature155",
+      "source_label": "FR-500中拖板新钣金支架焊板-5-2023-03-23",
+      "mesh_name": "Mesh_0214",
+      "mesh_label": "FR-500_-5-2023-03-23",
+      "facets": 2092
+    },
+    {
+      "index": 215,
+      "source_name": "Part__Feature153",
+      "source_label": "FR-500中拖板新钣金支架焊板-3",
+      "mesh_name": "Mesh_0215",
+      "mesh_label": "FR-500_-3",
+      "facets": 24
+    },
+    {
+      "index": 216,
+      "source_name": "Part__Feature157",
+      "source_label": "FR-500中拖板新钣金支架焊板-12-2022-11-17",
+      "mesh_name": "Mesh_0216",
+      "mesh_label": "FR-500_-12-2022-11-17",
+      "facets": 28
+    },
+    {
+      "index": 217,
+      "source_name": "Part__Feature158",
+      "source_label": "FR-500中拖板新钣金支架焊板-8-2023-03-28",
+      "mesh_name": "Mesh_0217",
+      "mesh_label": "FR-500_-8-2023-03-28",
+      "facets": 556
+    },
+    {
+      "index": 218,
+      "source_name": "Part__Feature163",
+      "source_label": "FR-500新油槽焊板-2-2023-08-03",
+      "mesh_name": "Mesh_0218",
+      "mesh_label": "FR-500_-2-2023-08-03",
+      "facets": 3812
+    },
+    {
+      "index": 219,
+      "source_name": "Part__Feature159",
+      "source_label": "直角水管接头",
+      "mesh_name": "Mesh_0219",
+      "mesh_label": "part_0219",
+      "facets": 1652
+    },
+    {
+      "index": 220,
+      "source_name": "Part__Feature154",
+      "source_label": "FR-500中拖板新钣金支架焊板-001",
+      "mesh_name": "Mesh_0220",
+      "mesh_label": "FR-500_-001",
+      "facets": 24
+    },
+    {
+      "index": 221,
+      "source_name": "Part__Feature156",
+      "source_label": "FR-500中拖板新钣金支架焊板-6-2023-03-23",
+      "mesh_name": "Mesh_0221",
+      "mesh_label": "FR-500_-6-2023-03-23",
+      "facets": 2976
+    },
+    {
+      "index": 222,
+      "source_name": "Part__Feature160",
+      "source_label": "FR-500中拖板新钣金支架焊板-12-2022-11-001",
+      "mesh_name": "Mesh_0222",
+      "mesh_label": "FR-500_-12-2022-11-001",
+      "facets": 28
+    },
+    {
+      "index": 223,
+      "source_name": "Part__Feature161",
+      "source_label": "FR-500中拖皮囊-1",
+      "mesh_name": "Mesh_0223",
+      "mesh_label": "FR-500_-1",
+      "facets": 5940
+    },
+    {
+      "index": 224,
+      "source_name": "Part__Feature162",
+      "source_label": "FR-500新油槽焊板-1-2023-10-25",
+      "mesh_name": "Mesh_0224",
+      "mesh_label": "FR-500_-1-2023-10-25",
+      "facets": 5906
+    },
+    {
+      "index": 225,
+      "source_name": "Part__Feature169",
+      "source_label": "FR-500新油槽横梁焊件",
+      "mesh_name": "Mesh_0225",
+      "mesh_label": "FR-500",
+      "facets": 20
+    },
+    {
+      "index": 226,
+      "source_name": "Part__Feature165",
+      "source_label": "FR-500新油槽焊板-3-2022-11-03",
+      "mesh_name": "Mesh_0226",
+      "mesh_label": "FR-500_-3-2022-11-03",
+      "facets": 612
+    },
+    {
+      "index": 227,
+      "source_name": "Part__Feature170",
+      "source_label": "FR-500新油槽立柱焊件-1-2022-10-15",
+      "mesh_name": "Mesh_0227",
+      "mesh_label": "FR-500_-1-2022-10-15",
+      "facets": 56
+    },
+    {
+      "index": 228,
+      "source_name": "Part__Feature166",
+      "source_label": "FR-500新油槽焊板-5-2022-11-03",
+      "mesh_name": "Mesh_0228",
+      "mesh_label": "FR-500_-5-2022-11-03",
+      "facets": 892
+    },
+    {
+      "index": 229,
+      "source_name": "Part__Feature167",
+      "source_label": "FR-500新油槽立柱焊件-3",
+      "mesh_name": "Mesh_0229",
+      "mesh_label": "FR-500_-3",
+      "facets": 36
+    },
+    {
+      "index": 230,
+      "source_name": "Part__Feature168",
+      "source_label": "FR-500新油槽立柱焊件-2",
+      "mesh_name": "Mesh_0230",
+      "mesh_label": "FR-500_-2",
+      "facets": 28
+    },
+    {
+      "index": 231,
+      "source_name": "Part__Feature164",
+      "source_label": "FR-500新油槽焊板-4-2023-04-21",
+      "mesh_name": "Mesh_0231",
+      "mesh_label": "FR-500_-4-2023-04-21",
+      "facets": 188
+    },
+    {
+      "index": 232,
+      "source_name": "Part__Feature002",
+      "source_label": "FR-500床身新前盖板焊件-3-2023-03-25",
+      "mesh_name": "Mesh_0232",
+      "mesh_label": "FR-500_-3-2023-03-25",
+      "facets": 156
+    },
+    {
+      "index": 233,
+      "source_name": "Part__Feature016",
+      "source_label": "压铆螺母M001",
+      "mesh_name": "Mesh_0233",
+      "mesh_label": "M001",
+      "facets": 432
+    },
+    {
+      "index": 234,
+      "source_name": "Part__Feature007",
+      "source_label": "FR-500床身新右前侧盖板焊件-5-2022-11-21",
+      "mesh_name": "Mesh_0234",
+      "mesh_label": "FR-500_-5-2022-11-21",
+      "facets": 622
+    },
+    {
+      "index": 235,
+      "source_name": "Part__Feature005",
+      "source_label": "FR-500床身新前盖板焊件-6-2022-10-25",
+      "mesh_name": "Mesh_0235",
+      "mesh_label": "FR-500_-6-2022-10-25",
+      "facets": 1008
+    },
+    {
+      "index": 236,
+      "source_name": "Part__Feature010",
+      "source_label": "FR-500床身盖板卡件片焊件001",
+      "mesh_name": "Mesh_0236",
+      "mesh_label": "FR-500_001",
+      "facets": 240
+    },
+    {
+      "index": 237,
+      "source_name": "Part__Feature015",
+      "source_label": "压铆螺母M5",
+      "mesh_name": "Mesh_0237",
+      "mesh_label": "M5",
+      "facets": 432
+    },
+    {
+      "index": 238,
+      "source_name": "Part__Feature014",
+      "source_label": "FR-500床身新左前侧盖板焊件-4-2022-10-25",
+      "mesh_name": "Mesh_0238",
+      "mesh_label": "FR-500_-4-2022-10-25",
+      "facets": 220
+    },
+    {
+      "index": 239,
+      "source_name": "Part__Feature260",
+      "source_label": "FR-400背包接线盒焊板-1-2023-01-06",
+      "mesh_name": "Mesh_0239",
+      "mesh_label": "FR-400_-1-2023-01-06",
+      "facets": 2188
+    },
+    {
+      "index": 240,
+      "source_name": "Part__Feature258",
+      "source_label": "压铆螺母M051",
+      "mesh_name": "Mesh_0240",
+      "mesh_label": "M051",
+      "facets": 432
+    },
+    {
+      "index": 241,
+      "source_name": "Part__Feature263",
+      "source_label": "FR-500新立柱背包门板-2022-12-17",
+      "mesh_name": "Mesh_0241",
+      "mesh_label": "FR-500_-2022-12-17",
+      "facets": 1168
+    },
+    {
+      "index": 242,
+      "source_name": "Part__Feature255",
+      "source_label": "FR-500新立柱背包焊板-001",
+      "mesh_name": "Mesh_0242",
+      "mesh_label": "FR-500_-001",
+      "facets": 460
+    },
+    {
+      "index": 243,
+      "source_name": "Part__Feature257",
+      "source_label": "压铆螺母M050",
+      "mesh_name": "Mesh_0243",
+      "mesh_label": "M050",
+      "facets": 432
+    },
+    {
+      "index": 244,
+      "source_name": "Part__Feature259",
+      "source_label": "压铆螺母M052",
+      "mesh_name": "Mesh_0244",
+      "mesh_label": "M052",
+      "facets": 432
+    },
+    {
+      "index": 245,
+      "source_name": "Part__Feature256",
+      "source_label": "压铆螺母M049",
+      "mesh_name": "Mesh_0245",
+      "mesh_label": "M049",
+      "facets": 432
+    },
+    {
+      "index": 246,
+      "source_name": "Part__Feature261",
+      "source_label": "FR-750背包接线盒2",
+      "mesh_name": "Mesh_0246",
+      "mesh_label": "FR-750_2",
+      "facets": 784
+    },
+    {
+      "index": 247,
+      "source_name": "Part__Feature262",
+      "source_label": "FR-750背包接线盒3",
+      "mesh_name": "Mesh_0247",
+      "mesh_label": "FR-750_3",
+      "facets": 868
+    },
+    {
+      "index": 248,
+      "source_name": "Part__Feature267",
+      "source_label": "压铆螺母M054",
+      "mesh_name": "Mesh_0248",
+      "mesh_label": "M054",
+      "facets": 432
+    },
+    {
+      "index": 249,
+      "source_name": "Part__Feature264",
+      "source_label": "FR-500新立柱接线柱固定弯板",
+      "mesh_name": "Mesh_0249",
+      "mesh_label": "FR-500",
+      "facets": 1372
+    },
+    {
+      "index": 250,
+      "source_name": "Part__Feature265",
+      "source_label": "FR-500新立柱风道盖板-2022-11-28",
+      "mesh_name": "Mesh_0250",
+      "mesh_label": "FR-500_-2022-11-28",
+      "facets": 988
+    },
+    {
+      "index": 251,
+      "source_name": "Part__Feature272",
+      "source_label": "压铆螺母M055",
+      "mesh_name": "Mesh_0251",
+      "mesh_label": "M055",
+      "facets": 432
+    },
+    {
+      "index": 252,
+      "source_name": "Part__Feature271",
+      "source_label": "FR-500新立柱左侧盖板固定架焊板-1-2022-12-09",
+      "mesh_name": "Mesh_0252",
+      "mesh_label": "FR-500_-1-2022-12-09",
+      "facets": 1936
+    },
+    {
+      "index": 253,
+      "source_name": "Part__Feature275",
+      "source_label": "压铆螺母M058",
+      "mesh_name": "Mesh_0253",
+      "mesh_label": "M058",
+      "facets": 432
+    },
+    {
+      "index": 254,
+      "source_name": "Part__Feature266",
+      "source_label": "压铆螺母M053",
+      "mesh_name": "Mesh_0254",
+      "mesh_label": "M053",
+      "facets": 432
+    },
+    {
+      "index": 255,
+      "source_name": "Part__Feature268",
+      "source_label": "FR-500新立柱门铰链上固定板",
+      "mesh_name": "Mesh_0255",
+      "mesh_label": "FR-500",
+      "facets": 536
+    },
+    {
+      "index": 256,
+      "source_name": "Part__Feature269",
+      "source_label": "FR-500新立柱下背包-2022-11-21",
+      "mesh_name": "Mesh_0256",
+      "mesh_label": "FR-500_-2022-11-21",
+      "facets": 2368
+    },
+    {
+      "index": 257,
+      "source_name": "Part__Feature270",
+      "source_label": "FR-500新立柱左侧盖板固定架焊板-2-2022-11-21",
+      "mesh_name": "Mesh_0257",
+      "mesh_label": "FR-500_-2-2022-11-21",
+      "facets": 516
+    },
+    {
+      "index": 258,
+      "source_name": "Part__Feature273",
+      "source_label": "压铆螺母M056",
+      "mesh_name": "Mesh_0258",
+      "mesh_label": "M056",
+      "facets": 432
+    },
+    {
+      "index": 259,
+      "source_name": "Part__Feature274",
+      "source_label": "压铆螺母M057",
+      "mesh_name": "Mesh_0259",
+      "mesh_label": "M057",
+      "facets": 432
+    },
+    {
+      "index": 260,
+      "source_name": "Part__Feature282",
+      "source_label": "FT-7055直线轴承固定板",
+      "mesh_name": "Mesh_0260",
+      "mesh_label": "FT-7055",
+      "facets": 3320
+    },
+    {
+      "index": 261,
+      "source_name": "Part__Feature277",
+      "source_label": "FR-500新立柱左侧盖板固定架焊板-1-2022-12-001",
+      "mesh_name": "Mesh_0261",
+      "mesh_label": "FR-500_-1-2022-12-001",
+      "facets": 1936
+    },
+    {
+      "index": 262,
+      "source_name": "Part__Feature278",
+      "source_label": "压铆螺母M060",
+      "mesh_name": "Mesh_0262",
+      "mesh_label": "M060",
+      "facets": 432
+    },
+    {
+      "index": 263,
+      "source_name": "Part__Feature280",
+      "source_label": "FR-500新立柱左侧盖板固定架焊板-001",
+      "mesh_name": "Mesh_0263",
+      "mesh_label": "FR-500_-001",
+      "facets": 24
+    },
+    {
+      "index": 264,
+      "source_name": "Part__Feature276",
+      "source_label": "压铆螺母M059",
+      "mesh_name": "Mesh_0264",
+      "mesh_label": "M059",
+      "facets": 432
+    },
+    {
+      "index": 265,
+      "source_name": "Part__Feature281",
+      "source_label": "FR-500新立柱上盖板-1-2022-12-09",
+      "mesh_name": "Mesh_0265",
+      "mesh_label": "FR-500_-1-2022-12-09",
+      "facets": 976
+    },
+    {
+      "index": 266,
+      "source_name": "Part__Feature279",
+      "source_label": "FR-500新立柱左侧盖板固定架焊板-3",
+      "mesh_name": "Mesh_0266",
+      "mesh_label": "FR-500_-3",
+      "facets": 24
+    },
+    {
+      "index": 267,
+      "source_name": "Part__Feature285",
+      "source_label": "FT-600立柱前门配重导轮固定块",
+      "mesh_name": "Mesh_0267",
+      "mesh_label": "FT-600",
+      "facets": 744
+    },
+    {
+      "index": 268,
+      "source_name": "Part__Feature284",
+      "source_label": "怡和达直线轴承LMW51-d001",
+      "mesh_name": "Mesh_0268",
+      "mesh_label": "LMW51-d001",
+      "facets": 1976
+    },
+    {
+      "index": 269,
+      "source_name": "Part__Feature290",
+      "source_label": "压铆螺母M061",
+      "mesh_name": "Mesh_0269",
+      "mesh_label": "M061",
+      "facets": 432
+    },
+    {
+      "index": 270,
+      "source_name": "Part__Feature286",
+      "source_label": "FT-600配重导轮",
+      "mesh_name": "Mesh_0270",
+      "mesh_label": "FT-600",
+      "facets": 1872
+    },
+    {
+      "index": 271,
+      "source_name": "Part__Feature289",
+      "source_label": "FR-500新立柱右侧盖板焊件-1-2023-01-09",
+      "mesh_name": "Mesh_0271",
+      "mesh_label": "FR-500_-1-2023-01-09",
+      "facets": 2880
+    },
+    {
+      "index": 272,
+      "source_name": "Part__Feature283",
+      "source_label": "怡和达直线轴承LMW51-d12",
+      "mesh_name": "Mesh_0272",
+      "mesh_label": "LMW51-d12",
+      "facets": 1976
+    },
+    {
+      "index": 273,
+      "source_name": "Part__Feature293",
+      "source_label": "压铆螺母M064",
+      "mesh_name": "Mesh_0273",
+      "mesh_label": "M064",
+      "facets": 432
+    },
+    {
+      "index": 274,
+      "source_name": "Part__Feature291",
+      "source_label": "压铆螺母M062",
+      "mesh_name": "Mesh_0274",
+      "mesh_label": "M062",
+      "facets": 432
+    },
+    {
+      "index": 275,
+      "source_name": "Part__Feature299",
+      "source_label": "压铆螺母M070",
+      "mesh_name": "Mesh_0275",
+      "mesh_label": "M070",
+      "facets": 432
+    },
+    {
+      "index": 276,
+      "source_name": "Part__Feature297",
+      "source_label": "压铆螺母M068",
+      "mesh_name": "Mesh_0276",
+      "mesh_label": "M068",
+      "facets": 432
+    },
+    {
+      "index": 277,
+      "source_name": "Part__Feature294",
+      "source_label": "压铆螺母M065",
+      "mesh_name": "Mesh_0277",
+      "mesh_label": "M065",
+      "facets": 432
+    },
+    {
+      "index": 278,
+      "source_name": "Part__Feature292",
+      "source_label": "压铆螺母M063",
+      "mesh_name": "Mesh_0278",
+      "mesh_label": "M063",
+      "facets": 432
+    },
+    {
+      "index": 279,
+      "source_name": "Part__Feature295",
+      "source_label": "压铆螺母M066",
+      "mesh_name": "Mesh_0279",
+      "mesh_label": "M066",
+      "facets": 432
+    },
+    {
+      "index": 280,
+      "source_name": "Part__Feature296",
+      "source_label": "压铆螺母M067",
+      "mesh_name": "Mesh_0280",
+      "mesh_label": "M067",
+      "facets": 432
+    },
+    {
+      "index": 281,
+      "source_name": "Part__Feature298",
+      "source_label": "压铆螺母M069",
+      "mesh_name": "Mesh_0281",
+      "mesh_label": "M069",
+      "facets": 432
+    },
+    {
+      "index": 282,
+      "source_name": "Part__Feature301",
+      "source_label": "FR-500新立柱左侧盖板焊件-1-2022-11-21",
+      "mesh_name": "Mesh_0282",
+      "mesh_label": "FR-500_-1-2022-11-21",
+      "facets": 856
+    },
+    {
+      "index": 283,
+      "source_name": "Part__Feature302",
+      "source_label": "FR-500新立柱左侧盖板焊件-2-2022-11-21",
+      "mesh_name": "Mesh_0283",
+      "mesh_label": "FR-500_-2-2022-11-21",
+      "facets": 764
+    },
+    {
+      "index": 284,
+      "source_name": "Part__Feature304",
+      "source_label": "FT-400 LED_X2_706F5B8988C55C01677F_X0_1-2",
+      "mesh_name": "Mesh_0284",
+      "mesh_label": "FT-400_LED_X2_706F5B8988C55C01677F_X0_1-2",
+      "facets": 1880
+    },
+    {
+      "index": 285,
+      "source_name": "Part__Feature307",
+      "source_label": "FT - 400 _X2_59347F69630994AE5F0051739762677F_X0_",
+      "mesh_name": "Mesh_0285",
+      "mesh_label": "FT_-_400__X2_59347F69630994AE5F0051739762677F_X0",
+      "facets": 1488
+    },
+    {
+      "index": 286,
+      "source_name": "Part__Feature310",
+      "source_label": "FT - 400 _X2_59347F69987676D6540E63216761_X0_",
+      "mesh_name": "Mesh_0286",
+      "mesh_label": "FT_-_400__X2_59347F69987676D6540E63216761_X0",
+      "facets": 604
+    },
+    {
+      "index": 287,
+      "source_name": "Part__Feature309",
+      "source_label": "FT-400 _X2_59347F6952A05F3A7B4B_X0_",
+      "mesh_name": "Mesh_0287",
+      "mesh_label": "FT-400__X2_59347F6952A05F3A7B4B_X0",
+      "facets": 248
+    },
+    {
+      "index": 288,
+      "source_name": "Part__Feature300",
+      "source_label": "压铆螺母M071",
+      "mesh_name": "Mesh_0288",
+      "mesh_label": "M071",
+      "facets": 432
+    },
+    {
+      "index": 289,
+      "source_name": "Part__Feature305",
+      "source_label": "FT-400 _X2_59347F69_X0_7-1",
+      "mesh_name": "Mesh_0289",
+      "mesh_label": "FT-400__X2_59347F69_X0_7-1",
+      "facets": 3612
+    },
+    {
+      "index": 290,
+      "source_name": "Part__Feature303",
+      "source_label": "FR-500新立柱左侧盖板焊件-3-2022-11-21",
+      "mesh_name": "Mesh_0290",
+      "mesh_label": "FR-500_-3-2022-11-21",
+      "facets": 460
+    },
+    {
+      "index": 291,
+      "source_name": "Part__Feature306",
+      "source_label": "FT - 400 _X2_59347F69987676D64E0A5B8988C56761_X0_",
+      "mesh_name": "Mesh_0291",
+      "mesh_label": "FT_-_400__X2_59347F69987676D64E0A5B8988C56761_X0",
+      "facets": 804
+    },
+    {
+      "index": 292,
+      "source_name": "Part__Feature308",
+      "source_label": "FT - 500 _X2_59347F69987676D6_X0_",
+      "mesh_name": "Mesh_0292",
+      "mesh_label": "FT_-_500__X2_59347F69987676D6_X0",
+      "facets": 1688
+    },
+    {
+      "index": 293,
+      "source_name": "Part__Feature001",
+      "source_label": "FR-500床身新前盖板焊件-2-2023-03-25",
+      "mesh_name": "Mesh_0293",
+      "mesh_label": "FR-500_-2-2023-03-25",
+      "facets": 156
+    },
+    {
+      "index": 294,
+      "source_name": "Part__Feature368",
+      "source_label": "FR-600钼丝桶滑座盖板焊件-13（自动穿丝）",
+      "mesh_name": "Mesh_0294",
+      "mesh_label": "FR-600_-13",
+      "facets": 44
+    },
+    {
+      "index": 295,
+      "source_name": "Part__Feature367",
+      "source_label": "FR-600钼丝桶滑座盖板焊件-12（自动穿丝）",
+      "mesh_name": "Mesh_0295",
+      "mesh_label": "FR-600_-12",
+      "facets": 88
+    },
+    {
+      "index": 296,
+      "source_name": "Part__Feature370",
+      "source_label": "FR-500钼丝桶钣金焊件-1",
+      "mesh_name": "Mesh_0296",
+      "mesh_label": "FR-500_-1",
+      "facets": 1388
+    },
+    {
+      "index": 297,
+      "source_name": "Part__Feature376",
+      "source_label": "FR-500钼丝桶钣金焊件-7",
+      "mesh_name": "Mesh_0297",
+      "mesh_label": "FR-500_-7",
+      "facets": 1316
+    },
+    {
+      "index": 298,
+      "source_name": "Part__Feature373",
+      "source_label": "FR-500钼丝桶钣金焊件-4",
+      "mesh_name": "Mesh_0298",
+      "mesh_label": "FR-500_-4",
+      "facets": 756
+    },
+    {
+      "index": 299,
+      "source_name": "Part__Feature369",
+      "source_label": "FR-600钼丝桶滑座盖板焊件-13（自动穿丝）001",
+      "mesh_name": "Mesh_0299",
+      "mesh_label": "FR-600_-13_001",
+      "facets": 44
+    },
+    {
+      "index": 300,
+      "source_name": "Part__Feature371",
+      "source_label": "FR-500钼丝桶钣金焊件-2",
+      "mesh_name": "Mesh_0300",
+      "mesh_label": "FR-500_-2",
+      "facets": 1132
+    },
+    {
+      "index": 301,
+      "source_name": "Part__Feature374",
+      "source_label": "FR-500钼丝桶钣金焊件-5",
+      "mesh_name": "Mesh_0301",
+      "mesh_label": "FR-500_-5",
+      "facets": 1220
+    },
+    {
+      "index": 302,
+      "source_name": "Part__Feature372",
+      "source_label": "FR-500钼丝桶钣金焊件-3",
+      "mesh_name": "Mesh_0302",
+      "mesh_label": "FR-500_-3",
+      "facets": 76
+    },
+    {
+      "index": 303,
+      "source_name": "Part__Feature375",
+      "source_label": "FR-500钼丝桶钣金焊件-6",
+      "mesh_name": "Mesh_0303",
+      "mesh_label": "FR-500_-6",
+      "facets": 532
+    },
+    {
+      "index": 304,
+      "source_name": "Part__Feature379",
+      "source_label": "FR-500钼丝桶钣金焊件-10",
+      "mesh_name": "Mesh_0304",
+      "mesh_label": "FR-500_-10",
+      "facets": 252
+    },
+    {
+      "index": 305,
+      "source_name": "Part__Feature381",
+      "source_label": "FR-500钼丝桶钣金焊件-12",
+      "mesh_name": "Mesh_0305",
+      "mesh_label": "FR-500_-12",
+      "facets": 84
+    },
+    {
+      "index": 306,
+      "source_name": "Part__Feature383",
+      "source_label": "FR-500新抽屉箱体焊板-1-2022-10-15",
+      "mesh_name": "Mesh_0306",
+      "mesh_label": "FR-500_-1-2022-10-15",
+      "facets": 720
+    },
+    {
+      "index": 307,
+      "source_name": "Part__Feature385",
+      "source_label": "FT-7055抽屉箱体焊板-5",
+      "mesh_name": "Mesh_0307",
+      "mesh_label": "FT-7055_-5",
+      "facets": 1368
+    },
+    {
+      "index": 308,
+      "source_name": "Part__Feature386",
+      "source_label": "FR-500新抽屉箱体焊板-3-2022-10-15",
+      "mesh_name": "Mesh_0308",
+      "mesh_label": "FR-500_-3-2022-10-15",
+      "facets": 652
+    },
+    {
+      "index": 309,
+      "source_name": "Part__Feature377",
+      "source_label": "FR-500钼丝桶钣金焊件-8",
+      "mesh_name": "Mesh_0309",
+      "mesh_label": "FR-500_-8",
+      "facets": 164
+    },
+    {
+      "index": 310,
+      "source_name": "Part__Feature378",
+      "source_label": "FR-500钼丝桶钣金焊件-9",
+      "mesh_name": "Mesh_0310",
+      "mesh_label": "FR-500_-9",
+      "facets": 204
+    },
+    {
+      "index": 311,
+      "source_name": "Part__Feature380",
+      "source_label": "FR-500钼丝桶钣金焊件-11",
+      "mesh_name": "Mesh_0311",
+      "mesh_label": "FR-500_-11",
+      "facets": 48
+    },
+    {
+      "index": 312,
+      "source_name": "Part__Feature382",
+      "source_label": "FR-500钼丝桶钣金焊件-13",
+      "mesh_name": "Mesh_0312",
+      "mesh_label": "FR-500_-13",
+      "facets": 112
+    },
+    {
+      "index": 313,
+      "source_name": "Part__Feature384",
+      "source_label": "FR-500新抽屉箱体焊板-2-2022-10-15",
+      "mesh_name": "Mesh_0313",
+      "mesh_label": "FR-500_-2-2022-10-15",
+      "facets": 652
+    },
+    {
+      "index": 314,
+      "source_name": "Part__Feature390",
+      "source_label": "FT-7055抽屉箱体焊板-8",
+      "mesh_name": "Mesh_0314",
+      "mesh_label": "FT-7055_-8",
+      "facets": 420
+    },
+    {
+      "index": 315,
+      "source_name": "Part__Feature393",
+      "source_label": "压铆螺母M072",
+      "mesh_name": "Mesh_0315",
+      "mesh_label": "M072",
+      "facets": 432
+    },
+    {
+      "index": 316,
+      "source_name": "Part__Feature392",
+      "source_label": "压铆螺母M6",
+      "mesh_name": "Mesh_0316",
+      "mesh_label": "M6",
+      "facets": 432
+    },
+    {
+      "index": 317,
+      "source_name": "Part__Feature394",
+      "source_label": "FT-7055抽屉箱体焊板-10",
+      "mesh_name": "Mesh_0317",
+      "mesh_label": "FT-7055_-10",
+      "facets": 88
+    },
+    {
+      "index": 318,
+      "source_name": "Part__Feature387",
+      "source_label": "FT-7055抽屉箱体焊板-7",
+      "mesh_name": "Mesh_0318",
+      "mesh_label": "FT-7055_-7",
+      "facets": 1324
+    },
+    {
+      "index": 319,
+      "source_name": "Part__Feature388",
+      "source_label": "FT-7055抽屉箱体焊板-4",
+      "mesh_name": "Mesh_0319",
+      "mesh_label": "FT-7055_-4",
+      "facets": 32
+    },
+    {
+      "index": 320,
+      "source_name": "Part__Feature389",
+      "source_label": "FT-7055抽屉箱体焊板-6",
+      "mesh_name": "Mesh_0320",
+      "mesh_label": "FT-7055_-6",
+      "facets": 176
+    },
+    {
+      "index": 321,
+      "source_name": "Part__Feature391",
+      "source_label": "FT-7055抽屉箱体焊板-9",
+      "mesh_name": "Mesh_0321",
+      "mesh_label": "FT-7055_-9",
+      "facets": 420
+    },
+    {
+      "index": 322,
+      "source_name": "Part__Feature395",
+      "source_label": "FT-7055抽屉箱体焊板-001",
+      "mesh_name": "Mesh_0322",
+      "mesh_label": "FT-7055_-001",
+      "facets": 88
+    },
+    {
+      "index": 323,
+      "source_name": "Part__Feature396",
+      "source_label": "deep groove ball bearings gb_PreviewCfg",
+      "mesh_name": "Mesh_0323",
+      "mesh_label": "deep_groove_ball_bearings_gb_PreviewCfg",
+      "facets": 14466
+    },
+    {
+      "index": 324,
+      "source_name": "Part__Feature401",
+      "source_label": "FR-500抽屉盖板焊件-1",
+      "mesh_name": "Mesh_0324",
+      "mesh_label": "FR-500_-1",
+      "facets": 2016
+    },
+    {
+      "index": 325,
+      "source_name": "Part__Feature403",
+      "source_label": "deep groove ball bearings gb_PreviewCfg002",
+      "mesh_name": "Mesh_0325",
+      "mesh_label": "deep_groove_ball_bearings_gb_PreviewCfg002",
+      "facets": 14466
+    },
+    {
+      "index": 326,
+      "source_name": "Part__Feature398",
+      "source_label": "FR-500抽屉弯板焊件-1",
+      "mesh_name": "Mesh_0326",
+      "mesh_label": "FR-500_-1",
+      "facets": 1640
+    },
+    {
+      "index": 327,
+      "source_name": "Part__Feature402",
+      "source_label": "FR-500抽屉盖板焊件-2",
+      "mesh_name": "Mesh_0327",
+      "mesh_label": "FR-500_-2",
+      "facets": 316
+    },
+    {
+      "index": 328,
+      "source_name": "Part__Feature397",
+      "source_label": "deep groove ball bearings gb_PreviewCfg001",
+      "mesh_name": "Mesh_0328",
+      "mesh_label": "deep_groove_ball_bearings_gb_PreviewCfg001",
+      "facets": 14466
+    },
+    {
+      "index": 329,
+      "source_name": "Part__Feature399",
+      "source_label": "FR-500抽屉弯板焊件-2",
+      "mesh_name": "Mesh_0329",
+      "mesh_label": "FR-500_-2",
+      "facets": 352
+    },
+    {
+      "index": 330,
+      "source_name": "Part__Feature400",
+      "source_label": "FR-500抽屉弯板焊件-3",
+      "mesh_name": "Mesh_0330",
+      "mesh_label": "FR-500_-3",
+      "facets": 352
+    },
+    {
+      "index": 331,
+      "source_name": "Part__Feature408",
+      "source_label": "抽屉限位板001",
+      "mesh_name": "Mesh_0331",
+      "mesh_label": "001",
+      "facets": 88
+    },
+    {
+      "index": 332,
+      "source_name": "Part__Feature410",
+      "source_label": "FT-7055抽屉基座上盖焊板-2",
+      "mesh_name": "Mesh_0332",
+      "mesh_label": "FT-7055_-2",
+      "facets": 460
+    },
+    {
+      "index": 333,
+      "source_name": "Part__Feature412",
+      "source_label": "FR-500钼丝桶新后围焊板-1-2022-11-21",
+      "mesh_name": "Mesh_0333",
+      "mesh_label": "FR-500_-1-2022-11-21",
+      "facets": 1320
+    },
+    {
+      "index": 334,
+      "source_name": "Part__Feature405",
+      "source_label": "socket head cap screw_is",
+      "mesh_name": "Mesh_0334",
+      "mesh_label": "socket_head_cap_screw_is",
+      "facets": 982
+    },
+    {
+      "index": 335,
+      "source_name": "Part__Feature406",
+      "source_label": "socket head cap screw_is001",
+      "mesh_name": "Mesh_0335",
+      "mesh_label": "socket_head_cap_screw_is001",
+      "facets": 982
+    },
+    {
+      "index": 336,
+      "source_name": "Part__Feature407",
+      "source_label": "抽屉限位板",
+      "mesh_name": "Mesh_0336",
+      "mesh_label": "part_0336",
+      "facets": 88
+    },
+    {
+      "index": 337,
+      "source_name": "Part__Feature404",
+      "source_label": "deep groove ball bearings gb_PreviewCfg003",
+      "mesh_name": "Mesh_0337",
+      "mesh_label": "deep_groove_ball_bearings_gb_PreviewCfg003",
+      "facets": 14466
+    },
+    {
+      "index": 338,
+      "source_name": "Part__Feature409",
+      "source_label": "FT-7055抽屉基座上盖焊板-1",
+      "mesh_name": "Mesh_0338",
+      "mesh_label": "FT-7055_-1",
+      "facets": 1646
+    },
+    {
+      "index": 339,
+      "source_name": "Part__Feature411",
+      "source_label": "急停开关",
+      "mesh_name": "Mesh_0339",
+      "mesh_label": "part_0339",
+      "facets": 3464
+    },
+    {
+      "index": 340,
+      "source_name": "Part__Feature419",
+      "source_label": "FR-500钼丝桶新围板后盖板焊件-2-2023-07-28",
+      "mesh_name": "Mesh_0340",
+      "mesh_label": "FR-500_-2-2023-07-28",
+      "facets": 1792
+    },
+    {
+      "index": 341,
+      "source_name": "Part__Feature418",
+      "source_label": "FR-500钼丝桶新围板后盖板焊件-1-2022-11-21",
+      "mesh_name": "Mesh_0341",
+      "mesh_label": "FR-500_-1-2022-11-21",
+      "facets": 992
+    },
+    {
+      "index": 342,
+      "source_name": "Part__Feature414",
+      "source_label": "压铆螺母M073",
+      "mesh_name": "Mesh_0342",
+      "mesh_label": "M073",
+      "facets": 432
+    },
+    {
+      "index": 343,
+      "source_name": "Part__Feature415",
+      "source_label": "压铆螺母M074",
+      "mesh_name": "Mesh_0343",
+      "mesh_label": "M074",
+      "facets": 432
+    },
+    {
+      "index": 344,
+      "source_name": "Part__Feature413",
+      "source_label": "FR-500钼丝桶新后围焊板-2-2022-09-17",
+      "mesh_name": "Mesh_0344",
+      "mesh_label": "FR-500_-2-2022-09-17",
+      "facets": 324
+    },
+    {
+      "index": 345,
+      "source_name": "Part__Feature416",
+      "source_label": "压铆螺母M075",
+      "mesh_name": "Mesh_0345",
+      "mesh_label": "M075",
+      "facets": 432
+    },
+    {
+      "index": 346,
+      "source_name": "Part__Feature417",
+      "source_label": "压铆螺母M076",
+      "mesh_name": "Mesh_0346",
+      "mesh_label": "M076",
+      "facets": 432
+    },
+    {
+      "index": 347,
+      "source_name": "Part__Feature420",
+      "source_label": "FR-500钼丝桶新围板后盖板焊件-3-2022-09-17",
+      "mesh_name": "Mesh_0347",
+      "mesh_label": "FR-500_-3-2022-09-17",
+      "facets": 904
+    },
+    {
+      "index": 348,
+      "source_name": "Part__Feature422",
+      "source_label": "FT-7055钼丝桶围板焊件-001",
+      "mesh_name": "Mesh_0348",
+      "mesh_label": "FT-7055_-001",
+      "facets": 12
+    },
+    {
+      "index": 349,
+      "source_name": "Part__Feature421",
+      "source_label": "FT-7055钼丝桶围板焊件-10",
+      "mesh_name": "Mesh_0349",
+      "mesh_label": "FT-7055_-10",
+      "facets": 12
+    },
+    {
+      "index": 350,
+      "source_name": "Part__Feature011",
+      "source_label": "FR-500床身盖板卡件片焊件002",
+      "mesh_name": "Mesh_0350",
+      "mesh_label": "FR-500_002",
+      "facets": 240
+    },
+    {
+      "index": 351,
+      "source_name": "Part__Feature177",
+      "source_label": "FR-500油槽焊接铰链-001",
+      "mesh_name": "Mesh_0351",
+      "mesh_label": "FR-500_-001",
+      "facets": 492
+    },
+    {
+      "index": 352,
+      "source_name": "Part__Feature176",
+      "source_label": "FR-500油槽焊接铰链-1",
+      "mesh_name": "Mesh_0352",
+      "mesh_label": "FR-500_-1",
+      "facets": 492
+    },
+    {
+      "index": 353,
+      "source_name": "Part__Feature172",
+      "source_label": "FR-500油槽前加强板",
+      "mesh_name": "Mesh_0353",
+      "mesh_label": "FR-500",
+      "facets": 104
+    },
+    {
+      "index": 354,
+      "source_name": "Part__Feature175",
+      "source_label": "FR-500油槽焊接铰链-3",
+      "mesh_name": "Mesh_0354",
+      "mesh_label": "FR-500_-3",
+      "facets": 504
+    },
+    {
+      "index": 355,
+      "source_name": "Part__Feature173",
+      "source_label": "FR-500新油槽焊板-6-2023-04-17",
+      "mesh_name": "Mesh_0355",
+      "mesh_label": "FR-500_-6-2023-04-17",
+      "facets": 540
+    },
+    {
+      "index": 356,
+      "source_name": "Part__Feature171",
+      "source_label": "FR-500新油槽焊板-8",
+      "mesh_name": "Mesh_0356",
+      "mesh_label": "FR-500_-8",
+      "facets": 24
+    },
+    {
+      "index": 357,
+      "source_name": "Part__Feature174",
+      "source_label": "FR-500油槽锁块-1",
+      "mesh_name": "Mesh_0357",
+      "mesh_label": "FR-500_-1",
+      "facets": 116
+    },
+    {
+      "index": 358,
+      "source_name": "Part__Feature181",
+      "source_label": "FR-500油槽密封条封板001",
+      "mesh_name": "Mesh_0358",
+      "mesh_label": "FR-500_001",
+      "facets": 12
+    },
+    {
+      "index": 359,
+      "source_name": "Part__Feature184",
+      "source_label": "FR-500新油槽焊管",
+      "mesh_name": "Mesh_0359",
+      "mesh_label": "FR-500",
+      "facets": 288
+    },
+    {
+      "index": 360,
+      "source_name": "Part__Feature180",
+      "source_label": "FR-500油槽密封条封板",
+      "mesh_name": "Mesh_0360",
+      "mesh_label": "FR-500",
+      "facets": 12
+    },
+    {
+      "index": 361,
+      "source_name": "Part__Feature182",
+      "source_label": "FR-500油槽锁块-2",
+      "mesh_name": "Mesh_0361",
+      "mesh_label": "FR-500_-2",
+      "facets": 140
+    },
+    {
+      "index": 362,
+      "source_name": "Part__Feature178",
+      "source_label": "FR-500油槽焊接铰链-002",
+      "mesh_name": "Mesh_0362",
+      "mesh_label": "FR-500_-002",
+      "facets": 504
+    },
+    {
+      "index": 363,
+      "source_name": "Part__Feature179",
+      "source_label": "FR-500油槽后内挂焊板-2022-10-15",
+      "mesh_name": "Mesh_0363",
+      "mesh_label": "FR-500_-2022-10-15",
+      "facets": 1488
+    },
+    {
+      "index": 364,
+      "source_name": "Part__Feature190",
+      "source_label": "FR-500新油槽右门焊板-3-2023-04-03",
+      "mesh_name": "Mesh_0364",
+      "mesh_label": "FR-500_-3-2023-04-03",
+      "facets": 132
+    },
+    {
+      "index": 365,
+      "source_name": "Part__Feature183",
+      "source_label": "FR-500新油槽焊板-11-2023-04-18",
+      "mesh_name": "Mesh_0365",
+      "mesh_label": "FR-500_-11-2023-04-18",
+      "facets": 496
+    },
+    {
+      "index": 366,
+      "source_name": "Part__Feature187",
+      "source_label": "FR-500新油槽右门焊板-1-2023-04-22",
+      "mesh_name": "Mesh_0366",
+      "mesh_label": "FR-500_-1-2023-04-22",
+      "facets": 870
+    },
+    {
+      "index": 367,
+      "source_name": "Part__Feature189",
+      "source_label": "FR-500新油槽右门焊板-2-2022-10-001",
+      "mesh_name": "Mesh_0367",
+      "mesh_label": "FR-500_-2-2022-10-001",
+      "facets": 240
+    },
+    {
+      "index": 368,
+      "source_name": "Part__Feature185",
+      "source_label": "FR-500新油槽焊板-9-2022-10-15",
+      "mesh_name": "Mesh_0368",
+      "mesh_label": "FR-500_-9-2022-10-15",
+      "facets": 12
+    },
+    {
+      "index": 369,
+      "source_name": "Part__Feature188",
+      "source_label": "FR-500新油槽右门焊板-2-2022-10-25",
+      "mesh_name": "Mesh_0369",
+      "mesh_label": "FR-500_-2-2022-10-25",
+      "facets": 240
+    },
+    {
+      "index": 370,
+      "source_name": "Part__Feature186",
+      "source_label": "FR-500新油槽焊板-11-2023-04-001",
+      "mesh_name": "Mesh_0370",
+      "mesh_label": "FR-500_-11-2023-04-001",
+      "facets": 496
+    },
+    {
+      "index": 371,
+      "source_name": "Part__Feature197",
+      "source_label": "FR-500新油槽前门焊板-3-2022-11-21",
+      "mesh_name": "Mesh_0371",
+      "mesh_label": "FR-500_-3-2022-11-21",
+      "facets": 164
+    },
+    {
+      "index": 372,
+      "source_name": "Part__Feature194",
+      "source_label": "FR-500新油槽右门焊管",
+      "mesh_name": "Mesh_0372",
+      "mesh_label": "FR-500",
+      "facets": 288
+    },
+    {
+      "index": 373,
+      "source_name": "Part__Feature195",
+      "source_label": "FR-500新油槽前门焊板-1-2023-04-22",
+      "mesh_name": "Mesh_0373",
+      "mesh_label": "FR-500_-1-2023-04-22",
+      "facets": 516
+    },
+    {
+      "index": 374,
+      "source_name": "Part__Feature191",
+      "source_label": "FR-500新油槽右门焊板-4-2023-04-22",
+      "mesh_name": "Mesh_0374",
+      "mesh_label": "FR-500_-4-2023-04-22",
+      "facets": 96
+    },
+    {
+      "index": 375,
+      "source_name": "Part__Feature193",
+      "source_label": "FR-500油槽焊接铰链-003",
+      "mesh_name": "Mesh_0375",
+      "mesh_label": "FR-500_-003",
+      "facets": 320
+    },
+    {
+      "index": 376,
+      "source_name": "Part__Feature196",
+      "source_label": "FR-500新油槽前门焊板-2-2022-11-21",
+      "mesh_name": "Mesh_0376",
+      "mesh_label": "FR-500_-2-2022-11-21",
+      "facets": 164
+    },
+    {
+      "index": 377,
+      "source_name": "Part__Feature192",
+      "source_label": "FR-500油槽焊接铰链-2",
+      "mesh_name": "Mesh_0377",
+      "mesh_label": "FR-500_-2",
+      "facets": 320
+    },
+    {
+      "index": 378,
+      "source_name": "Part__Feature198",
+      "source_label": "FR-500新油槽前门焊板-4-2022-11-21",
+      "mesh_name": "Mesh_0378",
+      "mesh_label": "FR-500_-4-2022-11-21",
+      "facets": 228
+    },
+    {
+      "index": 379,
+      "source_name": "Part__Feature120",
+      "source_label": "FR-500 床身中间盖板",
+      "mesh_name": "Mesh_0379",
+      "mesh_label": "FR-500",
+      "facets": 916
+    },
+    {
+      "index": 380,
+      "source_name": "Part__Feature122",
+      "source_label": "FR-500中拖板新钣金焊板-12-2023-03-23",
+      "mesh_name": "Mesh_0380",
+      "mesh_label": "FR-500_-12-2023-03-23",
+      "facets": 1028
+    },
+    {
+      "index": 381,
+      "source_name": "Part__Feature117",
+      "source_label": "压铆螺母M037",
+      "mesh_name": "Mesh_0381",
+      "mesh_label": "M037",
+      "facets": 432
+    },
+    {
+      "index": 382,
+      "source_name": "Part__Feature115",
+      "source_label": "FR-500床身压条-001",
+      "mesh_name": "Mesh_0382",
+      "mesh_label": "FR-500_-001",
+      "facets": 324
+    },
+    {
+      "index": 383,
+      "source_name": "Part__Feature119",
+      "source_label": "FR-500床身皮囊-001",
+      "mesh_name": "Mesh_0383",
+      "mesh_label": "FR-500_-001",
+      "facets": 4572
+    },
+    {
+      "index": 384,
+      "source_name": "Part__Feature116",
+      "source_label": "压铆螺母M036",
+      "mesh_name": "Mesh_0384",
+      "mesh_label": "M036",
+      "facets": 432
+    },
+    {
+      "index": 385,
+      "source_name": "Part__Feature118",
+      "source_label": "FR-500床身皮囊-1",
+      "mesh_name": "Mesh_0385",
+      "mesh_label": "FR-500_-1",
+      "facets": 4572
+    },
+    {
+      "index": 386,
+      "source_name": "Part__Feature121",
+      "source_label": "FR-500中拖板新钣金焊板-11-2023-03-23",
+      "mesh_name": "Mesh_0386",
+      "mesh_label": "FR-500_-11-2023-03-23",
+      "facets": 1576
+    },
+    {
+      "index": 387,
+      "source_name": "Part__Feature129",
+      "source_label": "FR-500中拖板新钣金焊板-1-2022-11-17",
+      "mesh_name": "Mesh_0387",
+      "mesh_label": "FR-500_-1-2022-11-17",
+      "facets": 164
+    },
+    {
+      "index": 388,
+      "source_name": "Part__Feature125",
+      "source_label": "压铆螺母M040",
+      "mesh_name": "Mesh_0388",
+      "mesh_label": "M040",
+      "facets": 432
+    },
+    {
+      "index": 389,
+      "source_name": "Part__Feature126",
+      "source_label": "压铆螺母M041",
+      "mesh_name": "Mesh_0389",
+      "mesh_label": "M041",
+      "facets": 432
+    },
+    {
+      "index": 390,
+      "source_name": "Part__Feature123",
+      "source_label": "压铆螺母M038",
+      "mesh_name": "Mesh_0390",
+      "mesh_label": "M038",
+      "facets": 432
+    },
+    {
+      "index": 391,
+      "source_name": "Part__Feature128",
+      "source_label": "FR-750中拖板新钣金焊板-001",
+      "mesh_name": "Mesh_0391",
+      "mesh_label": "FR-750_-001",
+      "facets": 396
+    },
+    {
+      "index": 392,
+      "source_name": "Part__Feature124",
+      "source_label": "压铆螺母M039",
+      "mesh_name": "Mesh_0392",
+      "mesh_label": "M039",
+      "facets": 432
+    },
+    {
+      "index": 393,
+      "source_name": "Part__Feature127",
+      "source_label": "FR-750中拖板新钣金焊板-16",
+      "mesh_name": "Mesh_0393",
+      "mesh_label": "FR-750_-16",
+      "facets": 396
+    },
+    {
+      "index": 394,
+      "source_name": "Part__Feature130",
+      "source_label": "FR-500中拖板新钣金焊板-2-2022-11-17",
+      "mesh_name": "Mesh_0394",
+      "mesh_label": "FR-500_-2-2022-11-17",
+      "facets": 328
+    },
+    {
+      "index": 395,
+      "source_name": "Part__Feature134",
+      "source_label": "FR-500中拖板新钣金焊板-9-2022-12-26",
+      "mesh_name": "Mesh_0395",
+      "mesh_label": "FR-500_-9-2022-12-26",
+      "facets": 1052
+    },
+    {
+      "index": 396,
+      "source_name": "Part__Feature136",
+      "source_label": "FR-500中拖板新钣金焊板-4-2022-10-15",
+      "mesh_name": "Mesh_0396",
+      "mesh_label": "FR-500_-4-2022-10-15",
+      "facets": 772
+    },
+    {
+      "index": 397,
+      "source_name": "Part__Feature138",
+      "source_label": "压铆螺母M043",
+      "mesh_name": "Mesh_0397",
+      "mesh_label": "M043",
+      "facets": 432
+    },
+    {
+      "index": 398,
+      "source_name": "Part__Feature137",
+      "source_label": "压铆螺母M042",
+      "mesh_name": "Mesh_0398",
+      "mesh_label": "M042",
+      "facets": 432
+    },
+    {
+      "index": 399,
+      "source_name": "Part__Feature131",
+      "source_label": "FR-500中拖板新钣金焊板-3-2022-11-17",
+      "mesh_name": "Mesh_0399",
+      "mesh_label": "FR-500_-3-2022-11-17",
+      "facets": 428
+    },
+    {
+      "index": 400,
+      "source_name": "Part__Feature133",
+      "source_label": "FR-500中拖板新钣金焊板-6-2023-05-12",
+      "mesh_name": "Mesh_0400",
+      "mesh_label": "FR-500_-6-2023-05-12",
+      "facets": 196
+    },
+    {
+      "index": 401,
+      "source_name": "Part__Feature132",
+      "source_label": "FR-500中拖板新钣金焊板-5-2022-10-15",
+      "mesh_name": "Mesh_0401",
+      "mesh_label": "FR-500_-5-2022-10-15",
+      "facets": 780
+    },
+    {
+      "index": 402,
+      "source_name": "Part__Feature135",
+      "source_label": "FR-500中拖板新钣金焊板-9-2022-12-001",
+      "mesh_name": "Mesh_0402",
+      "mesh_label": "FR-500_-9-2022-12-001",
+      "facets": 1052
+    },
+    {
+      "index": 403,
+      "source_name": "Part__Feature140",
+      "source_label": "FR-500中拖板新钣金焊板-8",
+      "mesh_name": "Mesh_0403",
+      "mesh_label": "FR-500_-8",
+      "facets": 180
+    },
+    {
+      "index": 404,
+      "source_name": "Part__Feature139",
+      "source_label": "压铆螺母M044",
+      "mesh_name": "Mesh_0404",
+      "mesh_label": "M044",
+      "facets": 432
+    },
+    {
+      "index": 405,
+      "source_name": "Part__Feature141",
+      "source_label": "FR-500中拖板新钣金焊板-001",
+      "mesh_name": "Mesh_0405",
+      "mesh_label": "FR-500_-001",
+      "facets": 180
+    },
+    {
+      "index": 406,
+      "source_name": "Part__Feature142",
+      "source_label": "压铆螺母M045",
+      "mesh_name": "Mesh_0406",
+      "mesh_label": "M045",
+      "facets": 432
+    },
+    {
+      "index": 407,
+      "source_name": "Part__Feature004",
+      "source_label": "FR-500床身新前盖板焊件-4-2023-03-001",
+      "mesh_name": "Mesh_0407",
+      "mesh_label": "FR-500_-4-2023-03-001",
+      "facets": 180
+    },
+    {
+      "index": 408,
+      "source_name": "Part__Feature012",
+      "source_label": "FR-500床身新右前侧盖板焊件-3-2022-10-25",
+      "mesh_name": "Mesh_0408",
+      "mesh_label": "FR-500_-3-2022-10-25",
+      "facets": 1088
+    },
+    {
+      "index": 409,
+      "source_name": "Part__Feature205",
+      "source_label": "FR-500油槽焊接铰链-005",
+      "mesh_name": "Mesh_0409",
+      "mesh_label": "FR-500_-005",
+      "facets": 468
+    },
+    {
+      "index": 410,
+      "source_name": "Part__Feature204",
+      "source_label": "FR-500油槽焊接铰链-",
+      "mesh_name": "Mesh_0410",
+      "mesh_label": "FR-500_-",
+      "facets": 468
+    },
+    {
+      "index": 411,
+      "source_name": "Part__Feature199",
+      "source_label": "FR-500油槽焊接铰链-4",
+      "mesh_name": "Mesh_0411",
+      "mesh_label": "FR-500_-4",
+      "facets": 704
+    },
+    {
+      "index": 412,
+      "source_name": "Part__Feature201",
+      "source_label": "FR-500新油槽前门焊板-7-2024-03-02",
+      "mesh_name": "Mesh_0412",
+      "mesh_label": "FR-500_-7-2024-03-02",
+      "facets": 1104
+    },
+    {
+      "index": 413,
+      "source_name": "Part__Feature202",
+      "source_label": "FR-500油槽前门焊管",
+      "mesh_name": "Mesh_0413",
+      "mesh_label": "FR-500",
+      "facets": 288
+    },
+    {
+      "index": 414,
+      "source_name": "Part__Feature203",
+      "source_label": "FR-500新油槽前门焊板-3-2022-11-001",
+      "mesh_name": "Mesh_0414",
+      "mesh_label": "FR-500_-3-2022-11-001",
+      "facets": 164
+    },
+    {
+      "index": 415,
+      "source_name": "Part__Feature200",
+      "source_label": "FR-500油槽焊接铰链-004",
+      "mesh_name": "Mesh_0415",
+      "mesh_label": "FR-500_-004",
+      "facets": 704
+    },
+    {
+      "index": 416,
+      "source_name": "Part__Feature206",
+      "source_label": "FR-500新油槽前门焊板-5-2024-03-02",
+      "mesh_name": "Mesh_0416",
+      "mesh_label": "FR-500_-5-2024-03-02",
+      "facets": 96
+    },
+    {
+      "index": 417,
+      "source_name": "Part__Feature208",
+      "source_label": "FR-500新油槽左门焊板-1-2023-04-22",
+      "mesh_name": "Mesh_0417",
+      "mesh_label": "FR-500_-1-2023-04-22",
+      "facets": 808
+    },
+    {
+      "index": 418,
+      "source_name": "Part__Feature212",
+      "source_label": "FR-500油槽焊接铰链-006",
+      "mesh_name": "Mesh_0418",
+      "mesh_label": "FR-500_-006",
+      "facets": 468
+    },
+    {
+      "index": 419,
+      "source_name": "Part__Feature215",
+      "source_label": "FR-500新油槽前门焊板-3-2022-11-003",
+      "mesh_name": "Mesh_0419",
+      "mesh_label": "FR-500_-3-2022-11-003",
+      "facets": 164
+    },
+    {
+      "index": 420,
+      "source_name": "Part__Feature209",
+      "source_label": "FR-500新油槽前门焊板-3-2022-11-002",
+      "mesh_name": "Mesh_0420",
+      "mesh_label": "FR-500_-3-2022-11-002",
+      "facets": 164
+    },
+    {
+      "index": 421,
+      "source_name": "Part__Feature211",
+      "source_label": "FR-500新油槽左门焊板-2-2022-11-21",
+      "mesh_name": "Mesh_0421",
+      "mesh_label": "FR-500_-2-2022-11-21",
+      "facets": 220
+    },
+    {
+      "index": 422,
+      "source_name": "Part__Feature214",
+      "source_label": "FR-500新油槽左门焊板-6-2023-04-22",
+      "mesh_name": "Mesh_0422",
+      "mesh_label": "FR-500_-6-2023-04-22",
+      "facets": 1084
+    },
+    {
+      "index": 423,
+      "source_name": "Part__Feature207",
+      "source_label": "FR-500新油槽前门焊板-6-2022-04-22",
+      "mesh_name": "Mesh_0423",
+      "mesh_label": "FR-500_-6-2022-04-22",
+      "facets": 96
+    },
+    {
+      "index": 424,
+      "source_name": "Part__Feature210",
+      "source_label": "FR-500新油槽左门焊板-3-2022-11-21",
+      "mesh_name": "Mesh_0424",
+      "mesh_label": "FR-500_-3-2022-11-21",
+      "facets": 164
+    },
+    {
+      "index": 425,
+      "source_name": "Part__Feature213",
+      "source_label": "FR-500油槽锁块-3",
+      "mesh_name": "Mesh_0425",
+      "mesh_label": "FR-500_-3",
+      "facets": 116
+    },
+    {
+      "index": 426,
+      "source_name": "Part__Feature220",
+      "source_label": "FR-500油槽皮囊固定焊板-2",
+      "mesh_name": "Mesh_0426",
+      "mesh_label": "FR-500_-2",
+      "facets": 660
+    },
+    {
+      "index": 427,
+      "source_name": "Part__Feature222",
+      "source_label": "FR-500新油槽接水盘焊板-1-2023-12-16",
+      "mesh_name": "Mesh_0427",
+      "mesh_label": "FR-500_-1-2023-12-16",
+      "facets": 1020
+    },
+    {
+      "index": 428,
+      "source_name": "Part__Feature224",
+      "source_label": "FR-500新油槽接水盘焊板-6",
+      "mesh_name": "Mesh_0428",
+      "mesh_label": "FR-500_-6",
+      "facets": 240
+    },
+    {
+      "index": 429,
+      "source_name": "Part__Feature216",
+      "source_label": "FR-500油槽焊接铰链-007",
+      "mesh_name": "Mesh_0429",
+      "mesh_label": "FR-500_-007",
+      "facets": 468
+    },
+    {
+      "index": 430,
+      "source_name": "Part__Feature218",
+      "source_label": "FR-500新油槽左门焊板-5-2023-04-22",
+      "mesh_name": "Mesh_0430",
+      "mesh_label": "FR-500_-5-2023-04-22",
+      "facets": 92
+    },
+    {
+      "index": 431,
+      "source_name": "Part__Feature219",
+      "source_label": "FR-500油槽皮囊固定焊板-1",
+      "mesh_name": "Mesh_0431",
+      "mesh_label": "FR-500_-1",
+      "facets": 1448
+    },
+    {
+      "index": 432,
+      "source_name": "Part__Feature217",
+      "source_label": "FR-500新油槽左门焊板-4",
+      "mesh_name": "Mesh_0432",
+      "mesh_label": "FR-500_-4",
+      "facets": 164
+    },
+    {
+      "index": 433,
+      "source_name": "Part__Feature221",
+      "source_label": "FR-500油槽皮囊固定焊板-3",
+      "mesh_name": "Mesh_0433",
+      "mesh_label": "FR-500_-3",
+      "facets": 660
+    },
+    {
+      "index": 434,
+      "source_name": "Part__Feature223",
+      "source_label": "FR-500新油槽接水盘焊板-3-2023-12-16",
+      "mesh_name": "Mesh_0434",
+      "mesh_label": "FR-500_-3-2023-12-16",
+      "facets": 620
+    },
+    {
+      "index": 435,
+      "source_name": "Part__Feature226",
+      "source_label": "FR-500新油槽接水盘焊板-2-2023-03-23",
+      "mesh_name": "Mesh_0435",
+      "mesh_label": "FR-500_-2-2023-03-23",
+      "facets": 1084
+    },
+    {
+      "index": 436,
+      "source_name": "Part__Feature225",
+      "source_label": "FR-500新油槽镜面板",
+      "mesh_name": "Mesh_0436",
+      "mesh_label": "FR-500",
+      "facets": 868
+    },
+    {
+      "index": 437,
+      "source_name": "Part__Feature008",
+      "source_label": "FR-500床身新右前侧盖板焊件-4-2022-10-25",
+      "mesh_name": "Mesh_0437",
+      "mesh_label": "FR-500_-4-2022-10-25",
+      "facets": 568
+    },
+    {
+      "index": 438,
+      "source_name": "Part__Feature009",
+      "source_label": "FR-500床身盖板卡件片焊件",
+      "mesh_name": "Mesh_0438",
+      "mesh_label": "FR-500",
+      "facets": 240
+    }
+  ]
+}

@@ -10,14 +10,48 @@ import { redeemFaqHandoff as requestFaqHandoffRedemption } from './faq-handoff-c
 import { requireTrustedOrigin } from './origin-guard.js';
 import { createAttachmentDownloadAudit } from './attachment-download-audit.js';
 import { validateRepairAttachments } from './repair-attachment-policy.js';
+import { createBoardQrToken, hashBoardQrToken, isBoardQrToken } from './board-qr.js';
 
 const app = express();
+process.on('exit', (code) => {
+  console.log('Process exiting with code', code);
+});
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught exception', err && err.stack || err);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled rejection', reason && (reason.stack || reason));
+});
 const port = Number(process.env.PORT || 3101);
-const host = process.env.HOST || '127.0.0.1';
+const host = process.env.HOST || '0.0.0.0';
 if (String(process.env.NODE_ENV || '').toLowerCase() === 'production' && !String(process.env.AUTH_SECRET || '').trim()) {
   throw new Error('生产环境必须配置 AUTH_SECRET');
 }
 if (String(process.env.TRUST_PROXY || '').toLowerCase() === 'true') app.set('trust proxy', 1);
+
+app.get('/', (_req, res) => {
+  res.type('html').send(`<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Repair System</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 40px; line-height: 1.6; }
+      a { color: #2563eb; }
+    </style>
+  </head>
+  <body>
+    <h1>Repair System API</h1>
+    <p>当前 API 服务已启动。</p>
+    <ul>
+      <li><a href="http://127.0.0.1:2888">客户端页面</a></li>
+      <li><a href="http://127.0.0.1:1888">管理后台</a></li>
+    </ul>
+    <p>接口请求请使用 /api 前缀。</p>
+  </body>
+</html>`);
+});
 
 const allowedOrigins = new Set(
   String(process.env.CORS_ORIGINS || 'http://127.0.0.1:2888,http://localhost:2888,http://127.0.0.1:1888,http://localhost:1888')
@@ -113,7 +147,7 @@ app.use((req, res, next) => {
   res.setHeader('X-Content-Type-Options', 'nosniff');
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  res.setHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+  res.setHeader('Permissions-Policy', 'camera=(self), microphone=(), geolocation=()');
   if (String(process.env.NODE_ENV || '').toLowerCase() === 'production') {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   }
@@ -483,14 +517,14 @@ function findSessionUser(db, payload) {
 function sessionTypeForRequest(req) {
   const explicit = String(req.get('X-Auth-Scope') || req.query.authType || '').trim().toLowerCase();
   if (explicit === 'client' || explicit === 'admin') return explicit;
-  if (req.path.startsWith('/admin') || req.path.startsWith('/roles') || req.path.startsWith('/work-orders') || req.path.startsWith('/reports') || req.path.startsWith('/master-data') || req.path.startsWith('/v8') || req.path.startsWith('/materials') || req.path.startsWith('/material-instances') || req.path.startsWith('/machines') || req.path.startsWith('/users')) return 'admin';
+  if (req.path.startsWith('/admin') || req.path.startsWith('/v1/admin') || req.path.startsWith('/roles') || req.path.startsWith('/work-orders') || req.path.startsWith('/reports') || req.path.startsWith('/master-data') || req.path.startsWith('/v8') || req.path.startsWith('/materials') || req.path.startsWith('/material-instances') || req.path.startsWith('/machines') || req.path.startsWith('/users')) return 'admin';
   return 'client';
 }
 
 async function requireAuth(req, res, next) {
   try {
     const publicPaths = new Set(['/health', '/auth/register', '/auth/login', '/auth/me', '/auth/logout', '/admin/auth/register', '/admin/auth/login', '/admin/auth/options', '/model-dictionary', '/model-photo-config', '/faq-handoffs/redeem']);
-    if (publicPaths.has(req.path)) return next();
+    if (publicPaths.has(req.path) || req.path.startsWith('/v1/boards/resolve/')) return next();
     const cookies = parseCookies(req.headers.cookie || '');
     const preferredType = sessionTypeForRequest(req);
     const types = preferredType === 'admin' ? ['admin', 'client'] : ['client', 'admin'];
@@ -562,6 +596,47 @@ function requireRequestAccess(permission = '') {
 function requireRequestList(req, res, next) {
   if (req.auth?.type === 'client' || (req.auth?.type === 'admin' && effectivePermissions(req.db, req.auth.user).includes('REQUEST_REVIEW'))) return next();
   return res.status(403).json({ message: '无权查看维修申请' });
+}
+
+function customerVisibleRequest(request, db = null) {
+  if (!request) return null;
+  const order = db?.workOrders?.find((item) => item.workOrderNo === request.workOrderNo || item.requestNo === request.requestNo) || null;
+  const safeLogs = (db?.operationLogs || []).filter((item) => item.targetNo === request.requestNo || item.targetNo === order?.workOrderNo).slice().reverse();
+  const statusEvents = [{ status: '待审核', at: request.createdAt || '' }];
+  const eventMap = [
+    ['审核通过并生成工单', '已生成工单'], ['维修接单', '维修中'], ['登记寄回物流', '已寄回'], ['维修归档', '已完成']
+  ];
+  for (const logEntry of safeLogs) {
+    const match = eventMap.find(([action]) => String(logEntry.action || '').includes(action));
+    if (match && !statusEvents.some((item) => item.status === match[1])) statusEvents.push({ status: match[1], at: logEntry.createdAt || '' });
+  }
+  const statusOrder = ['待审核', '已生成工单', '维修中', '待寄回', '已寄回', '已完成'];
+  const currentIndex = Math.max(0, statusOrder.indexOf(request.status || '待审核'));
+  return {
+    requestNo: request.requestNo,
+    status: request.status || '待审核',
+    nextAction: request.status === '待补充资料' ? '请补充机床铭牌和零件编号照片' : '',
+    createdAt: request.createdAt || '',
+    modelCode: request.modelCode || '',
+    modelName: request.modelName || '',
+    machineNo: request.machineNo || '',
+    customerName: request.customerName || '',
+    contact: request.contact || '',
+    phone: request.phone || '',
+    address: request.address || '',
+    faultDescription: request.faultDescription || '',
+    sendMethod: request.sendMethod || '',
+    logistics: order?.logistics ? { returnMethod: order.logistics.returnMethod || '', company: order.logistics.company || '', trackingNo: order.logistics.trackingNo || '', sentAt: order.logistics.sentAt || '' } : null,
+    supplementRequirements: Array.isArray(request.supplementRequirements) ? [...request.supplementRequirements] : [],
+    attachments: (request.attachments || []).map((item) => ({ id: item.id || '', name: item.name || '', category: item.category || '', url: item.url || '' })),
+    details: (request.details || []).map((item) => ({
+      id: item.id || '', serialNo: item.serialNo || '', boardNo: item.boardNo || '', serviceType: item.serviceType || '',
+      warrantyScope: item.warrantyScope || '', materialCode: item.materialCode || '', materialType: item.materialType || '',
+      materialName: item.materialName || '', spec: item.spec || '', faultPhenomenon: item.faultPhenomenon || '',
+      warrantyResult: item.warrantyResult || '', warrantySuggestion: item.warrantySuggestion || ''
+    })),
+    timeline: statusOrder.map((status, index) => ({ status, reached: index <= currentIndex, at: statusEvents.find((item) => item.status === status)?.at || '' }))
+  };
 }
 
 function actor(req) {
@@ -646,6 +721,39 @@ function applyWarrantyCheck(detail, check) {
   return detail;
 }
 
+function boardQrExpiry(value) {
+  const time = Date.parse(String(value || ''));
+  return Number.isFinite(time) ? time : null;
+}
+
+function boardQrAudit(db, { codeId = '', tokenHash = '', outcome, source = 'repair_portal' }) {
+  db.boardQrScanAudits ||= [];
+  db.boardQrScanAudits.push({
+    id: nextNo('BQRA', db.boardQrScanAudits, 'id'),
+    codeId,
+    tokenFingerprint: String(tokenHash).slice(0, 32),
+    outcome,
+    source: source === 'repair_portal' ? source : 'repair_portal',
+    scannedAt: timestamp()
+  });
+  if (db.boardQrScanAudits.length > 20_000) db.boardQrScanAudits.splice(0, db.boardQrScanAudits.length - 20_000);
+}
+
+function publicBoardQrResult(db, code) {
+  const instance = (db.materialInstances || []).find((item) => item.serialNo === code.serialNo);
+  const material = (db.materials || []).find((item) => item.materialCode === instance?.materialCode);
+  const binding = (db.bindings || []).find((item) => item.serialNo === code.serialNo && item.active);
+  const machine = (db.machines || []).find((item) => item.machineNo === binding?.machineNo);
+  if (!instance || !material) return null;
+  return {
+    boardId: instance.serialNo,
+    material: { code: material.materialCode, name: material.name, type: material.type, spec: material.spec || '' },
+    machine: binding && machine ? { machineNo: machine.machineNo, modelCode: machine.model, position: binding.position || '' } : null,
+    allowedActions: binding && machine ? ['repair_new', 'repair_warranty'] : ['repair_warranty'],
+    requiresLoginForRepair: true
+  };
+}
+
 async function recheckRepairRequest(db, repairRequest) {
   await Promise.all(
     (repairRequest.details || []).map(async (detail) => {
@@ -686,6 +794,71 @@ async function materializeAttachments(requestNo, attachments = []) {
 
 app.get('/api/health', (_req, res) => {
   res.json({ ok: true, name: 'repair-system-mvp', time: timestamp() });
+});
+
+app.get('/api/v1/boards/resolve/:token', rateLimit(5 * 60 * 1000, 60, 'board-qr-resolve'), async (req, res) => {
+  const token = String(req.params.token || '');
+  const tokenHash = hashBoardQrToken(token);
+  const db = await loadDb();
+  const code = tokenHash ? (db.boardQrCodes || []).find((item) => item.tokenHash === tokenHash) : null;
+  let outcome = 'invalid';
+  if (code?.status === 'revoked') outcome = 'revoked';
+  else if (code && boardQrExpiry(code.expiresAt) && boardQrExpiry(code.expiresAt) <= Date.now()) outcome = 'expired';
+  else if (code) outcome = publicBoardQrResult(db, code) ? 'resolved' : 'unavailable';
+  boardQrAudit(db, { codeId: code?.id || '', tokenHash, outcome, source: req.query.source });
+  await saveDb(db);
+  if (outcome === 'expired') return res.status(410).json({ message: '二维码已过期' });
+  if (outcome !== 'resolved') return res.status(404).json({ message: '二维码无效或已作废' });
+  return res.json(publicBoardQrResult(db, code));
+});
+
+app.get('/api/v1/admin/board-codes', requirePermission('MASTER_DATA'), async (req, res) => {
+  const serialNo = String(req.query.serialNo || '').trim();
+  const db = req.db;
+  const codes = (db.boardQrCodes || [])
+    .filter((item) => !serialNo || item.serialNo === serialNo)
+    .map(({ tokenHash, ...code }) => code);
+  return res.json(codes);
+});
+
+app.post('/api/v1/admin/board-codes', requirePermission('MASTER_DATA'), async (req, res) => {
+  const serialNo = String(req.body?.serialNo || '').trim();
+  const expiresAt = String(req.body?.expiresAt || '').trim();
+  const expiry = expiresAt ? boardQrExpiry(expiresAt) : null;
+  const db = req.db;
+  if (!serialNo || !db.materialInstances?.some((item) => item.serialNo === serialNo)) {
+    return res.status(400).json({ message: '板卡实例不存在' });
+  }
+  if (expiresAt && (!expiry || expiry <= Date.now())) return res.status(400).json({ message: '二维码有效期必须是未来时间' });
+  const token = createBoardQrToken();
+  const code = {
+    id: nextNo('BQR', db.boardQrCodes || [], 'id'),
+    tokenHash: hashBoardQrToken(token),
+    serialNo,
+    status: 'active',
+    issuedAt: timestamp(),
+    expiresAt,
+    revokedAt: '',
+    createdBy: actor(req)
+  };
+  db.boardQrCodes ||= [];
+  db.boardQrCodes.push(code);
+  log(db, '签发板卡二维码', actor(req), code.id, serialNo);
+  await saveDb(db);
+  return res.status(201).json({ id: code.id, serialNo, expiresAt, token, scanPath: `/scan/${token}` });
+});
+
+app.post('/api/v1/admin/board-codes/:id/revoke', requirePermission('MASTER_DATA'), async (req, res) => {
+  const db = await loadDb();
+  const code = (db.boardQrCodes || []).find((item) => item.id === req.params.id);
+  if (!code) return res.status(404).json({ message: '二维码不存在' });
+  if (code.status !== 'revoked') {
+    code.status = 'revoked';
+    code.revokedAt = timestamp();
+    log(db, '作废板卡二维码', actor(req), code.id, code.serialNo);
+    await saveDb(db);
+  }
+  return res.json({ id: code.id, status: code.status, revokedAt: code.revokedAt });
 });
 
 app.post('/api/faq/answer', rateLimit(60 * 1000, 30, 'faq-answer'), async (req, res, next) => {
@@ -1113,8 +1286,12 @@ app.post('/api/warranty/check', async (req, res) => {
 
 app.get('/api/repair-requests', requireRequestList, async (req, res) => {
   const db = await loadDb();
-  if (req.auth.type === 'client') return res.json(db.repairRequests.filter((item) => item.accountId === req.auth.user.id));
+  if (req.auth.type === 'client') return res.json(db.repairRequests.filter((item) => item.accountId === req.auth.user.id).map((item) => customerVisibleRequest(item, db)));
   res.json(db.repairRequests);
+});
+
+app.get('/api/repair-requests/:requestNo', requireRequestAccess(), (req, res) => {
+  res.json(customerVisibleRequest(req.repairRequest, req.db));
 });
 
 app.post('/api/repair-requests', requireClient, async (req, res) => {
@@ -1179,7 +1356,7 @@ app.post('/api/repair-requests', requireClient, async (req, res) => {
   db.repairRequests.unshift(repairRequest);
   log(db, '提交维修申请', actor(req), requestNo, `来源：${repairRequest.sourceChannel}`);
   await saveDb(db);
-  res.status(201).json(repairRequest);
+  res.status(201).json(customerVisibleRequest(repairRequest, db));
 });
 
 app.post('/api/repair-requests/:requestNo/recheck', requirePermission('REQUEST_REVIEW'), async (req, res) => {
@@ -1189,7 +1366,7 @@ app.post('/api/repair-requests/:requestNo/recheck', requirePermission('REQUEST_R
   await recheckRepairRequest(db, repairRequest);
   log(db, '重新核验维修申请', actor(req), repairRequest.requestNo);
   await saveDb(db);
-  res.json(repairRequest);
+  res.json(customerVisibleRequest(repairRequest, db));
 });
 
 app.post('/api/repair-requests/:requestNo/supplement', requireRequestAccess('REQUEST_REVIEW'), async (req, res) => {
@@ -1213,7 +1390,7 @@ app.post('/api/repair-requests/:requestNo/supplement', requireRequestAccess('REQ
   await recheckRepairRequest(db, repairRequest);
   log(db, '补充维修申请资料', actor(req), repairRequest.requestNo, `${newAttachments.length} 张照片`);
   await saveDb(db);
-  res.json(repairRequest);
+  res.json(customerVisibleRequest(repairRequest, db));
 });
 
 app.post('/api/repair-requests/:requestNo/audit', requirePermission('REQUEST_REVIEW'), async (req, res) => {
@@ -1476,3 +1653,5 @@ app.use((err, _req, res, _next) => {
 app.listen(port, host, () => {
   console.log(`Repair system API running at http://${host}:${port}`);
 });
+// 保持进程常驻，防止在某些运行环境下意外退出
+process.stdin.resume();

@@ -10,7 +10,7 @@ test('notification worker provisioner creates a separate non-admin service accou
     fetchImpl: async (url, options = {}) => {
       const request = { url: new URL(url), method: options.method || 'GET', body: options.body, headers: options.headers };
       calls.push(request);
-      if (request.url.pathname === '/roles') return Response.json({ data: [{ id: 'worker-role', name: 'Notification worker service account', admin_access: false }] });
+if (request.url.pathname === '/roles') return Response.json({ data: [{ id: 'worker-role', name: '通知任务服务账号', admin_access: false }] });
       if (request.url.pathname === '/users' && request.method === 'GET') return Response.json({ data: [] });
       if (request.url.pathname === '/users' && request.method === 'POST') return Response.json({ data: { id: 'worker-user' } });
       throw new Error(`Unexpected request ${request.method} ${request.url.pathname}`);

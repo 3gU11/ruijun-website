@@ -5,15 +5,28 @@ const { contentCollections, contentRoles, contentStates } = await import('../sch
 
 test('CMS content model covers every PRD object with an explicit publication state', () => {
   const expected = [
-    'pages', 'product_series', 'product_models', 'product_parameters', 'case_studies',
+    'pages', 'repair_page_configs', 'product_series', 'product_models', 'product_parameters', 'case_studies',
     'articles', 'manufacturing_evidence', 'qualifications', 'milestones', 'service_resources',
-    'service_locations', 'knowledge_items', 'external_service_entries', 'service_entry_clicks', 'media_assets', 'leads', 'lead_dedupe_keys', 'lead_notification_jobs', 'lead_upload_sessions', 'content_versions', 'site_settings'
+    'service_locations', 'knowledge_items', 'external_service_entries', 'service_entry_clicks', 'media_assets', 'leads', 'lead_dedupe_keys', 'lead_notification_jobs', 'lead_upload_sessions', 'content_versions', 'product_release_snapshots', 'site_settings', 'content_preview_tokens'
   ];
 
   assert.deepEqual(contentCollections.map((collection) => collection.name), expected);
   assert.deepEqual(contentStates, ['draft', 'review', 'scheduled', 'published', 'unpublished', 'archived', 'rejected']);
   for (const collection of contentCollections) {
     assert.ok(collection.fields.some((field) => field.name === 'status'), `${collection.name} needs a status field`);
+  }
+});
+
+test('product releases persist public cache invalidation delivery state without changing the immutable snapshot payload', () => {
+  const releases = contentCollections.find((collection) => collection.name === 'product_release_snapshots');
+
+  for (const field of ['cache_invalidation_status', 'cache_invalidation_attempts', 'cache_invalidation_last_attempt_at', 'cache_invalidated_at', 'cache_invalidation_error']) {
+    assert.ok(releases.fields.some((candidate) => candidate.name === field), `${field} is required`);
+  }
+  assert.equal(releases.defaultValues.cache_invalidation_status, 'pending');
+  assert.equal(releases.defaultValues.cache_invalidation_attempts, 0);
+  for (const field of ['restored_from_release_id', 'restored_from_version', 'restore_note']) {
+    assert.ok(releases.fields.some((candidate) => candidate.name === field), `${field} is required`);
   }
 });
 
@@ -53,10 +66,19 @@ test('service entry clicks are private anonymous attribution records', () => {
   assert.ok(!clicks.fields.some((field) => /name|phone|machine|fault|requirement/i.test(field.name)));
 });
 
+test('content preview tokens are private, short-lived and never store the raw token', () => {
+  const tokens = contentCollections.find((collection) => collection.name === 'content_preview_tokens');
+  assert.deepEqual(tokens.defaultValues, { status: 'active', publication_state: 'private', use_count: 0 });
+  for (const field of ['token_hash', 'content_collection', 'content_item_id', 'issued_by', 'created_at', 'expires_at', 'used_at', 'revoked_at', 'revoked_by', 'use_count', 'status', 'publication_state']) {
+    assert.ok(tokens.fields.some((candidate) => candidate.name === field), `content_preview_tokens needs ${field}`);
+  }
+  assert.ok(tokens.fields.some((field) => field.name === 'token_hash' && field.required && field.unique));
+  assert.ok(!tokens.fields.some((field) => field.name === 'token'));
+});
+
 test('CMS roles preserve PRD editing, review, publishing, and sales boundaries', () => {
   assert.deepEqual(contentRoles, [
-    'system_admin', 'content_editor', 'technical_reviewer', 'brand_reviewer',
-    'publisher', 'sales_user', 'read_only_manager', 'content_audit_reader', 'notification_worker', 'notification_manager', 'website_bff'
+    'system_admin', 'content_editor', 'review_manager', 'sales_user', 'read_only_manager', 'content_audit_reader', 'notification_worker', 'notification_manager', 'website_bff'
   ]);
 });
 
@@ -74,6 +96,14 @@ test('product records preserve source evidence and default to non-public drafts'
   assert.deepEqual(productModel.defaultValues, { status: 'draft', publication_state: 'unpublished' });
   for (const field of ['series_code', 'model_code', 'source_url', 'source_document', 'review_note', 'reviewed_by', 'reviewed_at', 'published_by', 'publication_log']) {
     assert.ok(productModel.fields.some((candidate) => candidate.name === field), `product_models needs ${field}`);
+  }
+});
+
+test('product parameters preserve independent source evidence for technical review', () => {
+  const parameters = contentCollections.find((collection) => collection.name === 'product_parameters');
+  assert.deepEqual(parameters.defaultValues, { status: 'draft', publication_state: 'unpublished' });
+  for (const field of ['model_code', 'field_name', 'value', 'source_url', 'source_document', 'review_note', 'import_evidence']) {
+    assert.ok(parameters.fields.some((candidate) => candidate.name === field), `product_parameters needs ${field}`);
   }
 });
 

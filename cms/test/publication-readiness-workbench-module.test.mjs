@@ -1,0 +1,25 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import test from 'node:test';
+const root = new URL('../', import.meta.url);
+test('publication readiness workbench is a read-only Directus module for the publisher workflow', async () => {
+  const [manifestText, index, module] = await Promise.all(['package.json', 'src/index.js', 'src/module.vue'].map((file) => readFile(new URL(`extensions/publication-readiness-workbench/${file}`, root), 'utf8')));
+  assert.equal(JSON.parse(manifestText)['directus:extension'].type, 'module');
+  assert.match(index, /ruijun-publication-readiness-workbench/);
+  assert.match(module, /api\.get\('\/publication-readiness'/);
+  assert.match(module, /page:\s*'页面'/);
+  assert.match(module, /setting:\s*'全站设置'/);
+  assert.match(module, /series:\s*'产品系列'/);
+  assert.match(module, /media:\s*'公共媒体'/);
+  assert.match(module, /manufacturing:\s*'制造证据'/);
+  assert.match(module, /qualification:\s*'资质证书'/);
+  assert.match(module, /milestone:\s*'企业历程'/);
+  assert.match(module, /parameter:\s*'产品参数'/);
+  assert.match(module, /case:\s*'客户案例'/);
+  assert.match(module, /knowledge:\s*'公开常见问题'/);
+  assert.match(module, /item\.edit_path/);
+  assert.match(module, /打开内容/);
+  assert.match(module, /blockedOnly/);
+  assert.doesNotMatch(module, /\/items\//);
+  assert.doesNotMatch(module, /api\.(post|patch|put|delete)|CMS_BFF_TOKEN|CMS_WRITE_TOKEN/);
+});

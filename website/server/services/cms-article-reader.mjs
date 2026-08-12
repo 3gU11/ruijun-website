@@ -1,8 +1,39 @@
+import { collectMediaAssetIds, createCmsMediaAssetResolver } from './cms-media-asset-resolver.mjs';
+
 function isPublished(record, now) {
   if (record?.status !== 'published' || record?.publication_state !== 'published') return false;
   if (!record.published_at) return true;
   const publishedAt = Date.parse(record.published_at);
   return Number.isFinite(publishedAt) && publishedAt <= now;
+}
+
+function safePublicUrl(value) {
+  const url = typeof value === 'string' ? value.trim() : '';
+  if (url.startsWith('/') && !url.startsWith('//')) return url;
+  try {
+    return new URL(url).protocol === 'https:' ? url : '';
+  } catch {
+    return '';
+  }
+}
+
+async function sanitizeArticle(record, mediaAssets) {
+  if (!record || typeof record !== 'object') return record;
+  const article = { ...record };
+  if (!Object.hasOwn(article, 'cover_asset')) return article;
+  const directCover = safePublicUrl(article.cover_asset);
+  if (directCover) {
+    article.cover_asset = directCover;
+    return article;
+  }
+  const ids = collectMediaAssetIds([{ media_asset_id: article.cover_asset }]);
+  const assets = await mediaAssets.resolve(ids);
+  article.cover_asset = ids.length ? assets.get(ids[0])?.path || null : null;
+  return article;
+}
+
+async function sanitizeArticles(records, mediaAssets) {
+  return Promise.all((Array.isArray(records) ? records : []).map((record) => sanitizeArticle(record, mediaAssets)));
 }
 
 function publicationTime(record) {
@@ -16,10 +47,11 @@ function normalizeSlug(value) {
   return slug;
 }
 
-export function createCmsArticleReader({ endpoint, accessToken = '', fetchImpl = fetch, now = () => Date.now(), cacheTtlMs = 30_000 }) {
+export function createCmsArticleReader({ endpoint, mediaAssetsEndpoint = '', publicAssetBaseUrl = '', accessToken = '', fetchImpl = fetch, now = () => Date.now(), cacheTtlMs = 30_000 }) {
   let cache;
   const detailCache = new Map();
   const headers = { Accept: 'application/json', ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}) };
+  const mediaAssets = createCmsMediaAssetResolver({ endpoint: mediaAssetsEndpoint, publicAssetBaseUrl, accessToken, fetchImpl, now });
 
   return {
     async list() {
@@ -36,7 +68,7 @@ export function createCmsArticleReader({ endpoint, accessToken = '', fetchImpl =
         if (!response.ok) throw new Error(`CMS responded ${response.status}`);
         const body = await response.json();
         if (!Array.isArray(body?.data)) throw new Error('CMS article response is invalid');
-        const data = body.data.filter((record) => isPublished(record, timestamp)).sort((left, right) => publicationTime(right) - publicationTime(left));
+        const data = await sanitizeArticles(body.data.filter((record) => isPublished(record, timestamp)).sort((left, right) => publicationTime(right) - publicationTime(left)), mediaAssets);
         cache = { data, updatedAt: timestamp };
         return { data, cache: 'fresh', source: 'cms' };
       } catch {
@@ -59,7 +91,8 @@ export function createCmsArticleReader({ endpoint, accessToken = '', fetchImpl =
         const response = await fetchImpl(url, { headers });
         if (!response.ok) throw new Error(`CMS responded ${response.status}`);
         const body = await response.json();
-        const data = Array.isArray(body?.data) ? body.data.find((record) => record?.slug === slug && isPublished(record, timestamp)) || null : null;
+        const record = Array.isArray(body?.data) ? body.data.find((candidate) => candidate?.slug === slug && isPublished(candidate, timestamp)) || null : null;
+        const data = record ? await sanitizeArticle(record, mediaAssets) : null;
         detailCache.set(slug, { data, updatedAt: timestamp });
         return { data, cache: 'fresh', source: 'cms' };
       } catch {
