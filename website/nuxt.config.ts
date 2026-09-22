@@ -3,13 +3,18 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineNuxtConfig({
   ssr: true,
   buildDir: process.env.NUXT_BUILD_DIR || '.nuxt',
+  devServer: {
+    host: '0.0.0.0',
+    port: 4175
+  },
   devtools: { enabled: false },
   modules: ['motion-v/nuxt'],
-  css: ['~/assets/inspira.css'],
+  css: ['~/assets/inspira.css', '~/assets/cms-presentation.css'],
   vite: {
     plugins: [tailwindcss()]
   },
   runtimeConfig: {
+    cmsHomepageSectionsUrl: process.env.CMS_HOMEPAGE_SECTIONS_URL || '',
     cmsPagesUrl: process.env.CMS_PAGES_URL || '',
     cmsRepairPageConfigsUrl: process.env.CMS_REPAIR_PAGE_CONFIGS_URL || '',
     cmsSiteSettingsUrl: process.env.CMS_SITE_SETTINGS_URL || '',
@@ -21,6 +26,7 @@ export default defineNuxtConfig({
     cmsServiceEntryClicksUrl: process.env.CMS_SERVICE_ENTRY_CLICKS_URL || '',
     cmsServiceResourcesUrl: process.env.CMS_SERVICE_RESOURCES_URL || '',
     cmsServiceLocationsUrl: process.env.CMS_SERVICE_LOCATIONS_URL || '',
+    cmsKnowledgeItemsUrl: process.env.CMS_KNOWLEDGE_ITEMS_URL || '',
     cmsMilestonesUrl: process.env.CMS_MILESTONES_URL || '',
     cmsQualificationsUrl: process.env.CMS_QUALIFICATIONS_URL || '',
     cmsManufacturingEvidenceUrl: process.env.CMS_MANUFACTURING_EVIDENCE_URL || '',
@@ -44,9 +50,13 @@ export default defineNuxtConfig({
     repairsysApiUrl: process.env.REPAIRSYS_API_URL || 'http://127.0.0.1:3101/api',
     repairsysPublicBaseUrl: process.env.REPAIRSYS_PUBLIC_BASE_URL || '',
     cmsPublicContentCacheTtlMs: Number(process.env.CMS_PUBLIC_CONTENT_CACHE_TTL_MS || 30_000),
+    // News is an operator-managed feed; reads must reflect CMS changes immediately.
+    cmsPublicArticleCacheTtlMs: Number(process.env.CMS_PUBLIC_ARTICLE_CACHE_TTL_MS || 0),
     public: {
       siteUrl: process.env.NUXT_PUBLIC_SITE_URL || 'http://127.0.0.1:4300',
-      faqBffUrl: process.env.NUXT_PUBLIC_FAQ_BFF_URL || ''
+      faqBffUrl: process.env.NUXT_PUBLIC_FAQ_BFF_URL || '',
+      cmsPreviewOrigin: process.env.NUXT_PUBLIC_CMS_PREVIEW_ORIGIN || 'http://127.0.0.1:8055',
+      cmsPreviewOrigins: process.env.NUXT_PUBLIC_CMS_PREVIEW_ORIGINS || process.env.NUXT_PUBLIC_CMS_PREVIEW_ORIGIN || 'http://127.0.0.1:8055'
       ,repairPortalUrl: process.env.NUXT_PUBLIC_REPAIR_PORTAL_URL || process.env.REPAIRSYS_PUBLIC_BASE_URL || ''
     }
   },

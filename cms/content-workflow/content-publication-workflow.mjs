@@ -6,8 +6,12 @@ import { assessArticle, assessCaseStudy, assessProductParameter, assessPublicKno
 import { assessServiceEntry, assessServiceLocation, assessServiceResource } from '../reports/service-content-review-report.mjs';
 import { assessManufacturingEvidence, assessMilestone, assessQualification } from '../reports/website-evidence-review-rules.mjs';
 
-const editorCollections = new Set(['pages', 'product_series', 'case_studies', 'articles', 'manufacturing_evidence', 'qualifications', 'milestones', 'service_locations']);
-const reviewManagerCollections = new Set(editorCollections);
+const editorCollections = new Set([
+  'pages', 'product_series', 'product_models', 'product_parameters', 'case_studies', 'articles',
+  'manufacturing_evidence', 'qualifications', 'milestones', 'service_locations'
+]);
+const editorCreateCollections = new Set([...editorCollections, 'media_assets']);
+const reviewManagerCollections = new Set([...editorCollections, 'media_assets']);
 
 const finalStatuses = new Set(['archived']);
 const controlledFields = new Set(['status', 'publication_state', 'published_at', 'reviewed_by', 'reviewed_at', 'published_by', 'publication_log']);
@@ -226,7 +230,7 @@ export function applyContentPublicationCreate({ collection, input, actor, now = 
   const payload = input && typeof input === 'object' ? input : {};
   const actorInfo = validActor(actor);
   if (!publicationWorkflowCollections.includes(collection)) throw new ContentPublicationError('CONTENT_NOT_FOUND', 'The content collection is unavailable');
-  if (!['content_editor', 'system_admin'].includes(actor?.role) || (actor?.role === 'content_editor' && !editorCollections.has(collection))) {
+  if (!['content_editor', 'system_admin'].includes(actor?.role) || (actor?.role === 'content_editor' && !editorCreateCollections.has(collection))) {
     throw new ContentPublicationError('ROLE_SCOPE', 'This role cannot create publishable content');
   }
   const timestamp = now();

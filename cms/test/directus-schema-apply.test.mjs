@@ -81,7 +81,7 @@ test('Directus schema applier creates only missing collections, fields, roles, a
   assert.ok(calls.every((call) => call.headers?.Authorization === 'Bearer server-only-token'));
 });
 
-test('Directus schema applier updates native collection translations without changing API keys', async () => {
+test('Directus schema applier updates native collection translations and preview URL without changing API keys', async () => {
   const calls = [];
   const applier = createDirectusSchemaApplier({
     baseUrl: 'https://cms.example.test',
@@ -89,7 +89,7 @@ test('Directus schema applier updates native collection translations without cha
     schemaPlan: {
       collections: [{
         collection: 'pages',
-        meta: { translations: [{ language: 'zh-CN', translation: '页面' }] },
+        meta: { translations: [{ language: 'zh-CN', translation: '页面' }], preview_url: '/content-preview-tokens/open?contentCollection=pages&contentItemId={{id}}' },
         schema: {}
       }],
       fields: [],
@@ -111,7 +111,7 @@ test('Directus schema applier updates native collection translations without cha
   const result = await applier.apply();
   const update = calls.find((call) => call.method === 'PATCH' && call.url.pathname === '/collections/pages');
   assert.equal(result.collections.updated, 1);
-  assert.deepEqual(JSON.parse(update.body), { meta: { translations: [{ language: 'zh-CN', translation: '页面' }] } });
+  assert.deepEqual(JSON.parse(update.body), { meta: { translations: [{ language: 'zh-CN', translation: '页面' }], preview_url: '/content-preview-tokens/open?contentCollection=pages&contentItemId={{id}}' } });
 });
 
 test('Directus schema applier migrates legacy English roles to the Chinese role without duplicates', async () => {
@@ -153,7 +153,7 @@ test('Directus schema applier fails closed on a rejected schema write', async ()
     }
   });
 
-  await assert.rejects(applier.apply(), /Unable to create collection pages: 403/);
+  await assert.rejects(applier.apply(), /Unable to create collection nav_website_home: 403/);
 });
 
 test('Directus schema applier surfaces a rejected Directus error message', async () => {
@@ -291,6 +291,41 @@ test('Directus schema applier repairs JSON field metadata so Directus returns st
   assert.deepEqual(patch, { meta: { interface: 'input-code', special: ['cast-json'] } });
 });
 
+test('Directus schema applier replaces the product parameter code editor with the managed form', async () => {
+  let patch;
+  const desiredMeta = {
+    interface: 'ruijun-product-parameters',
+    special: ['cast-json'],
+    translations: [{ language: 'zh-CN', translation: '技术参数' }]
+  };
+  const applier = createDirectusSchemaApplier({
+    baseUrl: 'https://cms.example.test', accessToken: 'server-only-token',
+    schemaPlan: {
+      collections: [{ collection: 'product_models' }],
+      fields: [{ collection: 'product_models', field: 'parameters', type: 'json', meta: desiredMeta }],
+      roles: []
+    },
+    fetchImpl: async (url, options = {}) => {
+      const request = { url: new URL(url), method: options.method || 'GET', body: options.body };
+      if (request.url.pathname === '/collections') return Response.json({ data: [{ collection: 'product_models' }] });
+      if (request.url.pathname === '/fields/product_models' && request.method === 'GET') {
+        return Response.json({ data: [{ field: 'parameters', meta: { interface: 'input-code', special: ['cast-json'] } }] });
+      }
+      if (request.url.pathname === '/fields/product_models/parameters' && request.method === 'PATCH') {
+        patch = JSON.parse(request.body);
+        return Response.json({ data: {} });
+      }
+      if (request.url.pathname === '/roles' || request.url.pathname === '/policies' || request.url.pathname === '/access' || request.url.pathname === '/permissions') return Response.json({ data: [] });
+      throw new Error(`Unexpected request ${request.method} ${request.url.pathname}`);
+    }
+  });
+
+  const result = await applier.apply();
+
+  assert.equal(result.fields.updated, 1);
+  assert.deepEqual(patch, { meta: desiredMeta });
+});
+
 test('Directus schema applier recognizes Directus 11 policy permissions and does not recreate them', async () => {
   const writes = [];
   const applier = createDirectusSchemaApplier({
@@ -374,9 +409,11 @@ test('Directus schema applier grants the website BFF only published-content read
   const clickPermission = permissionRequests.find((permission) => permission.collection === 'service_entry_clicks');
   assert.deepEqual({ action: clickPermission.action, fields: clickPermission.fields }, { action: 'create', fields: ['entry_type', 'source_page'] });
   const publicReads = permissionRequests.filter((permission) => permission.action === 'read' && !['lead_dedupe_keys', 'lead_upload_sessions'].includes(permission.collection));
-  assert.deepEqual(publicReads.map((permission) => permission.collection).sort(), ['articles', 'external_service_entries', 'manufacturing_evidence', 'media_assets', 'milestones', 'pages', 'product_models', 'product_parameters', 'product_release_snapshots', 'product_series', 'qualifications', 'repair_page_configs', 'service_locations', 'service_resources', 'site_settings']);
+  assert.deepEqual(publicReads.map((permission) => permission.collection).sort(), ['articles', 'external_service_entries', 'homepage_sections', 'knowledge_items', 'manufacturing_evidence', 'media_assets', 'milestones', 'pages', 'product_models', 'product_parameters', 'product_release_snapshots', 'product_series', 'qualifications', 'repair_page_configs', 'service_locations', 'service_resources', 'site_settings']);
   assert.ok(publicReads.every((permission) => permission.permissions.status._eq === 'published' && permission.permissions.publication_state._eq === 'published'));
   assert.ok(publicReads.some((permission) => permission.collection === 'service_resources' && permission.fields.includes('asset')));
+  assert.ok(publicReads.some((permission) => permission.collection === 'articles' && permission.fields.includes('field_presentation')));
+  assert.ok(publicReads.some((permission) => permission.collection === 'knowledge_items' && permission.fields.includes('question_title')));
   assert.ok(publicReads.some((permission) => permission.collection === 'service_locations' && permission.fields.includes('business_status')));
   assert.ok(publicReads.some((permission) => permission.collection === 'qualifications' && permission.fields.includes('authorization_status')));
   const uploadSessionRead = permissionRequests.find((permission) => permission.collection === 'lead_upload_sessions' && permission.action === 'read');

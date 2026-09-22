@@ -1,6 +1,35 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+@font-face {
+  font-family: "Source Han Sans CN Web";
+  src: url("/fonts/source-han-sans-cn-300.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 300;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Source Han Sans CN Web";
+  src: url("/fonts/source-han-sans-cn-400.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Source Han Sans CN Web";
+  src: url("/fonts/source-han-sans-cn-500.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 500 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Source Han Sans CN Web";
+  src: url("/fonts/source-han-sans-cn-700.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 700 900;
+  font-display: swap;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
@@ -10,8 +39,8 @@
   --ruijun-muted: #707277;
   --ruijun-line: #d5d6d4;
   --ruijun-max: 1280px;
-  --ruijun-font-cn: "AidianFengYaHei", "Microsoft YaHei Light", "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
-  --ruijun-font-latin: "Calibri Light", Calibri, "Helvetica Neue", Arial, sans-serif;
+  --ruijun-font-cn: "Source Han Sans CN Web", sans-serif;
+  --ruijun-font-latin: "Source Han Sans CN Web", sans-serif;
   --background: #090909;
   --foreground: #ffffff;
   --card: #101010;
@@ -54,6 +83,11 @@ body {
   font-synthesis: none;
   text-rendering: geometricPrecision;
 }
+
+/* Keep every website text layer on the supplied Source Han Sans CN family. */
+html, body, body * { font-family: var(--ruijun-font-cn) !important; }
+body *::before, body *::after { font-family: inherit !important; }
+body :where(.service-ai-route-icon,.dialog-close,.psd-support-action-symbol) { font-family: "Segoe UI Symbol", sans-serif !important; }
 
 *, *::before, *::after { box-sizing: border-box; }
 button, input, textarea, select { font: inherit; }

@@ -12,7 +12,7 @@ test('FAQ dialogs announce dynamic answers politely and support Escape dismissal
 
   for (const source of [globalAssistant, servicePage]) {
     assert.match(source, /aria-live="polite"/);
-    assert.match(source, /event\.key === 'Escape'/);
+    assert.match(source, /event\.key (?:===|!==) 'Escape'/);
   }
 });
 

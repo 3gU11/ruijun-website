@@ -1,8 +1,8 @@
 import { buildDirectusSchemaPlan } from '../schema/directus-schema-plan.mjs';
 
 const editableContentCollections = new Set([
-  'pages', 'repair_page_configs', 'product_series', 'case_studies', 'articles', 'manufacturing_evidence', 'qualifications',
-  'milestones', 'service_locations'
+  'homepage_sections', 'pages', 'repair_page_configs', 'product_series', 'product_models', 'product_parameters', 'case_studies', 'articles', 'manufacturing_evidence', 'qualifications',
+  'milestones', 'service_resources', 'service_locations', 'knowledge_items'
 ]);
 
 // Directus roles have no stable machine key. Keep old display names only as a
@@ -25,31 +25,33 @@ const contentEditorUpdateFilter = Object.freeze({ status: { _in: ['draft', 'reje
 
 const roleCollectionScopes = Object.freeze({
   content_editor: [...editableContentCollections],
-  review_manager: [...editableContentCollections],
+  review_manager: [...editableContentCollections, 'media_assets'],
   sales_user: ['leads'],
   read_only_manager: [...editableContentCollections, 'content_versions', 'lead_notification_jobs', 'service_entry_clicks'],
   content_audit_reader: ['product_series', 'product_models', 'service_resources', 'service_locations', 'external_service_entries']
 });
 
 const bffPublicReadFields = Object.freeze({
+  homepage_sections: ['page_key', 'section_key', 'title', 'kicker', 'body', 'content', 'media', 'sort_order', 'enabled', 'language', 'status', 'publication_state', 'published_at'],
   pages: ['slug', 'title', 'language', 'sections', 'seo', 'status', 'publication_state', 'published_at'],
   repair_page_configs: ['page_key', 'title', 'intro', 'hero_asset', 'model_cards', 'action_cards', 'process_steps', 'notices', 'faq_refs', 'seo', 'language', 'status', 'publication_state', 'published_at'],
-  product_series: ['series_code', 'slug', 'name', 'positioning', 'scenarios', 'capabilities', 'cover_asset', 'sort_order', 'language', 'status', 'publication_state', 'published_at'],
+  product_series: ['series_code', 'slug', 'name', 'positioning', 'presentation', 'scenarios', 'capabilities', 'cover_asset', 'sort_order', 'language', 'status', 'publication_state', 'published_at'],
   product_models: ['series_code', 'model_code', 'slug', 'name', 'parameters', 'configuration', 'media', 'resources', 'case_studies', 'status', 'publication_state', 'published_at'],
-  product_parameters: ['model_code', 'group_name', 'field_name', 'value', 'unit', 'sort_order', 'status', 'publication_state', 'published_at'],
+  product_parameters: ['model_code', 'group_name', 'field_name', 'value', 'unit', 'presentation', 'sort_order', 'status', 'publication_state', 'published_at'],
   product_release_snapshots: [
     'release_key', 'version', 'source_hash', 'snapshot', 'release_note', 'published_by', 'published_at',
     'status', 'publication_state', 'restored_from_release_id', 'restored_from_version', 'restore_note'
   ],
   external_service_entries: ['entry_type', 'url', 'enabled', 'open_mode', 'fallback_phone', 'health_status', 'status', 'publication_state', 'published_at'],
-  service_resources: ['source_key', 'type', 'applicable_models', 'version', 'language', 'asset', 'updated_at', 'status', 'publication_state', 'published_at'],
+  service_resources: ['source_key', 'type', 'title', 'summary', 'body', 'applicable_models', 'version', 'language', 'asset', 'cover_asset', 'display_date', 'sort_order', 'updated_at', 'status', 'publication_state', 'published_at'],
+  knowledge_items: ['source_key', 'visibility', 'channel', 'category', 'question_title', 'applicable_models', 'error_codes', 'symptoms', 'troubleshooting_steps', 'risk_level', 'safety_preconditions', 'media', 'version', 'display_date', 'sort_order', 'status', 'publication_state', 'published_at'],
   service_locations: ['source_key', 'region', 'city', 'service_scope', 'contact', 'business_status', 'valid_until', 'status', 'publication_state', 'published_at'],
-  milestones: ['source_key', 'year', 'event', 'evidence', 'sort_order', 'status', 'publication_state', 'published_at'],
+  milestones: ['source_key', 'year', 'event', 'evidence', 'media', 'icon_asset', 'sort_order', 'status', 'publication_state', 'published_at'],
   qualifications: ['source_key', 'type', 'name', 'assets', 'authorization_status', 'sort_order', 'status', 'publication_state', 'published_at'],
   manufacturing_evidence: ['source_key', 'process', 'description', 'media', 'inspection_evidence', 'sort_order', 'status', 'publication_state', 'published_at'],
   site_settings: ['setting_key', 'navigation', 'footer', 'brand', 'contacts', 'languages', 'status', 'publication_state', 'published_at'],
-  articles: ['slug', 'category', 'title', 'summary', 'cover_asset', 'video_url', 'seo', 'status', 'publication_state', 'published_at'],
-  media_assets: ['id', 'file_id', 'original_file_name', 'mime_type', 'byte_size', 'usage_scope', 'alt_text', 'status', 'publication_state', 'published_at']
+  articles: ['slug', 'category', 'title', 'summary', 'body', 'body_media', 'transcript', 'field_presentation', 'media', 'cover_asset', 'video_url', 'seo', 'status', 'publication_state', 'published_at'],
+  media_assets: ['id', 'file_id', 'original_file_name', 'mime_type', 'byte_size', 'usage_scope', 'media_type', 'width', 'height', 'duration_seconds', 'aspect_ratio', 'poster_asset_id', 'title', 'description', 'transcript', 'placement_key', 'page_key', 'section_key', 'sort_order', 'enabled', 'autoplay', 'muted', 'loop', 'alt_text', 'copyright_status', 'authorization_note', 'status', 'publication_state', 'published_at'],
 });
 
 const bffLeadFields = Object.freeze([
@@ -92,8 +94,9 @@ const bffServiceEntryClickFields = Object.freeze(['entry_type', 'source_page']);
 const contentAuditReadFields = Object.freeze({
   product_series: ['id', 'series_code', 'name', 'source_url', 'source_document', 'review_note', 'import_evidence', 'status', 'publication_state'],
   product_models: ['id', 'series_code', 'model_code', 'name', 'parameters', 'source_url', 'source_document', 'review_note', 'import_evidence', 'status', 'publication_state'],
-  product_parameters: ['id', 'model_code', 'group_name', 'field_name', 'value', 'unit', 'sort_order', 'test_conditions', 'source_url', 'source_document', 'review_note', 'import_evidence', 'status', 'publication_state'],
-  service_resources: ['id', 'source_key', 'type', 'applicable_models', 'version', 'language', 'asset', 'updated_at', 'source_url', 'source_document', 'review_note', 'status', 'publication_state'],
+  product_parameters: ['id', 'model_code', 'group_name', 'field_name', 'value', 'unit', 'presentation', 'sort_order', 'test_conditions', 'source_url', 'source_document', 'review_note', 'import_evidence', 'status', 'publication_state'],
+  service_resources: ['id', 'source_key', 'type', 'title', 'summary', 'body', 'applicable_models', 'version', 'language', 'asset', 'cover_asset', 'display_date', 'sort_order', 'updated_at', 'source_url', 'source_document', 'review_note', 'status', 'publication_state'],
+  knowledge_items: ['id', 'source_key', 'visibility', 'channel', 'category', 'question_title', 'applicable_models', 'error_codes', 'symptoms', 'troubleshooting_steps', 'risk_level', 'safety_preconditions', 'media', 'version', 'display_date', 'sort_order', 'source_url', 'source_document', 'review_note', 'status', 'publication_state'],
   service_locations: ['id', 'source_key', 'region', 'city', 'service_scope', 'contact', 'business_status', 'valid_until', 'source_url', 'source_document', 'review_note', 'status', 'publication_state'],
   external_service_entries: ['id', 'entry_type', 'url', 'enabled', 'open_mode', 'fallback_phone', 'health_status', 'source_document', 'review_note', 'status', 'publication_state']
 });
@@ -168,6 +171,9 @@ function permissionSpecs(roleKey, policyId) {
           { policy: policyId, collection, action: 'update', permissions: contentEditorUpdateFilter, validation: {}, fields }
         ];
       }),
+      { policy: policyId, collection: 'media_assets', action: 'read', permissions: {}, validation: {}, fields: ['id', ...contentEditorFieldsByCollection.media_assets] },
+      { policy: policyId, collection: 'media_assets', action: 'create', permissions: {}, validation: {}, fields: contentEditorFieldsByCollection.media_assets },
+      { policy: policyId, collection: 'media_assets', action: 'update', permissions: contentEditorUpdateFilter, validation: {}, fields: contentEditorFieldsByCollection.media_assets },
       { policy: policyId, collection: 'directus_files', action: 'create', permissions: {}, validation: {}, fields: publicCandidateFileFields },
       { policy: policyId, collection: 'directus_files', action: 'read', permissions: { uploaded_by: { _eq: '$CURRENT_USER' } }, validation: {}, fields: publicCandidateFileFields }
     ];
@@ -234,11 +240,16 @@ export function createDirectusSchemaApplier({ baseUrl, accessToken, fetchImpl = 
       if (current) {
         const desiredTranslations = collection.meta?.translations || [];
         const currentTranslations = current.meta?.translations || [];
-        const desiredNote = collection.meta?.note;
-        if (current.meta && (JSON.stringify(currentTranslations) !== JSON.stringify(desiredTranslations) || current.meta?.note !== desiredNote)) {
+        const managedMeta = ['translations', 'note', 'icon', 'hidden', 'group', 'sort', 'collapse', 'preview_url'];
+        const desiredMeta = Object.fromEntries(managedMeta
+          .filter((key) => Object.hasOwn(collection.meta || {}, key))
+          .map((key) => [key, key === 'translations' ? desiredTranslations : collection.meta[key]]));
+        const metaChanged = JSON.stringify(currentTranslations) !== JSON.stringify(desiredTranslations)
+          || Object.entries(desiredMeta).some(([key, value]) => key !== 'translations' && current.meta?.[key] !== value);
+        if (current.meta && metaChanged) {
           const updateResponse = await request(`/collections/${encodeURIComponent(collection.collection)}`, {
             method: 'PATCH',
-            body: JSON.stringify({ meta: { translations: desiredTranslations, note: desiredNote } })
+            body: JSON.stringify({ meta: desiredMeta })
           });
           if (!updateResponse.ok) throw new Error(`Unable to update collection ${collection.collection}: ${updateResponse.status}`);
           result.updated += 1;
@@ -264,11 +275,15 @@ export function createDirectusSchemaApplier({ baseUrl, accessToken, fetchImpl = 
         const current = existing.get(field.field);
         if (current) {
           const managesStatusChoices = field.field === 'status' && field.meta?.options?.choices;
+          const managesPlacementChoices = collection === 'media_assets' && field.field === 'placement_key'
+            && JSON.stringify(current.meta?.options?.choices || []) !== JSON.stringify(field.meta?.options?.choices || []);
           const managesJsonCasting = field.type === 'json'
             && JSON.stringify(current.meta?.special || []) !== JSON.stringify(field.meta?.special || []);
           const managesTranslations = field.meta?.translations
             && JSON.stringify(current.meta?.translations || []) !== JSON.stringify(field.meta.translations);
-          if (managesStatusChoices || managesJsonCasting || managesTranslations) {
+          const managesCustomInterface = field.meta?.interface?.startsWith('ruijun-')
+            && current.meta?.interface !== field.meta.interface;
+          if (managesStatusChoices || managesPlacementChoices || managesJsonCasting || managesTranslations || managesCustomInterface) {
             const updateResponse = await request(`/fields/${encodeURIComponent(collection)}/${encodeURIComponent(field.field)}`, {
               method: 'PATCH', body: JSON.stringify({ meta: field.meta })
             });
@@ -447,8 +462,23 @@ export function createDirectusSchemaApplier({ baseUrl, accessToken, fetchImpl = 
 }
 
 if (import.meta.main) {
-  const baseUrl = process.env.CMS_BASE_URL;
-  const accessToken = process.env.CMS_WRITE_TOKEN;
+  const fs = await import('node:fs/promises');
+  const envPath = new URL('../.env.local', import.meta.url);
+  try {
+    const text = await fs.readFile(envPath, 'utf8');
+    for (const line of text.split(/\r?\n/)) {
+      const match = line.match(/^\s*([A-Z][A-Z0-9_]*)\s*=\s*(.*)\s*$/);
+      if (match && !process.env[match[1]]) process.env[match[1]] = match[2].replace(/^['"]|['"]$/g, '');
+    }
+  } catch {}
+  const baseUrl = process.env.CMS_BASE_URL || process.env.PUBLIC_URL || 'http://127.0.0.1:8055';
+  let accessToken = process.env.CMS_WRITE_TOKEN;
+  if (!accessToken && process.env.ADMIN_EMAIL && process.env.ADMIN_PASSWORD) {
+    const response = await fetch(`${baseUrl.replace(/\/$/, '')}/auth/login`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ email: process.env.ADMIN_EMAIL, password: process.env.ADMIN_PASSWORD }) });
+    const payload = await response.json();
+    if (!response.ok || !payload?.data?.access_token) throw new Error(`Unable to obtain Directus session: ${response.status}`);
+    accessToken = payload.data.access_token;
+  }
   const result = await createDirectusSchemaApplier({ baseUrl, accessToken }).apply();
   console.log(JSON.stringify(result, null, 2));
 }

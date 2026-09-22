@@ -34,20 +34,22 @@ onMounted(async () => {
   jumpToPanel = (index: number) => {
     const panel = panels[index];
     if (!panel) return;
+    // The history canvas loads asynchronously. Keep a shared, short-lived
+    // marker so it cannot intercept this navigation if its listener is late.
+    document.documentElement.dataset.aboutPanelJump = 'true';
     window.dispatchEvent(new CustomEvent('about-panel-jump', { detail: { panel } }));
     if (!desktop.matches) {
       panel.scrollIntoView({ behavior: 'smooth' });
+      window.setTimeout(() => delete document.documentElement.dataset.aboutPanelJump, 700);
       return;
     }
     visible.value = true;
-    gsap.to(window, {
-      duration: .78,
-      scrollTo: { y: panel.offsetTop, autoKill: false },
-      ease: 'power3.inOut',
-      overwrite: true,
-      onUpdate: sync,
-      onComplete: sync
-    });
+    // A smooth window tween crosses the pinned history canvas, which owns
+    // desktop scrolling while active. A direct section jump is deterministic
+    // and leaves the canvas interaction intact for normal wheel scrolling.
+    window.scrollTo({ top: panel.offsetTop, left: 0, behavior: 'auto' });
+    sync();
+    window.setTimeout(() => delete document.documentElement.dataset.aboutPanelJump, 950);
   };
 
   window.addEventListener('scroll', show, { passive: true });
@@ -58,6 +60,7 @@ onMounted(async () => {
     window.removeEventListener('resize', sync);
     window.clearTimeout(hideTimer);
     gsap.killTweensOf(window);
+    delete document.documentElement.dataset.aboutPanelJump;
     jumpToPanel = () => {};
   };
 });

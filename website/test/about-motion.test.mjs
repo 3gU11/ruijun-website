@@ -50,6 +50,6 @@ test('about story motion keeps its backdrop and title within intended scroll bou
     backdropScale: 1.045,
     backdropRotation: -0.3,
     copyY: -28,
-    copyOpacity: 0.84
+    copyOpacity: 0
   });
 });

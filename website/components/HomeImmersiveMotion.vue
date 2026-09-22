@@ -1,12 +1,12 @@
 <script setup lang="ts">
-const emit = defineEmits<{ heroEnded: [] }>();
-
 const labels = ['首页', '选择瑞钧', '三大理由', '产品中心', '发展历程', '联系瑞钧'];
 const activePanel = ref(0);
 const indicatorVisible = ref(false);
 const indicatorProgress = ref(0);
 const HERO_INTRO_LOCK_MS = 4000;
 const HERO_HEADER_FULL_WIDTH_HOLD_MS = 420;
+const HERO_FREEZE_HOLD_MS = 700;
+const INTRO_FINAL_LOCK_MS = 1000;
 let cleanupMotion: (() => void) | undefined;
 let jumpPanel: (index: number) => void = () => {};
 
@@ -21,16 +21,18 @@ onMounted(async () => {
 
   const panels = [...root.querySelectorAll<HTMLElement>('.lifecycle-panel')];
   const hero = root.querySelector<HTMLElement>('.hero')!;
-  const heroMachine = root.querySelector<HTMLElement>('.hero-static-machine')!;
+  const heroVideo = root.querySelector<HTMLVideoElement>('.hero-video');
+  const morphCover = root.querySelector<HTMLElement>('.machine-morph-cover')!;
+  const morphStage = root.querySelector<HTMLElement>('.machine-morph-stage')!;
+  const morphMachine = root.querySelector<HTMLImageElement>('.machine-model-morph')!;
   const intro = root.querySelector<HTMLElement>('.reason-intro')!;
   const introStage = root.querySelector<HTMLElement>('.intro-machine-wrap')!;
   const introMachine = introStage.querySelector<HTMLElement>('img')!;
   const introItems = [...intro.querySelectorAll<HTMLElement>('.reason-list li')];
-  const morph = root.querySelector<HTMLElement>('.machine-morph-overlay')!;
-  const morphBg = morph.querySelector<HTMLElement>('.machine-morph-bg')!;
-  const morphImage = morph.querySelector<HTMLElement>('img')!;
   const showcase = root.querySelector<HTMLElement>('.reason-showcase')!;
+  const reasonTrack = showcase.querySelector<HTMLElement>('.reason-horizontal-track')!;
   const slides = [...showcase.querySelectorAll<HTMLElement>('[data-reason-slide]')];
+  const reasonTabLinks = [...showcase.querySelectorAll<HTMLAnchorElement>('.reason-tabs a')];
   const reasonProgress = [...showcase.querySelectorAll<HTMLElement>('.reason-progress i')];
   const history = root.querySelector<HTMLElement>('.history')!;
   const historyViewport = history.querySelector<HTMLElement>('.history-viewport')!;
@@ -53,20 +55,41 @@ onMounted(async () => {
   let reasonIndex = 0;
   let reasonTarget = 0;
   let reasonBoundary = 0;
+  let reasonMagnetDistance = 0;
+  let reasonMagnetDirection = 0;
+  let reasonMagnetLockedUntil = 0;
+  let reasonMagnetArmed = false;
   let historyTarget = 0;
   let historyBoundary = 0;
   let historyWheelRotation = 0;
   let historyOrbitRotation = 0;
   let historyCursorPulseActive = false;
   let gestureDistance = 0;
+  let gestureDirection = 0;
   let animating = false;
   let heroInputLocked = false;
+  let heroFreezeHoldUntil = 0;
+  let introFinalLockUntil = 0;
   let hideTimer = 0;
   let heroLockTimer = 0;
   let heroHeaderTimer = 0;
+  let contactScrollReleased = false;
   let observer: any;
 
+  const releaseToContactScroll = () => {
+    observer?.kill();
+    observer = null;
+    contactScrollReleased = true;
+    document.body.classList.remove('immersive-scroll-ready');
+  };
+
   const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(value, max));
+  // NANFU uses Lenis 0.2.28 with duration 1.3 and this exponential ease.
+  // Repeated wheel input moves reasonTarget while the rendered progress keeps
+  // chasing it, so speed accumulates and then decays after input stops.
+  const reasonInertiaEase = (progress: number) => Math.min(1, 1.001 - Math.pow(2, -10 * progress));
+  const PANEL_STEP_DISTANCE = 58;
+  const PANEL_BOUNDARY_DISTANCE = 180;
   const setHeaderWide = (wide: boolean) => {
     header?.classList.toggle('is-wide', wide);
     window.dispatchEvent(new CustomEvent('ruijun:header-wide', { detail: wide }));
@@ -76,6 +99,7 @@ onMounted(async () => {
     heroInputLocked = locked;
     header?.classList.toggle('is-hero-locked', locked);
     if (locked) indicatorVisible.value = false;
+    if (observer) setupObserver();
   };
 
   const releaseHeroInputLock = () => {
@@ -90,7 +114,14 @@ onMounted(async () => {
     heroHeaderTimer = window.setTimeout(() => header.classList.remove('is-hero-entered-wide'), HERO_HEADER_FULL_WIDTH_HOLD_MS);
   };
 
+  const flushHeroInputLock = () => {
+    if (!heroInputLocked) return;
+    window.clearTimeout(heroLockTimer);
+    releaseHeroInputLock();
+  };
+
   const startHeroInputLock = () => {
+    if (panels[panelIndex] !== hero) return;
     window.clearTimeout(heroLockTimer);
     setHeroInputLocked(true);
     heroLockTimer = window.setTimeout(releaseHeroInputLock, HERO_INTRO_LOCK_MS);
@@ -139,35 +170,40 @@ onMounted(async () => {
   function runMachineMorph(direction: 'forward' | 'backward', duration: number) {
     const forward = direction === 'forward';
     const viewport = { left: 0, top: 0, width: window.innerWidth, height: window.innerHeight };
+    const introRect = introStage.getBoundingClientRect();
+    const introMachineRect = introMachine.getBoundingClientRect();
+    // The forward transition scrolls the intro panel into view at the same time
+    // as the morph. Convert its document position to the final viewport space so
+    // the black frame and machine remain in one coordinate system.
+    const introScrollDelta = forward ? intro.offsetTop - window.scrollY : 0;
     const introBox = forward
-      ? { left: introStage.offsetLeft, top: introStage.offsetTop, width: introStage.offsetWidth, height: introStage.offsetHeight }
-      : machineRect(introStage);
-    const heroBox = machineRect(heroMachine, hero);
-    const introMachineBox = machineRect(introMachine, introStage);
+      ? { left: introRect.left, top: introRect.top - introScrollDelta, width: introRect.width, height: introRect.height }
+      : { left: introRect.left, top: introRect.top, width: introRect.width, height: introRect.height };
+    const heroBox = { left: window.innerWidth * .1675, top: window.innerHeight * .336, width: window.innerWidth * .332, height: window.innerHeight * .44 };
+    const introMachineBox = forward
+      ? { left: introMachineRect.left, top: introMachineRect.top - introScrollDelta, width: introMachineRect.width, height: introMachineRect.height }
+      : { left: introMachineRect.left, top: introMachineRect.top, width: introMachineRect.width, height: introMachineRect.height };
     const stageStart = forward ? viewport : introBox;
     const stageEnd = forward ? introBox : viewport;
     const imageStart = forward ? heroBox : introMachineBox;
     const imageEnd = forward ? introMachineBox : heroBox;
 
-    gsap.killTweensOf([morph, morphBg, morphImage]);
-    heroMachine.classList.add('is-morph-hidden');
-    introMachine.classList.add('is-morph-hidden');
+    if (forward) hero.classList.add('is-machine-morphing');
     introStage.classList.add('is-stage-morph-hidden');
-    gsap.set(morph, { display: 'block', autoAlpha: 1, ...stageStart, borderRadius: forward ? 0 : 5 });
-    gsap.set(morphBg, { autoAlpha: forward ? 1 : 0 });
-    gsap.set(morphImage, imageStart);
+    gsap.killTweensOf([morphCover, morphStage, morphMachine]);
+    gsap.set(morphCover, { display: 'block', autoAlpha: 1 });
+    gsap.set(morphStage, { display: 'block', autoAlpha: 1, ...stageStart, borderRadius: forward ? 0 : 24 });
+    gsap.set(morphMachine, { display: 'block', ...imageStart, autoAlpha: 1 });
     gsap.timeline({
       defaults: { duration, ease: 'power3.inOut', overwrite: true },
       onComplete: () => {
-        gsap.set(morph, { display: 'none', autoAlpha: 0 });
-        heroMachine.classList.remove('is-morph-hidden');
-        introMachine.classList.remove('is-morph-hidden');
+        gsap.set([morphCover, morphStage, morphMachine], { display: 'none', autoAlpha: 0 });
         introStage.classList.remove('is-stage-morph-hidden');
+        if (!forward) hero.classList.remove('is-machine-morphing');
       }
     })
-      .to(morph, { ...stageEnd, borderRadius: forward ? 5 : 0 }, 0)
-      .to(morphImage, imageEnd, 0)
-      .to(morphBg, { autoAlpha: forward ? 0 : 1, duration: duration * .72, ease: 'power2.inOut' }, duration * .16);
+      .to(morphStage, { ...stageEnd, borderRadius: forward ? 24 : 0 }, 0)
+      .to(morphMachine, imageEnd, 0);
   }
 
   function renderReasons(progress: number) {
@@ -177,22 +213,46 @@ onMounted(async () => {
     slides.forEach((slide, index) => {
       const incoming = index === 0 ? 1 : clamp(reasonMotion.progress - (index - 1), 0, 1);
       const outgoing = index < max ? clamp(reasonMotion.progress - index, 0, 1) : 0;
-      gsap.set(slide, { x: 0, xPercent: index === 0 ? 0 : (1 - incoming) * 100 });
+      // Keep every scene stacked at viewport size. Scroll continuously clips the
+      // upper scene from right to left, revealing the next scene underneath.
+      gsap.set(slide, {
+        x: 0,
+        xPercent: 0,
+        zIndex: slides.length - index,
+        clipPath: `inset(0 ${outgoing * 100}% 0 0)`
+      });
       slide.setAttribute('aria-hidden', String(index !== reasonIndex));
       const media = slide.querySelector<HTMLElement>('.scene-photo, .performance-machine');
-      const tabs = slide.querySelector<HTMLElement>('.reason-tabs');
       const copy = slide.querySelector<HTMLElement>('.performance-content, .photo-copy');
       if (media && index > 0) gsap.set(media, { xPercent: (1 - incoming) * 3.5, scale: 1 + (1 - incoming) * .08, transformOrigin: '50% 50%' });
-      if (tabs) gsap.set(tabs, { x: (1 - incoming) * 34 - outgoing * 14 });
       if (copy) gsap.set(copy, { x: (1 - incoming) * 82 - outgoing * 32, y: (1 - incoming) * 10, opacity: .68 + incoming * .32 - outgoing * .1 });
     });
+    reasonTabLinks.forEach((link, index) => {
+      link.classList.toggle('active', index === reasonIndex);
+      if (index === reasonIndex) link.setAttribute('aria-current', 'true');
+      else link.removeAttribute('aria-current');
+    });
     reasonProgress.forEach((item, index) => item.classList.toggle('active', index === reasonIndex));
+  }
+
+  function syncMobileReasonTabs() {
+    if (desktop.matches) return;
+    const index = clamp(Math.round(reasonTrack.scrollLeft / Math.max(1, reasonTrack.clientWidth)), 0, slides.length - 1);
+    reasonTabLinks.forEach((link, tabIndex) => {
+      link.classList.toggle('active', tabIndex === index);
+      if (tabIndex === index) link.setAttribute('aria-current', 'true');
+      else link.removeAttribute('aria-current');
+    });
   }
 
   function setReason(index: number, animate = true) {
     const next = clamp(index, 0, slides.length - 1);
     reasonTarget = next;
     reasonBoundary = 0;
+    reasonMagnetDistance = 0;
+    reasonMagnetDirection = 0;
+    reasonMagnetLockedUntil = 0;
+    reasonMagnetArmed = false;
     gsap.killTweensOf(reasonMotion);
     if (!desktop.matches || !animate || Math.abs(reasonMotion.progress - next) < .001) {
       renderReasons(next);
@@ -210,12 +270,68 @@ onMounted(async () => {
       : reasonTarget >= max - .001 && reasonMotion.progress >= max - .012;
     if (atBoundary) {
       reasonBoundary += Math.abs(delta);
-      if (reasonBoundary >= 140) { reasonBoundary = 0; gsap.killTweensOf(reasonMotion); goToPanel(panelIndex + direction); }
+      if (reasonBoundary >= PANEL_BOUNDARY_DISTANCE) {
+        reasonBoundary = 0;
+        gsap.killTweensOf(reasonMotion);
+        goToPanel(panelIndex + direction);
+      }
       return;
     }
     reasonBoundary = 0;
-    reasonTarget = clamp(reasonTarget + delta / Math.max(720, window.innerHeight * .95), 0, max);
-    gsap.to(reasonMotion, { progress: reasonTarget, duration: .28, ease: 'power2.out', overwrite: true, onUpdate: () => renderReasons(reasonMotion.progress), onComplete: () => renderReasons(reasonTarget) });
+    let appliedDelta = delta;
+    const currentStop = Math.round(reasonTarget);
+    const atMagneticStop = Math.abs(reasonTarget - currentStop) <= .001;
+    const canContinue = direction > 0 ? currentStop < max : currentStop > 0;
+
+    // A complete scene resists the next gesture briefly. This produces the
+    // boundary weight of NANFU's scrubbed scroll without snapping on wheel stop.
+    if (atMagneticStop && canContinue) {
+      if (reasonMagnetDirection !== direction) {
+        reasonMagnetDirection = direction;
+        reasonMagnetDistance = 0;
+        reasonMagnetLockedUntil = 0;
+        reasonMagnetArmed = false;
+      }
+      if (performance.now() < reasonMagnetLockedUntil) return;
+      if (reasonMagnetArmed) {
+        reasonMagnetArmed = false;
+      } else {
+        reasonMagnetDistance += Math.abs(delta);
+        if (reasonMagnetDistance < 88) return;
+        // Edge can split one physical wheel notch into several Observer updates.
+        // Hold the complete scene long enough to consume that whole input burst.
+        reasonMagnetDistance = 0;
+        reasonMagnetArmed = true;
+        reasonMagnetLockedUntil = performance.now() + 220;
+        return;
+      }
+    } else {
+      reasonMagnetDistance = 0;
+      reasonMagnetDirection = direction;
+      reasonMagnetLockedUntil = 0;
+      reasonMagnetArmed = false;
+    }
+
+    const previousTarget = reasonTarget;
+    reasonTarget = clamp(reasonTarget + appliedDelta / Math.max(760, window.innerHeight * .95), 0, max);
+    const nearestStop = Math.round(reasonTarget);
+    const approachingStop = direction > 0 ? nearestStop > previousTarget : nearestStop < previousTarget;
+    const magnetized = approachingStop && Math.abs(reasonTarget - nearestStop) <= .055;
+    if (magnetized) {
+      reasonTarget = nearestStop;
+      reasonMagnetDistance = 0;
+      reasonMagnetLockedUntil = 0;
+      reasonMagnetArmed = false;
+    }
+
+    gsap.to(reasonMotion, {
+      progress: reasonTarget,
+      duration: magnetized ? .55 : 1.3,
+      ease: reasonInertiaEase,
+      overwrite: true,
+      onUpdate: () => renderReasons(reasonMotion.progress),
+      onComplete: () => renderReasons(reasonTarget)
+    });
   }
 
   function renderHistory(progress: number) {
@@ -287,7 +403,7 @@ onMounted(async () => {
       : historyTarget >= .999 && historyMotion.progress >= .988;
     if (atBoundary) {
       historyBoundary += Math.abs(delta);
-      if (historyBoundary >= 140) { historyBoundary = 0; gsap.killTweensOf(historyMotion); goToPanel(panelIndex + direction); }
+      if (historyBoundary >= PANEL_BOUNDARY_DISTANCE) { historyBoundary = 0; gsap.killTweensOf(historyMotion); goToPanel(panelIndex + direction); }
       return;
     }
     historyBoundary = 0;
@@ -297,6 +413,8 @@ onMounted(async () => {
 
   function setActive(index: number, animate = true) {
     panelIndex = clamp(index, 0, panels.length - 1);
+    gestureDistance = 0;
+    gestureDirection = 0;
     activePanel.value = panelIndex;
     setHeaderWide(panelIndex > 0);
     panels.forEach((panel, index) => {
@@ -304,7 +422,7 @@ onMounted(async () => {
       panel.classList.toggle('is-before', index < panelIndex);
       panel.classList.toggle('is-after', index > panelIndex);
       if (panel === showcase || panel === history) return;
-      const items = [...panel.children].filter(item => !item.matches('.hero-static-machine, .intro-machine-wrap'));
+      const items = [...panel.children].filter(item => !item.matches('.hero-video, .intro-machine-wrap'));
       gsap.killTweensOf(items);
       if (!animate || index < panelIndex) gsap.set(items, { autoAlpha: 1, y: 0 });
       else if (index > panelIndex) gsap.set(items, { autoAlpha: .55, y: 18 });
@@ -312,34 +430,110 @@ onMounted(async () => {
     });
   }
 
-  function goToPanel(index: number, options: { reasonIndex?: number; historyProgress?: number } = {}) {
-    if (!desktop.matches || heroInputLocked || animating) return;
+  function goToPanel(index: number, options: { reasonIndex?: number; historyProgress?: number; immediate?: boolean } = {}) {
+    if (!desktop.matches || animating) return;
+    flushHeroInputLock();
     const next = clamp(index, 0, panels.length - 1);
     if (next === panelIndex) {
-      if (options.reasonIndex != null) setReason(options.reasonIndex);
-      if (options.historyProgress != null) setHistory(options.historyProgress);
+      if (options.reasonIndex != null) setReason(options.reasonIndex, !options.immediate);
+      if (options.historyProgress != null) setHistory(options.historyProgress, !options.immediate);
+      if (options.immediate) {
+        window.scrollTo({ left: 0, top: panels[next].offsetTop, behavior: 'auto' });
+        updateIndicator();
+      }
       return;
     }
     const currentPanel = panels[panelIndex];
     const nextPanel = panels[next];
+    // Leaving or returning to the opening panel always resolves the video to its approved still.
+    if (currentPanel === hero || nextPanel === hero) window.dispatchEvent(new Event('ruijun:hero-freeze'));
     const fromBelow = next < panelIndex;
     const morphDirection = currentPanel === hero && nextPanel === intro ? 'forward' : currentPanel === intro && nextPanel === hero ? 'backward' : null;
     if (nextPanel === intro) setIntroStage(fromBelow ? introItems.length : 0, fromBelow);
     if (nextPanel === hero) setIntroStage(0, false);
     if (nextPanel === showcase) setReason(options.reasonIndex ?? (fromBelow ? slides.length - 1 : 0), false);
     if (nextPanel === history) setHistory(options.historyProgress ?? (fromBelow ? 1 : 0), false);
+    if (options.immediate) {
+      gsap.killTweensOf([window, reasonMotion, historyMotion, morphCover, morphStage, morphMachine]);
+      animating = false;
+      setActive(next, false);
+      window.scrollTo({ left: 0, top: nextPanel.offsetTop, behavior: 'auto' });
+      if (nextPanel === intro) setIntroStage(introItems.length, true);
+      if (nextPanel.id === 'contact') releaseToContactScroll();
+      updateIndicator();
+      return;
+    }
     animating = true;
     const duration = morphDirection ? 1.35 : .92;
-    if (morphDirection) { emit('heroEnded'); runMachineMorph(morphDirection, duration); }
+    if (morphDirection) {
+      // The forward handoff already starts in the current viewport. Resetting
+      // scroll here made a partial wheel gesture visibly jump backward before
+      // the morph began. The reverse handoff still needs the intro panel fixed
+      // in view while it morphs back into the hero.
+      if (morphDirection === 'backward') window.scrollTo({ left: 0, top: currentPanel.offsetTop, behavior: 'auto' });
+      runMachineMorph(morphDirection, duration);
+    }
     setActive(next);
-    gsap.to(window, { duration, scrollTo: { y: nextPanel.offsetTop, autoKill: false }, ease: 'power3.inOut', overwrite: true, onUpdate: updateIndicator, onComplete: () => { animating = false; if (morphDirection === 'forward') setIntroStage(0, true); } });
+    if (morphDirection === 'forward') {
+      gsap.delayedCall(duration, () => {
+        window.scrollTo({ left: 0, top: nextPanel.offsetTop, behavior: 'auto' });
+        animating = false;
+        setIntroStage(0, true);
+        updateIndicator();
+      });
+      return;
+    }
+    gsap.to(window, { duration, scrollTo: { y: nextPanel.offsetTop, autoKill: false }, ease: 'power3.inOut', overwrite: true, onUpdate: updateIndicator, onComplete: () => { animating = false; if (nextPanel === intro && !fromBelow) setIntroStage(0, true); if (nextPanel.id === 'contact') releaseToContactScroll(); } });
   }
   jumpPanel = (index: number) => goToPanel(index);
+
+  function jumpToPreviewTarget(event?: Event) {
+    const eventSelector = (event as CustomEvent<{ selector?: string }> | undefined)?.detail?.selector;
+    const selector = String(eventSelector || document.documentElement.dataset.cmsPreviewTarget || '').trim();
+    if (!selector) return;
+    let target: HTMLElement | null = null;
+    try {
+      const previewTargets = [...root.querySelectorAll<HTMLElement>(selector)];
+      // A reason field is rendered both in the intro list and in the horizontal
+      // showcase. Prefer the showcase candidate so preview navigation selects the
+      // visible slide instead of the first matching intro copy.
+      target = previewTargets.find(candidate => candidate.closest<HTMLElement>('#reason-showcase [data-reason-slide]')) || previewTargets[0] || null;
+    } catch { return; }
+    const targetPanel = target?.closest<HTMLElement>('.lifecycle-panel');
+    const index = targetPanel ? panels.indexOf(targetPanel) : -1;
+    if (index < 0) return;
+    animating = false;
+    heroFreezeHoldUntil = 0;
+    flushHeroInputLock();
+    window.dispatchEvent(new Event('ruijun:hero-freeze'));
+    const reasonSlide = target?.dataset.reasonSlide || target?.closest<HTMLElement>('[data-reason-slide]')?.dataset.reasonSlide;
+    goToPanel(index, {
+      immediate: true,
+      ...(reasonSlide != null ? { reasonIndex: Number(reasonSlide) } : {}),
+      ...(targetPanel === history ? { historyProgress: .35 } : {})
+    });
+  }
 
   function moveForward() {
     revealIndicator();
     if (animating) return;
-    if (panels[panelIndex] === intro && introStageIndex < introItems.length) { setIntroStage(introStageIndex + 1); return; }
+    if (panels[panelIndex] === intro) {
+      if (introStageIndex >= introItems.length && performance.now() < introFinalLockUntil) {
+        gestureDistance = 0;
+        gestureDirection = 0;
+        return;
+      }
+      if (introStageIndex < introItems.length) {
+        const nextStage = introStageIndex + 1;
+        setIntroStage(nextStage);
+        if (nextStage === introItems.length) {
+          // The final intro copy must remain readable before the next panel
+          // can consume any further wheel input.
+          introFinalLockUntil = performance.now() + INTRO_FINAL_LOCK_MS;
+        }
+        return;
+      }
+    }
     if (panels[panelIndex] === showcase && reasonIndex < slides.length - 1) { setReason(reasonIndex + 1); return; }
     if (panels[panelIndex] === history) {
       pulseHistoryCursor(1);
@@ -351,6 +545,7 @@ onMounted(async () => {
   function moveBackward() {
     revealIndicator();
     if (animating) return;
+    introFinalLockUntil = 0;
     if (panels[panelIndex] === intro && introStageIndex > 0) { setIntroStage(introStageIndex - 1); return; }
     if (panels[panelIndex] === showcase && reasonIndex > 0) { setReason(reasonIndex - 1); return; }
     if (panels[panelIndex] === history) {
@@ -361,16 +556,39 @@ onMounted(async () => {
   }
 
   function handleGesture(instance: any) {
-    if (heroInputLocked) return;
     revealIndicator();
     const delta = instance.deltaY;
     if (!Number.isFinite(delta) || !delta) return;
-    if (animating) { gestureDistance = 0; return; }
+    // The first wheel gesture interrupts playback and is consumed by the
+    // approved still frame. A short hold prevents momentum from skipping it.
+    if (panels[panelIndex] === hero && heroInputLocked) {
+      window.dispatchEvent(new Event('ruijun:hero-freeze'));
+      heroFreezeHoldUntil = performance.now() + HERO_FREEZE_HOLD_MS;
+      flushHeroInputLock();
+      gestureDistance = 0;
+      gestureDirection = 0;
+      return;
+    }
+    if (panels[panelIndex] === hero && performance.now() < heroFreezeHoldUntil) {
+      gestureDistance = 0;
+      gestureDirection = 0;
+      return;
+    }
+    if (animating) { gestureDistance = 0; gestureDirection = 0; return; }
     if (panels[panelIndex] === showcase) { scrubReasons(delta); return; }
     if (panels[panelIndex] === history) { scrubHistory(delta); return; }
-    gestureDistance += delta;
-    if (gestureDistance >= 58) { gestureDistance = 0; moveForward(); }
-    else if (gestureDistance <= -58) { gestureDistance = 0; moveBackward(); }
+    const direction = Math.sign(delta);
+    const onIntroStep = panels[panelIndex] === intro && (direction > 0 ? introStageIndex < introItems.length : introStageIndex > 0);
+    const requiredDistance = onIntroStep ? PANEL_STEP_DISTANCE : PANEL_BOUNDARY_DISTANCE;
+    if (gestureDirection !== direction) {
+      gestureDistance = 0;
+      gestureDirection = direction;
+    }
+    gestureDistance += Math.abs(delta);
+    if (gestureDistance < requiredDistance) return;
+    gestureDistance = 0;
+    if (direction > 0) moveForward();
+    else moveBackward();
   }
 
   function setupObserver() {
@@ -378,7 +596,14 @@ onMounted(async () => {
     observer = null;
     document.body.classList.toggle('immersive-scroll-ready', desktop.matches);
     if (!desktop.matches) return;
-    observer = Observer.create({ target: window, type: 'wheel,touch,pointer', tolerance: 4, preventDefault: true, allowClicks: true, onChangeY: handleGesture });
+    observer = Observer.create({
+      target: window,
+      type: 'wheel,touch,pointer',
+      tolerance: 4,
+      preventDefault: true,
+      allowClicks: true,
+      onChangeY: handleGesture
+    });
   }
 
   function onKeydown(event: KeyboardEvent) {
@@ -417,9 +642,26 @@ onMounted(async () => {
 
   const anchors = [...root.querySelectorAll<HTMLAnchorElement>('a[href^="#"]')];
   anchors.forEach(link => link.addEventListener('click', onAnchorClick));
+  reasonTrack.addEventListener('scroll', syncMobileReasonTabs, { passive: true });
   window.addEventListener('keydown', onKeydown);
   window.addEventListener('resize', onResize);
-  window.addEventListener('scroll', updateIndicator, { passive: true });
+  window.addEventListener('ruijun:cms-preview-target', jumpToPreviewTarget);
+  function onScroll() {
+    updateIndicator();
+    // The final contact panel permits ordinary scrolling through its footer.
+    // Reclaim the observer once the user scrolls back into the previous panel.
+    const contactIndex = panels.length - 1;
+    const contactTop = panels[contactIndex].offsetTop;
+    if (contactScrollReleased && window.scrollY < contactTop - 1) {
+      contactScrollReleased = false;
+      window.scrollTo({ left: 0, top: contactTop, behavior: 'auto' });
+      setupObserver();
+      setActive(contactIndex, false);
+      requestAnimationFrame(() => goToPanel(contactIndex - 1, { historyProgress: 1 }));
+    }
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
   setIntroStage(0, false);
   renderReasons(0);
   renderHistory(0);
@@ -427,15 +669,17 @@ onMounted(async () => {
   setActive(0, false);
   updateIndicator();
   setupObserver();
-  const heroVideo = hero.querySelector<HTMLVideoElement>('video');
   heroVideo?.addEventListener('playing', startHeroInputLock);
   if (heroVideo && !heroVideo.paused && !heroVideo.ended) startHeroInputLock();
+  requestAnimationFrame(() => jumpToPreviewTarget());
 
   cleanupMotion = () => {
     anchors.forEach(link => link.removeEventListener('click', onAnchorClick));
+    reasonTrack.removeEventListener('scroll', syncMobileReasonTabs);
     window.removeEventListener('keydown', onKeydown);
     window.removeEventListener('resize', onResize);
-    window.removeEventListener('scroll', updateIndicator);
+    window.removeEventListener('scroll', onScroll);
+    window.removeEventListener('ruijun:cms-preview-target', jumpToPreviewTarget);
     window.clearTimeout(hideTimer);
     window.clearTimeout(heroLockTimer);
     window.clearTimeout(heroHeaderTimer);
@@ -443,7 +687,8 @@ onMounted(async () => {
     header?.classList.remove('is-hero-entered-wide');
     setHeroInputLocked(false);
     observer?.kill();
-    gsap.killTweensOf([window, reasonMotion, historyMotion, historyCursor, historyOrbitRing, historyWheelCursor, historyWheel, morph, morphBg, morphImage]);
+    contactScrollReleased = false;
+    gsap.killTweensOf([window, reasonMotion, historyMotion, historyCursor, historyOrbitRing, historyWheelCursor, historyWheel, morphCover, morphStage, morphMachine]);
     document.body.classList.remove('immersive-scroll-ready');
     jumpPanel = () => {};
   };
@@ -457,10 +702,9 @@ function jumpTo(index: number) {
 </script>
 
 <template>
-  <div class="machine-morph-overlay" aria-hidden="true">
-    <div class="machine-morph-bg"></div>
-    <img src="/assets/psd/hero-machine.png" alt="">
-  </div>
+  <div class="machine-morph-cover" aria-hidden="true"></div>
+  <div class="machine-morph-stage" aria-hidden="true"></div>
+  <img class="machine-model-morph" src="/assets/psd/hero-machine.png" alt="" aria-hidden="true">
   <nav class="immersive-indicator" :class="{ 'is-scrolling': indicatorVisible }" aria-label="页面段落导航">
     <span class="immersive-indicator__thumb" :style="{ transform: `translate3d(0, calc((100vh - 38px) * ${indicatorProgress}), 0)` }" aria-hidden="true"></span>
     <button v-for="(label, index) in labels" :key="label" type="button" :class="{ active: activePanel === index }" :style="{ top: `${index / labels.length * 100}%`, height: `${100 / labels.length}%` }" :aria-label="label" :aria-current="activePanel === index ? 'true' : undefined" @click="jumpTo(index)"></button>
@@ -468,14 +712,14 @@ function jumpTo(index: number) {
 </template>
 
 <style scoped>
-.machine-morph-overlay{position:fixed;z-index:75;top:0;left:0;display:none;width:1px;height:1px;overflow:hidden;background:#0b0b0c;pointer-events:none;will-change:top,left,width,height,border-radius,opacity;box-shadow:0 22px 45px rgb(0 0 0/18%)}
-.machine-morph-bg{position:absolute;inset:0;background:#050506 url('/assets/psd/hero-stage.jpg') center/cover no-repeat;will-change:opacity}
-.machine-morph-overlay img{position:absolute;z-index:1;top:0;left:0;width:1px;height:auto;max-width:none;object-fit:contain;will-change:top,left,width,opacity;filter:drop-shadow(0 22px 30px rgb(0 0 0/22%))}
+.machine-morph-cover{position:fixed;z-index:74;inset:0;display:none;background:#f3f3f1;pointer-events:none}
+.machine-morph-stage{position:fixed;z-index:75;top:0;left:0;display:none;width:1px;height:1px;background:#050506;pointer-events:none;will-change:top,left,width,height,border-radius,opacity}
+.machine-model-morph{position:fixed;z-index:76;top:0;left:0;display:none;width:1px;height:auto;max-width:none;object-fit:contain;pointer-events:none;will-change:top,left,width,opacity;filter:drop-shadow(0 22px 30px rgb(0 0 0/22%))}
 .immersive-indicator{position:fixed;z-index:110;top:0;right:0;bottom:0;width:12px;opacity:.2;transition:opacity .32s ease}
 .immersive-indicator::before{content:"";position:absolute;top:0;right:0;bottom:0;width:3px;background:rgb(5 13 9/78%)}
 .immersive-indicator:hover,.immersive-indicator:focus-within,.immersive-indicator.is-scrolling{opacity:1}
 .immersive-indicator__thumb{position:absolute;z-index:2;top:0;right:0;width:3px;height:38px;background:#e51b23;pointer-events:none;will-change:transform}
 .immersive-indicator button{position:absolute;z-index:1;left:0;width:12px;padding:0;border:0;background:transparent;cursor:pointer}
 .immersive-indicator button:focus-visible{outline:1px solid #e51b23;outline-offset:-2px}
-@media(max-width:900px), (prefers-reduced-motion:reduce){.machine-morph-overlay,.immersive-indicator{display:none!important}}
+@media(max-width:900px), (prefers-reduced-motion:reduce){.machine-morph-cover,.machine-morph-stage,.machine-model-morph,.immersive-indicator{display:none!important}}
 </style>

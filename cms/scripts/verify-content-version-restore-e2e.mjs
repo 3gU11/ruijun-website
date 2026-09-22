@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
+import { resolvePublicationWorkflowRoles } from './publication-e2e-roles.mjs';
 
 const cmsRoot = new URL('../', import.meta.url);
 
@@ -79,12 +80,12 @@ async function main() {
 
   try {
     const roles = await admin.request('/roles?fields=id,name&limit=-1');
-    const rolesByName = new Map(roles.data.map((role) => [role.name, role.id]));
-    const editor = await createTestUser(admin, required(rolesByName.get('内容编辑'), 'content_editor role'), suffix, 'editor');
+    const { editorRoleId, reviewerRoleId, publisherRoleId } = resolvePublicationWorkflowRoles(roles.data);
+    const editor = await createTestUser(admin, required(editorRoleId, 'content_editor role'), suffix, 'editor');
     createdUsers.push(editor.id);
-    const reviewer = await createTestUser(admin, required(rolesByName.get('技术审核人员'), 'technical_reviewer role'), suffix, 'reviewer');
+    const reviewer = await createTestUser(admin, required(reviewerRoleId, 'reviewer role'), suffix, 'reviewer');
     createdUsers.push(reviewer.id);
-    const publisher = await createTestUser(admin, required(rolesByName.get('发布人员'), 'publisher role'), suffix, 'publisher');
+    const publisher = await createTestUser(admin, required(publisherRoleId, 'publisher role'), suffix, 'publisher');
     createdUsers.push(publisher.id);
 
     const editorApi = client(baseUrl, editor.token);
@@ -92,11 +93,11 @@ async function main() {
     const publisherApi = client(baseUrl, publisher.token);
     const initialName = `Version one ${suffix.slice(0, 8)}`;
     const changedName = `Version two ${suffix.slice(0, 8)}`;
-    const created = await editorApi.request('/items/product_models', {
+    const created = await editorApi.request('/items/product_series', {
       method: 'POST',
       body: {
-        series_code: 'E2E', model_code: `E2E-${suffix.slice(0, 8)}`,
-        name: initialName, parameters: { travel_mm: '400' }, source_document: 'versioning-e2e',
+        series_code: `E2E-${suffix.slice(0, 8)}`, slug: `e2e-${suffix.slice(0, 8)}`,
+        name: initialName, import_evidence: { source: 'local-e2e' }, source_document: 'versioning-e2e',
         // The hook must discard forged publishing fields at creation time.
         status: 'published', publication_state: 'published'
       }
@@ -104,46 +105,46 @@ async function main() {
     productId = created.data.id;
     assert(created.data.status === 'draft' && created.data.publication_state === 'unpublished', 'Editor creation was not forced to an unpublished draft');
 
-    const reviewing = await editorApi.request(`/items/product_models/${productId}`, {
+    const reviewing = await editorApi.request(`/items/product_series/${productId}`, {
       method: 'PATCH', body: { name: changedName, status: 'review' }
     });
     assert(reviewing.data.status === 'review', 'Editor could not submit the draft for review');
-    const reviewerMutation = await reviewerApi.request(`/items/product_models/${productId}`, {
+    const reviewerMutation = await reviewerApi.request(`/items/product_series/${productId}`, {
       method: 'PATCH', body: { status: 'scheduled', name: 'Forged reviewer content' }, expected: [400]
     });
     assert(reviewerMutation.status === 400, 'Technical reviewer could mutate product content while approving it');
-    const scheduled = await reviewerApi.request(`/items/product_models/${productId}`, {
+    const scheduled = await reviewerApi.request(`/items/product_series/${productId}`, {
       method: 'PATCH', body: { status: 'scheduled' }
     });
     assert(scheduled.data.status === 'scheduled', 'Technical reviewer could not schedule reviewed content');
-    const publisherMutation = await publisherApi.request(`/items/product_models/${productId}`, {
+    const publisherMutation = await publisherApi.request(`/items/product_series/${productId}`, {
       method: 'PATCH', body: { status: 'published', name: 'Forged publisher content' }, expected: [400]
     });
     assert(publisherMutation.status === 400, 'Publisher could mutate product content while publishing it');
-    const published = await publisherApi.request(`/items/product_models/${productId}`, {
+    const published = await publisherApi.request(`/items/product_series/${productId}`, {
       method: 'PATCH', body: { status: 'published' }
     });
     assert(published.data.status === 'published' && published.data.publication_state === 'published', 'Publisher could not publish scheduled content');
 
-    const editorPublishedMutation = await editorApi.request(`/items/product_models/${productId}`, {
+    const editorPublishedMutation = await editorApi.request(`/items/product_series/${productId}`, {
       method: 'PATCH', body: { name: 'Forged editor change after publication' }, expected: [400, 403]
     });
     assert([400, 403].includes(editorPublishedMutation.status), 'Content editor was able to update published content');
-    const unchangedPublished = await admin.request(`/items/product_models/${productId}?fields=name,status,publication_state`);
+    const unchangedPublished = await admin.request(`/items/product_series/${productId}?fields=name,status,publication_state`);
     assert(unchangedPublished.data.name === changedName && unchangedPublished.data.status === 'published', 'Rejected editor update changed published content');
 
-    const versions = await admin.request(`/items/content_versions?filter[content_collection][_eq]=product_models&filter[content_item_id][_eq]=${encodeURIComponent(productId)}&sort=created_at&limit=-1`);
+    const versions = await admin.request(`/items/content_versions?filter[content_collection][_eq]=product_series&filter[content_item_id][_eq]=${encodeURIComponent(productId)}&sort=created_at&limit=-1`);
     for (const version of versions.data) createdVersionIds.push(version.id);
     const draftVersion = versions.data.find((version) => version.action === 'submitted_for_review');
     assert(draftVersion, 'The draft-to-review update did not create a version snapshot');
     assert(draftVersion.snapshot?.name === initialName, 'The version snapshot did not retain the prior content');
 
-    const history = await publisherApi.request(`/content-version-restore?collection=product_models&itemId=${encodeURIComponent(productId)}&limit=50`);
+    const history = await publisherApi.request(`/content-version-restore?collection=product_series&itemId=${encodeURIComponent(productId)}&limit=50`);
     assert(history.data.some((version) => version.id === draftVersion.id && version.changed_fields.includes('name')), 'Publisher history endpoint did not return the expected version summary');
     const versionDetail = await publisherApi.request(`/content-version-restore/${draftVersion.id}`);
     assert(versionDetail.data.version.snapshot.name === initialName && versionDetail.data.current.name === changedName, 'Publisher version detail endpoint did not expose the historical-to-current comparison');
 
-    const unauthorized = await reviewerApi.request(`/content-version-restore/${draftVersion.id}/restore`, {
+    const unauthorized = await editorApi.request(`/content-version-restore/${draftVersion.id}/restore`, {
       method: 'POST', body: { restoreNote: 'Role verification' }, expected: [403]
     });
     assert(unauthorized.status === 403, 'A reviewer was permitted to restore a content version');
@@ -157,7 +158,7 @@ async function main() {
       method: 'POST', body: { restoreNote: 'E2E restore verification' }
     });
     assert(restored.data.status === 'draft', 'Restore endpoint did not report a draft result');
-    const item = await admin.request(`/items/product_models/${productId}`);
+    const item = await admin.request(`/items/product_series/${productId}`);
     assert(item.data.name === initialName, 'Restore endpoint did not restore the snapshot content');
     assert(item.data.status === 'draft' && item.data.publication_state === 'unpublished', 'Restore endpoint did not force an unpublished draft');
     assert(item.data.publication_log?.at(-1)?.action === 'restored_from_version', 'Restore endpoint did not append an audit entry');
@@ -167,11 +168,11 @@ async function main() {
     console.log('Content version restore E2E passed.');
   } finally {
     if (productId) {
-      const generatedVersions = await admin.request(`/items/content_versions?filter[content_collection][_eq]=product_models&filter[content_item_id][_eq]=${encodeURIComponent(productId)}&fields=id&limit=-1`);
+      const generatedVersions = await admin.request(`/items/content_versions?filter[content_collection][_eq]=product_series&filter[content_item_id][_eq]=${encodeURIComponent(productId)}&fields=id&limit=-1`);
       for (const version of generatedVersions.data) createdVersionIds.push(version.id);
     }
     for (const versionId of [...new Set(createdVersionIds)]) await admin.request(`/items/content_versions/${versionId}`, { method: 'DELETE', expected: [204] });
-    if (productId) await admin.request(`/items/product_models/${productId}`, { method: 'DELETE', expected: [204] });
+    if (productId) await admin.request(`/items/product_series/${productId}`, { method: 'DELETE', expected: [204] });
     for (const userId of createdUsers) await admin.request(`/users/${userId}`, { method: 'DELETE', expected: [204] });
   }
 }

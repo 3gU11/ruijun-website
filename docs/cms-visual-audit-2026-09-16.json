@@ -1,0 +1,1626 @@
+{
+  "status": "in_progress",
+  "note": "PC canvas media click audit. Hidden and click-blocked rows require follow-up. No save/publish tested.",
+  "pages": [
+    {
+      "slug": "home",
+      "url": "http://127.0.0.1:4175/",
+      "rows": [
+        {
+          "index": 2,
+          "tag": "IMG",
+          "src": "/assets/home-intro-end-video-sharpened.png?v=1",
+          "alt": "",
+          "key": "hero",
+          "field": "",
+          "status": "click blocked",
+          "options": 0,
+          "detail": "TimeoutError: locator.click: Timeout 1300ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('img,video,[data-c"
+        },
+        {
+          "index": 3,
+          "tag": "VIDEO",
+          "src": "/assets/home-intro-raw.mp4",
+          "alt": "",
+          "key": "hero",
+          "field": "hero_video_asset_id",
+          "status": "media options",
+          "options": 2,
+          "detail": "选中元素\n\nhero_video_asset_id\n×\n\npages/1 · sections[hero].hero_video_asset_id\n\n媒体替换\n选择媒体\n首页首屏视频候选素材 · 103beeaf8ea0c2fe625d78da816dda5d_raw.mp4 · video/mp4\n\n草稿素材只在已登录后台的实时预览中显示；保存的内容草稿不能提交发布，直到所用素材已审核发布。\n\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入"
+        },
+        {
+          "index": 4,
+          "tag": "IMG",
+          "src": "/assets/psd/hero-machine.png",
+          "alt": "",
+          "key": "why-ruijun",
+          "field": "",
+          "status": "no panel",
+          "options": 0,
+          "detail": ""
+        },
+        {
+          "index": 5,
+          "tag": "IMG",
+          "src": "/api/preview/media/143",
+          "alt": "",
+          "key": "performance",
+          "field": "media.0",
+          "status": "hidden"
+        },
+        {
+          "index": 6,
+          "tag": "IMG",
+          "src": "/api/preview/media/144",
+          "alt": "",
+          "key": "advanced-manufacturing",
+          "field": "media.0",
+          "status": "hidden"
+        },
+        {
+          "index": 7,
+          "tag": "IMG",
+          "src": "/api/preview/media/145",
+          "alt": "",
+          "key": "industry-leadership",
+          "field": "media.0",
+          "status": "hidden"
+        },
+        {
+          "index": 8,
+          "tag": "IMG",
+          "src": "/assets/psd/reason-efficiency-machine.png",
+          "alt": "瑞钧中走丝线切割机床",
+          "key": "performance",
+          "field": "",
+          "status": "no panel",
+          "options": 0,
+          "detail": ""
+        },
+        {
+          "index": 9,
+          "tag": "IMG",
+          "src": "/assets/psd/reason-factory-full.jpg",
+          "alt": "先进智造",
+          "key": "advanced-manufacturing",
+          "field": "",
+          "status": "click blocked",
+          "options": 0,
+          "detail": "TimeoutError: locator.click: Timeout 1300ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('img,video,[data-c"
+        },
+        {
+          "index": 10,
+          "tag": "IMG",
+          "src": "/assets/psd/reason-market-full.jpg",
+          "alt": "领军品牌",
+          "key": "industry-leadership",
+          "field": "",
+          "status": "click blocked",
+          "options": 0,
+          "detail": "TimeoutError: locator.click: Timeout 1300ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('img,video,[data-c"
+        },
+        {
+          "index": 11,
+          "tag": "IMG",
+          "src": "/assets/psd/product-workstation.png",
+          "alt": "灵动切割工作站 设备",
+          "key": "workstation",
+          "field": "",
+          "status": "other panel",
+          "options": 0,
+          "detail": "选中元素\n\n画布元素\n×\n\npages/1 · 区块位置\n\n此为静态素材；请先在媒体资产中导入、审核并发布后再替换。"
+        },
+        {
+          "index": 12,
+          "tag": "IMG",
+          "src": "/assets/psd/product-auto.png",
+          "alt": "FR-XS (auto) 设备",
+          "key": "fr-xs-auto",
+          "field": "",
+          "status": "other panel",
+          "options": 0,
+          "detail": "选中元素\n\n画布元素\n×\n\npages/1 · 区块位置\n\n此为静态素材；请先在媒体资产中导入、审核并发布后再替换。"
+        },
+        {
+          "index": 13,
+          "tag": "IMG",
+          "src": "/assets/psd/product-pro.png",
+          "alt": "FR-XS (pro) 设备",
+          "key": "fr-xs-pro",
+          "field": "",
+          "status": "other panel",
+          "options": 0,
+          "detail": "选中元素\n\n画布元素\n×\n\npages/1 · 区块位置\n\n此为静态素材；请先在媒体资产中导入、审核并发布后再替换。"
+        },
+        {
+          "index": 14,
+          "tag": "IMG",
+          "src": "/assets/psd/product-ft-xs.png",
+          "alt": "FT-XS 设备",
+          "key": "ft-xs",
+          "field": "",
+          "status": "other panel",
+          "options": 0,
+          "detail": "选中元素\n\n画布元素\n×\n\npages/1 · 区块位置\n\n此为静态素材；请先在媒体资产中导入、审核并发布后再替换。"
+        },
+        {
+          "index": 15,
+          "tag": "IMG",
+          "src": "/assets/psd/product-fr-y.png",
+          "alt": "FR-Y 设备",
+          "key": "fr-y",
+          "field": "",
+          "status": "other panel",
+          "options": 0,
+          "detail": "选中元素\n\n画布元素\n×\n\npages/1 · 区块位置\n\n此为静态素材；请先在媒体资产中导入、审核并发布后再替换。"
+        },
+        {
+          "index": 16,
+          "tag": "IMG",
+          "src": "/assets/psd/product-fr-y.png",
+          "alt": "FL-XS 设备",
+          "key": "fl-xs",
+          "field": "",
+          "status": "other panel",
+          "options": 0,
+          "detail": "选中元素\n\n画布元素\n×\n\npages/1 · 区块位置\n\n此为静态素材；请先在媒体资产中导入、审核并发布后再替换。"
+        },
+        {
+          "index": 17,
+          "tag": "SECTION",
+          "src": "",
+          "alt": "",
+          "key": "history",
+          "field": "",
+          "status": "other panel",
+          "options": 0,
+          "detail": "选中元素\n\nThe DevelopmentHistory of Ruijun.Zhike's Mid SpeedWire Manufacturing瑞钧智科的中走丝制造历史\n×\n\npages/1 · 区块位置\n\n此为静态素材；请先在媒体资产中导入、审核并发布后再替换。"
+        },
+        {
+          "index": 18,
+          "tag": "IMG",
+          "src": "/assets/about-psd/history-guide-wheel.png",
+          "alt": "时间轴导航",
+          "key": "history",
+          "field": "",
+          "status": "click blocked",
+          "options": 0,
+          "detail": "TimeoutError: locator.click: Timeout 1300ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('img,video,[data-c"
+        },
+        {
+          "index": 19,
+          "tag": "IMG",
+          "src": "/assets/psd-footer/layer-28.png",
+          "alt": "",
+          "key": "site-footer",
+          "field": "",
+          "status": "click blocked",
+          "options": 0,
+          "detail": "TimeoutError: locator.click: Timeout 1300ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('img,video,[data-c"
+        },
+        {
+          "index": 20,
+          "tag": "IMG",
+          "src": "/assets/ruijun-logo.png",
+          "alt": "瑞钧中走丝",
+          "key": "site-footer",
+          "field": "brand.footer_logo_asset",
+          "status": "no candidate",
+          "options": 0,
+          "detail": "选中元素\n\nbrand.footer_logo_asset\n×\n\nsite_settings/1 · brand.footer_logo_asset\n\n待媒体：当前没有符合该展示位置的已审核媒体或内部预览草稿。请先在媒体资产中导入并补全用途、替代文本和展示位置。\n\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        },
+        {
+          "index": 21,
+          "tag": "IMG",
+          "src": "/assets/psd-footer/layer-01.png",
+          "alt": "",
+          "key": "site-footer",
+          "field": "footer.address_icon_asset",
+          "status": "no candidate",
+          "options": 0,
+          "detail": "选中元素\n\nfooter.address_icon_asset\n×\n\nsite_settings/1 · footer.address_icon_asset\n\n待媒体：当前没有符合该展示位置的已审核媒体或内部预览草稿。请先在媒体资产中导入并补全用途、替代文本和展示位置。\n\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        },
+        {
+          "index": 22,
+          "tag": "IMG",
+          "src": "/assets/psd-footer/layer-03.png",
+          "alt": "",
+          "key": "site-footer",
+          "field": "footer.phone_icon_asset",
+          "status": "no candidate",
+          "options": 0,
+          "detail": "选中元素\n\nfooter.phone_icon_asset\n×\n\nsite_settings/1 · footer.phone_icon_asset\n\n待媒体：当前没有符合该展示位置的已审核媒体或内部预览草稿。请先在媒体资产中导入并补全用途、替代文本和展示位置。\n\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        },
+        {
+          "index": 23,
+          "tag": "IMG",
+          "src": "/assets/psd-footer/layer-02.png",
+          "alt": "",
+          "key": "site-footer",
+          "field": "footer.email_icon_asset",
+          "status": "no candidate",
+          "options": 0,
+          "detail": "选中元素\n\nfooter.email_icon_asset\n×\n\nsite_settings/1 · footer.email_icon_asset\n\n待媒体：当前没有符合该展示位置的已审核媒体或内部预览草稿。请先在媒体资产中导入并补全用途、替代文本和展示位置。\n\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        },
+        {
+          "index": 24,
+          "tag": "IMG",
+          "src": "/assets/psd-footer/layer-09.png",
+          "alt": "",
+          "key": "site-footer",
+          "field": "",
+          "status": "click blocked",
+          "options": 0,
+          "detail": "TimeoutError: locator.click: Timeout 1300ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('img,video,[data-c"
+        }
+      ]
+    },
+    {
+      "slug": "product",
+      "url": "http://127.0.0.1:4175/product",
+      "rows": [
+        {
+          "index": 1,
+          "tag": "IMG",
+          "src": "/assets/psd/product-workstation.png",
+          "alt": "灵动切割工作站 产品图",
+          "key": "workstation",
+          "field": "cover_asset",
+          "status": "media options",
+          "options": 24,
+          "detail": "选中元素\n\ncover_asset\n×\n\nproduct_series/1 · cover_asset\n\n媒体替换\n选择媒体\nPRO1080 尺寸参数图 · 1080.png · image/png\nY1080 尺寸参数图 · 1080.png · image/png\nFL1180 尺寸参数图 · 1180.png · image/png\nFL1390 尺寸参数图 · 1390.png · image/png\nFL1610 尺寸参数图 · 1610.png · image/png\nFRAUTO400 尺寸参数图 ·"
+        },
+        {
+          "index": 2,
+          "tag": "IMG",
+          "src": "/assets/psd/product-auto.png",
+          "alt": "FR-XS (auto) 产品图",
+          "key": "fr-xs-auto",
+          "field": "cover_asset",
+          "status": "media options",
+          "options": 24,
+          "detail": "选中元素\n\ncover_asset\n×\n\nproduct_series/2 · cover_asset\n\n媒体替换\n选择媒体\nPRO1080 尺寸参数图 · 1080.png · image/png\nY1080 尺寸参数图 · 1080.png · image/png\nFL1180 尺寸参数图 · 1180.png · image/png\nFL1390 尺寸参数图 · 1390.png · image/png\nFL1610 尺寸参数图 · 1610.png · image/png\nFRAUTO400 尺寸参数图 ·"
+        },
+        {
+          "index": 3,
+          "tag": "IMG",
+          "src": "/assets/psd/product-pro.png",
+          "alt": "FR-Y 产品图",
+          "key": "fr-y",
+          "field": "cover_asset",
+          "status": "media options",
+          "options": 24,
+          "detail": "选中元素\n\ncover_asset\n×\n\nproduct_series/3 · cover_asset\n\n媒体替换\n选择媒体\nPRO1080 尺寸参数图 · 1080.png · image/png\nY1080 尺寸参数图 · 1080.png · image/png\nFL1180 尺寸参数图 · 1180.png · image/png\nFL1390 尺寸参数图 · 1390.png · image/png\nFL1610 尺寸参数图 · 1610.png · image/png\nFRAUTO400 尺寸参数图 ·"
+        },
+        {
+          "index": 4,
+          "tag": "IMG",
+          "src": "/assets/psd/product-ft-xs.png",
+          "alt": "FL-XS 产品图",
+          "key": "fl-xs",
+          "field": "cover_asset",
+          "status": "media options",
+          "options": 24,
+          "detail": "选中元素\n\ncover_asset\n×\n\nproduct_series/4 · cover_asset\n\n媒体替换\n选择媒体\nPRO1080 尺寸参数图 · 1080.png · image/png\nY1080 尺寸参数图 · 1080.png · image/png\nFL1180 尺寸参数图 · 1180.png · image/png\nFL1390 尺寸参数图 · 1390.png · image/png\nFL1610 尺寸参数图 · 1610.png · image/png\nFRAUTO400 尺寸参数图 ·"
+        },
+        {
+          "index": 5,
+          "tag": "IMG",
+          "src": "/assets/psd/product-fr-y.png",
+          "alt": "FR (pro) 产品图",
+          "key": "fr-pro",
+          "field": "cover_asset",
+          "status": "media options",
+          "options": 24,
+          "detail": "选中元素\n\ncover_asset\n×\n\nproduct_series/5 · cover_asset\n\n媒体替换\n选择媒体\nPRO1080 尺寸参数图 · 1080.png · image/png\nY1080 尺寸参数图 · 1080.png · image/png\nFL1180 尺寸参数图 · 1180.png · image/png\nFL1390 尺寸参数图 · 1390.png · image/png\nFL1610 尺寸参数图 · 1610.png · image/png\nFRAUTO400 尺寸参数图 ·"
+        },
+        {
+          "index": 6,
+          "tag": "IMG",
+          "src": "/assets/psd/product-fr-y.png",
+          "alt": "FT-XS 产品图",
+          "key": "ft-xs",
+          "field": "cover_asset",
+          "status": "media options",
+          "options": 24,
+          "detail": "选中元素\n\ncover_asset\n×\n\nproduct_series/6 · cover_asset\n\n媒体替换\n选择媒体\nPRO1080 尺寸参数图 · 1080.png · image/png\nY1080 尺寸参数图 · 1080.png · image/png\nFL1180 尺寸参数图 · 1180.png · image/png\nFL1390 尺寸参数图 · 1390.png · image/png\nFL1610 尺寸参数图 · 1610.png · image/png\nFRAUTO400 尺寸参数图 ·"
+        },
+        {
+          "index": 7,
+          "tag": "IMG",
+          "src": "/assets/psd-footer/layer-28.png",
+          "alt": "",
+          "key": "site-footer",
+          "field": "",
+          "status": "click blocked",
+          "options": 0,
+          "detail": "TimeoutError: locator.click: Timeout 1300ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('img,video,[data-c"
+        },
+        {
+          "index": 8,
+          "tag": "IMG",
+          "src": "/assets/ruijun-logo.png",
+          "alt": "瑞钧中走丝",
+          "key": "site-footer",
+          "field": "brand.footer_logo_asset",
+          "status": "no candidate",
+          "options": 0,
+          "detail": "选中元素\n\nbrand.footer_logo_asset\n×\n\nsite_settings/1 · brand.footer_logo_asset\n\n待媒体：当前没有符合该展示位置的已审核媒体或内部预览草稿。请先在媒体资产中导入并补全用途、替代文本和展示位置。\n\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        },
+        {
+          "index": 9,
+          "tag": "IMG",
+          "src": "/assets/psd-footer/layer-01.png",
+          "alt": "",
+          "key": "site-footer",
+          "field": "footer.address_icon_asset",
+          "status": "no candidate",
+          "options": 0,
+          "detail": "选中元素\n\nfooter.address_icon_asset\n×\n\nsite_settings/1 · footer.address_icon_asset\n\n待媒体：当前没有符合该展示位置的已审核媒体或内部预览草稿。请先在媒体资产中导入并补全用途、替代文本和展示位置。\n\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        },
+        {
+          "index": 10,
+          "tag": "IMG",
+          "src": "/assets/psd-footer/layer-03.png",
+          "alt": "",
+          "key": "site-footer",
+          "field": "footer.phone_icon_asset",
+          "status": "no candidate",
+          "options": 0,
+          "detail": "选中元素\n\nfooter.phone_icon_asset\n×\n\nsite_settings/1 · footer.phone_icon_asset\n\n待媒体：当前没有符合该展示位置的已审核媒体或内部预览草稿。请先在媒体资产中导入并补全用途、替代文本和展示位置。\n\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        },
+        {
+          "index": 11,
+          "tag": "IMG",
+          "src": "/assets/psd-footer/layer-02.png",
+          "alt": "",
+          "key": "site-footer",
+          "field": "footer.email_icon_asset",
+          "status": "no candidate",
+          "options": 0,
+          "detail": "选中元素\n\nfooter.email_icon_asset\n×\n\nsite_settings/1 · footer.email_icon_asset\n\n待媒体：当前没有符合该展示位置的已审核媒体或内部预览草稿。请先在媒体资产中导入并补全用途、替代文本和展示位置。\n\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        },
+        {
+          "index": 12,
+          "tag": "IMG",
+          "src": "/assets/psd-footer/layer-09.png",
+          "alt": "",
+          "key": "site-footer",
+          "field": "",
+          "status": "click blocked",
+          "options": 0,
+          "detail": "TimeoutError: locator.click: Timeout 1300ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('img,video,[data-c"
+        }
+      ]
+    },
+    {
+      "slug": "manufacturing",
+      "url": "http://127.0.0.1:4175/manufacturing",
+      "rows": [
+        {
+          "index": 1,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/hero-building.png",
+          "alt": "瑞钧智科生产基地",
+          "key": "hero",
+          "field": "media.0",
+          "status": "media options",
+          "options": 2,
+          "detail": "选中元素\n\nmedia.0\n×\n\npages/8 · sections[hero].media.0\n\n媒体替换\n选择媒体\n先进制造首屏生产基地背景 · hero-building.png · image/png\n\n草稿素材只在已登录后台的实时预览中显示；保存的内容草稿不能提交发布，直到所用素材已审核发布。\n\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        },
+        {
+          "index": 2,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/hero-panel.png",
+          "alt": "",
+          "key": "process",
+          "field": "",
+          "status": "no panel",
+          "options": 0,
+          "detail": ""
+        },
+        {
+          "index": 3,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/hero-production-image.png",
+          "alt": "生产车间",
+          "key": "hero",
+          "field": "media.1",
+          "status": "media options",
+          "options": 2,
+          "detail": "选中元素\n\nmedia.1\n×\n\npages/8 · sections[hero].media.1\n\n媒体替换\n选择媒体\n先进制造首屏生产基地背景 · hero-building.png · image/png\n\n草稿素材只在已登录后台的实时预览中显示；保存的内容草稿不能提交发布，直到所用素材已审核发布。\n\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        },
+        {
+          "index": 4,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/cnc-card-background.png",
+          "alt": "",
+          "key": "process",
+          "field": "",
+          "status": "click blocked",
+          "options": 0,
+          "detail": "TimeoutError: locator.click: Timeout 1300ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('img,video,[data-c"
+        },
+        {
+          "index": 5,
+          "tag": "IMG",
+          "src": "/assets/psd/reason-factory-full.jpg",
+          "alt": "CNC龙门加工中心",
+          "key": "precision-machining",
+          "field": "media.0",
+          "status": "media options",
+          "options": 7,
+          "detail": "选中元素\n\nmedia.0\n×\n\npages/8 · sections[precision-machining].media.0\n\n媒体替换\n选择媒体\nCNC车间龙门设备图 · cnc-gantry.png · image/png\nCNC车间卧式加工设备图 · cnc-horizontal.png · image/png\nCNC车间主设备图 · cnc-main.png · image/png\nCNC车间导轨磨设备图 · cnc-rail-grinder.png · image/png\nCNC车间平面磨床图 · c"
+        },
+        {
+          "index": 6,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/cnc-horizontal.png",
+          "alt": "卧式加工中心",
+          "key": "precision-machining",
+          "field": "media.1",
+          "status": "media options",
+          "options": 7,
+          "detail": "选中元素\n\nmedia.1\n×\n\npages/8 · sections[precision-machining].media.1\n\n媒体替换\n选择媒体\nCNC车间龙门设备图 · cnc-gantry.png · image/png\nCNC车间卧式加工设备图 · cnc-horizontal.png · image/png\nCNC车间主设备图 · cnc-main.png · image/png\nCNC车间导轨磨设备图 · cnc-rail-grinder.png · image/png\nCNC车间平面磨床图 · c"
+        },
+        {
+          "index": 7,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/cnc-rail-grinder.png",
+          "alt": "导轨磨床",
+          "key": "precision-machining",
+          "field": "media.2",
+          "status": "media options",
+          "options": 7,
+          "detail": "选中元素\n\nmedia.2\n×\n\npages/8 · sections[precision-machining].media.2\n\n媒体替换\n选择媒体\nCNC车间龙门设备图 · cnc-gantry.png · image/png\nCNC车间卧式加工设备图 · cnc-horizontal.png · image/png\nCNC车间主设备图 · cnc-main.png · image/png\nCNC车间导轨磨设备图 · cnc-rail-grinder.png · image/png\nCNC车间平面磨床图 · c"
+        },
+        {
+          "index": 8,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/cnc-surface-grinder.png",
+          "alt": "建德磨床",
+          "key": "precision-machining",
+          "field": "media.3",
+          "status": "media options",
+          "options": 7,
+          "detail": "选中元素\n\nmedia.3\n×\n\npages/8 · sections[precision-machining].media.3\n\n媒体替换\n选择媒体\nCNC车间龙门设备图 · cnc-gantry.png · image/png\nCNC车间卧式加工设备图 · cnc-horizontal.png · image/png\nCNC车间主设备图 · cnc-main.png · image/png\nCNC车间导轨磨设备图 · cnc-rail-grinder.png · image/png\nCNC车间平面磨床图 · c"
+        },
+        {
+          "index": 9,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/cnc-vertical.png",
+          "alt": "立式加工中心",
+          "key": "precision-machining",
+          "field": "media.4",
+          "status": "media options",
+          "options": 7,
+          "detail": "选中元素\n\nmedia.4\n×\n\npages/8 · sections[precision-machining].media.4\n\n媒体替换\n选择媒体\nCNC车间龙门设备图 · cnc-gantry.png · image/png\nCNC车间卧式加工设备图 · cnc-horizontal.png · image/png\nCNC车间主设备图 · cnc-main.png · image/png\nCNC车间导轨磨设备图 · cnc-rail-grinder.png · image/png\nCNC车间平面磨床图 · c"
+        },
+        {
+          "index": 10,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/cnc-gantry.png",
+          "alt": "龙门加工中心",
+          "key": "precision-machining",
+          "field": "media.5",
+          "status": "media options",
+          "options": 7,
+          "detail": "选中元素\n\nmedia.5\n×\n\npages/8 · sections[precision-machining].media.5\n\n媒体替换\n选择媒体\nCNC车间龙门设备图 · cnc-gantry.png · image/png\nCNC车间卧式加工设备图 · cnc-horizontal.png · image/png\nCNC车间主设备图 · cnc-main.png · image/png\nCNC车间导轨磨设备图 · cnc-rail-grinder.png · image/png\nCNC车间平面磨床图 · c"
+        },
+        {
+          "index": 11,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/metal-bending-center.png",
+          "alt": "折弯中心",
+          "key": "sheet-metal",
+          "field": "media.0",
+          "status": "hidden"
+        },
+        {
+          "index": 12,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/metal-laser.png",
+          "alt": "激光加工",
+          "key": "sheet-metal",
+          "field": "media.1",
+          "status": "hidden"
+        },
+        {
+          "index": 13,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/metal-bending.png",
+          "alt": "折弯加工",
+          "key": "sheet-metal",
+          "field": "media.2",
+          "status": "hidden"
+        },
+        {
+          "index": 14,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/metal-coating.png",
+          "alt": "喷涂产线",
+          "key": "sheet-metal",
+          "field": "media.3",
+          "status": "hidden"
+        },
+        {
+          "index": 15,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/assembly-card-background.png",
+          "alt": "",
+          "key": "process",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 16,
+          "tag": "IMG",
+          "src": "/assets/psd/reason-factory-full.jpg",
+          "alt": "装配车间",
+          "key": "standardized-assembly",
+          "field": "media.0",
+          "status": "hidden"
+        },
+        {
+          "index": 17,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/assembly-detail.png",
+          "alt": "装配工位",
+          "key": "standardized-assembly",
+          "field": "media.1",
+          "status": "hidden"
+        },
+        {
+          "index": 18,
+          "tag": "IMG",
+          "src": "/assets/psd/reason-factory-full.jpg",
+          "alt": "激光干涉仪",
+          "key": "whole-machine-validation",
+          "field": "media.0",
+          "status": "hidden"
+        },
+        {
+          "index": 19,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/inspection-vision.png",
+          "alt": "影像仪",
+          "key": "whole-machine-validation",
+          "field": "media.1",
+          "status": "hidden"
+        },
+        {
+          "index": 20,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/inspection-coordinate.png",
+          "alt": "三坐标仪",
+          "key": "whole-machine-validation",
+          "field": "media.2",
+          "status": "hidden"
+        },
+        {
+          "index": 21,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/inspection-ballbar.png",
+          "alt": "球杆仪",
+          "key": "whole-machine-validation",
+          "field": "media.3",
+          "status": "hidden"
+        },
+        {
+          "index": 22,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/inspection-main.png",
+          "alt": "精密检测设备",
+          "key": "whole-machine-validation",
+          "field": "media.4",
+          "status": "hidden"
+        },
+        {
+          "index": 23,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/electrical-card-background.png",
+          "alt": "",
+          "key": "process",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 24,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/electrical-bench.png",
+          "alt": "电气装配作业",
+          "key": "electrical-assembly",
+          "field": "media.0",
+          "status": "hidden"
+        },
+        {
+          "index": 25,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/electrical-cabinet.png",
+          "alt": "电柜装配",
+          "key": "electrical-assembly",
+          "field": "media.1",
+          "status": "hidden"
+        },
+        {
+          "index": 26,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/warehouse-image.png",
+          "alt": "智能物料仓储",
+          "key": "smart-warehouse",
+          "field": "media.0",
+          "status": "hidden"
+        },
+        {
+          "index": 27,
+          "tag": "IMG",
+          "src": "/api/preview/media/50",
+          "alt": "平面磨床",
+          "key": "core-equipment",
+          "field": "media.0",
+          "status": "hidden"
+        },
+        {
+          "index": 28,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/equipment-2.png",
+          "alt": "大隈立加",
+          "key": "core-equipment",
+          "field": "media.1",
+          "status": "hidden"
+        },
+        {
+          "index": 29,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/equipment-3.png",
+          "alt": "威力双排",
+          "key": "core-equipment",
+          "field": "media.2",
+          "status": "hidden"
+        },
+        {
+          "index": 30,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/equipment-4.png",
+          "alt": "北一大隈",
+          "key": "core-equipment",
+          "field": "media.3",
+          "status": "hidden"
+        },
+        {
+          "index": 31,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/footer-28.png",
+          "alt": "",
+          "key": "process",
+          "field": "",
+          "status": "click blocked",
+          "options": 0,
+          "detail": "TimeoutError: locator.click: Timeout 1300ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('img,video,[data-c"
+        },
+        {
+          "index": 32,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/footer-27.png",
+          "alt": "瑞钧中走丝",
+          "key": "process",
+          "field": "",
+          "status": "click blocked",
+          "options": 0,
+          "detail": "TimeoutError: locator.click: Timeout 1300ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('img,video,[data-c"
+        },
+        {
+          "index": 33,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/footer-01.png",
+          "alt": "",
+          "key": "process",
+          "field": "",
+          "status": "click blocked",
+          "options": 0,
+          "detail": "TimeoutError: locator.click: Timeout 1300ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('img,video,[data-c"
+        },
+        {
+          "index": 34,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/footer-03.png",
+          "alt": "",
+          "key": "process",
+          "field": "",
+          "status": "click blocked",
+          "options": 0,
+          "detail": "TimeoutError: locator.click: Timeout 1300ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('img,video,[data-c"
+        },
+        {
+          "index": 35,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/footer-02.png",
+          "alt": "",
+          "key": "process",
+          "field": "",
+          "status": "click blocked",
+          "options": 0,
+          "detail": "TimeoutError: locator.click: Timeout 1300ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('img,video,[data-c"
+        },
+        {
+          "index": 36,
+          "tag": "IMG",
+          "src": "/assets/manufacturing-psd/layers/footer-09.png",
+          "alt": "大批量采购",
+          "key": "process",
+          "field": "",
+          "status": "click blocked",
+          "options": 0,
+          "detail": "TimeoutError: locator.click: Timeout 1300ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('img,video,[data-c"
+        }
+      ]
+    },
+    {
+      "slug": "news",
+      "url": "http://127.0.0.1:4175/news",
+      "rows": [
+        {
+          "index": 0,
+          "tag": "IMG",
+          "src": "/assets/ruijun-logo.png",
+          "alt": "瑞钧智科",
+          "key": "hero",
+          "field": "",
+          "status": "no panel",
+          "options": 0,
+          "detail": ""
+        },
+        {
+          "index": 1,
+          "tag": "VIDEO",
+          "src": "",
+          "alt": "",
+          "key": "hero",
+          "field": "",
+          "status": "click blocked",
+          "options": 0,
+          "detail": "TimeoutError: locator.click: Timeout 1300ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('img,video,[data-c"
+        },
+        {
+          "index": 2,
+          "tag": "IMG",
+          "src": "",
+          "alt": "展会快闪视频分享",
+          "key": "cms-editor-article-1788339283655",
+          "field": "video_url",
+          "status": "no candidate",
+          "options": 0,
+          "detail": "选中元素\n\nvideo_url\n×\n\narticles/36 · video_url\n\n待媒体：当前没有符合该展示位置的已审核媒体或内部预览草稿。请先在媒体资产中导入并补全用途、替代文本和展示位置。\n\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        }
+      ]
+    },
+    {
+      "slug": "about",
+      "url": "http://127.0.0.1:4175/about",
+      "rows": [
+        {
+          "index": 2,
+          "tag": "IMG",
+          "src": "/assets/about-psd/hero-machine.jpg",
+          "alt": "瑞钧智科中走丝线切割机床",
+          "key": "hero",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 3,
+          "tag": "IMG",
+          "src": "/assets/psd/reason-intro-machine.png",
+          "alt": "",
+          "key": "hero",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 4,
+          "tag": "IMG",
+          "src": "/assets/about-psd/intro-building.jpg",
+          "alt": "瑞钧智科现代化厂区",
+          "key": "overview",
+          "field": "",
+          "status": "other panel",
+          "options": 0,
+          "detail": "选中元素\n\n画布元素\n×\n\npages/2 · 区块位置\n\n此为静态素材；请先在媒体资产中导入、审核并发布后再替换。"
+        },
+        {
+          "index": 5,
+          "tag": "SECTION",
+          "src": "",
+          "alt": "",
+          "key": "history",
+          "field": "",
+          "status": "other panel",
+          "options": 0,
+          "detail": "选中元素\n\nThe DevelopmentHistory of Ruijun.Zhike's Mid SpeedWire Manufacturing瑞钧智科的中走丝制造历史\n×\n\npages/2 · 区块位置\n\n此为静态素材；请先在媒体资产中导入、审核并发布后再替换。"
+        },
+        {
+          "index": 6,
+          "tag": "IMG",
+          "src": "/assets/about-psd/history-guide-wheel.png",
+          "alt": "时间轴导航",
+          "key": "history",
+          "field": "",
+          "status": "no panel",
+          "options": 0,
+          "detail": ""
+        },
+        {
+          "index": 7,
+          "tag": "IMG",
+          "src": "/assets/about-psd/factory-01.jpg",
+          "alt": "瑞钧厂区外景一",
+          "key": "factory",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 8,
+          "tag": "IMG",
+          "src": "/assets/about-psd/factory-02.jpg",
+          "alt": "瑞钧厂区外景二",
+          "key": "factory",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 9,
+          "tag": "IMG",
+          "src": "/assets/about-psd/factory-03.jpg",
+          "alt": "瑞钧厂区外景三",
+          "key": "factory",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 10,
+          "tag": "IMG",
+          "src": "/assets/about-psd/factory-04.jpg",
+          "alt": "瑞钧厂区广场",
+          "key": "factory",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 11,
+          "tag": "IMG",
+          "src": "/assets/about-psd/certificate-07.jpg",
+          "alt": "TUV认证证书",
+          "key": "certificate-07",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 12,
+          "tag": "IMG",
+          "src": "/assets/about-psd/certificate-06.jpg",
+          "alt": "职业健康安全英文认证证书",
+          "key": "certificate-06",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 13,
+          "tag": "IMG",
+          "src": "/assets/about-psd/certificate-05.jpg",
+          "alt": "环境管理体系英文认证证书",
+          "key": "certificate-05",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 14,
+          "tag": "IMG",
+          "src": "/assets/about-psd/certificate-04.jpg",
+          "alt": "环境管理体系认证证书",
+          "key": "certificate-04",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 15,
+          "tag": "IMG",
+          "src": "/assets/about-psd/certificate-03.jpg",
+          "alt": "质量管理体系英文认证证书",
+          "key": "certificate-03",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 16,
+          "tag": "IMG",
+          "src": "/assets/about-psd/certificate-02.jpg",
+          "alt": "职业健康安全管理体系认证证书",
+          "key": "certificate-02",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 17,
+          "tag": "IMG",
+          "src": "/assets/about-psd/certificate-01.jpg",
+          "alt": "质量管理体系认证证书",
+          "key": "certificate-01",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 18,
+          "tag": "IMG",
+          "src": "/assets/about-psd/honor-05.jpg",
+          "alt": "行业荣誉证书",
+          "key": "honor-05",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 19,
+          "tag": "IMG",
+          "src": "/assets/about-psd/honor-04.jpg",
+          "alt": "专精特新企业证书",
+          "key": "honor-04",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 20,
+          "tag": "IMG",
+          "src": "/assets/about-psd/honor-03.jpg",
+          "alt": "企业荣誉证书",
+          "key": "honor-03",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 21,
+          "tag": "IMG",
+          "src": "/assets/about-psd/honor-02.jpg",
+          "alt": "企业技术中心证书",
+          "key": "honor-02",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 22,
+          "tag": "IMG",
+          "src": "/assets/about-psd/honor-01.jpg",
+          "alt": "高新技术企业证书",
+          "key": "honor-01",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 23,
+          "tag": "IMG",
+          "src": "/assets/about-psd/patent-08.jpg",
+          "alt": "辅助夹具专利证书",
+          "key": "patent-08",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 24,
+          "tag": "IMG",
+          "src": "/assets/about-psd/patent-07.jpg",
+          "alt": "穿丝线切割机专利证书",
+          "key": "patent-07",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 25,
+          "tag": "IMG",
+          "src": "/assets/about-psd/patent-06.jpg",
+          "alt": "钼丝筒专利证书",
+          "key": "patent-06",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 26,
+          "tag": "IMG",
+          "src": "/assets/about-psd/patent-05.jpg",
+          "alt": "喷液机构专利证书",
+          "key": "patent-05",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 27,
+          "tag": "IMG",
+          "src": "/assets/about-psd/patent-04.jpg",
+          "alt": "线切割导丝机专利证书",
+          "key": "patent-04",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 28,
+          "tag": "IMG",
+          "src": "/assets/about-psd/patent-03.jpg",
+          "alt": "精密中走丝专利证书",
+          "key": "patent-03",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 29,
+          "tag": "IMG",
+          "src": "/assets/about-psd/patent-02.jpg",
+          "alt": "回卷检测机构专利证书",
+          "key": "patent-02",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 30,
+          "tag": "IMG",
+          "src": "/assets/about-psd/patent-01.jpg",
+          "alt": "导丝机构专利证书",
+          "key": "patent-01",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 31,
+          "tag": "IMG",
+          "src": "/assets/about-psd/suppliers.jpg",
+          "alt": "瑞钧智科合作品牌与供应商",
+          "key": "partners",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 32,
+          "tag": "IMG",
+          "src": "/assets/about-psd/client-domestic-01.jpg",
+          "alt": "国内客户现场一",
+          "key": "clients-domestic",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 33,
+          "tag": "IMG",
+          "src": "/assets/about-psd/client-domestic-02.jpg",
+          "alt": "国内客户现场二",
+          "key": "clients-domestic",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 34,
+          "tag": "IMG",
+          "src": "/assets/about-psd/client-domestic-03.jpg",
+          "alt": "国内客户现场三",
+          "key": "clients-domestic",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 35,
+          "tag": "IMG",
+          "src": "/assets/about-psd/client-domestic-04.jpg",
+          "alt": "国内客户现场四",
+          "key": "clients-domestic",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 36,
+          "tag": "IMG",
+          "src": "/assets/about-psd/client-domestic-05.jpg",
+          "alt": "国内客户现场五",
+          "key": "clients-domestic",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 37,
+          "tag": "IMG",
+          "src": "/assets/about-psd/client-global-01.jpg",
+          "alt": "海外客户现场一",
+          "key": "clients-global",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 38,
+          "tag": "IMG",
+          "src": "/assets/about-psd/client-global-02.jpg",
+          "alt": "海外客户现场二",
+          "key": "clients-global",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 39,
+          "tag": "IMG",
+          "src": "/assets/about-psd/client-global-03.jpg",
+          "alt": "海外客户现场三",
+          "key": "clients-global",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 40,
+          "tag": "IMG",
+          "src": "/assets/about-psd/client-global-04.jpg",
+          "alt": "海外客户现场四",
+          "key": "clients-global",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 41,
+          "tag": "IMG",
+          "src": "/assets/about-psd/client-global-05.jpg",
+          "alt": "海外客户现场五",
+          "key": "clients-global",
+          "field": "",
+          "status": "hidden"
+        },
+        {
+          "index": 42,
+          "tag": "IMG",
+          "src": "/assets/psd-footer/layer-28.png",
+          "alt": "",
+          "key": "site-footer",
+          "field": "",
+          "status": "click blocked",
+          "options": 0,
+          "detail": "TimeoutError: locator.click: Timeout 1300ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('img,video,[data-c"
+        },
+        {
+          "index": 43,
+          "tag": "IMG",
+          "src": "/assets/ruijun-logo.png",
+          "alt": "瑞钧中走丝",
+          "key": "site-footer",
+          "field": "brand.footer_logo_asset",
+          "status": "no candidate",
+          "options": 0,
+          "detail": "选中元素\n\nbrand.footer_logo_asset\n×\n\nsite_settings/1 · brand.footer_logo_asset\n\n待媒体：当前没有符合该展示位置的已审核媒体或内部预览草稿。请先在媒体资产中导入并补全用途、替代文本和展示位置。\n\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        },
+        {
+          "index": 44,
+          "tag": "IMG",
+          "src": "/assets/psd-footer/layer-01.png",
+          "alt": "",
+          "key": "site-footer",
+          "field": "footer.address_icon_asset",
+          "status": "no candidate",
+          "options": 0,
+          "detail": "选中元素\n\nfooter.address_icon_asset\n×\n\nsite_settings/1 · footer.address_icon_asset\n\n待媒体：当前没有符合该展示位置的已审核媒体或内部预览草稿。请先在媒体资产中导入并补全用途、替代文本和展示位置。\n\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        },
+        {
+          "index": 45,
+          "tag": "IMG",
+          "src": "/assets/psd-footer/layer-03.png",
+          "alt": "",
+          "key": "site-footer",
+          "field": "footer.phone_icon_asset",
+          "status": "no candidate",
+          "options": 0,
+          "detail": "选中元素\n\nfooter.phone_icon_asset\n×\n\nsite_settings/1 · footer.phone_icon_asset\n\n待媒体：当前没有符合该展示位置的已审核媒体或内部预览草稿。请先在媒体资产中导入并补全用途、替代文本和展示位置。\n\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        },
+        {
+          "index": 46,
+          "tag": "IMG",
+          "src": "/assets/psd-footer/layer-02.png",
+          "alt": "",
+          "key": "site-footer",
+          "field": "footer.email_icon_asset",
+          "status": "no candidate",
+          "options": 0,
+          "detail": "选中元素\n\nfooter.email_icon_asset\n×\n\nsite_settings/1 · footer.email_icon_asset\n\n待媒体：当前没有符合该展示位置的已审核媒体或内部预览草稿。请先在媒体资产中导入并补全用途、替代文本和展示位置。\n\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        },
+        {
+          "index": 47,
+          "tag": "IMG",
+          "src": "/assets/psd-footer/layer-09.png",
+          "alt": "",
+          "key": "site-footer",
+          "field": "",
+          "status": "click blocked",
+          "options": 0,
+          "detail": "TimeoutError: locator.click: Timeout 1300ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('img,video,[data-c"
+        }
+      ]
+    },
+    {
+      "slug": "service",
+      "rows": [
+        {
+          "index": 1,
+          "tag": "SECTION",
+          "src": "",
+          "alt": "",
+          "key": "hero",
+          "field": "",
+          "status": "no panel",
+          "options": 0,
+          "detail": ""
+        },
+        {
+          "index": 2,
+          "tag": "IMG",
+          "src": "/assets/service-model-icon.png",
+          "alt": "",
+          "key": "support-models",
+          "field": "items.0.image",
+          "status": "no candidate",
+          "options": 0,
+          "detail": "选中元素\n\nitems.0.image\n×\n\npages/3 · sections[support-models].items.0.image\n\n待媒体：当前没有符合该展示位置的已审核媒体或内部预览草稿。请先在媒体资产中导入并补全用途、替代文本和展示位置。\n\n当前第 1 项，共 9 项\n复制\n删除\n上移\n下移\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        },
+        {
+          "index": 3,
+          "tag": "IMG",
+          "src": "/assets/service-model-icon.png",
+          "alt": "",
+          "key": "support-models",
+          "field": "items.1.image",
+          "status": "no candidate",
+          "options": 0,
+          "detail": "选中元素\n\nitems.1.image\n×\n\npages/3 · sections[support-models].items.1.image\n\n待媒体：当前没有符合该展示位置的已审核媒体或内部预览草稿。请先在媒体资产中导入并补全用途、替代文本和展示位置。\n\n当前第 2 项，共 9 项\n复制\n删除\n上移\n下移\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        },
+        {
+          "index": 4,
+          "tag": "IMG",
+          "src": "/assets/service-model-icon.png",
+          "alt": "",
+          "key": "support-models",
+          "field": "items.2.image",
+          "status": "no candidate",
+          "options": 0,
+          "detail": "选中元素\n\nitems.2.image\n×\n\npages/3 · sections[support-models].items.2.image\n\n待媒体：当前没有符合该展示位置的已审核媒体或内部预览草稿。请先在媒体资产中导入并补全用途、替代文本和展示位置。\n\n当前第 3 项，共 9 项\n复制\n删除\n上移\n下移\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        },
+        {
+          "index": 5,
+          "tag": "IMG",
+          "src": "/assets/service-model-icon.png",
+          "alt": "",
+          "key": "support-models",
+          "field": "items.3.image",
+          "status": "no candidate",
+          "options": 0,
+          "detail": "选中元素\n\nitems.3.image\n×\n\npages/3 · sections[support-models].items.3.image\n\n待媒体：当前没有符合该展示位置的已审核媒体或内部预览草稿。请先在媒体资产中导入并补全用途、替代文本和展示位置。\n\n当前第 4 项，共 9 项\n复制\n删除\n上移\n下移\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        },
+        {
+          "index": 6,
+          "tag": "IMG",
+          "src": "/assets/service-model-icon.png",
+          "alt": "",
+          "key": "support-models",
+          "field": "items.4.image",
+          "status": "no candidate",
+          "options": 0,
+          "detail": "选中元素\n\nitems.4.image\n×\n\npages/3 · sections[support-models].items.4.image\n\n待媒体：当前没有符合该展示位置的已审核媒体或内部预览草稿。请先在媒体资产中导入并补全用途、替代文本和展示位置。\n\n当前第 5 项，共 9 项\n复制\n删除\n上移\n下移\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        },
+        {
+          "index": 7,
+          "tag": "IMG",
+          "src": "/assets/service-model-icon.png",
+          "alt": "",
+          "key": "support-models",
+          "field": "items.5.image",
+          "status": "no candidate",
+          "options": 0,
+          "detail": "选中元素\n\nitems.5.image\n×\n\npages/3 · sections[support-models].items.5.image\n\n待媒体：当前没有符合该展示位置的已审核媒体或内部预览草稿。请先在媒体资产中导入并补全用途、替代文本和展示位置。\n\n当前第 6 项，共 9 项\n复制\n删除\n上移\n下移\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        },
+        {
+          "index": 8,
+          "tag": "IMG",
+          "src": "/assets/service-model-icon.png",
+          "alt": "",
+          "key": "support-models",
+          "field": "items.6.image",
+          "status": "no candidate",
+          "options": 0,
+          "detail": "选中元素\n\nitems.6.image\n×\n\npages/3 · sections[support-models].items.6.image\n\n待媒体：当前没有符合该展示位置的已审核媒体或内部预览草稿。请先在媒体资产中导入并补全用途、替代文本和展示位置。\n\n当前第 7 项，共 9 项\n复制\n删除\n上移\n下移\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        },
+        {
+          "index": 9,
+          "tag": "IMG",
+          "src": "/assets/service-model-icon.png",
+          "alt": "",
+          "key": "support-models",
+          "field": "items.7.image",
+          "status": "no candidate",
+          "options": 0,
+          "detail": "选中元素\n\nitems.7.image\n×\n\npages/3 · sections[support-models].items.7.image\n\n待媒体：当前没有符合该展示位置的已审核媒体或内部预览草稿。请先在媒体资产中导入并补全用途、替代文本和展示位置。\n\n当前第 8 项，共 9 项\n复制\n删除\n上移\n下移\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        },
+        {
+          "index": 10,
+          "tag": "IMG",
+          "src": "/assets/service-model-icon.png",
+          "alt": "",
+          "key": "support-models",
+          "field": "items.8.image",
+          "status": "no candidate",
+          "options": 0,
+          "detail": "选中元素\n\nitems.8.image\n×\n\npages/3 · sections[support-models].items.8.image\n\n待媒体：当前没有符合该展示位置的已审核媒体或内部预览草稿。请先在媒体资产中导入并补全用途、替代文本和展示位置。\n\n当前第 9 项，共 9 项\n复制\n删除\n上移\n下移\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        },
+        {
+          "index": 11,
+          "tag": "IMG",
+          "src": "/assets/service-action-1.png?v=20260812c",
+          "alt": "",
+          "key": "support-actions",
+          "field": "media.0",
+          "status": "media options",
+          "options": 9,
+          "detail": "选中元素\n\nmedia.0\n×\n\npages/3 · sections[support-actions].media.0\n\n媒体替换\n选择媒体\n服务入口图标 - 我的维修申请 · service-action-1.png · image/png\n服务入口图标 - 保修状态验核 · service-action-2.png · image/png\n服务入口图标 - 服务流程与寄修 · service-action-3.png · image/png\n服务入口图标 - 视频教学 · service-action-4.p"
+        },
+        {
+          "index": 12,
+          "tag": "IMG",
+          "src": "/assets/service-action-2.png?v=20260812c",
+          "alt": "",
+          "key": "support-actions",
+          "field": "media.1",
+          "status": "media options",
+          "options": 9,
+          "detail": "选中元素\n\nmedia.1\n×\n\npages/3 · sections[support-actions].media.1\n\n媒体替换\n选择媒体\n服务入口图标 - 我的维修申请 · service-action-1.png · image/png\n服务入口图标 - 保修状态验核 · service-action-2.png · image/png\n服务入口图标 - 服务流程与寄修 · service-action-3.png · image/png\n服务入口图标 - 视频教学 · service-action-4.p"
+        },
+        {
+          "index": 13,
+          "tag": "IMG",
+          "src": "/assets/service-action-3.png?v=20260812c",
+          "alt": "",
+          "key": "support-actions",
+          "field": "media.2",
+          "status": "media options",
+          "options": 9,
+          "detail": "选中元素\n\nmedia.2\n×\n\npages/3 · sections[support-actions].media.2\n\n媒体替换\n选择媒体\n服务入口图标 - 我的维修申请 · service-action-1.png · image/png\n服务入口图标 - 保修状态验核 · service-action-2.png · image/png\n服务入口图标 - 服务流程与寄修 · service-action-3.png · image/png\n服务入口图标 - 视频教学 · service-action-4.p"
+        },
+        {
+          "index": 14,
+          "tag": "IMG",
+          "src": "/assets/service-action-4.png?v=20260812c",
+          "alt": "",
+          "key": "support-actions",
+          "field": "media.3",
+          "status": "media options",
+          "options": 9,
+          "detail": "选中元素\n\nmedia.3\n×\n\npages/3 · sections[support-actions].media.3\n\n媒体替换\n选择媒体\n服务入口图标 - 我的维修申请 · service-action-1.png · image/png\n服务入口图标 - 保修状态验核 · service-action-2.png · image/png\n服务入口图标 - 服务流程与寄修 · service-action-3.png · image/png\n服务入口图标 - 视频教学 · service-action-4.p"
+        },
+        {
+          "index": 15,
+          "tag": "IMG",
+          "src": "/assets/service-action-5.png?v=20260812c",
+          "alt": "",
+          "key": "support-actions",
+          "field": "media.4",
+          "status": "media options",
+          "options": 9,
+          "detail": "选中元素\n\nmedia.4\n×\n\npages/3 · sections[support-actions].media.4\n\n媒体替换\n选择媒体\n服务入口图标 - 我的维修申请 · service-action-1.png · image/png\n服务入口图标 - 保修状态验核 · service-action-2.png · image/png\n服务入口图标 - 服务流程与寄修 · service-action-3.png · image/png\n服务入口图标 - 视频教学 · service-action-4.p"
+        },
+        {
+          "index": 16,
+          "tag": "IMG",
+          "src": "/assets/service-action-6.png?v=20260812c",
+          "alt": "",
+          "key": "support-actions",
+          "field": "media.5",
+          "status": "media options",
+          "options": 9,
+          "detail": "选中元素\n\nmedia.5\n×\n\npages/3 · sections[support-actions].media.5\n\n媒体替换\n选择媒体\n服务入口图标 - 我的维修申请 · service-action-1.png · image/png\n服务入口图标 - 保修状态验核 · service-action-2.png · image/png\n服务入口图标 - 服务流程与寄修 · service-action-3.png · image/png\n服务入口图标 - 视频教学 · service-action-4.p"
+        },
+        {
+          "index": 17,
+          "tag": "IMG",
+          "src": "/assets/service-action-7.png?v=20260812c",
+          "alt": "",
+          "key": "support-actions",
+          "field": "media.6",
+          "status": "media options",
+          "options": 9,
+          "detail": "选中元素\n\nmedia.6\n×\n\npages/3 · sections[support-actions].media.6\n\n媒体替换\n选择媒体\n服务入口图标 - 我的维修申请 · service-action-1.png · image/png\n服务入口图标 - 保修状态验核 · service-action-2.png · image/png\n服务入口图标 - 服务流程与寄修 · service-action-3.png · image/png\n服务入口图标 - 视频教学 · service-action-4.p"
+        },
+        {
+          "index": 18,
+          "tag": "IMG",
+          "src": "/assets/service-action-8.png?v=20260812c",
+          "alt": "",
+          "key": "support-actions",
+          "field": "media.7",
+          "status": "media options",
+          "options": 9,
+          "detail": "选中元素\n\nmedia.7\n×\n\npages/3 · sections[support-actions].media.7\n\n媒体替换\n选择媒体\n服务入口图标 - 我的维修申请 · service-action-1.png · image/png\n服务入口图标 - 保修状态验核 · service-action-2.png · image/png\n服务入口图标 - 服务流程与寄修 · service-action-3.png · image/png\n服务入口图标 - 视频教学 · service-action-4.p"
+        },
+        {
+          "index": 19,
+          "tag": "IMG",
+          "src": "/assets/service-office-region-1.jpg",
+          "alt": "外贸商务办事处",
+          "key": "office-directory",
+          "field": "items.0.image",
+          "status": "media options",
+          "options": 11,
+          "detail": "选中元素\n\nitems.0.image\n×\n\npages/3 · sections[office-directory].items.0.image\n\n媒体替换\n选择媒体\n服务支持办事处地区图片 1 · service-office-region-1.jpg · image/jpeg\n服务支持办事处地区图片 10 · service-office-region-10.jpg · image/jpeg\n服务支持办事处地区图片 2 · service-office-region-2.jpg · image/jpeg\n服务"
+        },
+        {
+          "index": 20,
+          "tag": "IMG",
+          "src": "/assets/service-office-map.jpg",
+          "alt": "外贸商务位置地图",
+          "key": "office-directory",
+          "field": "items.0.map",
+          "status": "media options",
+          "options": 2,
+          "detail": "选中元素\n\nitems.0.map\n×\n\npages/3 · sections[office-directory].items.0.map\n\n媒体替换\n选择媒体\n服务支持办事处地图 · service-office-map.jpg · image/jpeg\n\n草稿素材只在已登录后台的实时预览中显示；保存的内容草稿不能提交发布，直到所用素材已审核发布。\n\n当前第 1 项，共 10 项\n复制\n删除\n上移\n下移\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt "
+        },
+        {
+          "index": 21,
+          "tag": "IMG",
+          "src": "/assets/service-office-region-2.jpg",
+          "alt": "长三角区办事处",
+          "key": "office-directory",
+          "field": "items.1.image",
+          "status": "media options",
+          "options": 11,
+          "detail": "选中元素\n\nitems.1.image\n×\n\npages/3 · sections[office-directory].items.1.image\n\n媒体替换\n选择媒体\n服务支持办事处地区图片 1 · service-office-region-1.jpg · image/jpeg\n服务支持办事处地区图片 10 · service-office-region-10.jpg · image/jpeg\n服务支持办事处地区图片 2 · service-office-region-2.jpg · image/jpeg\n服务"
+        },
+        {
+          "index": 22,
+          "tag": "IMG",
+          "src": "/assets/service-office-region-3.jpg",
+          "alt": "珠三角区办事处",
+          "key": "office-directory",
+          "field": "items.2.image",
+          "status": "media options",
+          "options": 11,
+          "detail": "选中元素\n\nitems.2.image\n×\n\npages/3 · sections[office-directory].items.2.image\n\n媒体替换\n选择媒体\n服务支持办事处地区图片 1 · service-office-region-1.jpg · image/jpeg\n服务支持办事处地区图片 10 · service-office-region-10.jpg · image/jpeg\n服务支持办事处地区图片 2 · service-office-region-2.jpg · image/jpeg\n服务"
+        },
+        {
+          "index": 23,
+          "tag": "IMG",
+          "src": "/assets/service-office-region-4.jpg",
+          "alt": "浙江地区办事处",
+          "key": "office-directory",
+          "field": "items.3.image",
+          "status": "media options",
+          "options": 11,
+          "detail": "选中元素\n\nitems.3.image\n×\n\npages/3 · sections[office-directory].items.3.image\n\n媒体替换\n选择媒体\n服务支持办事处地区图片 1 · service-office-region-1.jpg · image/jpeg\n服务支持办事处地区图片 10 · service-office-region-10.jpg · image/jpeg\n服务支持办事处地区图片 2 · service-office-region-2.jpg · image/jpeg\n服务"
+        },
+        {
+          "index": 24,
+          "tag": "IMG",
+          "src": "/assets/service-office-region-5.jpg",
+          "alt": "华中地区办事处",
+          "key": "office-directory",
+          "field": "items.4.image",
+          "status": "media options",
+          "options": 11,
+          "detail": "选中元素\n\nitems.4.image\n×\n\npages/3 · sections[office-directory].items.4.image\n\n媒体替换\n选择媒体\n服务支持办事处地区图片 1 · service-office-region-1.jpg · image/jpeg\n服务支持办事处地区图片 10 · service-office-region-10.jpg · image/jpeg\n服务支持办事处地区图片 2 · service-office-region-2.jpg · image/jpeg\n服务"
+        },
+        {
+          "index": 25,
+          "tag": "IMG",
+          "src": "/assets/service-office-region-6.jpg",
+          "alt": "西南地区办事处",
+          "key": "office-directory",
+          "field": "items.5.image",
+          "status": "media options",
+          "options": 11,
+          "detail": "选中元素\n\nitems.5.image\n×\n\npages/3 · sections[office-directory].items.5.image\n\n媒体替换\n选择媒体\n服务支持办事处地区图片 1 · service-office-region-1.jpg · image/jpeg\n服务支持办事处地区图片 10 · service-office-region-10.jpg · image/jpeg\n服务支持办事处地区图片 2 · service-office-region-2.jpg · image/jpeg\n服务"
+        },
+        {
+          "index": 26,
+          "tag": "IMG",
+          "src": "/assets/service-office-region-7.jpg",
+          "alt": "华北地区办事处",
+          "key": "office-directory",
+          "field": "items.6.image",
+          "status": "media options",
+          "options": 11,
+          "detail": "选中元素\n\nitems.6.image\n×\n\npages/3 · sections[office-directory].items.6.image\n\n媒体替换\n选择媒体\n服务支持办事处地区图片 1 · service-office-region-1.jpg · image/jpeg\n服务支持办事处地区图片 10 · service-office-region-10.jpg · image/jpeg\n服务支持办事处地区图片 2 · service-office-region-2.jpg · image/jpeg\n服务"
+        },
+        {
+          "index": 27,
+          "tag": "IMG",
+          "src": "/assets/service-office-region-8.jpg",
+          "alt": "山东地区办事处",
+          "key": "office-directory",
+          "field": "items.7.image",
+          "status": "media options",
+          "options": 11,
+          "detail": "选中元素\n\nitems.7.image\n×\n\npages/3 · sections[office-directory].items.7.image\n\n媒体替换\n选择媒体\n服务支持办事处地区图片 1 · service-office-region-1.jpg · image/jpeg\n服务支持办事处地区图片 10 · service-office-region-10.jpg · image/jpeg\n服务支持办事处地区图片 2 · service-office-region-2.jpg · image/jpeg\n服务"
+        },
+        {
+          "index": 28,
+          "tag": "IMG",
+          "src": "/assets/service-office-region-9.jpg",
+          "alt": "东北地区办事处",
+          "key": "office-directory",
+          "field": "items.8.image",
+          "status": "media options",
+          "options": 11,
+          "detail": "选中元素\n\nitems.8.image\n×\n\npages/3 · sections[office-directory].items.8.image\n\n媒体替换\n选择媒体\n服务支持办事处地区图片 1 · service-office-region-1.jpg · image/jpeg\n服务支持办事处地区图片 10 · service-office-region-10.jpg · image/jpeg\n服务支持办事处地区图片 2 · service-office-region-2.jpg · image/jpeg\n服务"
+        },
+        {
+          "index": 29,
+          "tag": "IMG",
+          "src": "/assets/service-office-region-10.jpg",
+          "alt": "西北地区办事处",
+          "key": "office-directory",
+          "field": "items.9.image",
+          "status": "media options",
+          "options": 11,
+          "detail": "选中元素\n\nitems.9.image\n×\n\npages/3 · sections[office-directory].items.9.image\n\n媒体替换\n选择媒体\n服务支持办事处地区图片 1 · service-office-region-1.jpg · image/jpeg\n服务支持办事处地区图片 10 · service-office-region-10.jpg · image/jpeg\n服务支持办事处地区图片 2 · service-office-region-2.jpg · image/jpeg\n服务"
+        },
+        {
+          "index": 30,
+          "tag": "IMG",
+          "src": "/assets/psd-footer/layer-28.png",
+          "alt": "",
+          "key": "site-footer",
+          "field": "",
+          "status": "click blocked",
+          "options": 0,
+          "detail": "TimeoutError: locator.click: Timeout 1300ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('img,video,[data-c"
+        },
+        {
+          "index": 31,
+          "tag": "IMG",
+          "src": "/assets/ruijun-logo.png",
+          "alt": "瑞钧中走丝",
+          "key": "site-footer",
+          "field": "brand.footer_logo_asset",
+          "status": "no candidate",
+          "options": 0,
+          "detail": "选中元素\n\nbrand.footer_logo_asset\n×\n\nsite_settings/1 · brand.footer_logo_asset\n\n待媒体：当前没有符合该展示位置的已审核媒体或内部预览草稿。请先在媒体资产中导入并补全用途、替代文本和展示位置。\n\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        },
+        {
+          "index": 32,
+          "tag": "IMG",
+          "src": "/assets/psd-footer/layer-01.png",
+          "alt": "",
+          "key": "site-footer",
+          "field": "footer.address_icon_asset",
+          "status": "no candidate",
+          "options": 0,
+          "detail": "选中元素\n\nfooter.address_icon_asset\n×\n\nsite_settings/1 · footer.address_icon_asset\n\n待媒体：当前没有符合该展示位置的已审核媒体或内部预览草稿。请先在媒体资产中导入并补全用途、替代文本和展示位置。\n\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        },
+        {
+          "index": 33,
+          "tag": "IMG",
+          "src": "/assets/psd-footer/layer-03.png",
+          "alt": "",
+          "key": "site-footer",
+          "field": "footer.phone_icon_asset",
+          "status": "no candidate",
+          "options": 0,
+          "detail": "选中元素\n\nfooter.phone_icon_asset\n×\n\nsite_settings/1 · footer.phone_icon_asset\n\n待媒体：当前没有符合该展示位置的已审核媒体或内部预览草稿。请先在媒体资产中导入并补全用途、替代文本和展示位置。\n\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        },
+        {
+          "index": 34,
+          "tag": "IMG",
+          "src": "/assets/psd-footer/layer-02.png",
+          "alt": "",
+          "key": "site-footer",
+          "field": "footer.email_icon_asset",
+          "status": "no candidate",
+          "options": 0,
+          "detail": "选中元素\n\nfooter.email_icon_asset\n×\n\nsite_settings/1 · footer.email_icon_asset\n\n待媒体：当前没有符合该展示位置的已审核媒体或内部预览草稿。请先在媒体资产中导入并补全用途、替代文本和展示位置。\n\n水平偏移\n垂直偏移\n字号\n字重\n正常\n中等\n半粗\n粗体\n行高\n文字颜色\n\n只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。"
+        },
+        {
+          "index": 35,
+          "tag": "IMG",
+          "src": "/assets/psd-footer/layer-09.png",
+          "alt": "",
+          "key": "site-footer",
+          "field": "",
+          "status": "click blocked",
+          "options": 0,
+          "detail": "TimeoutError: locator.click: Timeout 1300ms exceeded.\nCall log:\n\u001b[2m  - waiting for locator('img,video,[data-c"
+        }
+      ]
+    }
+  ]
+}

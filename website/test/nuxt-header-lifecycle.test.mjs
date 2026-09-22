@@ -12,6 +12,9 @@ test('Nuxt header reserves its compact state for landing-page opening sequences'
   assert.match(component, /compactPanelSelectors/);
   assert.match(component, /const videoNewsNavigation = \{ label: '视频新闻', href: '\/news' \}/);
   assert.match(component, /items\.some\(\(item\) => item\.href === videoNewsNavigation\.href\)/);
+  assert.match(component, /hasExplicitNavigation/);
+  assert.match(component, /languageLabel = computed/);
+  assert.match(component, /:aria-label="`切换语言，当前显示 \$\{languageLabel\}`"/);
   assert.match(component, /'\/product'/);
   assert.match(component, /'\/manufacturing'/);
   assert.match(component, /'\/about'/);

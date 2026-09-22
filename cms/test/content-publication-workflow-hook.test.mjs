@@ -37,13 +37,13 @@ test('content publication hook removes forged audit fields and forces a server-g
   assert.equal(result.publication_log.at(-1).action, 'submitted_for_review');
 });
 
-test('content publication hook prevents a reviewer from approving content outside their role scope', async () => {
+test('content publication hook allows unified review management to approve product drafts', async () => {
   const hooks = new Map();
   registerContentPublicationWorkflowHook({ filter: (event, handler) => hooks.set(event, handler) });
-  await assert.rejects(
-    hooks.get('product_models.items.update')({ status: 'scheduled' }, { keys: ['page-1'] }, hookContext({ roleName: '审核管理', record: { id: 'page-1', status: 'review', publication_state: 'unpublished' } })),
-    /cannot review this content type/
+  const result = await hooks.get('product_models.items.update')(
+    { status: 'scheduled' }, { keys: ['page-1'] }, hookContext({ roleName: '审核管理', record: { id: 'page-1', status: 'review', publication_state: 'unpublished' } })
   );
+  assert.equal(result.status, 'scheduled');
 });
 
 test('content publication hook forces newly created content to a draft and blocks reviewer-created records', async () => {

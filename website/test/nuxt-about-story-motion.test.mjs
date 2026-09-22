@@ -16,6 +16,18 @@ test('Nuxt about page joins the opening story into one desktop scroll compositio
   assert.match(page, /height:200svh/);
   assert.match(page, /data-about-panel/);
   assert.match(page, /class="legacy-copy"/);
+  assert.match(page, /const heroBackdropStyle = computed/);
+  assert.match(page, /:style="heroBackdropStyle"/);
+  assert.match(page, /about-psd\/banner\.jpg/);
+  assert.match(page, /const brandStoryKicker = computed\(\(\) => sectionText\('brand-story', 'kicker', 'Since'\)\)/);
+  assert.match(page, /const brandStoryYear = computed\(\(\) => sectionText\('brand-story', 'description', '1997'\)\)/);
+  assert.match(page, /<span[^>]*data-cms-preview-field-path="kicker"[^>]*>\{\{ brandStoryKicker \}\}<\/span><strong[^>]*data-cms-preview-field-path="description"[^>]*>\{\{ brandStoryYear \}\}<\/strong>/);
+  assert.match(page, /class="legacy-story(?:\s|")/);
+  assert.match(page, /aria-labelledby="brand-story-title"/);
+  assert.match(page, /上世纪 90 年代初，二十来岁的年轻兄弟俩立足温州/);
+  assert.match(page, /2023 年斥资数亿元在常熟建设 4\.0 智慧工厂/);
+  assert.match(page, /const brandStoryTitle = computed\(\(\) => sectionText\('brand-story', 'title', '品牌故事'\)\)/);
+  assert.match(page, /<h2 id="brand-story-title"[^>]*>\{\{ brandStoryTitle \}\}<\/h2>/);
   assert.match(page, /ScrollTrigger\.create\(/);
   assert.match(page, /trigger: legacySection,\s*start: 'top 88%',\s*end: 'bottom 16%',\s*scrub: 1\.2,\s*invalidateOnRefresh: true/s);
   assert.match(page, /const sinceProgress =/);
@@ -31,6 +43,21 @@ test('Nuxt about page joins the opening story into one desktop scroll compositio
   assert.match(page, /\.about-story,\.about-overview\{background:#fbfaf7\}/);
   assert.match(page, /\.about-story \.legacy\{isolation:isolate;contain:paint;clip-path:inset\(0\)\}/);
   assert.match(page, /\.about-overview\{position:relative;z-index:2;isolation:isolate\}/);
+});
+
+test('desktop-visible about hero backdrop carries the complete visual editing record context', async () => {
+  const page = await readFile(new URL('../pages/about.vue', import.meta.url), 'utf8');
+  const backdrop = page.match(/<div ref="storyBackdrop"[^>]*>/)?.[0] || '';
+  assert.match(backdrop, /:data-cms-preview-collection="heroContent\.cms_collection \|\| undefined"/);
+  assert.match(backdrop, /:data-cms-preview-item-id="heroContent\.cms_item_id \|\| undefined"/);
+  assert.match(backdrop, /data-cms-preview-key="hero"/);
+  assert.match(backdrop, /:data-cms-preview-field-path="heroBackdrop\.fieldPath"/);
+  assert.match(backdrop, /data-cms-preview-media-role="background"/);
+  assert.match(backdrop, /data-cms-preview-media-slot="background"/);
+  assert.match(backdrop, /data-cms-preview-allow-default="true"/);
+  assert.match(page, /const binding = pageSectionMediaBinding\(0\)/);
+  assert.match(page, /html\[data-cms-preview-edit-mode="true"\] \.about-story>section\{pointer-events:none\}/);
+  assert.match(page, /html\[data-cms-preview-edit-mode="true"\] \.about-story>section \[data-cms-preview-editable="true"\]\{pointer-events:auto\}/);
 });
 
 test('Nuxt about page retains every legacy content chapter and its dedicated footer', async () => {
@@ -65,6 +92,7 @@ test('Nuxt about page retains every legacy content chapter and its dedicated foo
   for (const year of ['1997', '2003', '2006', '2014', '2016', '2025']) {
     assert.match(page, new RegExp(`'${year}'`));
   }
+  assert.match(page, /\['2025', '启用瑞钧智科', '常熟基地'\]/);
   assert.doesNotMatch(page, /class="history-guide"/);
   assert.match(page, /Observer\.create/);
   assert.match(page, /historyBoundaryDistance/);
@@ -80,7 +108,31 @@ test('Nuxt about page retains every legacy content chapter and its dedicated foo
   assert.doesNotMatch(page, /Forerunner in/);
   assert.match(page, /client-domestic-/);
   assert.match(page, /client-global-/);
+  assert.match(page, /openGallery\(domesticClients, index, domesticClientsContent\.title\)/);
+  assert.match(page, /openGallery\(globalClients, index, globalClientsContent\.title\)/);
+  assert.match(page, /factoryGalleryAssets\(findAboutSection\('factory'\), fallbackFactoryGallery\)/);
+  assert.match(page, /:data-cms-preview-media-slot="asset.mediaSlot"/);
+  assert.match(page, /partnerGalleryAssets\(findAboutSection\('partners'\)/);
+  assert.match(page, /clientGalleryAssets\(findAboutSection\('clients-domestic'\), fallbackDomesticClients\)/);
+  assert.match(page, /clientGalleryAssets\(findAboutSection\('clients-global'\), fallbackGlobalClients\)/);
+  assert.match(page, /累计数万用户/);
+  assert.doesNotMatch(page, /20000\+/);
+  assert.match(page, /text-indent: 2em; text-align: justify/);
   assert.match(indicator, /关于我们页面段落导航/);
   assert.match(indicator, /ScrollToPlugin/);
   assert.match(indicator, /about-panel-jump/);
+  assert.match(indicator, /document\.documentElement\.dataset\.aboutPanelJump = 'true'/);
+  assert.match(indicator, /delete document\.documentElement\.dataset\.aboutPanelJump/);
+  assert.match(page, /document\.documentElement\.dataset\.aboutPanelJump === 'true'/);
+  assert.match(page, /if \(targetPanel === panel\) return;/);
+  assert.match(page, /gsap\.killTweensOf\(window\);\s*historyObserver\.disable\(\);/);
+  assert.doesNotMatch(page, /if \(!historyActive \|\| targetPanel === panel\) return;/);
+});
+
+test('about record-backed qualifications are editable while unowned PSD fallbacks stay read-only', async () => {
+  const page = await readFile(new URL('../pages/about.vue', import.meta.url), 'utf8');
+  assert.match(page, /qualificationAssetBinding\(qualification, asset\.sourceIndex \?\? assetIndex\)/);
+  assert.match(page, /return assets\.length \? assets : fallback/);
+  assert.match(page, /asset\.managed === true \? binding\?\.fieldPath : undefined/);
+  assert.match(page, /asset\.managed === true && typeof asset\.path === 'string'/);
 });

@@ -1,4 +1,5 @@
 import { CMS_PREVIEW_SESSION_TTL_MS, useCmsPreviewSessionStore } from './cms-preview-session-store.mjs';
+import { decoratePreviewMedia } from './cms-preview-media.mjs';
 
 export class CmsPreviewError extends Error {
   constructor(message, { status = 502, code = 'PREVIEW_UPSTREAM_ERROR' } = {}) {
@@ -58,15 +59,20 @@ export function createCmsPreviewReader({ consumeEndpoint, accessToken = '', fetc
     return {
       collection: String(data.content_collection),
       itemId: String(data.content_item_id),
-      preview: data.preview,
+      preview: decoratePreviewMedia(data.preview),
       expiresAt: new Date(expiresAt).toISOString()
     };
   }
 
-  async function createSession(rawToken) {
+  async function createSession(rawToken, context = {}) {
     const payload = await consume(rawToken);
-    const session = sessionStore.create(payload);
-    return { ...session, collection: payload.collection, itemId: payload.itemId };
+    const sectionKey = typeof context?.sectionKey === 'string' && /^[a-z0-9][a-z0-9-]{0,79}$/.test(context.sectionKey)
+      ? context.sectionKey : '';
+    const data = sectionKey && (payload.collection === 'pages' || (payload.collection === 'articles' && ['dynamic-news', 'video-sharing'].includes(sectionKey)))
+      ? { ...payload, targetContext: { sectionKey } }
+      : payload;
+    const session = sessionStore.create(data);
+    return { ...session, collection: data.collection, itemId: data.itemId, data };
   }
 
   return Object.freeze({ consume, createSession, sessionTtlMs: CMS_PREVIEW_SESSION_TTL_MS });

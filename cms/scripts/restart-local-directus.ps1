@@ -22,7 +22,7 @@ foreach ($process in $allProcesses) {
 $listener = Get-NetTCPConnection -LocalPort 8055 -State Listen -ErrorAction SilentlyContinue | Select-Object -First 1
 if ($listener) {
   $owner = $allProcesses | Where-Object { $_.ProcessId -eq $listener.OwningProcess } | Select-Object -First 1
-  if ($owner -and $owner.CommandLine -like '*directus/cli.js start*') {
+  if ($owner -and $owner.CommandLine -match 'directus[\\/]cli\.js\s+start') {
     $queue.Enqueue([int]$owner.ProcessId)
   }
 }

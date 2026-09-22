@@ -23,6 +23,9 @@ test('CMS environment template requires secrets rather than committing credentia
     assert.match(environment, new RegExp(`^${key}=<REPLACE_ME>$`, 'm'));
   }
   assert.match(environment, /^WEBSITE_CACHE_INVALIDATION_URL=https:\/\//m);
+  assert.match(environment, /^WEBSITE_PREVIEW_OPEN_URL=https:\/\//m);
+  assert.match(environment, /^CONTENT_SECURITY_POLICY_DIRECTIVES__CHILD_SRC=.*https:\/\//m);
+  assert.match(environment, /^CONTENT_SECURITY_POLICY_DIRECTIVES__FORM_ACTION=.*https:\/\//m);
   assert.match(environment, /^PRODUCT_RELEASE_CACHE_INVALIDATION_TIMEOUT_MS=5000$/m);
 });
 
@@ -36,7 +39,11 @@ test('Windows local development template keeps SQLite data and secrets outside v
   assert.match(environment, /^KEY=<REPLACE_ME>$/m);
   assert.match(environment, /^SECRET=<REPLACE_ME>$/m);
   assert.match(environment, /^CMS_WEBHOOK_SECRET=<REPLACE_ME>$/m);
-  assert.match(environment, /^WEBSITE_CACHE_INVALIDATION_URL=http:\/\/127\.0\.0\.1:4173\/api\/internal\/v1\/cms\/cache-invalidate$/m);
+  assert.match(environment, /^WEBSITE_CACHE_INVALIDATION_URL=http:\/\/127\.0\.0\.1:4175\/api\/internal\/v1\/cms\/cache-invalidate$/m);
+  assert.match(environment, /^WEBSITE_PREVIEW_OPEN_URL=http:\/\/127\.0\.0\.1:4175\/api\/preview\/open$/m);
+  assert.match(environment, /^CONTENT_SECURITY_POLICY_DIRECTIVES__CHILD_SRC=.*http:\/\/127\.0\.0\.1:4175$/m);
+  assert.match(environment, /^CONTENT_SECURITY_POLICY_DIRECTIVES__MEDIA_SRC=.*blob:.*http:\/\/127\.0\.0\.1:8055$/m);
+  assert.match(environment, /^CONTENT_SECURITY_POLICY_DIRECTIVES__FORM_ACTION=.*http:\/\/127\.0\.0\.1:4175$/m);
   assert.match(gitignore, /^\.env\.local$/m);
   assert.match(gitignore, /^data\/$/m);
   assert.match(readme, /Node\.js 22 LTS/);

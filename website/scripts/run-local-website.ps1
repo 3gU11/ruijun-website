@@ -9,6 +9,6 @@ Get-Content -LiteralPath $environmentFile | ForEach-Object {
 }
 
 $env:NITRO_HOST = '0.0.0.0'
-$env:NITRO_PORT = '4173'
+$env:NITRO_PORT = '4175'
 Set-Location $websiteRoot
 node .output/server/index.mjs

@@ -2,14 +2,7 @@ import { defineConfig } from 'vite';
 import vue from '@vitejs/plugin-vue';
 import Components from 'unplugin-vue-components/vite';
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers';
-import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-
-const certPath = resolve(__dirname, '.certs', 'repair-lan.pem');
-const keyPath = resolve(__dirname, '.certs', 'repair-lan-key.pem');
-const localHttps = existsSync(certPath) && existsSync(keyPath)
-  ? { cert: readFileSync(certPath), key: readFileSync(keyPath) }
-  : undefined;
 
 function clientHome() {
   function rewriteRoot(request, _response, next) {
@@ -38,6 +31,13 @@ function clientHome() {
 }
 
 export default defineConfig({
+  cacheDir: resolve(__dirname, 'node_modules/.vite-client'),
+  resolve: {
+    dedupe: ['vue', 'vue-router', 'element-plus']
+  },
+  optimizeDeps: {
+    include: ['vue', 'vue-router', 'element-plus', '@element-plus/icons-vue']
+  },
   plugins: [
     vue(),
     Components({ resolvers: [ElementPlusResolver({ importStyle: 'css' })] }),
@@ -48,7 +48,6 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 2888,
     strictPort: true,
-    https: localHttps,
     headers: {
       'Permissions-Policy': 'camera=(self), microphone=(), geolocation=()'
     },
@@ -58,7 +57,6 @@ export default defineConfig({
     }
   },
   preview: {
-    https: localHttps,
     headers: {
       'Permissions-Policy': 'camera=(self), microphone=(), geolocation=()'
     }

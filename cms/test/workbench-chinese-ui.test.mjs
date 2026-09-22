@@ -21,7 +21,9 @@ test('CMS workbench eyebrow labels stay in Chinese for non-technical operators',
   const modules = await Promise.all(workbenches.map((name) => readFile(new URL(`extensions/${name}/src/module.vue`, root), 'utf8')));
   const forbidden = />(?:CMS OPERATIONS|FAQ GOVERNANCE|QUICK ACTIONS|CONTENT INVENTORY|CONTENT PUBLICATION|FAQ KNOWLEDGE REVIEW|SALES INBOX|NOTIFICATION EXCEPTIONS|PRODUCT RELEASE|NEXT SNAPSHOT|ACTIVE RELEASE|RELEASE HISTORY|CONTROLLED RESTORE|PRODUCT REVIEW|PUBLICATION READINESS|SERVICE REVIEW|SERVICE ENTRY ATTRIBUTION|PUBLISH APPROVED CONTENT|WITHDRAW PUBLISHED CONTENT|ARCHIVE WITHDRAWN CONTENT)</;
   for (const module of modules) assert.doesNotMatch(module, forbidden);
-  for (const module of modules) assert.doesNotMatch(module, />[^<]*(?:CMS|FAQ)[^<]*</);
+  // Only inspect text inside one rendered tag. The previous expression crossed
+  // the template/script boundary and treated implementation comments as UI.
+  for (const module of modules) assert.doesNotMatch(module, />[^\n<>]*(?:CMS|FAQ)[^\n<>]*</);
 });
 
 test('default CMS workbenches do not expose English workflow labels or collection keys', async () => {

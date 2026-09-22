@@ -8,14 +8,15 @@ registerCmsPublicCache('pages', () => readers.clear());
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event);
   const endpoint = String(config.cmsPagesUrl || '');
+  const homepageSectionsEndpoint = String(config.cmsHomepageSectionsUrl || '');
   const mediaAssetsEndpoint = String(config.cmsMediaAssetsUrl || '');
   const publicAssetBaseUrl = String(config.cmsPublicAssetBaseUrl || '');
   const accessToken = String(config.cmsBffToken || '');
   const cacheTtlMs = Number(config.cmsPublicContentCacheTtlMs || 30_000);
-  const key = `${endpoint}:${mediaAssetsEndpoint}:${publicAssetBaseUrl}:${Boolean(accessToken)}:${cacheTtlMs}`;
+  const key = `${endpoint}:${homepageSectionsEndpoint}:${mediaAssetsEndpoint}:${publicAssetBaseUrl}:${Boolean(accessToken)}:${cacheTtlMs}`;
   let reader = readers.get(key);
   if (!reader) {
-    reader = createCmsPageReader({ endpoint, mediaAssetsEndpoint, publicAssetBaseUrl, accessToken, cacheTtlMs });
+    reader = createCmsPageReader({ endpoint, homepageSectionsEndpoint, mediaAssetsEndpoint, publicAssetBaseUrl, accessToken, cacheTtlMs });
     readers.set(key, reader);
   }
   try {

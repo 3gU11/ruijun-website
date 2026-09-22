@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
 import { normalizeLocalCmsBaseUrl, probeBuiltExtensions, verifyLocalCmsRuntime } from '../scripts/verify-local-cms-runtime.mjs';
@@ -58,4 +59,11 @@ test('local CMS runtime verification ignores directories without a Directus exte
 
   assert.equal(extensions.some((extension) => extension.name === 'media-asset-governance'), false);
   assert.equal(extensions.every((extension) => typeof extension.built === 'boolean'), true);
+});
+
+test('the local Directus launcher resolves extensions from the CMS directory', async () => {
+  const launcher = await readFile(new URL('../.codex-start-node22.ps1', import.meta.url), 'utf8');
+
+  assert.match(launcher, /Set-Location -LiteralPath \$PSScriptRoot/);
+  assert.match(launcher, /directus\\cli\.js' start/);
 });

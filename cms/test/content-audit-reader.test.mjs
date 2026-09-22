@@ -28,7 +28,7 @@ test('content audit reader receives read-only permissions only for product and s
 
   await applier.apply();
   assert.deepEqual(permissions.map((item) => [item.collection, item.action]).sort(), [
-    ['external_service_entries', 'read'], ['product_models', 'read'], ['product_parameters', 'read'], ['product_series', 'read'], ['service_locations', 'read'], ['service_resources', 'read']
+    ['external_service_entries', 'read'], ['knowledge_items', 'read'], ['product_models', 'read'], ['product_parameters', 'read'], ['product_series', 'read'], ['service_locations', 'read'], ['service_resources', 'read']
   ]);
   assert.ok(permissions.every((item) => !item.fields.includes('lead_reference') && !item.fields.includes('phone')));
 });

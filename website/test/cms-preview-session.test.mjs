@@ -17,13 +17,26 @@ test('preview session store expires opaque sessions and supports revocation', ()
   assert.equal(store.get(second.id), null);
 });
 
-test('CMS form post opens a server-side preview session before redirecting to the preview page', async () => {
+test('CMS form post opens a server-side preview session before redirecting to the real page', async () => {
   const source = await readFile(new URL('../server/api/preview/open.post.ts', import.meta.url), 'utf8');
   assert.match(source, /readBody/);
-  assert.match(source, /createSession\(body\?\.token\)/);
+  assert.match(source, /URLSearchParams/);
+  assert.match(source, /typeof rawBody === 'string'/);
+  assert.match(source, /createSession\(body\?\.token, \{ sectionKey:/);
+  assert.match(source, /targetContext\?\.sectionKey/);
   assert.match(source, /httpOnly: true/);
-  assert.match(source, /sendRedirect\(event, '\/preview', 303\)/);
+  assert.match(source, /resolveCmsPreviewTarget/);
+  assert.match(source, /previewTargetLocation/);
+  assert.match(source, /sendRedirect\(event, previewTargetLocation\(target\), 303\)/);
   assert.doesNotMatch(source, /token=.*preview/);
+});
+
+test('fragment handoff creates the CMS preview session only after reaching the website origin', async () => {
+  const source = await readFile(new URL('../pages/cms-preview-handoff.vue', import.meta.url), 'utf8');
+  assert.match(source, /cmsPreviewToken/);
+  assert.match(source, /window\.history\.replaceState/);
+  assert.match(source, /fetch\('\/api\/preview\/session'/);
+  assert.match(source, /navigateTo\(location, \{ replace: true \}\)/);
 });
 
 test('preview reader exchanges a token once and keeps CMS credentials server-side', async () => {
@@ -47,6 +60,39 @@ test('preview reader exchanges a token once and keeps CMS credentials server-sid
   assert.equal(requests[0].url, 'http://cms.test/content-preview-tokens/consume');
   assert.equal(requests[0].init.headers.Authorization, 'Bearer server-only-token');
   assert.match(requests[0].init.body, /"token":"A{48}"/);
+});
+
+test('page preview sessions retain only a validated section key for on-page scrolling', async () => {
+  const store = createCmsPreviewSessionStore({ random: () => Buffer.alloc(48, 8) });
+  const reader = createCmsPreviewReader({
+    consumeEndpoint: 'http://cms.test/content-preview-tokens/consume',
+    sessionStore: store,
+    fetchImpl: async () => new Response(JSON.stringify({ data: {
+      content_collection: 'pages', content_item_id: 'page-1', expires_at: new Date(Date.now() + 30_000).toISOString(),
+      preview: { slug: 'manufacturing', title: '制造页草稿' }
+    } }), { status: 200, headers: { 'content-type': 'application/json' } })
+  });
+  const session = await reader.createSession('C'.repeat(48), { sectionKey: 'core-equipment' });
+  assert.deepEqual(store.get(session.id).data.targetContext, { sectionKey: 'core-equipment' });
+  const rejected = await reader.createSession('D'.repeat(48), { sectionKey: 'not valid' });
+  assert.equal(store.get(rejected.id).data.targetContext, undefined);
+});
+
+test('article preview sessions permit only the fixed news list-card contexts', async () => {
+  const store = createCmsPreviewSessionStore({ random: () => Buffer.alloc(48, 9) });
+  const reader = createCmsPreviewReader({
+    consumeEndpoint: 'http://cms.test/content-preview-tokens/consume',
+    sessionStore: store,
+    fetchImpl: async () => new Response(JSON.stringify({ data: {
+      content_collection: 'articles', content_item_id: 10, expires_at: new Date(Date.now() + 30_000).toISOString(),
+      preview: { slug: 'draft-news', title: '草稿新闻' }
+    } }), { status: 200, headers: { 'content-type': 'application/json' } })
+  });
+
+  const dynamicNews = await reader.createSession('E'.repeat(48), { sectionKey: 'dynamic-news' });
+  assert.deepEqual(store.get(dynamicNews.id).data.targetContext, { sectionKey: 'dynamic-news' });
+  const unsupported = await reader.createSession('F'.repeat(48), { sectionKey: 'hero' });
+  assert.equal(store.get(unsupported.id).data.targetContext, undefined);
 });
 
 test('preview reader maps expired and replayed CMS tokens without leaking upstream text', async () => {

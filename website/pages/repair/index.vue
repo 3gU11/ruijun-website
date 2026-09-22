@@ -6,7 +6,7 @@ const cards = [
   { title: '保修查询', text: '输入机器编号，快速确认服务资格', to: '/repair/warranty' },
   { title: '维修进度', text: '查看申请审核、维修和寄回状态', to: '/repair/requests' }
 ];
-const modelOptions = ['灵动工作站', 'FR-XS(AUTO)', 'FR-XS(PRO)', 'FT-XS', 'FL-XS(PRO)', 'FR-Y', 'FR-G', 'FH-C', '定制机型'];
+const modelOptions = ['灵动工作站', 'FR-XS(auto)', 'FR-XS(pro)', 'FT-XS', 'FL-XS(pro)', 'FR-Y', 'FR-G', 'FH-C', '定制机型'];
 const target = computed(() => model.value ? `/repair/new?model=${encodeURIComponent(model.value)}` : '/repair/new');
 </script>
 <template><RepairShell title="让每一次服务，都有明确的下一步" intro="从设备识别到维修进度，官网与售后服务现在使用同一条服务链路。"><template #default>

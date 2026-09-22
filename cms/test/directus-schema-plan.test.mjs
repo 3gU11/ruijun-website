@@ -6,11 +6,28 @@ const { buildDirectusSchemaPlan } = await import('../schema/directus-schema-plan
 test('Directus schema plan materializes every CMS collection and field from the content contract', () => {
   const plan = buildDirectusSchemaPlan();
 
-  assert.equal(plan.collections.length, 24);
+  assert.equal(plan.collections.length, 33);
+  assert.equal(plan.collections.find((collection) => collection.collection === 'nav_website_home').schema, null);
+  assert.deepEqual(plan.collections.find((collection) => collection.collection === 'nav_website_home').meta.translations, [{ language: 'zh-CN', translation: '网站主页' }]);
+  assert.equal(plan.collections.find((collection) => collection.collection === 'product_series').meta.group, 'nav_product_showcase');
+  assert.equal(plan.collections.find((collection) => collection.collection === 'manufacturing_evidence').meta.group, 'nav_manufacturing');
+  assert.equal(plan.collections.find((collection) => collection.collection === 'articles').meta.group, 'nav_video_news');
+  assert.equal(plan.collections.find((collection) => collection.collection === 'milestones').meta.group, 'nav_about_ruijun');
+  assert.equal(plan.collections.find((collection) => collection.collection === 'service_resources').meta.group, 'nav_service_support');
+  assert.equal(plan.collections.find((collection) => collection.collection === 'leads').meta.group, 'nav_contact_advice');
+  assert.equal(plan.collections.find((collection) => collection.collection === 'content_versions').meta.group, 'nav_internal_management');
+  assert.equal(plan.collections.find((collection) => collection.collection === 'pages').meta.preview_url, '/content-preview-tokens/open?contentCollection=pages&contentItemId={{id}}');
+  assert.equal(plan.collections.find((collection) => collection.collection === 'homepage_sections').meta.preview_url, '/content-preview-tokens/open?contentCollection=homepage_sections&contentItemId={{id}}');
+  assert.equal(plan.collections.find((collection) => collection.collection === 'repair_page_configs').meta.preview_url, '/content-preview-tokens/open?contentCollection=repair_page_configs&contentItemId={{id}}');
+  assert.equal(plan.collections.find((collection) => collection.collection === 'leads').meta.preview_url, undefined);
   assert.deepEqual(plan.collections.find((collection) => collection.collection === 'pages').meta.translations, [{ language: 'zh-CN', translation: '页面' }]);
   assert.deepEqual(plan.collections.find((collection) => collection.collection === 'knowledge_items').meta.translations, [{ language: 'zh-CN', translation: '常见问题知识' }]);
   assert.equal(plan.fields.find((field) => field.collection === 'service_entry_clicks' && field.field === 'entry_type').type, 'string');
-  assert.equal(plan.fields.filter((field) => field.collection === 'product_models').find((field) => field.field === 'parameters').type, 'json');
+  assert.equal(plan.fields.find((field) => field.collection === 'articles' && field.field === 'sort_order').type, 'integer');
+  assert.equal(plan.fields.find((field) => field.collection === 'articles' && field.field === 'field_presentation').type, 'json');
+  const productModelParameters = plan.fields.filter((field) => field.collection === 'product_models').find((field) => field.field === 'parameters');
+  assert.equal(productModelParameters.type, 'json');
+  assert.equal(productModelParameters.meta.interface, 'ruijun-product-parameters');
   assert.deepEqual(plan.fields.filter((field) => field.type === 'json').map((field) => field.meta.special), Array(plan.fields.filter((field) => field.type === 'json').length).fill(['cast-json']));
   const productStatus = plan.fields.find((field) => field.collection === 'product_models' && field.field === 'status');
   assert.deepEqual(productStatus.schema, { is_nullable: false, default_value: 'draft' });
@@ -30,6 +47,9 @@ test('Directus schema plan materializes every CMS collection and field from the 
   assert.deepEqual(plan.fields.find((field) => field.collection === 'lead_notification_jobs' && field.field === 'date_updated').meta.special, ['date-updated']);
   assert.equal(plan.fields.find((field) => field.collection === 'lead_notification_jobs' && field.field === 'date_updated').meta.readonly, true);
   assert.equal(plan.fields.find((field) => field.collection === 'media_assets' && field.field === 'file_id').type, 'string');
+  const placementChoices = plan.fields.find((field) => field.collection === 'media_assets' && field.field === 'placement_key').meta.options.choices;
+  assert.ok(placementChoices.some((choice) => choice.value === 'service.hero.image' && choice.text.includes('1920×960')));
+  assert.ok(placementChoices.some((choice) => choice.value === 'about.timeline.background' && choice.text.includes('1600×900')));
   assert.equal(plan.fields.find((field) => field.collection === 'product_release_snapshots' && field.field === 'restored_from_release_id').type, 'string');
   assert.equal(plan.fields.find((field) => field.collection === 'product_release_snapshots' && field.field === 'restored_from_version').type, 'integer');
   assert.equal(plan.fields.find((field) => field.collection === 'product_release_snapshots' && field.field === 'restore_note').type, 'text');
@@ -53,7 +73,7 @@ test('Directus schema plan preserves CMS role boundaries and explicit publish au
   assert.equal(auditReader.name, '内容审核只读账号');
   assert.equal(notificationWorker.name, '通知任务服务账号');
   assert.equal(notificationManager.name, '通知管理员');
-  assert.deepEqual(reviewer.publish_collections, ['pages', 'repair_page_configs', 'product_series', 'case_studies', 'articles', 'manufacturing_evidence', 'qualifications', 'milestones', 'service_locations']);
+  assert.deepEqual(reviewer.publish_collections, ['homepage_sections', 'pages', 'repair_page_configs', 'product_series', 'product_models', 'product_parameters', 'case_studies', 'articles', 'manufacturing_evidence', 'qualifications', 'milestones', 'service_resources', 'service_locations', 'knowledge_items', 'media_assets']);
   assert.deepEqual(sales.manage_collections, ['leads']);
   assert.equal(sales.publish_collections.length, 0);
   assert.equal(websiteBff.admin, false);
@@ -62,5 +82,7 @@ test('Directus schema plan preserves CMS role boundaries and explicit publish au
   assert.deepEqual(plan.roles.find((role) => role.key === 'notification_manager').manage_collections, ['lead_notification_jobs']);
   assert.deepEqual(plan.roles.find((role) => role.key === 'read_only_manager').manage_collections, ['service_entry_clicks']);
   assert.ok(!plan.roles.find((role) => role.key === 'content_editor').manage_collections.includes('media_assets'));
-  assert.ok(!reviewer.manage_collections.includes('knowledge_items'));
+  assert.ok(reviewer.manage_collections.includes('knowledge_items'));
+  assert.ok(reviewer.manage_collections.includes('product_models'));
+  assert.ok(reviewer.manage_collections.includes('media_assets'));
 });

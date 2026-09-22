@@ -8,8 +8,10 @@ const privateBffKeys = new Set([
   'LEAD_DEDUPE_SECRET', 'NUXT_LEAD_DEDUPE_SECRET', 'CMS_LEAD_DEDUPE_KEYS_URL', 'NUXT_CMS_LEAD_DEDUPE_KEYS_URL',
   'CMS_WEBHOOK_SECRET', 'NUXT_CMS_WEBHOOK_SECRET',
   'CMS_SERVICE_RESOURCES_URL', 'NUXT_CMS_SERVICE_RESOURCES_URL', 'CMS_SERVICE_LOCATIONS_URL', 'NUXT_CMS_SERVICE_LOCATIONS_URL',
+  'CMS_KNOWLEDGE_ITEMS_URL', 'NUXT_CMS_KNOWLEDGE_ITEMS_URL',
   'CMS_MILESTONES_URL', 'NUXT_CMS_MILESTONES_URL', 'CMS_QUALIFICATIONS_URL', 'NUXT_CMS_QUALIFICATIONS_URL',
   'CMS_MANUFACTURING_EVIDENCE_URL', 'NUXT_CMS_MANUFACTURING_EVIDENCE_URL', 'CMS_MEDIA_ASSETS_URL', 'NUXT_CMS_MEDIA_ASSETS_URL',
+  'CMS_ARTICLES_URL', 'NUXT_CMS_ARTICLES_URL', 'CMS_PUBLIC_ASSET_BASE_URL', 'NUXT_CMS_PUBLIC_ASSET_BASE_URL',
   'CMS_SERVICE_ENTRY_CLICKS_URL', 'NUXT_CMS_SERVICE_ENTRY_CLICKS_URL'
 ]);
 
@@ -26,10 +28,13 @@ export function buildBffEnvironment(source, serviceToken, dedupeSecret, webhookS
   const dedupeUrl = collectionUrl('lead_dedupe_keys');
   const resourcesUrl = collectionUrl('service_resources');
   const locationsUrl = collectionUrl('service_locations');
+  const knowledgeItemsUrl = collectionUrl('knowledge_items');
   const milestonesUrl = collectionUrl('milestones');
   const qualificationsUrl = collectionUrl('qualifications');
   const manufacturingEvidenceUrl = collectionUrl('manufacturing_evidence');
   const mediaAssetsUrl = collectionUrl('media_assets');
+  const articlesUrl = collectionUrl('articles');
+  const publicAssetBaseUrl = new URL(pagesUrl).origin;
   const serviceEntryClicksUrl = collectionUrl('service_entry_clicks');
   const newline = source.includes('\r\n') ? '\r\n' : '\n';
   const trailingNewline = source.endsWith('\n');
@@ -48,6 +53,8 @@ export function buildBffEnvironment(source, serviceToken, dedupeSecret, webhookS
   lines.push(`NUXT_CMS_SERVICE_RESOURCES_URL=${resourcesUrl}`);
   lines.push(`CMS_SERVICE_LOCATIONS_URL=${locationsUrl}`);
   lines.push(`NUXT_CMS_SERVICE_LOCATIONS_URL=${locationsUrl}`);
+  lines.push(`CMS_KNOWLEDGE_ITEMS_URL=${knowledgeItemsUrl}`);
+  lines.push(`NUXT_CMS_KNOWLEDGE_ITEMS_URL=${knowledgeItemsUrl}`);
   lines.push(`CMS_MILESTONES_URL=${milestonesUrl}`);
   lines.push(`NUXT_CMS_MILESTONES_URL=${milestonesUrl}`);
   lines.push(`CMS_QUALIFICATIONS_URL=${qualificationsUrl}`);
@@ -56,6 +63,10 @@ export function buildBffEnvironment(source, serviceToken, dedupeSecret, webhookS
   lines.push(`NUXT_CMS_MANUFACTURING_EVIDENCE_URL=${manufacturingEvidenceUrl}`);
   lines.push(`CMS_MEDIA_ASSETS_URL=${mediaAssetsUrl}`);
   lines.push(`NUXT_CMS_MEDIA_ASSETS_URL=${mediaAssetsUrl}`);
+  lines.push(`CMS_ARTICLES_URL=${articlesUrl}`);
+  lines.push(`NUXT_CMS_ARTICLES_URL=${articlesUrl}`);
+  lines.push(`CMS_PUBLIC_ASSET_BASE_URL=${publicAssetBaseUrl}`);
+  lines.push(`NUXT_CMS_PUBLIC_ASSET_BASE_URL=${publicAssetBaseUrl}`);
   lines.push(`CMS_SERVICE_ENTRY_CLICKS_URL=${serviceEntryClicksUrl}`);
   lines.push(`NUXT_CMS_SERVICE_ENTRY_CLICKS_URL=${serviceEntryClicksUrl}`);
   lines.push(`CMS_WEBHOOK_SECRET=${webhookSecret}`);

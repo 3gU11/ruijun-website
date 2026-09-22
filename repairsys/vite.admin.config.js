@@ -19,6 +19,13 @@ function adminHome() {
 }
 
 export default defineConfig({
+  cacheDir: resolve(__dirname, 'node_modules/.vite-admin'),
+  resolve: {
+    dedupe: ['vue', 'vue-router', 'element-plus']
+  },
+  optimizeDeps: {
+    include: ['vue', 'vue-router', 'element-plus', '@element-plus/icons-vue']
+  },
   plugins: [
     vue(),
     Components({ resolvers: [ElementPlusResolver({ importStyle: 'css' })] }),

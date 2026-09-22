@@ -29,7 +29,8 @@ test('Nuxt sends conversion CTAs to a standalone contact page', async () => {
     readFile(new URL('components/SiteHeader.vue', root), 'utf8')
   ]);
 
-  assert.match(home, /NuxtLink to="\/contact"/);
+  assert.match(home, /href: '\/contact'/);
+  assert.match(home, /<NuxtLink :to="productTask\.href \|\| '\/contact'"/);
   assert.doesNotMatch(home, /LeadInquiryDialog|openInquiry/);
   assert.match(header, /href: '\/contact'/);
   assert.match(contact, /<LeadInquiryDialog/);

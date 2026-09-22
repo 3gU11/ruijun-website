@@ -1,4 +1,11 @@
 <script setup lang="ts">
+import { resolvePageSection } from '~/shared/page-sections.mjs';
+const { data: pageResponse } = await useFetch('/api/public/v1/pages/contact', { default: () => ({ data: null as Record<string, any> | null }) });
+const { data: settingsResponse } = await useFetch('/api/public/v1/navigation', { default: () => ({ data: null as Record<string, any> | null }) });
+const pageContent = computed(() => pageResponse.value?.data || null);
+const heroContent = computed(() => resolvePageSection(pageContent.value, 'hero', { kicker: 'CONTACT RUIJUN', title: '获取选型建议', body: '从工件资料到设备设置，让我们为您匹配合适的中走丝线切割方案。' }));
+const detailsContent = computed(() => resolvePageSection(pageContent.value, 'details', { kicker: 'DIRECT CONTACT', title: '选型前可先发材料', body: '提交加工尺寸、材料、精度与产能要求，可缩短评估时间。' }));
+const contacts = computed(() => settingsResponse.value?.data?.contacts || {});
 const motionReady = ref(false);
 let contactObserver: IntersectionObserver | undefined;
 
@@ -20,8 +27,8 @@ onMounted(() => {
 onBeforeUnmount(() => contactObserver?.disconnect());
 
 useSeoMeta({
-  title: '获取选型建议',
-  description: '留下加工任务与联系方式，瑞钧销售顾问将尽快与您沟通。'
+  title: () => String(pageContent.value?.seo?.title || heroContent.value.title),
+  description: () => String(pageContent.value?.seo?.description || heroContent.value.body)
 });
 </script>
 
@@ -30,23 +37,23 @@ useSeoMeta({
     <SiteHeader />
     <section class="contact-hero" aria-labelledby="contact-title">
       <div class="contact-hero__inner">
-        <p>CONTACT RUIJUN</p>
-        <h1 id="contact-title">获取选型建议</h1>
-        <span>从工件资料到设备设置，让我们为您匹配合适的中走丝线切割方案。</span>
+        <p>{{ heroContent.kicker }}</p>
+        <h1 id="contact-title">{{ heroContent.title }}</h1>
+        <span>{{ heroContent.body }}</span>
       </div>
     </section>
 
     <section class="contact-main" aria-label="选型咨询">
       <div class="contact-main__inner">
         <aside class="contact-details contact-reveal">
-          <p class="section-kicker">DIRECT CONTACT</p>
-          <h2>选型前可先发材料</h2>
-          <p>提交加工尺寸、材料、精度与产能要求，可缩短评估时间。</p>
+          <p class="section-kicker">{{ detailsContent.kicker }}</p>
+          <h2>{{ detailsContent.title }}</h2>
+          <p>{{ detailsContent.body }}</p>
           <dl>
-            <div><dt>国内热线</dt><dd><a href="tel:13738375470">137 3837 5470</a></dd></div>
-            <div><dt>外贸热线</dt><dd><a href="tel:17751119936">177 5111 9936</a></dd></div>
-            <div><dt>国内邮箱</dt><dd><a href="mailto:ksrjjx@126.com">ksrjjx@126.com</a></dd></div>
-            <div><dt>外贸邮箱</dt><dd><a href="mailto:kylewuedm@gmail.com">kylewuedm@gmail.com</a></dd></div>
+            <div><dt>国内热线</dt><dd><a :href="`tel:${contacts.domestic_phone || '13738375470'}`">{{ contacts.domestic_phone || '137 3837 5470' }}</a></dd></div>
+            <div><dt>外贸热线</dt><dd><a :href="`tel:${contacts.export_phone || '17751119936'}`">{{ contacts.export_phone || '177 5111 9936' }}</a></dd></div>
+            <div><dt>国内邮箱</dt><dd><a :href="`mailto:${contacts.domestic_email || 'ksrjjx@126.com'}`">{{ contacts.domestic_email || 'ksrjjx@126.com' }}</a></dd></div>
+            <div><dt>外贸邮箱</dt><dd><a :href="`mailto:${contacts.export_email || 'kylewuedm@gmail.com'}`">{{ contacts.export_email || 'kylewuedm@gmail.com' }}</a></dd></div>
           </dl>
         </aside>
         <div class="contact-form-shell contact-reveal">
@@ -54,7 +61,7 @@ useSeoMeta({
         </div>
       </div>
     </section>
-    <SiteFooter variant="full" />
+    <PsdFooter />
   </main>
 </template>
 

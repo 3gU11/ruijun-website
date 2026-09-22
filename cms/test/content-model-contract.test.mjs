@@ -5,7 +5,7 @@ const { contentCollections, contentRoles, contentStates } = await import('../sch
 
 test('CMS content model covers every PRD object with an explicit publication state', () => {
   const expected = [
-    'pages', 'repair_page_configs', 'product_series', 'product_models', 'product_parameters', 'case_studies',
+    'homepage_sections', 'pages', 'repair_page_configs', 'product_series', 'product_models', 'product_parameters', 'case_studies',
     'articles', 'manufacturing_evidence', 'qualifications', 'milestones', 'service_resources',
     'service_locations', 'knowledge_items', 'external_service_entries', 'service_entry_clicks', 'media_assets', 'leads', 'lead_dedupe_keys', 'lead_notification_jobs', 'lead_upload_sessions', 'content_versions', 'product_release_snapshots', 'site_settings', 'content_preview_tokens'
   ];
@@ -15,6 +15,15 @@ test('CMS content model covers every PRD object with an explicit publication sta
   for (const collection of contentCollections) {
     assert.ok(collection.fields.some((field) => field.name === 'status'), `${collection.name} needs a status field`);
   }
+});
+
+test('news and video articles have a controlled same-day display order', () => {
+  const articles = contentCollections.find((collection) => collection.name === 'articles');
+  const sortOrder = articles.fields.find((field) => field.name === 'sort_order');
+
+  assert.equal(sortOrder?.type, 'integer');
+  assert.equal(articles.fields.find((field) => field.name === 'field_presentation')?.type, 'json');
+  assert.equal(articles.fields.find((field) => field.name === 'body_media')?.type, 'json');
 });
 
 test('product releases persist public cache invalidation delivery state without changing the immutable snapshot payload', () => {
@@ -102,7 +111,7 @@ test('product records preserve source evidence and default to non-public drafts'
 test('product parameters preserve independent source evidence for technical review', () => {
   const parameters = contentCollections.find((collection) => collection.name === 'product_parameters');
   assert.deepEqual(parameters.defaultValues, { status: 'draft', publication_state: 'unpublished' });
-  for (const field of ['model_code', 'field_name', 'value', 'source_url', 'source_document', 'review_note', 'import_evidence']) {
+  for (const field of ['model_code', 'field_name', 'value', 'presentation', 'source_url', 'source_document', 'review_note', 'import_evidence']) {
     assert.ok(parameters.fields.some((candidate) => candidate.name === field), `product_parameters needs ${field}`);
   }
 });
@@ -112,6 +121,11 @@ test('reviewable website evidence uses stable source keys so repeat imports cann
     const collection = contentCollections.find((candidate) => candidate.name === name);
     assert.ok(collection.fields.some((field) => field.name === 'source_key'), `${name} needs source_key`);
   }
+});
+
+test('milestones support optional evidence media and a timeline icon asset', () => {
+  const milestones = contentCollections.find((candidate) => candidate.name === 'milestones');
+  for (const field of ['media', 'icon_asset']) assert.ok(milestones.fields.some((candidate) => candidate.name === field));
 });
 
 test('knowledge items retain source identity and server-enforceable audience scope before Dify sync', () => {

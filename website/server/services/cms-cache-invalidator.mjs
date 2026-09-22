@@ -17,6 +17,7 @@ const cacheByCollection = Object.freeze({
   site_settings: ['navigation'],
   external_service_entries: ['serviceEntries'],
   service_resources: ['serviceContent'],
+  knowledge_items: ['serviceContent'],
   service_locations: ['serviceContent'],
   milestones: ['evidence'],
   qualifications: ['evidence'],

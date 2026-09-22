@@ -9,7 +9,7 @@ export function useCmsArticleReader(config: ReturnType<typeof useRuntimeConfig>)
   const mediaAssetsEndpoint = String(config.cmsMediaAssetsUrl || '');
   const publicAssetBaseUrl = String(config.cmsPublicAssetBaseUrl || '');
   const accessToken = String(config.cmsBffToken || '');
-  const cacheTtlMs = Number(config.cmsPublicContentCacheTtlMs || 30_000);
+  const cacheTtlMs = Number(config.cmsPublicArticleCacheTtlMs ?? config.cmsPublicContentCacheTtlMs ?? 0);
   const key = `${endpoint}:${mediaAssetsEndpoint}:${publicAssetBaseUrl}:${Boolean(accessToken)}:${cacheTtlMs}`;
   let reader = readers.get(key);
   if (!reader) {

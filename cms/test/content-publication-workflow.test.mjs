@@ -62,6 +62,33 @@ test('only content editors may create publishable records and creation always st
   }), (error) => error instanceof ContentPublicationError && error.code === 'ROLE_SCOPE');
 });
 
+test('content editors may create media assets as unpublished drafts for later review', () => {
+  const created = applyContentPublicationCreate({
+    collection: 'media_assets',
+    input: {
+      file_id: 'file-1', original_file_name: 'hero.png', mime_type: 'image/png', byte_size: 10,
+      usage_scope: 'homepage', media_type: 'image', placement_key: 'home.hero', enabled: true,
+      copyright_status: 'owned', status: 'published', publication_state: 'published'
+    },
+    actor: { role: 'content_editor', id: 'editor-1' }, now
+  });
+  assert.equal(created.status, 'draft');
+  assert.equal(created.publication_state, 'unpublished');
+  assert.equal(created.published_at, null);
+  assert.equal(created.file_id, 'file-1');
+});
+
+test('content editors may create product model drafts used by the visual product editor', () => {
+  const created = applyContentPublicationCreate({
+    collection: 'product_models',
+    input: { series_code: 'FL', model_code: 'FL1180', name: 'E2E 产品型号', status: 'published', publication_state: 'published' },
+    actor: { role: 'content_editor', id: 'editor-1' }, now
+  });
+  assert.equal(created.status, 'draft');
+  assert.equal(created.publication_state, 'unpublished');
+  assert.equal(created.model_code, 'FL1180');
+});
+
 test('system management reviews and publishes technical content', () => {
   const reviewingModel = {
     status: 'review', publication_state: 'unpublished', publication_log: '[]', name: 'FR400XS', model_code: 'FR400XS',
@@ -142,17 +169,18 @@ test('final readiness accepts complete JSON fields returned as database strings'
 });
 
 test('reviewer scope and final states are enforced by the server workflow', () => {
-  assert.throws(() => applyContentPublicationUpdate({
+  const approved = applyContentPublicationUpdate({
     collection: 'product_models', current: { status: 'review', publication_state: 'unpublished' }, input: { status: 'scheduled' },
     actor: { role: 'review_manager', id: 'review-1' }, now
-  }), (error) => error instanceof ContentPublicationError && error.code === 'ROLE_SCOPE');
+  });
+  assert.equal(approved.status, 'scheduled');
   assert.throws(() => applyContentPublicationUpdate({
     collection: 'articles', current: { status: 'archived', publication_state: 'unpublished' }, input: { status: 'draft' },
     actor: { role: 'content_editor', id: 'editor-1' }, now
   }), (error) => error instanceof ContentPublicationError && error.code === 'FINALIZED_CONTENT');
 });
 
-test('media assets are reviewed only by system management', () => {
+test('unified review management may approve governed media assets', () => {
   const technicalApproval = applyContentPublicationUpdate({
     collection: 'media_assets',
     current: { status: 'review', publication_state: 'unpublished', usage_scope: 'product', publication_log: [] },
@@ -160,9 +188,10 @@ test('media assets are reviewed only by system management', () => {
   });
   assert.equal(technicalApproval.status, 'scheduled');
 
-  assert.throws(() => applyContentPublicationUpdate({
+  const brandApproval = applyContentPublicationUpdate({
     collection: 'media_assets',
     current: { status: 'review', publication_state: 'unpublished', usage_scope: 'qualification', publication_log: [] },
     input: { status: 'scheduled' }, actor: { role: 'review_manager', id: 'review-1' }, now
-  }), (error) => error instanceof ContentPublicationError && error.code === 'ROLE_SCOPE');
+  });
+  assert.equal(brandApproval.status, 'scheduled');
 });

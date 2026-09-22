@@ -1,73 +1,112 @@
 <script setup lang="ts">
-type DownloadItem = { label: string; size: string };
-type DownloadGroup = { title: string; items: DownloadItem[] };
+import { resolvePageSection } from '~/shared/page-sections.mjs';
+import { fieldPresentationAttributes, sectionPresentationAttributes } from '~/shared/section-presentation.mjs';
+
+type Resource = { id?: string | number; source_key: string; type: string; title: string; summary?: string; version?: string; asset?: string | null; path?: string | null; url?: string | null; applicable_models?: string[] };
+
+// Public resources normally expose `asset`; an authenticated CMS preview
+// overlays private files as `path`. Keep the template independent from that
+// transport detail so draft downloads never fall back to a missing/unsafe URL.
+function serviceResourceUrl(resource: Resource) {
+  return String(resource?.path || resource?.asset || resource?.url || '').trim();
+}
+
+function serviceResourceDownloadName(resource: Resource) {
+  const url = serviceResourceUrl(resource);
+  const type = String(resource?.type || '').trim().toLowerCase();
+  if (!url || type === 'video') return undefined;
+  return String(resource?.title || '').trim() || undefined;
+}
 
 const query = ref('');
-const activeCategory = ref<'product' | 'machine' | 'software' | null>(null);
-const { data: resourceResponse } = await useFetch('/api/public/v1/service-resources', {
-  default: () => ({ data: [] as Array<Record<string, unknown>> })
+const activeCategory = ref<'product' | 'machine' | 'software'>('product');
+const { data: resourceResponse } = await useFetch('/api/public/v1/service-resources', { default: () => ({ data: [] as Resource[] }) });
+const { data: servicePageResponse } = await useFetch('/api/public/v1/pages/service', { default: () => ({ data: null as Record<string, any> | null }) });
+const { overlayList, recordFor } = useCmsDraftPreview();
+const resources = computed<Resource[]>(() => overlayList('service_resources', Array.isArray(resourceResponse.value?.data) ? resourceResponse.value.data as Resource[] : []));
+const servicePage = computed(() => overlayList('pages', servicePageResponse.value?.data || null, (draft: any) => draft.slug === 'service'));
+const downloadContent = computed(() => {
+  const sections = Array.isArray(servicePage.value?.sections) ? servicePage.value.sections : [];
+  const section = sections.find((candidate: any) => candidate?.id === 'download' || candidate?.id === 'service-download' || candidate?.section_key === 'service.download');
+  return section ? resolvePageSection(servicePage.value, String(section.id || 'download'), section) : {};
 });
-const resources = computed(() => Array.isArray(resourceResponse.value?.data) ? resourceResponse.value.data : []);
-const makeItems = (labels: string[], size: string) => labels.map(label => ({ label, size }));
-
-const productGroups: DownloadGroup[] = [
-  { title: 'FR-XS(Pro)', items: makeItems(['FR-XS400', 'FR-XS500', 'FR-XS600', 'FR-XS1055', 'FR-XS8055', 'FR-XS8050', 'FR-XS1080'], '5.38M') },
-  { title: 'FR-XS(Auto)', items: makeItems(['FR-XS400', 'FR-XS500', 'FR-XS600', 'FR-XS1055', 'FR-XS8055', 'FR-XS8050'], '5.38M') },
-  { title: 'FL-XS(Pro)', items: makeItems(['FL-XS860', 'FL-XS1100', 'FL-XS1390', 'FL-XS1610'], '5.38M') },
-  { title: 'FT-XS(Pro)', items: makeItems(['FT-XS400', 'FT-XS500', 'FT-XS600', 'FT-XS1055'], '5.38M') },
-  { title: 'FR-Y', items: makeItems(['FY-XS8060', 'FR-Y1080'], '5.38M') },
-  { title: 'FR-G', items: makeItems(['FR-400G', 'FR-500G', 'FR-600G', 'FR-7055G'], '5.38M') },
-  { title: 'FH-C', items: makeItems(['FH-250C', 'FH-300C'], '5.38M') }
+const categoryMediaRoles = { product: ['category-product', 'product-icon', 'download-product'], machine: ['category-machine', 'machine-icon', 'download-machine'], software: ['category-software', 'software-icon', 'download-software'] } as const;
+const categoryDefinitions = [
+  { key: 'product' as const, label: '产品技术手册', icon: '/assets/service-action-5.png' },
+  { key: 'machine' as const, label: '机床说明书', icon: '/assets/service-action-6.png' },
+  { key: 'software' as const, label: '系统软件', icon: '/assets/service-action-3.png' }
 ];
-const machineGroups: DownloadGroup[] = [{ title: '机床说明书', items: makeItems(['FR-XS(Pro)说明书', 'FR-XS(Auto)说明书', 'FR-G说明书', 'FL-XS说明书'], '10.38M') }];
-const softwareGroups: DownloadGroup[] = [{ title: '系统软件', items: makeItems(['瑞钧3.0', '瑞钧2.0', 'AUTOCAD'], '10.38M') }];
-
-function visibleGroups(groups: DownloadGroup[]) {
+const categories = computed(() => categoryDefinitions.map((category) => {
+  const media = Array.isArray(downloadContent.value?.media) ? downloadContent.value.media : [];
+  const mediaIndex = media.findIndex((entry: any) => categoryMediaRoles[category.key].includes(String(entry?.role || '').trim().toLowerCase()) && String(entry?.path || '').trim());
+  const mediaEntry = mediaIndex >= 0 ? media[mediaIndex] : null;
+  return {
+    ...category,
+    label: String(downloadContent.value?.categories?.[category.key] || category.label),
+    fieldPath: `categories.${category.key}`,
+    icon: String(mediaEntry?.path || category.icon),
+    iconFieldPath: mediaIndex >= 0 ? `media.${mediaIndex}` : ''
+  };
+}));
+const categoryTypes = {
+  product: ['product_manual', 'product', 'technical_package'],
+  machine: ['machine_manual', 'manual'],
+  software: ['software']
+} as const;
+const visibleResources = computed(() => {
   const keyword = query.value.trim().toLowerCase();
-  return groups.map(group => ({ ...group, items: group.items.filter(item => !keyword || item.label.toLowerCase().includes(keyword)) })).filter(group => group.items.length);
-}
-function resourceUrl(item: DownloadItem) {
-  const match = resources.value.find(resource => Array.isArray(resource.applicable_models) && resource.applicable_models.map(String).includes(item.label));
-  const value = String(match?.asset || '').trim();
-  return value.startsWith('/') || /^https?:\/\//i.test(value) ? value : '';
-}
-function scrollToSection(id: string) {
-  activeCategory.value = id === 'product-guides' ? 'product' : id === 'machine-manuals' ? 'machine' : 'software';
-}
-
-useSeoMeta({ title: '资料下载 | 瑞钧智科', description: '瑞钧智科产品技术手册、机床说明书与系统软件资料下载。' });
+  return resources.value.filter((item) => String(item.title || '').trim() && serviceResourceUrl(item))
+    .filter((item) => categoryTypes[activeCategory.value].includes(item.type as never))
+    .filter((item) => !keyword || [item.title, item.version, ...(item.applicable_models || [])].join(' ').toLowerCase().includes(keyword));
+});
+const sectionTitle = computed(() => categories.value.find(item => item.key === activeCategory.value)?.label || '产品技术手册');
+const pageTitle = computed(() => String(downloadContent.value?.title || '资料下载'));
+const searchPlaceholder = computed(() => String(downloadContent.value?.search_placeholder || '搜索机型或具体型号'));
+const emptyLabel = computed(() => String(downloadContent.value?.empty_label || '暂无已发布资料。'));
+const backLabel = computed(() => String(downloadContent.value?.back_label || '返回服务支持'));
+onMounted(() => {
+  const type = String(recordFor('service_resources')?.type || '');
+  if (categoryTypes.machine.includes(type as never)) activeCategory.value = 'machine';
+  if (categoryTypes.software.includes(type as never)) activeCategory.value = 'software';
+});
+useSeoMeta({ title: '技术文件下载 | 瑞钧智科', description: '瑞钧智科产品技术手册、机床说明书与系统软件下载。' });
 </script>
 
 <template>
-  <main class="download-page" :class="activeCategory ? `is-${activeCategory}` : ''">
+  <main class="download-page">
     <SiteHeader />
-    <button v-if="activeCategory" type="button" class="download-modal-close" aria-label="Close downloads" @click="activeCategory = null">&times;</button>
-    <section class="download-intro" aria-labelledby="download-title">
+    <section class="download-content" v-bind="sectionPresentationAttributes(downloadContent)" data-cms-preview-key="download">
       <div class="download-shell">
-        <p class="download-eyebrow">SERVICE SUPPORT / DOWNLOADS</p>
-        <h1 id="download-title">资料下载</h1>
-        <nav class="download-page-switcher" aria-label="服务支持子页面">
-          <NuxtLink to="/service">技术支持</NuxtLink>
-          <NuxtLink to="/service/download">资料下载</NuxtLink>
+        <h1 v-bind="fieldPresentationAttributes(downloadContent, 'title')" data-cms-preview-field="title" data-cms-preview-field-path="title" data-cms-preview-position-field-path="field_presentation.title">{{ pageTitle }}</h1>
+        <label class="download-search"><span class="sr-only" data-cms-preview-field-path="search_placeholder">{{ searchPlaceholder }}</span><input v-model="query" type="search" :placeholder="searchPlaceholder" data-cms-preview-field-path="search_placeholder"></label>
+        <nav class="download-categories" aria-label="资料分类">
+          <button v-for="category in categories" :key="category.key" type="button" :class="{ 'is-active': activeCategory === category.key }" @click="activeCategory = category.key">
+            <span :data-cms-preview-field-path="category.fieldPath">{{ category.label }}</span><img :src="category.icon" alt="" :data-cms-preview-field-path="category.iconFieldPath || undefined" data-cms-preview-placement-key="service.download.category.icon" data-cms-preview-media-role="icon">
+          </button>
         </nav>
-        <label class="download-search"><span class="sr-only">搜索资料型号</span><input v-model="query" type="search" placeholder="搜索机型或资料名称"><span aria-hidden="true">⌕</span></label>
-        <nav class="download-category-nav" aria-label="资料分类">
-          <button type="button" @click="scrollToSection('product-guides')"><span class="category-icon category-icon--manual" aria-hidden="true"></span>产品技术手册</button>
-          <button type="button" @click="scrollToSection('machine-manuals')"><span class="category-icon category-icon--machine" aria-hidden="true"></span>机床说明书</button>
-          <button type="button" @click="scrollToSection('system-software')"><span class="category-icon category-icon--software" aria-hidden="true"></span>系统软件</button>
-        </nav>
+        <section id="service-download-list" class="download-list">
+          <h2 :data-cms-preview-field-path="`categories.${activeCategory}`">{{ sectionTitle }}</h2>
+          <div class="download-group">
+            <ul v-if="visibleResources.length">
+              <li v-for="item in visibleResources" :key="item.source_key || item.title" :data-cms-preview-key="item.source_key" data-cms-preview-collection="service_resources" :data-cms-preview-item-id="item.id || undefined">
+                <b data-cms-preview-field-path="title">{{ item.title }}</b><span v-if="item.version" data-cms-preview-field-path="version">{{ item.version }}</span><span v-else data-cms-preview-field-path="applicable_models">{{ item.applicable_models?.join(' / ') || '' }}</span>
+                <a :href="serviceResourceUrl(item)" :download="serviceResourceDownloadName(item)" :target="serviceResourceUrl(item).startsWith('https://') ? '_blank' : undefined" :rel="serviceResourceUrl(item).startsWith('https://') ? 'noreferrer' : undefined" :aria-label="`下载 ${item.title}`">↓</a>
+              </li>
+            </ul>
+          </div>
+          <p v-if="!visibleResources.length" class="download-empty" data-cms-preview-field-path="empty_label">{{ emptyLabel }}</p>
+        </section>
+        <NuxtLink class="download-back" to="/service">
+          <span data-cms-preview-field-path="back_label">{{ backLabel }}</span>
+          <span aria-hidden="true">→</span>
+        </NuxtLink>
       </div>
     </section>
-
-    <section id="product-guides" class="download-section" aria-labelledby="product-guides-title"><div class="download-shell"><h2 id="product-guides-title">产品技术手册</h2><div v-for="group in visibleGroups(productGroups)" :key="group.title" class="download-group"><h3>{{ group.title }}</h3><ul><li v-for="item in group.items" :key="item.label"><span class="download-model">{{ item.label }}</span><span class="download-size">{{ item.size }}</span><a v-if="resourceUrl(item)" class="download-control" :href="resourceUrl(item)" target="_blank" rel="noopener" :aria-label="`下载 ${item.label}`">⇩</a><span v-else class="download-control is-unavailable" :title="`${item.label} 暂无可下载文件`" aria-hidden="true">⇩</span></li></ul></div><p v-if="!visibleGroups(productGroups).length" class="download-empty">没有匹配的产品资料。</p></div></section>
-    <section id="machine-manuals" class="download-section" aria-labelledby="machine-manuals-title"><div class="download-shell"><h2 id="machine-manuals-title">机床说明书</h2><div v-for="group in visibleGroups(machineGroups)" :key="group.title" class="download-group"><ul><li v-for="item in group.items" :key="item.label"><span class="download-model">{{ item.label }}</span><span class="download-size">{{ item.size }}</span><a v-if="resourceUrl(item)" class="download-control" :href="resourceUrl(item)" target="_blank" rel="noopener" :aria-label="`下载 ${item.label}`">⇩</a><span v-else class="download-control is-unavailable" aria-hidden="true">⇩</span></li></ul></div></div></section>
-    <section id="system-software" class="download-section download-section--last" aria-labelledby="system-software-title"><div class="download-shell"><h2 id="system-software-title">系统软件</h2><div v-for="group in visibleGroups(softwareGroups)" :key="group.title" class="download-group"><ul><li v-for="item in group.items" :key="item.label"><span class="download-model">{{ item.label }}</span><span class="download-size">{{ item.size }}</span><a v-if="resourceUrl(item)" class="download-control" :href="resourceUrl(item)" target="_blank" rel="noopener" :aria-label="`下载 ${item.label}`">⇩</a><span v-else class="download-control is-unavailable" aria-hidden="true">⇩</span></li></ul></div></div></section>
     <SiteFooter variant="full" home-psd />
   </main>
 </template>
 
 <style scoped>
-.download-page{min-height:100vh;background:#f4f4f3;color:#222326}.download-shell{width:min(1280px,78vw);margin:0 auto}.download-intro{padding:150px 0 68px}.download-eyebrow{margin:0 0 14px;color:#d31d27;font:600 11px/1 var(--ruijun-font-latin);letter-spacing:.08em}.download-intro h1{margin:0;color:#242528;font-size:44px;font-weight:500;line-height:1.12}.download-page-switcher{display:flex;gap:26px;margin-top:20px}.download-page-switcher a{color:#727477;font-size:14px;text-decoration:none}.download-page-switcher a.router-link-exact-active{color:#e51b23}.download-search{width:min(450px,100%);height:44px;display:flex;align-items:center;gap:10px;margin-top:28px;padding:0 14px;border:1px solid #696b6d;border-radius:6px;background:rgb(255 255 255/.2)}.download-search input{min-width:0;flex:1;border:0;outline:0;background:transparent;color:#252629;font:inherit;font-size:14px}.download-search input::placeholder{color:#b0b1b3}.download-search span{color:#838588;font-size:19px}.download-category-nav{display:flex;gap:46px;margin-top:58px}.download-category-nav button{width:184px;height:54px;display:flex;align-items:center;justify-content:space-between;padding:0 18px;border:0;border-radius:4px;color:#fff;background:linear-gradient(118deg,#262626,#4d4d4d);font:500 15px var(--ruijun-font-cn);cursor:pointer}.download-category-nav button:hover{background:#242528}.category-icon{position:relative;width:25px;height:25px;display:block;color:#d6c993}.category-icon::before,.category-icon::after{content:"";position:absolute}.category-icon--manual::before{inset:4px;border:1px solid currentColor;border-radius:3px}.category-icon--manual::after{top:0;right:0;width:9px;height:9px;border:1px solid currentColor;border-radius:50%;box-shadow:-9px 14px 0 -4px currentColor}.category-icon--machine::before{top:4px;left:8px;width:9px;height:17px;border:1px solid currentColor;border-radius:2px;box-shadow:-7px 7px 0 -3px currentColor}.category-icon--machine::after{right:1px;bottom:3px;width:12px;height:5px;border:1px solid currentColor;border-radius:50%}.category-icon--software::before{top:3px;left:9px;width:7px;height:18px;border:1px solid currentColor}.category-icon--software::after{top:0;left:5px;width:15px;height:5px;border:1px solid currentColor;border-radius:2px}.download-section{padding:0 0 42px;scroll-margin-top:92px}.download-section h2{margin:0 0 25px;font-size:23px;font-weight:500}.download-group{margin-top:21px}.download-group h3{margin:0 0 9px;color:#404144;font-size:14px;font-weight:500}.download-group ul{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin:0;padding:13px 24px;border:1px solid #d2d3d3;border-radius:3px;list-style:none}.download-group li{min-width:0;min-height:40px;display:flex;align-items:center;gap:10px}.download-model{min-width:96px;padding:6px 10px;border-radius:4px;color:#4a3b1b;background:#f6b500;font:500 13px/1.1 var(--ruijun-font-latin);text-align:center;white-space:nowrap}.download-size{color:#515254;font:13px var(--ruijun-font-latin);white-space:nowrap}.download-control{width:22px;height:24px;display:grid;place-items:center;color:#e8898e;font-size:21px;line-height:1;text-decoration:none}.download-control:not(.is-unavailable):hover{color:#d91d28}.is-unavailable{opacity:.38}.download-section--last{padding-bottom:100px}.download-empty{margin:0;color:#76787b;font-size:14px}@media(max-width:900px){.download-shell{width:min(100% - 44px,680px)}.download-intro{padding:98px 0 52px}.download-intro h1{font-size:35px}.download-category-nav{display:grid;grid-template-columns:1fr;gap:12px;margin-top:40px}.download-category-nav button{width:100%}.download-group ul{grid-template-columns:repeat(2,minmax(0,1fr));padding:12px}.download-group li{gap:7px}.download-model{min-width:0;padding:6px 8px;font-size:12px}.download-size{font-size:12px}.download-section{padding-bottom:34px}.download-section--last{padding-bottom:66px}}@media(max-width:520px){.download-group ul{grid-template-columns:1fr}.download-page-switcher{gap:18px}}
-.download-page-switcher{display:none}
-.download-section{display:none}.download-page.is-product #product-guides,.download-page.is-machine #machine-manuals,.download-page.is-software #system-software{position:fixed;z-index:200;inset:0;display:block;overflow:auto;padding:120px 0 90px;background:#f4f4f3}.download-modal-close{position:fixed;z-index:220;top:28px;right:32px;width:38px;height:38px;border:1px solid #707276;border-radius:50%;color:#35363a;background:#fff;font-size:25px;line-height:1;cursor:pointer}.download-modal-close:hover{color:#fff;background:#e51b23;border-color:#e51b23}
+.download-page{min-height:100vh;background:#f1f1f0;color:#252628}.download-shell{width:min(78vw,2820px);margin:0 auto}.download-content{padding:154px 0 110px}.download-content h1{margin:0;font-size:clamp(38px,3vw,58px);font-weight:500}.download-search{width:min(420px,100%);height:46px;display:block;margin-top:34px}.download-search input{width:100%;height:100%;padding:0 18px;border:1px solid #77797b;border-radius:5px;outline:0;background:transparent;font-size:14px}.download-search input:focus{border-color:#d8202a}.download-categories{display:flex;gap:5%;margin:58px 0 72px}.download-categories button{width:min(238px,28%);height:78px;display:flex;align-items:center;justify-content:space-between;padding:0 24px;border:0;border-radius:4px;background:#3b3c3c;color:#fff;cursor:pointer}.download-categories button:hover,.download-categories button.is-active{background:#272829}.download-categories img{width:44px;height:44px;object-fit:contain}.download-list h2{margin:0 0 32px;font-size:26px;font-weight:500}.download-group{margin:0 0 28px}.download-group h3{margin:0 0 12px;font-size:14px;font-weight:500}.download-group ul{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin:0;padding:18px 24px;border:1px solid #c8c9c8;border-radius:3px;list-style:none}.download-group li{min-width:0;display:flex;align-items:center;gap:10px;min-height:46px}.download-group b{min-width:118px;padding:8px 10px;border-radius:4px;background:#f3ae00;color:#3b3321;font-size:13px;font-weight:500;text-align:center;white-space:nowrap}.download-group span{font-size:12px;white-space:nowrap}.download-group a,.download-group i{width:22px;color:#dd6870;font-size:20px;font-style:normal;text-align:center;text-decoration:none}.download-group i{opacity:.34}.download-empty{color:#737577}.download-back{width:260px;height:56px;display:flex;align-items:center;justify-content:space-between;margin-top:72px;padding:0 22px;border-radius:3px;background:#343536;color:#fff;font-size:15px;font-weight:500;text-decoration:none;transition:background .2s ease}.download-back:hover,.download-back:focus-visible{background:#242526}.download-back:focus-visible{outline:2px solid #d8202a;outline-offset:3px}.download-back span:last-child{font-size:20px;font-weight:300;line-height:1}@media(max-width:900px){.download-shell{width:min(100% - 44px,720px)}.download-content{padding:110px 0 72px}.download-categories{display:grid;grid-template-columns:1fr;margin:42px 0 52px;gap:12px}.download-categories button{width:100%}.download-group ul{grid-template-columns:repeat(2,minmax(0,1fr));padding:12px}.download-group li{gap:7px}.download-group b{min-width:0;font-size:12px}.download-back{width:min(260px,100%);margin-top:52px}}@media(max-width:520px){.download-group ul{grid-template-columns:1fr}}
+.download-content{padding-top:148px}.download-content h1{line-height:1.1}.download-search{margin-top:18px}.download-categories{margin-top:100px}@media(max-width:900px){.download-content{padding-top:110px}.download-categories{margin-top:42px}}
 </style>

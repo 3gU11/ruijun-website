@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-const { buildPublicationReadiness } = await import('../reports/publication-readiness-report.mjs');
+const { assessPage, assessPageSection, buildPublicationReadiness } = await import('../reports/publication-readiness-report.mjs');
 
 test('publication readiness keeps drafts blocked and makes missing release evidence explicit', () => {
   const report = buildPublicationReadiness({ products: [{ name: 'FR-XS', status: 'draft', publication_state: 'unpublished', issues: ['参数冲突'] }], services: [{ label: '维修入口', status: 'draft', publication_state: 'unpublished', issues: ['未完成发布', '目标地址无效'] }], articles: [{ title: '新闻', status: 'draft', publication_state: 'unpublished', body: '' }] });
@@ -66,4 +66,14 @@ test('publication readiness adds a native Directus edit path only when a record 
   assert.equal(report.items[0].edit_path, '/admin/content/product_models/42');
   assert.equal(report.items[1].edit_path, '/admin/content/service_resources/7');
   assert.equal('edit_path' in report.items[2], false);
+});
+
+test('page readiness validates controlled section presentation and pagination without changing legacy defaults', () => {
+  assert.deepEqual(assessPageSection({ id: 'hero', title: '首页标题' }), []);
+  assert.deepEqual(assessPageSection({ id: 'hero', layout: { desktop: { offset_x: 31 } } }), ['页面段落位置']);
+  assert.deepEqual(assessPageSection({ id: 'news', pagination: { page_size: 7, sort: 'random' } }), ['分页数量', '分页排序']);
+  assert.deepEqual(assessPage({
+    slug: 'news', title: '视频新闻', language: 'zh-CN', source_document: 'news.vue', seo: { title: '新闻' },
+    sections: [{ id: 'dynamic-news', pagination: { page_size: 7 } }, { id: 'dynamic-news', text_style: { color: 'red' } }]
+  }), ['分页数量', '页面段落文字颜色', '页面段落标识重复']);
 });

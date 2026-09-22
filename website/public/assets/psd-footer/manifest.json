@@ -1,0 +1,230 @@
+{
+  "width": 3896,
+  "height": 1887,
+  "layers": [
+    {
+      "name": "layer-01",
+      "source": "地址小图标",
+      "x": 436,
+      "y": 975,
+      "width": 67,
+      "height": 100
+    },
+    {
+      "name": "layer-02",
+      "source": "邮箱图标",
+      "x": 422,
+      "y": 1395,
+      "width": 93,
+      "height": 65
+    },
+    {
+      "name": "layer-03",
+      "source": "电话图标",
+      "x": 424,
+      "y": 1183,
+      "width": 90,
+      "height": 89
+    },
+    {
+      "name": "layer-04",
+      "source": "外贸邮箱：kylewuedm@gmail.com",
+      "x": 581,
+      "y": 1446,
+      "width": 740,
+      "height": 41
+    },
+    {
+      "name": "layer-05",
+      "source": "国内邮箱：ksrjjx@126.com",
+      "x": 588,
+      "y": 1381,
+      "width": 602,
+      "height": 41
+    },
+    {
+      "name": "layer-06",
+      "source": "15050166844",
+      "x": 3062,
+      "y": 1382,
+      "width": 330,
+      "height": 32
+    },
+    {
+      "name": "layer-07",
+      "source": "你有量 我有价",
+      "x": 3142,
+      "y": 1198,
+      "width": 183,
+      "height": 123
+    },
+    {
+      "name": "layer-08",
+      "source": "大批量采购",
+      "x": 3099,
+      "y": 1105,
+      "width": 257,
+      "height": 44
+    },
+    {
+      "name": "layer-09",
+      "source": "圆角矩形 6",
+      "x": 3007,
+      "y": 1053,
+      "width": 446,
+      "height": 431
+    },
+    {
+      "name": "layer-10",
+      "source": "热线：13738375470 外贸：17751119936",
+      "x": 581,
+      "y": 1186,
+      "width": 468,
+      "height": 92
+    },
+    {
+      "name": "layer-11",
+      "source": "昆山工厂：江苏省苏州市昆山市巴城苏杭路88号",
+      "x": 579,
+      "y": 1039,
+      "width": 1012,
+      "height": 40
+    },
+    {
+      "name": "layer-12",
+      "source": "常熟工厂：江苏省苏州市常熟市沙家浜儒浜路78号",
+      "x": 577,
+      "y": 973,
+      "width": 1062,
+      "height": 40
+    },
+    {
+      "name": "layer-13",
+      "source": "CNC车间",
+      "x": 2514,
+      "y": 588,
+      "width": 155,
+      "height": 35
+    },
+    {
+      "name": "layer-14",
+      "source": "装配车间",
+      "x": 2514,
+      "y": 696,
+      "width": 163,
+      "height": 35
+    },
+    {
+      "name": "layer-15",
+      "source": "钣金车间",
+      "x": 2514,
+      "y": 642,
+      "width": 163,
+      "height": 36
+    },
+    {
+      "name": "layer-16",
+      "source": "先进智造",
+      "x": 2515,
+      "y": 437,
+      "width": 328,
+      "height": 70
+    },
+    {
+      "name": "layer-17",
+      "source": "品牌发展历程",
+      "x": 3122,
+      "y": 651,
+      "width": 248,
+      "height": 35
+    },
+    {
+      "name": "layer-18",
+      "source": "荣誉资质认证 ",
+      "x": 3122,
+      "y": 594,
+      "width": 249,
+      "height": 36
+    },
+    {
+      "name": "layer-19",
+      "source": "关于我们",
+      "x": 3121,
+      "y": 437,
+      "width": 326,
+      "height": 70
+    },
+    {
+      "name": "layer-20",
+      "source": "FL-XS(pro)",
+      "x": 1892,
+      "y": 895,
+      "width": 216,
+      "height": 34
+    },
+    {
+      "name": "layer-21",
+      "source": "FR-Y(pro)",
+      "x": 1892,
+      "y": 833,
+      "width": 192,
+      "height": 34
+    },
+    {
+      "name": "layer-22",
+      "source": "FT-XS(pro)",
+      "x": 1892,
+      "y": 776,
+      "width": 220,
+      "height": 34
+    },
+    {
+      "name": "layer-23",
+      "source": "FR-XS(pro)",
+      "x": 1892,
+      "y": 714,
+      "width": 218,
+      "height": 34
+    },
+    {
+      "name": "layer-24",
+      "source": "FR-XS(AUTO)",
+      "x": 1892,
+      "y": 650,
+      "width": 261,
+      "height": 34
+    },
+    {
+      "name": "layer-25",
+      "source": "产品中心",
+      "x": 1885,
+      "y": 437,
+      "width": 327,
+      "height": 70
+    },
+    {
+      "name": "layer-26",
+      "source": "灵动切割工作站",
+      "x": 1889,
+      "y": 580,
+      "width": 292,
+      "height": 35
+    },
+    {
+      "name": "layer-27",
+      "source": "瑞钧中走丝",
+      "x": 449,
+      "y": 436,
+      "width": 960,
+      "height": 126
+    },
+    {
+      "name": "layer-28",
+      "source": "底",
+      "x": 0,
+      "y": 0,
+      "width": 3896,
+      "height": 1887
+    }
+  ]
+}

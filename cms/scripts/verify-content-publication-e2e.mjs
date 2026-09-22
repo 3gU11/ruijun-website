@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
+import { resolvePublicationWorkflowRoles } from './publication-e2e-roles.mjs';
 
 const cmsRoot = new URL('../', import.meta.url);
 
@@ -52,22 +53,18 @@ function client(baseUrl, token = '') {
   };
 }
 
-async function uploadTemporaryPng(baseUrl, accessToken) {
-  const bytes = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64');
+async function uploadTemporaryImage(baseUrl, accessToken) {
+  // Use a repository image large enough for the governed default placement;
+  // a 1x1 fixture would test upload mechanics but can never pass media review.
+  const bytes = await readFile(new URL('../website/public/assets/psd/reason-factory-full.jpg', cmsRoot));
   const form = new FormData();
-  form.append('file', new Blob([bytes], { type: 'image/png' }), 'publication-rehearsal.png');
+  form.append('file', new Blob([bytes], { type: 'image/jpeg' }), 'publication-rehearsal.jpg');
   const response = await fetch(new URL('files', `${baseUrl}/`), {
     method: 'POST', headers: { Accept: 'application/json', Authorization: `Bearer ${accessToken}` }, body: form
   });
   const payload = await response.json().catch(() => null);
   if (!response.ok) throw new Error(`POST /files failed: ${payload?.errors?.[0]?.message || `HTTP ${response.status}`}`);
   return payload.data;
-}
-
-function pickRole(roles, candidates, label) {
-  const role = roles.find((item) => candidates.includes(item.name));
-  if (!role?.id) throw new Error(`${label} role is not configured`);
-  return role.id;
 }
 
 async function createTemporaryUser(admin, roleId, suffix, label) {
@@ -100,25 +97,24 @@ async function main() {
 
   try {
     const roles = await admin.request('/roles?fields=id,name&limit=-1');
-    const editorRole = pickRole(roles.data, ['内容编辑', '鍐呭缂栬緫'], 'content editor');
-    const brandReviewerRole = pickRole(roles.data, ['品牌审核人员', '鍝佺墝瀹℃牳浜哄憳'], 'brand reviewer');
-    const publisherRole = pickRole(roles.data, ['发布人员', '鍙戝竷浜哄憳'], 'publisher');
-    const editor = await createTemporaryUser(admin, editorRole, suffix, 'editor');
-    const reviewer = await createTemporaryUser(admin, brandReviewerRole, suffix, 'reviewer');
-    const publisher = await createTemporaryUser(admin, publisherRole, suffix, 'publisher');
+    const { editorRoleId, reviewerRoleId, publisherRoleId } = resolvePublicationWorkflowRoles(roles.data);
+    const editor = await createTemporaryUser(admin, editorRoleId, suffix, 'editor');
+    const reviewer = await createTemporaryUser(admin, reviewerRoleId, suffix, 'reviewer');
+    const publisher = await createTemporaryUser(admin, publisherRoleId, suffix, 'publisher');
     createdUsers.push(editor.id, reviewer.id, publisher.id);
 
     const editorApi = client(baseUrl, editor.token);
     const reviewerApi = client(baseUrl, reviewer.token);
     const publisherApi = client(baseUrl, publisher.token);
-    const file = await uploadTemporaryPng(baseUrl, session.data.access_token);
+    const file = await uploadTemporaryImage(baseUrl, session.data.access_token);
     fileId = String(file.id);
     const mediaDraft = await editorApi.request('/items/media_assets', {
       method: 'POST',
       body: {
         file_id: fileId, original_file_name: file.filename_download, mime_type: file.type,
-        byte_size: Number(file.filesize), usage_scope: 'article', alt_text: 'Temporary publication rehearsal',
-        copyright_status: 'owned', authorization_note: 'Temporary local E2E fixture.',
+        byte_size: Number(file.filesize), usage_scope: 'article', media_type: 'image',
+        width: Number(file.width), height: Number(file.height), placement_key: 'default.image', enabled: true,
+        alt_text: 'Temporary publication rehearsal', copyright_status: 'owned', authorization_note: 'Temporary local E2E fixture.',
         source_document: `E2E media rehearsal ${suffix}`, status: 'published', publication_state: 'published'
       }
     });
@@ -126,10 +122,12 @@ async function main() {
     assert(mediaDraft.data.status === 'draft' && mediaDraft.data.publication_state === 'unpublished', 'Media asset creation did not start as a draft');
     const mediaReview = await editorApi.request(`/items/media_assets/${mediaAssetId}`, { method: 'PATCH', body: { status: 'review' } });
     assert(mediaReview.data.status === 'review', 'Editor could not submit the media asset for review');
-    const mediaApproved = await reviewerApi.request(`/items/media_assets/${mediaAssetId}`, { method: 'PATCH', body: { status: 'scheduled', review_note: 'Temporary media review passed.' } });
-    assert(mediaApproved.data.status === 'scheduled', 'Brand reviewer could not approve the media asset');
-    const mediaPublished = await publisherApi.request(`/items/media_assets/${mediaAssetId}`, { method: 'PATCH', body: { status: 'published' } });
-    assert(mediaPublished.data.status === 'published' && mediaPublished.data.publication_state === 'published', 'Publisher could not publish the media asset');
+    // Media governance intentionally reserves approval/publication for system
+    // management; the business reviewer handles the article that references it.
+    const mediaApproved = await admin.request(`/items/media_assets/${mediaAssetId}`, { method: 'PATCH', body: { status: 'scheduled', review_note: 'Temporary media review passed.' } });
+    assert(mediaApproved.data.status === 'scheduled', 'System management could not approve the media asset');
+    const mediaPublished = await admin.request(`/items/media_assets/${mediaAssetId}`, { method: 'PATCH', body: { status: 'published' } });
+    assert(mediaPublished.data.status === 'published' && mediaPublished.data.publication_state === 'published', 'System management could not publish the media asset');
 
     const created = await editorApi.request('/items/articles', {
       method: 'POST',

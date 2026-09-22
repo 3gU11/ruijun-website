@@ -10,6 +10,18 @@ non-goals: [new visual direction, English site, publishing unapproved CMS drafts
 open assumptions: [the current `demo/` files and documented QA screenshots are the authoritative pre-migration baseline; unapproved dynamic content must remain safely absent or use the existing approved static fallback]
 risks: [some Demo copy and media are intentionally unapproved; visual parity must not turn draft claims into published CMS content; local browser parity cannot replace final production-content and real-device acceptance]
 
+## CMS Content Editing
+
+goal: Let non-technical content operators update common website pages without needing to understand Directus collections, JSON structures, or publishing internals.
+user: Desktop content operators with low technical confidence who need to update website copy repeatedly and safely.
+JTBD: Choose a page, edit visitor-facing text, see the result immediately, save a draft, then submit it through the existing review flow.
+constraints: stack=Directus 11 custom Vue extension; preserve the existing draft, review, version, and publication controls; live preview must never write data or publish it.
+success: The common page-copy workflow is understandable from one screen; title, SEO description, and visible sections update in a persistent preview while typing; website preview remains available after saving a draft; usable at desktop and narrow layouts.
+scope v1: [simplified home navigation, page-copy form hints, persistent live page preview, retained official-site saved-draft preview]
+non-goals: [replacing Directus admin, auto-publishing changes, redesigning technical product configuration or existing approval rules]
+open assumptions: [page copy is the highest-frequency editing task; operators use desktop browsers; the configured website preview endpoint is available in the target environment]
+risks: [a local structural preview cannot guarantee final Nuxt layout or media rendering; operators must use the saved-draft official-site preview before submission]
+
 ## Repair Portal Continuity
 
 goal: Let a customer enter the independently deployed Repair portal from the official site without a visible product or brand-context break, while keeping Repair as a separate application.

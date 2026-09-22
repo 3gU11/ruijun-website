@@ -29,6 +29,13 @@ function activityLog(value) {
   return Array.isArray(entries) ? entries.filter((entry) => entry && typeof entry === 'object').slice(-199) : [];
 }
 
+export function databaseDateTime(value) {
+  const date = value instanceof Date ? value : new Date(value);
+  if (!Number.isFinite(date.getTime())) throw new TypeError('value must be a valid date');
+  const pad = (part) => String(part).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+}
+
 export function contentSnapshot(record) {
   return Object.fromEntries(Object.entries(asObject(record)).filter(([key]) => !systemFields.has(key)));
 }

@@ -38,6 +38,22 @@ test('version endpoint exposes a bounded, publisher-only history with parsed dif
   }]);
 });
 
+test('version endpoint recognizes the current unified review-management publisher role', async () => {
+  const handlers = new Map();
+  const router = { get: (path, callback) => handlers.set(path, callback), post() {} };
+  const database = (table) => {
+    if (table === 'directus_roles') return { where() { return this; }, async first() { return { name: '审核管理' }; } };
+    if (table === 'content_versions') return { where() { return this; }, orderBy() { return this; }, limit() { return Promise.resolve([]); } };
+    throw new Error(`Unexpected table ${table}`);
+  };
+  registerContentVersionRestoreEndpoint(router, { database });
+  let response;
+  await handlers.get('/')({ query: {}, accountability: { user: 'publisher-1', role: 'role-1' } }, {
+    status(code) { assert.equal(code, 200); return this; }, json(value) { response = value; }
+  }, (error) => { throw error; });
+  assert.deepEqual(response.data, []);
+});
+
 test('version endpoint returns a historical snapshot alongside the current content for field comparison', async () => {
   const handlers = new Map();
   const router = { get: (path, callback) => handlers.set(path, callback), post() {} };
@@ -85,7 +101,7 @@ test('restore endpoint allows publishers to restore a snapshot only as an unpubl
     where() { return this; },
     async first() {
       if (table === 'directus_roles') return { name: '发布人员' };
-      if (table === 'content_versions') return { id: 9, content_collection: 'product_models', content_item_id: '7', snapshot: JSON.stringify({ model_code: 'OLD', name: 'Old model', status: 'published', publication_state: 'published' }) };
+      if (table === 'content_versions') return { id: 9, content_collection: 'product_models', content_item_id: '7', snapshot: JSON.stringify({ model_code: 'OLD', name: 'Old model', parameters: { travel: '400' }, status: 'published', publication_state: 'published' }) };
       return { id: 7, status: 'published', publication_state: 'published', publication_log: [] };
     },
     update(value) { updates.push({ table, value }); return Promise.resolve(1); }
@@ -97,6 +113,8 @@ test('restore endpoint allows publishers to restore a snapshot only as an unpubl
   assert.deepEqual(response.data, { content_collection: 'product_models', content_item_id: '7', status: 'draft' });
   assert.equal(updates[0].table, 'product_models');
   assert.equal(updates[0].value.status, 'draft');
+  assert.deepEqual(JSON.parse(updates[0].value.parameters), { travel: '400' });
   assert.equal(updates[1].table, 'content_versions');
   assert.equal(updates[1].value.status, 'restored');
+  assert.match(updates[1].value.restored_at, /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
 });

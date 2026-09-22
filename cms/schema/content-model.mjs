@@ -36,6 +36,12 @@ export const contentRoles = Object.freeze([
 ]);
 
 export const contentCollections = Object.freeze([
+  content('homepage_sections', [
+    field('page_key', 'string', { required: true }), field('section_key', 'string', { required: true }),
+    field('title', 'string'), field('kicker', 'string'), field('body', 'text'), field('content', 'json'),
+    field('media', 'json'), field('sort_order', 'integer'), field('enabled', 'boolean', { required: true }),
+    field('language', 'string', { required: true })
+  ]),
   content('pages', [
     field('slug', 'string', { required: true }), field('title', 'string', { required: true }),
     field('language', 'string', { required: true }), field('sections', 'json'), field('seo', 'json')
@@ -47,19 +53,19 @@ export const contentCollections = Object.freeze([
   ]),
   content('product_series', [
     field('series_code', 'string', { required: true }), field('slug', 'string', { required: true }),
-    field('name', 'string', { required: true }), field('positioning', 'text'), field('scenarios', 'json'),
+    field('name', 'string', { required: true }), field('positioning', 'text'), field('presentation', 'json'), field('scenarios', 'json'),
     field('capabilities', 'json'), field('cover_asset', 'string'), field('sort_order', 'integer'), field('language', 'string'),
     field('import_evidence', 'json')
   ]),
   content('product_models', [
     field('series_code', 'string', { required: true }), field('model_code', 'string', { required: true }),
     field('slug', 'string'), field('name', 'string', { required: true }), field('parameters', 'json'),
-    field('configuration', 'json'), field('media', 'json'), field('resources', 'json'), field('case_studies', 'json'),
+    field('configuration', 'json'), field('presentation', 'json'), field('media', 'json'), field('resources', 'json'), field('case_studies', 'json'),
     field('import_evidence', 'json')
   ]),
   content('product_parameters', [
     field('model_code', 'string', { required: true }), field('group_name', 'string'), field('field_name', 'string', { required: true }),
-    field('value', 'string', { required: true }), field('unit', 'string'), field('sort_order', 'integer'), field('test_conditions', 'text'),
+    field('value', 'string', { required: true }), field('unit', 'string'), field('presentation', 'json'), field('sort_order', 'integer'), field('test_conditions', 'text'),
     field('import_evidence', 'json')
   ]),
   content('case_studies', [
@@ -68,7 +74,7 @@ export const contentCollections = Object.freeze([
   ]),
   content('articles', [
     field('slug', 'string', { required: true }), field('category', 'string', { required: true }), field('title', 'string', { required: true }),
-    field('summary', 'text'), field('body', 'text'), field('video_url', 'string'), field('cover_asset', 'string'), field('seo', 'json')
+    field('display_date', 'date'), field('sort_order', 'integer'), field('summary', 'text'), field('body', 'text'), field('body_media', 'json'), field('transcript', 'text'), field('field_presentation', 'json'), field('media', 'json'), field('video_url', 'string'), field('cover_asset', 'string'), field('seo', 'json')
   ]),
   content('manufacturing_evidence', [
     field('source_key', 'string', { required: true }), field('process', 'string', { required: true }), field('description', 'text'), field('media', 'json'), field('inspection_evidence', 'text'), field('sort_order', 'integer')
@@ -78,10 +84,13 @@ export const contentCollections = Object.freeze([
     field('issuer', 'string'), field('valid_until', 'date'), field('assets', 'json'), field('sort_order', 'integer'), field('authorization_status', 'string')
   ]),
   content('milestones', [
-    field('source_key', 'string', { required: true }), field('year', 'integer', { required: true }), field('event', 'text', { required: true }), field('evidence', 'text'), field('sort_order', 'integer')
+    field('source_key', 'string', { required: true }), field('year', 'integer', { required: true }), field('event', 'text', { required: true }), field('evidence', 'text'), field('media', 'json'), field('icon_asset', 'string'), field('sort_order', 'integer')
   ]),
   content('service_resources', [
-    field('source_key', 'string', { required: true }), field('type', 'string', { required: true }), field('applicable_models', 'json'), field('version', 'string'), field('language', 'string'), field('asset', 'string'), field('updated_at', 'datetime')
+    field('source_key', 'string', { required: true }), field('type', 'string', { required: true }), field('title', 'string'),
+    field('summary', 'text'), field('body', 'text'), field('applicable_models', 'json'), field('version', 'string'),
+    field('language', 'string'), field('asset', 'string'), field('cover_asset', 'string'), field('display_date', 'date'),
+    field('sort_order', 'integer'), field('updated_at', 'datetime')
   ]),
   content('service_locations', [
     field('source_key', 'string', { required: true }), field('region', 'string', { required: true }), field('city', 'string'), field('service_scope', 'text'),
@@ -91,7 +100,8 @@ export const contentCollections = Object.freeze([
     field('source_key', 'string', { required: true, unique: true }), field('visibility', 'string', { required: true }), field('channel', 'string', { required: true }),
     field('category', 'string', { required: true }), field('question_title', 'string', { required: true }), field('applicable_models', 'json'),
     field('error_codes', 'json'), field('symptoms', 'text'), field('troubleshooting_steps', 'json'), field('risk_level', 'string', { required: true }),
-    field('safety_preconditions', 'json'), field('escalation_guidance', 'text'), field('media', 'json'), field('version', 'string'), field('technical_reviewer', 'string'), field('dify_sync_status', 'string')
+    field('safety_preconditions', 'json'), field('escalation_guidance', 'text'), field('media', 'json'), field('version', 'string'),
+    field('display_date', 'date'), field('sort_order', 'integer'), field('technical_reviewer', 'string'), field('dify_sync_status', 'string')
   ]),
   content('external_service_entries', [
     field('entry_type', 'string', { required: true }), field('url', 'string', { required: true }), field('enabled', 'boolean', { required: true }),
@@ -103,6 +113,11 @@ export const contentCollections = Object.freeze([
   content('media_assets', [
     field('file_id', 'string', { required: true }), field('original_file_name', 'string', { required: true }),
     field('mime_type', 'string', { required: true }), field('byte_size', 'integer', { required: true }), field('usage_scope', 'string', { required: true }),
+    field('media_type', 'string', { required: true }), field('width', 'integer'), field('height', 'integer'),
+    field('duration_seconds', 'integer'), field('aspect_ratio', 'string'), field('poster_asset_id', 'string'),
+    field('title', 'string'), field('description', 'text'), field('transcript', 'text'), field('placement_key', 'string', { required: true }), field('page_key', 'string'),
+    field('section_key', 'string'), field('sort_order', 'integer'), field('enabled', 'boolean', { required: true }),
+    field('autoplay', 'boolean'), field('muted', 'boolean'), field('loop', 'boolean'),
     field('alt_text', 'string'), field('copyright_status', 'string', { required: true }), field('authorization_note', 'text')
   ]),
   content('leads', [

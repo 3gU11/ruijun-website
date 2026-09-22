@@ -20,3 +20,27 @@ test('navigation reader sends a configured server-only CMS token upstream', asyn
   await reader.get();
   assert.equal(headers.Authorization, 'Bearer server-only-token');
 });
+
+test('navigation reader resolves governed header and footer assets without changing layout data', async () => {
+  const requests = [];
+  const reader = createCmsNavigationReader({
+    endpoint: 'https://cms.test/items/site_settings',
+    mediaAssetsEndpoint: 'https://cms.test/items/media_assets',
+    publicAssetBaseUrl: 'https://cms.test',
+    fetchImpl: async (url) => {
+      requests.push(String(url));
+      if (String(url).includes('/items/site_settings')) return Response.json({ data: [{
+        setting_key: 'global', brand: { logo_asset: '11' }, footer: { phone_icon_asset: '12' },
+        status: 'published', publication_state: 'published'
+      }] });
+      return Response.json({ data: [
+        { id: 11, file_id: 'logo-file', media_type: 'image', status: 'published', publication_state: 'published' },
+        { id: 12, file_id: 'phone-file', media_type: 'image', status: 'published', publication_state: 'published' }
+      ] });
+    }
+  });
+  const result = await reader.get();
+  assert.equal(result.data.brand.logo_path, 'https://cms.test/assets/logo-file');
+  assert.equal(result.data.footer.phone_icon_path, 'https://cms.test/assets/phone-file');
+  assert.equal(requests.length, 2);
+});

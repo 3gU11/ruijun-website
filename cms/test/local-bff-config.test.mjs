@@ -17,6 +17,8 @@ test('local BFF configuration keeps only the dedicated service token and removes
   assert.match(configured, /^NUXT_CMS_SERVICE_RESOURCES_URL=http:\/\/127\.0\.0\.1:8055\/items\/service_resources$/m);
   assert.match(configured, /^CMS_SERVICE_LOCATIONS_URL=http:\/\/127\.0\.0\.1:8055\/items\/service_locations$/m);
   assert.match(configured, /^NUXT_CMS_SERVICE_LOCATIONS_URL=http:\/\/127\.0\.0\.1:8055\/items\/service_locations$/m);
+  assert.match(configured, /^CMS_KNOWLEDGE_ITEMS_URL=http:\/\/127\.0\.0\.1:8055\/items\/knowledge_items$/m);
+  assert.match(configured, /^NUXT_CMS_KNOWLEDGE_ITEMS_URL=http:\/\/127\.0\.0\.1:8055\/items\/knowledge_items$/m);
   assert.match(configured, /^CMS_MILESTONES_URL=http:\/\/127\.0\.0\.1:8055\/items\/milestones$/m);
   assert.match(configured, /^NUXT_CMS_MILESTONES_URL=http:\/\/127\.0\.0\.1:8055\/items\/milestones$/m);
   assert.match(configured, /^CMS_QUALIFICATIONS_URL=http:\/\/127\.0\.0\.1:8055\/items\/qualifications$/m);
@@ -25,6 +27,10 @@ test('local BFF configuration keeps only the dedicated service token and removes
   assert.match(configured, /^NUXT_CMS_MANUFACTURING_EVIDENCE_URL=http:\/\/127\.0\.0\.1:8055\/items\/manufacturing_evidence$/m);
   assert.match(configured, /^CMS_MEDIA_ASSETS_URL=http:\/\/127\.0\.0\.1:8055\/items\/media_assets$/m);
   assert.match(configured, /^NUXT_CMS_MEDIA_ASSETS_URL=http:\/\/127\.0\.0\.1:8055\/items\/media_assets$/m);
+  assert.match(configured, /^CMS_ARTICLES_URL=http:\/\/127\.0\.0\.1:8055\/items\/articles$/m);
+  assert.match(configured, /^NUXT_CMS_ARTICLES_URL=http:\/\/127\.0\.0\.1:8055\/items\/articles$/m);
+  assert.match(configured, /^CMS_PUBLIC_ASSET_BASE_URL=http:\/\/127\.0\.0\.1:8055$/m);
+  assert.match(configured, /^NUXT_CMS_PUBLIC_ASSET_BASE_URL=http:\/\/127\.0\.0\.1:8055$/m);
   assert.match(configured, /^CMS_SERVICE_ENTRY_CLICKS_URL=http:\/\/127\.0\.0\.1:8055\/items\/service_entry_clicks$/m);
   assert.match(configured, /^NUXT_CMS_SERVICE_ENTRY_CLICKS_URL=http:\/\/127\.0\.0\.1:8055\/items\/service_entry_clicks$/m);
   assert.match(configured, /^CMS_WEBHOOK_SECRET=new-webhook-secret$/m);

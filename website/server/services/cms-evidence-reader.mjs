@@ -16,14 +16,23 @@ function safePath(value) {
   }
 }
 
-function safeMedia(entries, assets) {
+function safeMedia(entries, assets, retainIndex = false) {
   if (!Array.isArray(entries)) return [];
   return entries
-    .flatMap((entry) => {
+    .flatMap((entry, sourceIndex) => {
       const path = entry && (safePath(entry.path) ? entry.path.trim() : assets.get(String(entry.media_asset_id))?.path);
       if (!path) return [];
-      const alt = typeof entry.alt === 'string' && entry.alt.trim() ? entry.alt.trim() : assets.get(String(entry.media_asset_id))?.alt;
-      return [{ path, ...(alt ? { alt } : {}) }];
+      const asset = assets.get(String(entry.media_asset_id));
+      const alt = typeof entry.alt === 'string' && entry.alt.trim() ? entry.alt.trim() : asset?.alt;
+      return [{
+        path,
+        ...(retainIndex ? { sourceIndex } : {}),
+        ...(entry?.media_asset_id != null || asset ? { managed: true } : {}),
+        ...(alt ? { alt } : {}),
+        ...(asset?.mediaType ? { mediaType: asset.mediaType } : {}),
+        ...(asset?.posterPath ? { posterPath: asset.posterPath } : {}),
+        ...(asset?.title ? { title: asset.title } : {})
+      }];
     });
 }
 
@@ -31,25 +40,40 @@ function text(value) {
   return typeof value === 'string' ? value : '';
 }
 
+function recordId(value) {
+  if (typeof value !== 'string' && typeof value !== 'number') return '';
+  return String(value).trim();
+}
+
 function sortByOrder(records) {
   return records.toSorted((left, right) => Number(left.sort_order || 0) - Number(right.sort_order || 0));
 }
 
-function normalizeMilestone(record) {
+function normalizeMilestone(record, mediaAssets) {
   if (!Number.isInteger(record?.year) || !text(record.event)) return null;
-  return { source_key: text(record.source_key), year: record.year, event: record.event, evidence: text(record.evidence), sort_order: Number(record.sort_order || 0) };
+  const id = recordId(record.id);
+  const media = safeMedia(record.media, mediaAssets);
+  const iconReference = text(record.icon_asset);
+  const iconAsset = mediaAssets.get(iconReference)?.path || (safePath(iconReference) ? iconReference : '');
+  return {
+    ...(id ? { id } : {}), source_key: text(record.source_key), year: record.year, event: record.event, evidence: text(record.evidence), sort_order: Number(record.sort_order || 0),
+    ...(media.length ? { media } : {}), ...(iconAsset ? { icon_asset: iconAsset } : {})
+  };
 }
 
 function normalizeQualification(record, mediaAssets) {
-  const assets = safeMedia(record?.assets, mediaAssets);
+  const assets = safeMedia(record?.assets, mediaAssets, true);
   if (record?.authorization_status !== 'approved' || !text(record.type) || !text(record.name) || !assets.length) return null;
-  return { source_key: text(record.source_key), type: record.type, name: record.name, assets, sort_order: Number(record.sort_order || 0) };
+  const id = recordId(record.id);
+  return { ...(id ? { id } : {}), source_key: text(record.source_key), type: record.type, name: record.name, assets, sort_order: Number(record.sort_order || 0) };
 }
 
 function normalizeManufacturingEvidence(record, mediaAssets) {
   const media = safeMedia(record?.media, mediaAssets);
   if (!text(record?.process) || !text(record.description) || !media.length) return null;
+  const id = recordId(record.id);
   return {
+    ...(id ? { id } : {}),
     source_key: text(record.source_key), process: record.process, description: record.description, media,
     inspection_evidence: text(record.inspection_evidence), sort_order: Number(record.sort_order || 0)
   };
@@ -75,7 +99,10 @@ export function createCmsEvidenceReader({ milestonesEndpoint = '', qualification
       const body = await response.json();
       if (!Array.isArray(body?.data)) throw new Error('CMS evidence response is invalid');
       const records = body.data.filter((record) => isPublished(record, timestamp));
-      const assets = await mediaAssets.resolve(records.flatMap((record) => collectMediaAssetIds(record.assets || record.media)));
+      const assets = await mediaAssets.resolve(records.flatMap((record) => [
+        ...collectMediaAssetIds(record.assets || record.media),
+        ...(cacheKey === 'milestones' && text(record.icon_asset) ? [text(record.icon_asset)] : [])
+      ]));
       const data = sortByOrder(records
         .map((record) => normalize(record, assets))
         .filter(Boolean));
@@ -88,9 +115,9 @@ export function createCmsEvidenceReader({ milestonesEndpoint = '', qualification
   }
 
   return {
-    listMilestones: () => list({ cacheKey: 'milestones', endpoint: milestonesEndpoint, fields: 'source_key,year,event,evidence,sort_order,status,publication_state,published_at', normalize: normalizeMilestone }),
-    listQualifications: () => list({ cacheKey: 'qualifications', endpoint: qualificationsEndpoint, fields: 'source_key,type,name,assets,authorization_status,sort_order,status,publication_state,published_at', normalize: normalizeQualification }),
-    listManufacturingEvidence: () => list({ cacheKey: 'manufacturingEvidence', endpoint: manufacturingEvidenceEndpoint, fields: 'source_key,process,description,media,inspection_evidence,sort_order,status,publication_state,published_at', normalize: normalizeManufacturingEvidence })
+    listMilestones: () => list({ cacheKey: 'milestones', endpoint: milestonesEndpoint, fields: 'id,source_key,year,event,evidence,media,icon_asset,sort_order,status,publication_state,published_at', normalize: normalizeMilestone }),
+    listQualifications: () => list({ cacheKey: 'qualifications', endpoint: qualificationsEndpoint, fields: 'id,source_key,type,name,assets,authorization_status,sort_order,status,publication_state,published_at', normalize: normalizeQualification }),
+    listManufacturingEvidence: () => list({ cacheKey: 'manufacturingEvidence', endpoint: manufacturingEvidenceEndpoint, fields: 'id,source_key,process,description,media,inspection_evidence,sort_order,status,publication_state,published_at', normalize: normalizeManufacturingEvidence })
   };
 }
 import { collectMediaAssetIds, createCmsMediaAssetResolver } from './cms-media-asset-resolver.mjs';

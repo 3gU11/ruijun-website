@@ -1,15 +1,33 @@
-# Repair Portal Continuity Audit
+# 官网设计意见审计
 
-target: `repairsys/src/ClientApp.vue` and `repairsys/src/styles.css`
-goal: Make the independent Repair portal feel like a continuous Ruijun official-site service journey without coupling it to Nuxt.
+目标：核对艺术设计总监提出的 13 项意见与当前 Nuxt 官网实际行为，区分已确认缺陷、文案调整和需要补充定义的意见。
 
-| # | area | issue | severity | fix | status |
+| # | 页面/区域 | 核对结论 | 当前证据 | 建议处理 | 优先级 |
 |---|---|---|---|---|---|
-| 1 | hierarchy | The anonymous Repair home was a centered support card and product grid, so it read as a separate tool rather than the next page of the official site. | HIGH | Replaced the visible home structure with a full-width service hero, one primary repair CTA, and an official-site-style content rhythm. | fixed |
-| 2 | navigation | The prior top bar only exposed service navigation after login and used a utility-toolbar layout. | HIGH | Added a public portal header with service home, new repair, progress, technical support, return-to-site, and login actions. | fixed |
-| 3 | brand continuity | Repair had no equivalent footer or official-site return path in its page structure. | HIGH | Added a persistent dark brand/footer block with service actions, official-site links, and hotline. | fixed |
-| 4 | conversion | Model selection was shown before explaining the repair journey, so the main action was not obvious at first view. | MED | Moved the repair CTA into the hero and positioned device selection as the next explicit step. | fixed |
-| 5 | mobile navigation | The first mobile implementation displayed a close symbol while the menu was closed. | MED | Replaced it with a standard three-line menu indicator. | fixed |
-| 6 | performance | Client production JS remains about 517 kB after minification. | MED | Follow up with route-level lazy loading and Element Plus import reduction; not required for this structural redesign. | open |
+| 1 | 首页视频声音 | 部分成立，属于浏览器策略限制 | 首页视频默认 `muted`，代码已在首次播放失败后静音重试，并提供“开启声音”按钮；浏览器通常禁止未交互的带声音自动播放 | 保留静音自动播放；把声音按钮做成更明显的首屏控件，并确认按钮文案/状态。不能承诺无人操作自动有声 | 高 |
+| 2 | 先进制造 / 生产核心设备 | 已确认缺陷 | `equipment-1` 至 `equipment-4` 目前是普通 `<img>`，没有点击、弹窗或大图导航 | 增加可访问的缩略图按钮、大图预览、上一张/下一张、Esc 关闭和移动端触控 | 中 |
+| 3 | 关于我们 / 企业简介 | 已确认版式问题 | 企业简介段落从左侧直接开始，没有首行缩进；截图中左文块和右图块的视觉基线也不完全一致 | 只对中文正文增加 `text-indent: 2em`；用网格/对齐规则统一正文块与厂区图的顶部或视觉基线，不用手工空格 | 中 |
+| 4 | 关于我们 / 品牌故事 | 文案需改，现有内容方向一致 | 当前为“二十多岁的王树钧兄弟”；未体现“年轻兄弟俩”的指定口吻 | 按审核后的正式文案替换为“二十来岁的年轻兄弟俩”，同时确认“王树钧兄弟”是否应改成两位人物的真实称谓，避免事实表述不准确 | 中 |
+| 5 | 关于我们 / 累计用户 | 已确认文案问题 | 页面显示“累计用户 20000+” | 删除数字及 `20000+`，保留“累计用户”或按总监确认改为不带数量的表述 | 中 |
+| 6 | 关于我们 / 国内外用户照片 | 已确认交互缺失 | 国内客户、国外客户照片是普通 `<img>`，没有大图预览；证书/荣誉/专利已有 lightbox，可复用 | 将两组客户照片接入同一套大图预览与翻页交互 | 中 |
+| 7 | 服务支持 / PSD 缩放 | 现象需要限定视口，不能直接判定为全站缺陷 | 1440×900 桌面实测已加载 PSD 风格服务首屏；当前 CSS 使用原始宽高比和大桌面规则，窄桌面/移动端的“缩小”需求尚未按 PSD 逐项比对 | 提供设计总监指定的目标视口或 PSD 标注；按 1440×900、390×844 分别核对比例、裁切、文字位置后再改 | 高 |
+| 8 | 服务支持 / 产品技术手册 | 表述有歧义 | 点击“技术文件下载”可以进入 `/service/download`；进入后“产品技术手册”当前显示“暂无已发布资料” | 若意思是“不能点击”：需要确认是否要禁用入口；若意思是“点了没有内容”：应补齐已发布资源或提供明确空状态，不应静默禁用 | 高 |
+| 9 | 技术文件下载 / 返回 | 已确认缺陷 | 下载页只有页脚“返回首页”，页面主体没有返回服务支持的入口；已有 `.download-back` 样式但模板没有对应链接 | 在标题或搜索区上方增加“返回服务支持”链接，使用 `router.back()` 需有 fallback 到 `/service` | 中 |
+| 10 | 服务支持 / 办事处照片、文字、地图 | 已确认部分对齐问题 | 桌面网格中照片与右侧内容分列；首个区域照片因额外顶部间距，和地图顶部不在同一基线；其余区域没有地图，仅有照片和文字 | 将照片、地图放入统一媒体列并明确每个区域是否需要地图；去除导致首个区域基线偏移的额外 margin，按 PSD 对齐 | 中 |
+| 11 | 编号缺失 | 原始意见编号跳过 11 | 当前清单从 10 直接到 12，无法确认是否漏了一条需求 | 设计总监补充第 11 项，避免验收遗漏 | 低 |
+| 12 | 服务支持 / 办事处文案 | 已确认文案未达要求 | 页面显示“全国几十家门店 涵盖全国主要省市”；当前 DOM 有 44 个办事处条目、10 个区域 | 按指定文案改为“国内50多个直属办事处，覆盖全国主要省市”；同时核实 44 条名单是否已过时，不能只改数字宣传 | 中 |
+| 13 | 服务支持 / 办事处文字间距 | 已确认版式问题 | 办事处条目使用双列网格，地址较长时换行，条目高度和行间视觉节奏不稳定 | 压缩条目的纵向 padding、图标与地址/负责人间距；保留长地址自然换行并做 1440 与移动端检查 | 中 |
 
-verification: `npm run build:client` passed. Production-preview screenshots were checked at desktop and mobile widths. Full screen-reader testing and logged-in workflow testing remain manual acceptance work.
+## 不应直接照改的地方
+
+- “视频出来没声音”不是单纯的代码故障。未获得用户手势时，Chrome、Safari 等浏览器会阻止带声音自动播放；可优化声音入口，但不能绕过策略。
+- “产品技术手册不能再点击”与当前交互事实相反：入口能点击并能导航。需要先确认是要禁用入口，还是要修复资料为空。
+- “国内50多个”是宣传口径，不等于当前数据真实数量。当前页面实际统计到 44 条办事处记录，必须先确认名单和统计口径。
+- 服务支持“没缩小”需要指定目标 viewport 和 PSD 对照图；只凭一句话改尺寸，容易破坏桌面与移动端比例。
+
+## 建议实施顺序
+
+1. 先修复高优先级：声音控件状态、服务页 PSD 尺寸验收、下载入口空状态/文案歧义。
+2. 再补齐交互：生产核心设备和国内外客户大图翻页、下载页返回。
+3. 最后统一文案与排版：企业简介缩进、品牌故事、用户数字、办事处文案和间距。
+

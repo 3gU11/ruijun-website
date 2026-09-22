@@ -1,9 +1,13 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-const { buildContentVersion, buildRestoredDraft } = await import('../content-workflow/content-versioning.mjs');
+const { buildContentVersion, buildRestoredDraft, databaseDateTime } = await import('../content-workflow/content-versioning.mjs');
 
 const now = () => new Date('2026-08-01T10:00:00.000Z');
+
+test('database datetime values use MySQL DATETIME syntax at the persistence boundary', () => {
+  assert.match(databaseDateTime('2026-08-01T10:00:00.123Z'), /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
+});
 
 test('content version snapshots exclude Directus internals and retain only changed public-content fields', () => {
   const version = buildContentVersion({

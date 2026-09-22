@@ -31,7 +31,7 @@ useSeoMeta({ title: '产品型号', description: '瑞钧智科已发布中走丝
       <aside v-if="selectedCodes.length" class="comparison-panel" aria-live="polite"><div class="comparison-heading"><div><p>MODEL COMPARISON</p><h3>型号参数对比 <span>{{ selectedCodes.length }} / 3</span></h3></div><button type="button" @click="clearComparison">清空</button></div><p v-if="selectedCodes.length < 2" class="comparison-hint">再选择一台已发布型号即可开始对比。</p><div v-else class="comparison-table-wrap"><table><thead><tr><th scope="col">参数</th><th v-for="model in comparedModels" :key="String(model.model_code)" scope="col">{{ model.name || model.model_code }}</th></tr></thead><tbody><tr v-for="row in comparisonRows" :key="row.key"><th scope="row">{{ row.label }}</th><td v-for="(value, index) in row.values" :key="`${row.key}-${index}`">{{ value || '—' }}</td></tr></tbody></table><p v-if="!comparisonRows.length" class="comparison-hint">所选型号暂未发布可对比的结构化参数。</p></div></aside>
       <p v-else class="empty-state">请选择已发布产品系列，或联系瑞钧获取选型建议。</p>
     </section>
-    <SiteFooter />
+    <PsdFooter />
   </main>
 </template>
 

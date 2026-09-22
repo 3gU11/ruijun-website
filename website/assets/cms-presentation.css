@@ -1,0 +1,89 @@
+/* Defaults preserve the PSD layout. A group affects only the elements that a
+ * page deliberately marks and only after an editor enables that group. */
+.cms-presentation[data-cms-layout-enabled="true"] > .cms-positioned,
+.cms-presentation[data-cms-layout-enabled="true"] .cms-positioned {
+  z-index: var(--cms-z-index);
+  text-align: var(--cms-text-align) !important;
+  translate: var(--cms-offset-x-desktop) var(--cms-offset-y-desktop) !important;
+}
+
+.cms-positioned-item[data-cms-layout-enabled="true"] {
+  translate: var(--cms-offset-x-desktop) var(--cms-offset-y-desktop) !important;
+}
+
+.cms-field-presentation[data-cms-layout-enabled="true"] {
+  position: relative;
+  z-index: var(--cms-z-index, auto);
+  translate: var(--cms-offset-x-desktop) var(--cms-offset-y-desktop) !important;
+}
+
+.cms-field-presentation[data-cms-text-enabled="true"] {
+  color: var(--cms-text-color) !important;
+  font-size: var(--cms-text-size-desktop) !important;
+  font-weight: var(--cms-text-weight) !important;
+  line-height: var(--cms-text-line-height) !important;
+}
+
+/* Legacy PSD chapters use scoped !important typography rules. A field that an
+ * editor explicitly enables must win that cascade without changing defaults. */
+#__nuxt .cms-field-presentation[data-cms-layout-enabled="true"] {
+  translate: var(--cms-offset-x-desktop) var(--cms-offset-y-desktop) !important;
+}
+
+#__nuxt .cms-field-presentation[data-cms-text-enabled="true"] {
+  color: var(--cms-text-color) !important;
+  font-size: var(--cms-text-size-desktop) !important;
+  font-weight: var(--cms-text-weight) !important;
+  line-height: var(--cms-text-line-height) !important;
+}
+
+.cms-presentation[data-cms-text-enabled="true"] .cms-styled-text {
+  max-width: var(--cms-content-width) !important;
+  color: var(--cms-text-color) !important;
+  font-size: var(--cms-text-size-desktop) !important;
+  font-weight: var(--cms-text-weight) !important;
+  line-height: var(--cms-text-line-height) !important;
+  text-align: var(--cms-text-align) !important;
+}
+
+/* Repeated cards are their own presentation roots. Keep their type changes
+ * local so a canvas edit cannot spill into neighbouring legacy cards. */
+.cms-positioned-item.cms-presentation[data-cms-text-enabled="true"] .cms-styled-text {
+  color: var(--cms-text-color) !important;
+  font-size: var(--cms-text-size-desktop) !important;
+  font-weight: var(--cms-text-weight) !important;
+  line-height: var(--cms-text-line-height) !important;
+}
+
+.cms-presentation[data-cms-media-enabled="true"] .cms-media {
+  object-fit: var(--cms-media-fit);
+  object-position: var(--cms-media-position);
+}
+
+@media (min-width: 1025px) {
+  .cms-presentation[data-cms-responsive-enabled="true"][data-cms-desktop-visible="false"] { display: none !important; }
+}
+
+@media (min-width: 761px) and (max-width: 1024px) {
+  .cms-presentation[data-cms-responsive-enabled="true"][data-cms-tablet-visible="false"] { display: none !important; }
+}
+
+@media (max-width: 760px) {
+  .cms-presentation[data-cms-layout-enabled="true"] > .cms-positioned,
+  .cms-presentation[data-cms-layout-enabled="true"] .cms-positioned {
+    translate: var(--cms-offset-x-mobile) var(--cms-offset-y-mobile);
+  }
+
+  .cms-positioned-item[data-cms-layout-enabled="true"] {
+    translate: var(--cms-offset-x-mobile) var(--cms-offset-y-mobile);
+  }
+
+  #__nuxt .cms-field-presentation[data-cms-layout-enabled="true"] {
+    translate: var(--cms-offset-x-mobile) var(--cms-offset-y-mobile) !important;
+  }
+
+  .cms-presentation[data-cms-text-enabled="true"] .cms-styled-text { font-size: var(--cms-text-size-mobile); }
+  .cms-positioned-item.cms-presentation[data-cms-text-enabled="true"] .cms-styled-text { font-size: var(--cms-text-size-mobile) !important; }
+  #__nuxt .cms-field-presentation[data-cms-text-enabled="true"] { font-size: var(--cms-text-size-mobile) !important; }
+  .cms-presentation[data-cms-responsive-enabled="true"][data-cms-mobile-visible="false"] { display: none !important; }
+}

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { ElMessage } from 'element-plus/es/components/message/index.mjs';
 import 'element-plus/es/components/message/style/css';
@@ -40,7 +40,7 @@ import { BrowserQRCodeReader } from '@zxing/browser';
 const route = useRoute();
 const router = useRouter();
 const { playPageEntry } = useRepairMotion();
-const officialSiteUrl = String(import.meta.env.VITE_OFFICIAL_SITE_URL || `${window.location.protocol}//${window.location.hostname}:4300/`).trim();
+const officialSiteUrl = String(import.meta.env.VITE_OFFICIAL_SITE_URL || `${window.location.protocol}//${window.location.hostname}:4175/`).trim();
 const officialServiceUrl = computed(() => {
   try {
     return new URL('/service', officialSiteUrl).toString();
@@ -119,10 +119,7 @@ const boardWarrantyError = ref('');
 const boardWarrantyLoading = ref(false);
 const scanTokenInput = ref('');
 const scanInputError = ref('');
-const scanCameraActive = ref(false);
-const scanVideo = ref(null);
 let qrReader = null;
-let qrControls = null;
 const serviceGuideDialog = ref(false);
 const faqDialog = ref(false);
 const faqQuestion = ref('');
@@ -533,12 +530,6 @@ async function resolveBoardQr(inputToken = '') {
   }
 }
 
-function stopQrCamera() {
-  qrControls?.stop?.();
-  qrControls = null;
-  scanCameraActive.value = false;
-}
-
 async function submitQrScan(value = scanTokenInput.value) {
   const token = extractBoardQrToken(value);
   if (!/^[A-Za-z0-9_-]{32,128}$/.test(token)) {
@@ -546,27 +537,8 @@ async function submitQrScan(value = scanTokenInput.value) {
     return;
   }
   scanInputError.value = '';
-  stopQrCamera();
   scanTokenInput.value = token;
   await resolveBoardQr(token);
-}
-
-async function startQrCamera() {
-  scanInputError.value = '';
-  stopQrCamera();
-  scanCameraActive.value = true;
-  await nextTick();
-  try {
-    qrReader = new BrowserQRCodeReader();
-    qrControls = await qrReader.decodeFromVideoDevice(undefined, scanVideo.value, (result) => {
-      if (result) submitQrScan(result.getText());
-    });
-  } catch (error) {
-    stopQrCamera();
-    scanInputError.value = error?.name === 'NotAllowedError'
-      ? '浏览器拒绝了摄像头权限，请允许摄像头，或改用扫码枪/地址输入。'
-      : '当前电脑无法打开摄像头，请改用扫码枪或地址输入。';
-  }
 }
 
 async function handleQrImageChange(event) {
@@ -1172,7 +1144,6 @@ onMounted(async () => {
 
 onUnmounted(() => {
   faqAbortController?.abort();
-  stopQrCamera();
 });
 </script>
 
@@ -1394,17 +1365,13 @@ onUnmounted(() => {
             <div><strong>请将板卡二维码放入扫描框</strong><span>识别后会自动匹配所属设备、机型和物料，并进入维修申请。</span></div>
           </div>
           <div v-if="!route.params.token && !boardQrLoading && !boardQrResult" class="board-qr-entry-panel">
-            <p class="board-qr-entry-lead">PC 端可以使用扫码枪、摄像头，或粘贴二维码地址。</p>
+            <p class="board-qr-entry-lead">请拍摄一张清晰的二维码照片后识别，也可以使用扫码枪或粘贴二维码地址。</p>
             <div class="board-qr-entry-actions">
-              <button type="button" class="board-qr-camera-button" @click="scanCameraActive ? stopQrCamera() : startQrCamera()">
-                {{ scanCameraActive ? '停止摄像头' : '打开摄像头扫码' }}
-              </button>
               <label class="board-qr-upload-button">
-                <span>上传二维码图片</span>
-                <input type="file" accept="image/*" @change="handleQrImageChange" />
+                <span>拍摄二维码照片</span>
+                <input type="file" accept="image/*" capture="environment" @change="handleQrImageChange" />
               </label>
             </div>
-            <video v-show="scanCameraActive" ref="scanVideo" class="board-qr-camera" autoplay muted playsinline></video>
             <form class="board-qr-token-form" @submit.prevent="submitQrScan()">
               <input v-model="scanTokenInput" type="text" autocomplete="off" placeholder="扫描枪输入或粘贴 /scan/二维码地址" aria-label="二维码地址或Token" />
               <button type="submit">解析并进入维修</button>

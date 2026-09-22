@@ -5,14 +5,14 @@ export const PREVIEW_TOKEN_MIN_TTL_SECONDS = 60;
 export const PREVIEW_TOKEN_MAX_TTL_SECONDS = 30 * 60;
 
 export const previewableCollections = Object.freeze(new Set([
-  'pages', 'product_series', 'product_models', 'product_parameters', 'case_studies', 'articles',
+  'pages', 'homepage_sections', 'repair_page_configs', 'product_series', 'product_models', 'product_parameters', 'case_studies', 'articles',
   'manufacturing_evidence', 'qualifications', 'milestones', 'service_resources', 'service_locations',
   'knowledge_items', 'external_service_entries', 'site_settings'
 ]));
 
 export const previewIssuerScopes = Object.freeze({
   '内容编辑': previewableCollections,
-  '审核管理': new Set(['pages', 'product_series', 'case_studies', 'articles', 'manufacturing_evidence', 'qualifications', 'milestones', 'service_locations']),
+  '审核管理': new Set(['pages', 'homepage_sections', 'repair_page_configs', 'product_series', 'case_studies', 'articles', 'manufacturing_evidence', 'qualifications', 'milestones', 'service_resources', 'service_locations', 'knowledge_items']),
   '系统管理员': previewableCollections
 });
 

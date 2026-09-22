@@ -33,7 +33,8 @@ test('standalone client has a QR landing route and resolves it through the Repai
   assert.match(client, /clientView === 'scan'/);
   assert.match(client, /resolveBoardQr/);
   assert.match(client, /BrowserQRCodeReader/);
-  assert.match(client, /decodeFromVideoDevice/);
+  assert.match(client, /decodeFromImageUrl/);
+  assert.match(client, /capture="environment"/);
   assert.match(client, /handleQrImageChange/);
   assert.match(client, /submitQrScan/);
   assert.match(vite, /path === '\/scan'/);

@@ -46,7 +46,10 @@ export function getStoryMotion(progress) {
     backdropScale: 1 + 0.045 * travel,
     backdropRotation: travel ? -0.3 * travel : 0,
     copyY: travel ? -28 * travel : 0,
-    copyOpacity: 1 - 0.16 * travel
+    // The hero copy belongs only to the opening panel. Remove it before the
+    // story panel reaches the viewport instead of leaving a ghost over the
+    // factory background.
+    copyOpacity: 1 - clamp((normalizedProgress - 0.12) / 0.22, 0, 1)
   };
 }
 

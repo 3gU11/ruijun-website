@@ -18,7 +18,11 @@ test('CMS media asset resolver maps only published asset metadata to a safe Dire
   });
 
   const assets = await resolver.resolve([7, '8', 'invalid']);
-  assert.deepEqual(assets.get('7'), { path: 'https://cms.example.test/assets/file-7', alt: '已审核机床' });
+  assert.deepEqual(assets.get('7'), {
+    path: 'https://cms.example.test/assets/file-7', managed: true, alt: '已审核机床', mediaType: 'image', posterPath: null,
+    title: '', description: '', durationSeconds: null, width: null, height: null,
+    autoplay: false, muted: true, loop: false, published_at: '2026-07-31T00:00:00.000Z'
+  });
   assert.equal(assets.has('8'), false);
   assert.equal(request.url.searchParams.get('filter[id][_in]'), '7,8');
   assert.equal(request.url.searchParams.get('filter[status][_eq]'), 'published');
