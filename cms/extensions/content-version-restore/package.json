@@ -3,5 +3,5 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "directus:extension": { "host": "^11.0.0", "type": "endpoint", "path": "dist/index.js", "source": "dist/index.js" }
+  "directus:extension": { "host": "^11.0.0", "type": "endpoint", "path": "src/index.js", "source": "src/index.js" }
 }

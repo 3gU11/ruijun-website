@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-const { registerContentVersionRestoreEndpoint } = await import('../extensions/content-version-restore/dist/index.js');
+const { registerContentVersionRestoreEndpoint } = await import('../extensions/content-version-restore/src/index.js');
 
 test('version endpoint exposes a bounded, publisher-only history with parsed diff metadata', async () => {
   const handlers = new Map();

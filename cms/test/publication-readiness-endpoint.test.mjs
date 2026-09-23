@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-const { registerPublicationReadinessEndpoint } = await import('../extensions/publication-readiness-endpoint/dist/index.js');
+const { registerPublicationReadinessEndpoint } = await import('../extensions/publication-readiness-endpoint/src/index.js');
 
 function responseCapture() {
   const capture = { statusCode: null, body: null };

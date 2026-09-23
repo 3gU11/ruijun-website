@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 const { LeadWorkflowError, applyLeadWorkflowUpdate } = await import('../lead-workflow/lead-workflow.mjs');
-const { registerLeadWorkflowHook } = await import('../extensions/lead-workflow/dist/index.js');
+const { registerLeadWorkflowHook } = await import('../extensions/lead-workflow/src/index.js');
 
 const now = () => new Date('2026-08-01T08:00:00.000Z');
 

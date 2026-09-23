@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-const { registerKnowledgeReviewEndpoint } = await import('../extensions/knowledge-review-endpoint/dist/index.js');
+const { registerKnowledgeReviewEndpoint } = await import('../extensions/knowledge-review-endpoint/src/index.js');
 
 function responseCapture() {
   const capture = { statusCode: null, body: null };

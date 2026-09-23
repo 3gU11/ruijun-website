@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-const { registerContentPublicationWorkflowHook } = await import('../extensions/content-publication-workflow/dist/index.js');
+const { registerContentPublicationWorkflowHook } = await import('../extensions/content-publication-workflow/src/index.js');
 
 function hookContext({ roleName, record, mediaAssets = [], file = null, user = 'user-1' }) {
   const versions = [];

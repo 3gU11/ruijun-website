@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-const { registerNotificationWorkflowHook } = await import('../extensions/notification-workflow/dist/index.js');
+const { registerNotificationWorkflowHook } = await import('../extensions/notification-workflow/src/index.js');
 
 function hookContext({ roleName, job, user = 'user-1' }) {
   return {
