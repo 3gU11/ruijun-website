@@ -1,0 +1,110 @@
+{
+ "marker": "画布发布验证mv7wrebe",
+ "original": "在线报单、进度追踪、专人支持，全程透明可查",
+ "log": [
+  "原始正文: \"在线报单、进度追踪、专人支持，全程透明可查\"",
+  "本次标记: \"画布发布验证mv7wrebe\"",
+  "① 登录 CMS 成功",
+  "② 服务支持页当前状态: published/published",
+  "   [截图] 01-01-published-queue.png — 内容发布队列 / 已发布",
+  "   [截图] 02-02-taken-offline.png — 已下线（published → unpublished）",
+  "②b 已下线 → 状态 unpublished/unpublished",
+  "   [截图] 03-03-recover-queue.png — 内容送审 / 恢复草稿 列表",
+  "   [截图] 04-04-restored-draft.png — 已恢复为草稿",
+  "③ 已恢复为草稿 → 状态 draft",
+  "   [截图] 05-03-section-selected.png — 选中 服务支持 / 服务支持首屏",
+  "   [截图] 06-04-live-preview.png — 打开实时预览（画布 = 真实官网页面）",
+  "④ 画布已打开",
+  "⑤ 已选「文字」工具；编辑模式按钮显示「编辑中」（\"编辑中\"表示已开启，不要再点）",
+  "   [截图] 07-05-element-selected.png — 单击选中元素 → 属性面板打开（选中字段：body）",
+  "   [截图] 08-06-inline-typing.png — 双击后直接在画布上输入：「画布发布验证mv7wrebe」",
+  "⑥ 输入后「保存草稿」按钮 disabled=false",
+  "   [截图] 09-07-canvas-saved.png — 画布修改已保存到后台草稿",
+  "⑦ 画布保存后 CMS 正文 = \"画布发布验证mv7wrebe\"",
+  "   ★ 画布修改已写入 CMS",
+  "   [截图] 10-08-submit-queue.png — 内容送审 / 提交审核 列表",
+  "   [截图] 11-09-submitted.png — 已提交审核",
+  "⑧ 已提交审核 → 状态 review",
+  "   [截图] 12-10-review-queue.png — 高级设置 / 审核队列",
+  "   [截图] 13-11-approved.png — 已批准进入待发布",
+  "⑨ 已批准 → 状态 scheduled",
+  "   [截图] 14-12-publish-queue.png — 内容发布队列 / 待发布",
+  "   [截图] 15-13-published.png — 已正式发布",
+  "⑩ 已正式发布 → 状态 published/published",
+  "⑪ 等待官网缓存刷新（约 30 秒）...",
+  "⑫ 官网 /service 是否显示新文案: 是 ★",
+  "",
+  "最终结论：画布编辑 → 送审 → 审核 → 发布 → 官网可见 = 全链路成功",
+  "[还原] 状态=published/published 正文=\"在线报单、进度追踪、专人支持，全程透明可查\" 一致=true"
+ ],
+ "shots": [
+  {
+   "file": "01-发布队列-已发布.png",
+   "label": "01-01-published-queue.png"
+  },
+  {
+   "file": "02-已下线.png",
+   "label": "02-02-taken-offline.png"
+  },
+  {
+   "file": "03-送审-恢复草稿队列.png",
+   "label": "03-03-recover-queue.png"
+  },
+  {
+   "file": "04-已恢复为草稿.png",
+   "label": "04-04-restored-draft.png"
+  },
+  {
+   "file": "05-选中页面与区块.png",
+   "label": "05-03-section-selected.png"
+  },
+  {
+   "file": "06-打开实时预览-画布.png",
+   "label": "06-04-live-preview.png"
+  },
+  {
+   "file": "07-单击选中元素-属性面板.png",
+   "label": "07-05-element-selected.png"
+  },
+  {
+   "file": "08-双击内联输入.png",
+   "label": "08-06-inline-typing.png"
+  },
+  {
+   "file": "09-画布保存到草稿.png",
+   "label": "09-07-canvas-saved.png"
+  },
+  {
+   "file": "10-送审-提交审核.png",
+   "label": "10-08-submit-queue.png"
+  },
+  {
+   "file": "11-已提交审核.png",
+   "label": "11-09-submitted.png"
+  },
+  {
+   "file": "12-审核队列.png",
+   "label": "12-10-review-queue.png"
+  },
+  {
+   "file": "13-已批准待发布.png",
+   "label": "13-11-approved.png"
+  },
+  {
+   "file": "14-发布队列-待发布.png",
+   "label": "14-12-publish-queue.png"
+  },
+  {
+   "file": "15-已正式发布.png",
+   "label": "15-13-published.png"
+  },
+  {
+   "file": "16-官网真实页面.png",
+   "label": "14-live-site.png"
+  },
+  {
+   "file": "17-官网首屏确认新文案.png",
+   "label": "15-live-site-hero.png"
+  }
+ ]
+}

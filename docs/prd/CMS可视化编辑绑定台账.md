@@ -344,3 +344,72 @@
 2026-09-01 增量：服务入口第 3 项 `pages/3.sections[support-actions].items.2.title` 已完成真实 PC 可逆闭环。真实画布点击“服务流程与寄修”后属性面板精确命中该嵌套路径；临时改字即时渲染，保存后认证 Directus 回读 `HTTP 200` 且仍为 `draft/unpublished`，工作台“重新加载”后的 iframe 与属性栏均保留测试值。最终从同一属性面板恢复“服务流程与寄修”并认证回读确认，无测试数据残留。截图：`output/playwright/service-support-action-third-title-restored-20260901.png`。该项不包含服务入口图案或图片的媒体替换。
 
 2026-09-01 增量：先进制造 `pages/8.sections[core-equipment].media.0` 的不同图片替换完成真实 PC 可逆闭环。四张设备候选来自用户提供的 `素材/先进制造/先进制造(1).psd` 的现有图层，已整理到 `素材/先进制造/设备照片/` 并由导入器按来源路径去重；资产 51-54 均为 `pending_review + draft + unpublished`，不会进入公开页面。因三张真实图层为 `740x415`，设备展示位最低高度已从错误的 416 修正为 415，仍保持 740px 宽度与内部审核限制。画布选择“平面磨床”后，右侧属性栏精确命中该路径；选择资产 52 时，字段立即为 `{"media_asset_id":"52","role":""}`，iframe 显示“立式加工中心”。保存草稿、点击工作台“重新加载”后选择和预览保持 52；随后选回 50、保存并截图确认“平面磨床”已恢复。媒体导入/治理定向测试 `21/21` 与 Directus 健康检查通过。此闭环不代表可公开发布，必须先完成媒体版权与发布审核。
+
+## 2026-09-23 当前媒体绑定覆盖矩阵（以真实脚本结果为准）
+
+| 范围 | 真实验证证据 | 状态 |
+|---|---|---|
+| 首页三大理由（背景/前景/图标，含独立 `homepage_sections`） | `verify-homepage-background-browser.mjs`、独立区块不同像素闭环；认证保存/回读/重载/恢复 | 已验证 |
+| 首页首屏视频、海报、结束静帧 | 首屏视频脚本及浏览器视频播放验证；海报/结束静帧编辑入口和保存回读 | 已验证 |
+| 首页/关于时间轴背景和图标 | `verify-about-timeline-media-preview.mjs`、`verify-about-timeline-icon-media-preview.mjs`、首页时间轴浏览器验证 | 已验证 |
+| 关于首屏背景/机器前景 | `verify-about-hero-media-preview.mjs`、`verify-about-hero-foreground-media-preview.mjs`，桌面隐藏前景有编辑模式入口 | 已验证 |
+| 关于厂区、资质、荣誉、专利、合作品牌、客户图库 | 厂区/资质/合作品牌/国内客户/国外客户脚本通过；荣誉/专利候选仍需逐项不同内容浏览器闭环 | 部分验证 |
+| 服务首屏、入口图标、区域图、地图、教程海报 | 服务媒体脚本及浏览器闭环通过 | 已验证 |
+| 产品封面、设备主图、特性图、工程图、技术标签 | 产品型号工程图、资料下载及部分设备图通过；全部产品媒体槽位仍需逐项验收 | 部分验证 |
+| 制造首屏、工艺节点、核心设备图库 | 制造图层、核心设备和工艺节点相关脚本通过；全部制造媒体槽位仍需逐项验收 | 部分验证 |
+| 新闻封面、视频、海报、正文媒体 | 动态封面、视频切换、视频海报通过；正文媒体尚需逐项浏览器闭环 | 部分验证 |
+
+“已验证”表示已有认证回读和恢复证据；“部分验证”不得升级为 PRD 完成。固定 PSD、纹理、Logo 和无 CMS 字段资源保持只读/待建模标记。
+- 新增并运行 `cms/scripts/verify-about-qualification-browser.mjs`：荣誉记录 `qualifications/12.assets.0` 使用候选素材 121，专利记录 `qualifications/20.assets.0` 使用候选素材 132；两项均完成真实画布选中、媒体替换、保存 PATCH、认证 Directus 回读、工作台重新打开确认，并恢复原始静态路径。此前错误的测试修改已回读清理。
+- 产品型号自动详情字段与第三型号记录脚本通过；产品发布恢复脚本因当前本地无已发布型号（`NO_PUBLISHED_MODELS`）失败，该失败属于发布环境前置条件，不计入媒体绑定闭环通过。
+
+## 2026-09-23 产品系列封面用途隔离修补
+
+- 发现原实现错误复用 `product.gallery.image`：产品系列封面选择器会列出型号尺寸工程图，违反媒体用途隔离。
+- 新增受控用途 `product.series.cover`，同步后端预览授权、工作台候选过滤、Nuxt 封面绑定、治理规格和测试；`product.gallery.image` 继续只服务产品型号图/特性图/工程图。
+- 新增临时媒体浏览器验收：创建两个临时 `product.series.cover` 草稿资产（复用现有文件但不修改正式资产），真实工作台完成封面选中、候选隔离、不同文件替换、保存、认证回读、重新打开和恢复，最后删除临时资产并回读确认。
+- 验收结果：`product-series-cover-browser` 全部通过；预览授权和页面媒体策略定向测试 16/16 通过。
+
+## 2026-09-23 制造与新闻剩余项复核
+
+- 制造工艺节点脚本、制造图层媒体和媒体治理 E2E 均通过；但 `manufacturing_evidence` 现有多数 `media` 项仍是 `/assets/psd/...` 静态路径，没有 `media_asset_id` 和受控 `manufacturing.*` 资产，按 PRD 必须标记为只读/待媒体，不能伪造可写字段。
+- 新闻动态封面、视频切换、视频海报和受保护下载脚本通过。当前视频新闻记录使用 `articles.media[]`；正文 `body_media` 已有独立 `news.article.body` 画布绑定、治理规格和候选用途，但真实文章尚无正文媒体记录，且本轮临时浏览器验收因工作台 iframe 未加载而未形成证据，仍需不同图片的真实浏览器替换、保存、认证回读、刷新与恢复验收，不能用正文 URL 或普通 HTML 冒充媒体闭环。
+- 产品系列封面已改用独立 `product.series.cover` 用途并完成真实浏览器闭环；产品型号工程图/特性图继续使用 `product.gallery.image`。
+
+## 2026-09-23 静态媒体分类审计
+
+新增 `cms/scripts/audit-website-media.mjs` 的分类输出：扫描源码而非构建产物，对每个本地媒体引用标记为受控绑定/明确只读，或静态回退/装饰。当前无未分类引用；该审计不能将 PSD、Logo、纹理和动画装饰变成可编辑 CMS 媒体。
+
+## 2026-09-23 最终绑定不变量审计
+
+源码媒体元素审计确认：所有本地 `<img>/<video>` 节点均有受控绑定或明确只读属性。固定动画变形机、首页装饰机器图和页脚 Logo 已显式标注为不可编辑装饰。
+
+## 2026-09-23 正文媒体真实闭环复验通过
+
+- 已修复正文媒体在 CMS/Nuxt 白名单中丢失、解析误放产品分支、排序后索引串写，以及画布修改未同步保存 JSON 的问题。工作台与预览端点已重建，并重启本地 Directus。
+- 可重复脚本：`cms/scripts/verify-news-body-media-browser.mjs`。临时文章 1054、两张不同底层图片 511/512 完成真实登录工作台选中、替换、图像解码和像素差异、保存、认证回读、工作台重开及预览地址保持；恢复原值采用认证 API 回写并回读。
+- 删除临时文章和媒体后逐条认证查询为空，`cleanupVerified=true`。日志：`output/news-body-browser-verified.log`。
+- 官网全量 463/463 通过；CMS 全量 533/533 通过。测试日志分别为 `output/website-body-final-regression.log`、`output/cms-body-final-regression.log`。
+- 此证据更新此前正文媒体“待建模/无法加载”的历史结论，但不证明其他尚未逐项验收的媒体槽位完成；本次重载断言是图片地址保持，尚未对重载及恢复后的图片执行像素比对。
+
+### 正文媒体刷新与画布恢复像素复验
+
+`cms/scripts/verify-news-body-media-browser.mjs` 再次通过：刷新后的图片像素与替换后像素一致；从同一画布选择原图、点击保存、认证回读完整 `body_media` 与原始值相等；重新打开工作台后原图像素仍一致。结果包含 `reloadPixelsVerified=true`、`canvasRestorationVerified=true`、`cleanupVerified=true`，日志为 `output/news-body-browser-verified.log`。此结果补齐前述恢复采用 API 和重载只检查地址的验收限制。其他页面未验收项不因此升级为完成。
+
+### 2026-09-23 P0 行业领军背景与图标复验
+
+修正 `verify-homepage-background-browser.mjs` 中替代图片固定使用 91 号、导致 leadership 场景拿同一个文件对比的问题。分别执行 `leadership --different-image` 与 `icon-industry-leadership --different-image`，真实画布选择、不同像素替换、保存、认证回读、重载像素一致均通过；API 恢复与临时素材删除回读通过。证据：`output/reasons-leadership-current.log`、`output/reasons-leadership-icon-current.log`。仅覆盖这两个位置。
+
+### 2026-09-23 P0 其余理由图标逐项复验
+
+`icon-performance --different-image` 和 `icon-advanced-manufacturing --different-image` 两个真实浏览器场景通过：各自画布选中、不同像素替换、保存、认证回读、完整重载像素保持均成功；原始页面数据通过 API 恢复并回读，临时媒体删除并确认不存在。证据分别为 `output/reasons-performance-icon-current.log`、`output/reasons-manufacturing-icon-current.log`。结合此前行业领军图标的单独运行，三个理由的图标均已有逐项证据；不据此扩大到未测试位置。
+
+### 2026-09-23 首屏海报与结束静帧逐项复验
+
+分别执行 `verify-homepage-background-browser.mjs hero-poster --different-image` 和 `hero-still --different-image`。两个场景均完成真实画布选中、不同图片解码像素变化、保存、认证回读以及重载后的像素一致；原始页面数据恢复并回读，临时媒体删除并回读确认。日志：`output/home-hero-poster-current.log`、`output/home-hero-still-current.log`。此处验证编辑模式中的两个明确媒体入口，不将其扩大为视频播放时序验收。
+
+### 荣誉与专利不同像素闭环复验
+
+增强 `verify-about-qualification-browser.mjs` 的解码像素断言后，荣誉 qualifications/12 使用候选 121、专利 qualifications/20 使用候选 131 均完成真实鼠标选中、像素变化、保存、认证回读、重载像素一致及原 assets 恢复回读。日志：output/about-honor-browser-current.log、output/about-patent-browser-current.log。
+
+专利候选 132 与原图解码像素相同，因此其早期成功只证明引用切换；此次改用候选 131 才补齐不同画面证据。未创建新媒体或文件；原值恢复采用 API，未执行恢复后画布像素比较。此结果只覆盖两条记录，不外推到整个图库。
