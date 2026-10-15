@@ -2,6 +2,11 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { editorialPreviewGrantIds, livePreviewGrantIds } from '../extensions/content-editor-workbench/src/editorial-preview-grants.js';
 
+test('independent homepage grants collect only explicit valid media IDs', () => {
+ assert.deepEqual(livePreviewGrantIds('homepage_sections', {media:[{media_asset_id:90},{media_asset_id:'90'},{media_asset_id:'-1'},{path:'/api/preview/media/91'}]}), ['90']);
+ assert.deepEqual(livePreviewGrantIds('homepage_sections', {media:null}), []);
+});
+
 test('qualification grants collect explicit asset IDs, not static paths', () => {
  assert.deepEqual(livePreviewGrantIds('qualifications', {assets:[{media_asset_id:113},{media_asset_id:'113'},{path:'/api/preview/media/114'}]}), ['113']);
  assert.deepEqual(livePreviewGrantIds('qualifications', {assets:null}), []);

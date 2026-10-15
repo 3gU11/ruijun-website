@@ -37,6 +37,26 @@ test('service resource scalar attachments are authorized and decorated as protec
   assert.deepEqual([...collectPreviewMediaAssetIds(preview)], ['97', '98']);
 });
 
+test('product model machine images are decorated and authorized in the preview session', () => {
+  const preview = decoratePreviewMedia({
+    configuration: { machineImage: '/assets/psd/product-detail/auto-machine.png', machine_asset_id: '546' }
+  });
+  // The legacy static path must not survive decoration, otherwise the proxy URL
+  // is never rendered and the machine cover stays uneditable.
+  assert.equal(preview.configuration.machine_asset_id, '546');
+  assert.equal(preview.configuration.machineImage, '/api/preview/media/546');
+  assert.equal(preview.configuration.machine_asset_url, '/api/preview/media/546');
+  assert.ok(collectPreviewMediaAssetIds(preview).has('546'));
+});
+
+test('machine asset IDs are collected even when nested deeper in the draft payload', () => {
+  const collected = collectPreviewMediaAssetIds({
+    models: [{ configuration: { machine_asset_id: 611 } }, { configuration: { machine_asset_id: '612' } }]
+  });
+  assert.deepEqual([...collected].sort(), ['611', '612']);
+  assert.equal(collectPreviewMediaAssetIds({ configuration: { machine_asset_id: '../etc/passwd' } }).size, 0);
+});
+
 test('preview media endpoint authorizes asset access against the opaque preview session', async () => {
   const source = await readFile(new URL('../server/api/preview/media/[assetId].get.ts', import.meta.url), 'utf8');
   assert.match(source, /CMS_PREVIEW_SESSION_COOKIE/);

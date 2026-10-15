@@ -12,6 +12,8 @@ async function walk(directory) {
   for (const entry of entries) {
     if (
       entry.name === 'node_modules' ||
+      entry.name === 'dist' ||
+      entry.name.startsWith('.codex-build-check') ||
       entry.name === '.nuxt' ||
       entry.name === '.output' ||
       entry.name === 'test-results' ||
@@ -27,10 +29,24 @@ async function walk(directory) {
 
 const files = await walk(root);
 const hardcodedMedia = [];
+const mediaReferences = [];
 const hardcodedText = [];
 for (const file of files) {
   const source = await readFile(file, 'utf8');
+  const lines = source.split(/\r?\n/);
   const mediaMatches = source.match(mediaPattern) || [];
+  lines.forEach((line, index) => {
+    if (!mediaPattern.test(line)) { mediaPattern.lastIndex = 0; return; }
+    mediaPattern.lastIndex = 0;
+    const classification = /data-cms-preview-(?:field-path|media-role|readonly|allow-default)/.test(line)
+      ? 'bound-or-explicit-readonly'
+      : /fallback|default|texture|logo|legacy|decorat|import .*assets|css:|aria-hidden|background(?:-image)?\s*:|::after|::before/i.test(line)
+        ? 'static-fallback-or-decoration'
+        : /<img|<video|background(?:-image)?\s*:/i.test(line)
+          ? 'needs-review'
+          : 'static-fallback-or-decoration';
+    mediaReferences.push({ file: relative(root, file), line: index + 1, classification, sample: line.trim().slice(0, 240) });
+  });
   if (mediaMatches.length) hardcodedMedia.push({ file: relative(root, file), references: [...new Set(mediaMatches)].length });
   const chineseLines = source.split(/\r?\n/).filter((line) => /[\u4e00-\u9fff]/.test(line) && !/fallback|default|aria-label|alt=/.test(line));
   if (chineseLines.length) hardcodedText.push({ file: relative(root, file), lines: chineseLines.length });
@@ -46,4 +62,5 @@ console.log(JSON.stringify({
   images_missing_dimensions: 'requires CMS metadata scan',
   files_still_referencing_local_media: hardcodedMedia,
   files_with_hardcoded_text: hardcodedText
+  , media_references: mediaReferences
 }, null, 2));

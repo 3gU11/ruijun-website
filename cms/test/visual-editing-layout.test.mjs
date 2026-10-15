@@ -4,6 +4,17 @@ import { readFile } from 'node:fs/promises';
 import { setVisualAlignment } from '../extensions/content-editor-workbench/src/visual-editing-layout.js';
 import { canEditVisualCanvas } from '../extensions/content-editor-workbench/src/visual-editing-viewport.js';
 
+// The workbench now spans the SFC, its extracted modules, and two stylesheets.
+// These layout assertions should not depend on which of those a rule lives in.
+const readWorkbenchSource = async () => {
+  const parts = await Promise.all([
+    readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8'),
+    readFile(new URL('../extensions/content-editor-workbench/src/module.css', import.meta.url), 'utf8'),
+    readFile(new URL('../extensions/content-editor-workbench/src/module-global.css', import.meta.url), 'utf8')
+  ]);
+  return parts.join('\n');
+};
+
 test('alignment is stored on the selected repeated item for every collection type', () => {
   const record = { items: [{ title: '标题', layout: { align_x: 'left' } }] };
   assert.equal(setVisualAlignment(record, 'items.0.title', 'center'), true);
@@ -24,7 +35,7 @@ test('editing alignment enables the controlled layout presentation group', () =>
 });
 
 test('in-flow live preview keeps a positioning context for its absolute canvas', async () => {
-  const moduleSource = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const moduleSource = await readWorkbenchSource();
   assert.match(
     moduleSource,
     /live-website-preview\{position:relative!important;top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;grid-column:2;grid-row:5/,
@@ -32,7 +43,7 @@ test('in-flow live preview keeps a positioning context for its absolute canvas',
 });
 
 test('medium desktop stacks the live preview after the form so its property panel cannot intercept form actions', async () => {
-  const moduleSource = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const moduleSource = await readWorkbenchSource();
   assert.match(
     moduleSource,
     /@media\(min-width:1280px\) and \(max-width:1599px\)\{[\s\S]*?grid-template-columns:176px minmax\(0,1fr\);[\s\S]*?\.live-website-preview\{position:relative!important;[\s\S]*?grid-column:2;grid-row:5/,
@@ -44,7 +55,7 @@ test('medium desktop stacks the live preview after the form so its property pane
 });
 
 test('medium desktop constrains the live-preview editor form track so save actions stay inside the viewport', async () => {
-  const moduleSource = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const moduleSource = await readWorkbenchSource();
   assert.match(
     moduleSource,
     /\.editor-page\.live-website-preview-active \.editor-form\{[^}]*grid-template-columns:minmax\(0,1fr\)/,
@@ -52,7 +63,7 @@ test('medium desktop constrains the live-preview editor form track so save actio
 });
 
 test('live preview grid item is bounded so the canvas cannot cover the workbench', async () => {
-  const moduleSource = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const moduleSource = await readWorkbenchSource();
   assert.match(
     moduleSource,
     /\.editor-page\.live-website-preview-active\{[\s\S]*?box-sizing:\s*border-box;[\s\S]*?min-width:\s*0;/,
@@ -64,7 +75,7 @@ test('live preview grid item is bounded so the canvas cannot cover the workbench
 });
 
 test('mobile live preview overrides the desktop canvas width so read-only preview does not scroll horizontally', async () => {
-  const moduleSource = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const moduleSource = await readWorkbenchSource();
   assert.match(
     moduleSource,
     /@media\(max-width:720px\)[\s\S]*?visual-canvas-viewport[^}]*iframe\{[\s\S]*?width:100%!important;[\s\S]*?transform:none!important/,

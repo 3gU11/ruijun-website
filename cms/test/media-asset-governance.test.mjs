@@ -7,6 +7,7 @@ const {
   assertMediaAssetUpload,
   assertMediaAssetRecord,
   assertMediaAssetPlacement,
+  mediaPlacementQualityNotice,
   reviewerRoleForMediaUsageScope,
   collectMediaAssetReferenceIds,
   assertPublishedMediaReferences
@@ -53,42 +54,52 @@ test('public media upload validation accepts supported files but rejects spoofed
   }), (error) => error instanceof MediaAssetGovernanceError && error.code === 'MEDIA_FILE_TOO_LARGE');
 });
 
-test('media placement specifications enforce dimensions, duration, poster and muted autoplay', () => {
+test('media placement keeps the checks whose absence breaks a page, and drops the quality guardrails', () => {
+  // 尺寸 / 体积 / 时长不再是硬约束：运营手里常常只有一种素材，卡尺寸等于没法上线。
+  // 画质提示改由 mediaPlacementQualityNotice() 给出（见下一个测试）。
   assert.doesNotThrow(() => assertMediaAssetPlacement({ media_type: 'image', width: 1920, height: 1080, byte_size: 10_000_000 }, 'home.hero.poster'));
-  assert.doesNotThrow(() => assertMediaAssetPlacement({ media_type: 'image', width: 1920, height: 960, byte_size: 10_000_000 }, 'service.hero.image'));
-  assert.throws(() => assertMediaAssetPlacement({ media_type: 'image', width: 1920, height: 959, byte_size: 10_000_000 }, 'service.hero.image'),
-    (error) => error instanceof MediaAssetGovernanceError && error.code === 'MEDIA_DIMENSIONS_INVALID');
-  assert.doesNotThrow(() => assertMediaAssetPlacement({ media_type: 'image', width: 740, height: 415, byte_size: 700_000 }, 'manufacturing.equipment.image'));
-  assert.doesNotThrow(() => assertMediaAssetPlacement({ media_type: 'image', width: 452, height: 254, byte_size: 700_000 }, 'manufacturing.layer.image'));
-  assert.doesNotThrow(() => assertMediaAssetPlacement({ media_type: 'image', width: 34, height: 42, byte_size: 10_000 }, 'service.action.icon'));
-  assert.doesNotThrow(() => assertMediaAssetPlacement({ media_type: 'image', width: 1600, height: 900, byte_size: 10_000 }, 'home.reason.background'));
-  assert.doesNotThrow(() => assertMediaAssetPlacement({ media_type: 'image', width: 209, height: 305, byte_size: 10_000 }, 'home.reason.machine'));
-  assert.doesNotThrow(() => assertMediaAssetPlacement({ media_type: 'image', width: 96, height: 96, byte_size: 10_000 }, 'home.reason.icon'));
-  assert.throws(() => assertMediaAssetPlacement({ media_type: 'image', width: 79, height: 96, byte_size: 10_000 }, 'home.reason.icon'),
-    (error) => error instanceof MediaAssetGovernanceError && error.code === 'MEDIA_DIMENSIONS_INVALID');
-  assert.doesNotThrow(() => assertMediaAssetPlacement({ media_type: 'image', width: 792, height: 446, byte_size: 10_000 }, 'about.gallery.image'));
-  assert.doesNotThrow(() => assertMediaAssetPlacement({ media_type: 'image', width: 542, height: 406, byte_size: 10_000 }, 'about.client.image'));
+  assert.doesNotThrow(() => assertMediaAssetPlacement({ media_type: 'image', width: 1920, height: 959, byte_size: 10_000_000 }, 'service.hero.image'));
+  assert.doesNotThrow(() => assertMediaAssetPlacement({ media_type: 'image', width: 79, height: 96, byte_size: 10_000 }, 'home.reason.icon'));
+  assert.doesNotThrow(() => assertMediaAssetPlacement({ media_type: 'image', width: 451, height: 254, byte_size: 700_000 }, 'manufacturing.layer.image'));
+  assert.doesNotThrow(() => assertMediaAssetPlacement({ media_type: 'image', width: 740, height: 416, byte_size: 700_000 }, 'manufacturing.gallery.image'));
   assert.doesNotThrow(() => assertMediaAssetPlacement({ media_type: 'image', width: 365, height: 410, byte_size: 10_000 }, 'qualification.image'));
-  assert.throws(() => assertMediaAssetPlacement({ media_type: 'image', width: 791, height: 446, byte_size: 10_000 }, 'about.gallery.image'),
-    (error) => error instanceof MediaAssetGovernanceError && error.code === 'MEDIA_DIMENSIONS_INVALID');
-  assert.throws(() => assertMediaAssetPlacement({ media_type: 'image', width: 33, height: 42, byte_size: 10_000 }, 'service.action.icon'),
-    (error) => error instanceof MediaAssetGovernanceError && error.code === 'MEDIA_DIMENSIONS_INVALID');
-  assert.throws(() => assertMediaAssetPlacement({ media_type: 'image', width: 451, height: 254, byte_size: 700_000 }, 'manufacturing.layer.image'),
-    (error) => error instanceof MediaAssetGovernanceError && error.code === 'MEDIA_DIMENSIONS_INVALID');
-  assert.throws(() => assertMediaAssetPlacement({ media_type: 'image', width: 740, height: 416, byte_size: 700_000 }, 'manufacturing.gallery.image'),
-    (error) => error instanceof MediaAssetGovernanceError && error.code === 'MEDIA_DIMENSIONS_INVALID');
-  assert.doesNotThrow(() => assertMediaAssetPlacement({ media_type: 'video', width: 1920, height: 1080, byte_size: 10_000_000, duration_seconds: 30, poster_asset_id: 'poster-1', autoplay: true, muted: true }, 'home.hero.video'));
-  assert.throws(() => assertMediaAssetPlacement({ media_type: 'video', width: 1280, height: 720, byte_size: 10_000_000, poster_asset_id: 'poster-1' }, 'home.hero.video'),
-    (error) => error instanceof MediaAssetGovernanceError && error.code === 'MEDIA_DIMENSIONS_INVALID');
-  assert.throws(() => assertMediaAssetPlacement({ media_type: 'video', width: 1920, height: 1080, byte_size: 10_000_000 }, 'news.hero.video'),
+
+  // 1080×1920 竖屏视频：宽 1080 小于推荐的 1280，但不再被拒。
+  assert.doesNotThrow(() => assertMediaAssetPlacement(
+    { media_type: 'video', width: 1080, height: 1920, byte_size: 10_000_000, poster_asset_id: 'poster-1' }, 'news.video_share.list'));
+  // 超长视频也不再被拒。
+  assert.doesNotThrow(() => assertMediaAssetPlacement(
+    { media_type: 'video', width: 1280, height: 720, byte_size: 10_000_000, duration_seconds: 99_999, poster_asset_id: 'poster-1' }, 'news.video_share.list'));
+  // 超大文件在「位置」这一层不再被拒（上传层仍有基础设施上限）。
+  assert.doesNotThrow(() => assertMediaAssetPlacement(
+    { media_type: 'image', width: 1920, height: 1080, byte_size: 999_000_000 }, 'home.hero.poster'));
+
+  // 以下这些缺了页面会直接坏掉，必须继续拦截。
+  assert.throws(() => assertMediaAssetPlacement({ media_type: 'image', width: 1920, height: 1080 }, 'home.hero.video'),
+    (error) => error instanceof MediaAssetGovernanceError && error.code === 'MEDIA_PLACEMENT_TYPE_INVALID');
+  assert.throws(() => assertMediaAssetPlacement({ media_type: 'video', width: 1920, height: 1080 }, 'news.hero.video'),
     (error) => error instanceof MediaAssetGovernanceError && error.code === 'MEDIA_POSTER_REQUIRED');
-  assert.throws(() => assertMediaAssetPlacement({ media_type: 'video', width: 1920, height: 1080, byte_size: 10_000_000, poster_asset_id: 'poster-1', autoplay: true, muted: false }, 'news.hero.video'),
+  assert.throws(() => assertMediaAssetPlacement(
+    { media_type: 'video', width: 1920, height: 1080, poster_asset_id: 'poster-1', autoplay: true }, 'home.hero.video'),
     (error) => error instanceof MediaAssetGovernanceError && error.code === 'MEDIA_PLAYBACK_INVALID');
-  assert.doesNotThrow(() => assertMediaAssetPlacement({ media_type: 'video', width: 1280, height: 720, byte_size: 10_000_000 }, 'news.video_share.list'));
-  assert.doesNotThrow(() => assertMediaAssetPlacement({ media_type: 'video', width: 1280, height: 720, byte_size: 10_000_000, poster_asset_id: 'poster-1', transcript: '字幕文字稿' }, 'news.video_share.list'));
-  assert.doesNotThrow(() => assertMediaAssetPlacement({ media_type: 'video', width: 1280, height: 720, byte_size: 10_000_000, duration_seconds: 90, poster_asset_id: 'poster-1', transcript: '工艺字幕' }, 'manufacturing.process.video'));
-  assert.throws(() => assertMediaAssetPlacement({ media_type: 'video', width: 1280, height: 720, byte_size: 10_000_000, duration_seconds: 90, poster_asset_id: 'poster-1' }, 'manufacturing.gallery.video'),
-    (error) => error instanceof MediaAssetGovernanceError && error.code === 'MEDIA_TRANSCRIPT_REQUIRED');
+  assert.throws(() => assertMediaAssetPlacement({ media_type: 'image', width: 1920, height: 1080 }, 'not.a.real.placement'),
+    (error) => error instanceof MediaAssetGovernanceError && error.code === 'MEDIA_PLACEMENT_INVALID');
+});
+
+test('an undersized asset produces a quality notice instead of a rejection', () => {
+  // 竖屏 1080×1920 传进要求 1280×720 的位置：不拦截，但要提示。
+  const notice = mediaPlacementQualityNotice({ width: 1080, height: 1920 }, 'news.video_share.list');
+  assert.match(notice, /建议 1280×720/);
+  assert.match(notice, /当前 1080×1920/);
+
+  // 达标 → 无提示。
+  assert.equal(mediaPlacementQualityNotice({ width: 1280, height: 720 }, 'news.video_share.list'), null);
+  assert.equal(mediaPlacementQualityNotice({ width: 1920, height: 1080 }, 'home.hero.poster'), null);
+
+  // 无尺寸要求的位置 → 无提示。
+  assert.equal(mediaPlacementQualityNotice({ width: 1, height: 1 }, 'product.document'), null);
+  // 尺寸缺失 → 不臆造提示。
+  assert.equal(mediaPlacementQualityNotice({}, 'news.video_share.list'), null);
 });
 
 test('video media records only require a poster for placements that need one', () => {
@@ -116,6 +127,26 @@ test('media asset records must match the server-side uploaded file and declare a
   assert.throws(() => assertMediaAssetRecord({ ...input, usage_scope: 'unknown' }, file),
     (error) => error instanceof MediaAssetGovernanceError && error.code === 'MEDIA_USAGE_SCOPE_INVALID');
   assert.equal(reviewerRoleForMediaUsageScope('homepage'), 'brand_reviewer');
+});
+
+test('media asset records accept CJK filenames whose full-width punctuation is NFKC-folded', () => {
+  // Regression: the recorded name went through NFKC (，→ ,) but the file's name was
+  // compared raw, so an asset named 假期收官，全线启动.mp4 could be uploaded yet never
+  // transitioned — it stayed permanently stuck in draft. Both sides now fold alike.
+  const name = '假期收官，全线启动.mp4';
+  const input = {
+    file_id: 'file-cjk', original_file_name: name, mime_type: 'video/mp4', byte_size: 12_091_627,
+    usage_scope: 'article', copyright_status: 'owned', media_type: 'video', width: 1280, height: 720,
+    placement_key: 'news.video_share.list'
+  };
+  const file = { id: 'file-cjk', filename_download: name, type: 'video/mp4', filesize: 12_091_627 };
+
+  assert.notEqual(name, name.normalize('NFKC'), 'the fixture must actually exercise NFKC folding');
+  assert.doesNotThrow(() => assertMediaAssetRecord(input, file));
+
+  // A genuinely different name must still be rejected.
+  assert.throws(() => assertMediaAssetRecord({ ...input, original_file_name: 'other.mp4' }, file),
+    (error) => error instanceof MediaAssetGovernanceError && error.code === 'MEDIA_FILE_METADATA_MISMATCH');
 });
 
 test('PDF records use the document media type and document placements', () => {
@@ -207,8 +238,11 @@ test('milestone timeline icon is a published controlled media reference', () => 
     new Map([['timeline-icon', { id: 'timeline-icon', status: 'draft', publication_state: 'unpublished' }]])
   ), (error) => error instanceof MediaAssetGovernanceError && error.code === 'MEDIA_NOT_PUBLISHED');
 });
-test('dynamic news cover accepts a correctly sized image and rejects undersized covers', () => {
+test('dynamic news cover accepts any size but warns when below the recommendation', () => {
   const image = { media_type: 'image', width: 1600, height: 900, byte_size: 100000 };
   assert.doesNotThrow(() => assertMediaAssetPlacement(image, 'news.dynamic_news.cover'));
-  assert.throws(() => assertMediaAssetPlacement({ ...image, width: 800 }, 'news.dynamic_news.cover'));
+  // 偏小的封面不再被拒——只在工作台给出画质提示。
+  assert.doesNotThrow(() => assertMediaAssetPlacement({ ...image, width: 800 }, 'news.dynamic_news.cover'));
+  assert.match(mediaPlacementQualityNotice({ ...image, width: 800 }, 'news.dynamic_news.cover'), /建议 1600×900/);
+  assert.equal(mediaPlacementQualityNotice(image, 'news.dynamic_news.cover'), null);
 });

@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { getHeroState } from '~/shared/home-hero-state.mjs';
+import { overlayHomepageSectionDrafts } from '~/shared/homepage-preview-sections.mjs';
 import { resolveHomepageProducts } from '~/shared/home-product-catalog.mjs';
 import { resolvePageSection } from '~/shared/page-sections.mjs';
 import { fieldPresentationAttributes, sectionPresentationAttributes } from '~/shared/section-presentation.mjs';
-import { homepageFieldPresentationPath, homepageReasonBinding, homepageSectionItemBinding } from '~/shared/visual-binding-paths.mjs';
+import { homepageFieldPresentationPath, homepageReasonBinding, homepageSectionItemBinding, selectSectionMediaEntry, managedPageSectionMediaBinding } from '~/shared/visual-binding-paths.mjs';
+import { resolveReasonIcon, resolveReasonImage } from '~/shared/homepage-reason-media.mjs';
 import '~/assets/page-content.css';
 
 const { data: page } = await useFetch('/api/public/v1/pages/home', {
@@ -44,6 +46,10 @@ function rebuildHomepageDerivedContent(currentPage: Record<string, any> | null) 
     return {
       ...fallback,
       ...section,
+      // Reason backgrounds and icons are governed media slots, so the rendered
+      // image must follow the bound asset; see homepage-reason-media.mjs.
+      image: resolveReasonImage(section, fallback),
+      icon: resolveReasonIcon(section, fallback),
       shortTitle: section.shortTitle || section.label || fallback.shortTitle,
       introTitle: section.introTitle || section.title || fallback.introTitle,
       introDetail: section.introDetail || section.description || section.body || fallback.introDetail,
@@ -120,8 +126,9 @@ watchEffect(() => {
   const currentPage = !draft || draft.slug !== 'home'
     ? published
     : { ...(published || {}), ...draft };
-  pageContent.value = currentPage;
-  rebuildHomepageDerivedContent(currentPage);
+  const previewPage = overlayHomepageSectionDrafts(currentPage, cmsPreviewRecords('homepage_sections'));
+  pageContent.value = previewPage;
+  rebuildHomepageDerivedContent(previewPage);
 });
 
 function previewPerformanceBody(record: any) {
@@ -212,11 +219,18 @@ const previewHeroVideoSource = computed(() => {
   return /^(?:\/assets\/|https?:\/\/)/.test(value) ? value : '';
 });
 const heroVideoSource = computed(() => previewHeroVideoSource.value || heroContent.value.video || heroMedia.value?.path || '/assets/home-intro-raw.mp4');
-const heroEndFrame = computed(() => heroContent.value.image || heroMedia.value?.posterPath || '/assets/home-intro-end-video-sharpened.png?v=1');
-const historyBackground = computed(() => historySection.value.media?.find((media: any) => media?.mediaType !== 'video')?.path || '');
+const heroImageSlot = (role: string) => {
+  const selected = selectSectionMediaEntry(heroContent.value.media, role);
+  return selected ? { ...selected.entry, fieldPath: managedPageSectionMediaBinding(selected.entry, selected.index)?.fieldPath } : null;
+};
+const heroPoster = computed(() => heroImageSlot('poster'));
+const heroStill = computed(() => heroImageSlot('end-frame'));
+const heroEndFrame = computed(() => heroStill.value?.path || heroContent.value.image || heroMedia.value?.posterPath || '/assets/home-intro-end-video-sharpened.png?v=1');
+const heroPosterSource = computed(() => heroPoster.value?.path || heroEndFrame.value);
+const historyBackground = computed(() => historySection.value.media?.find((media: any) => media?.role === 'background' && media?.mediaType !== 'video')?.path || '');
 const historyBackgroundFieldPath = computed(() => {
   const media = Array.isArray(historySection.value.media) ? historySection.value.media : [];
-  const index = media.findIndex((item: any) => item?.mediaType !== 'video' && String(item?.path || '').trim());
+  const index = media.findIndex((item: any) => item?.role === 'background' && item?.mediaType !== 'video' && String(item?.path || '').trim());
   return index >= 0 && media[index]?.managed === true ? `media.${index}` : '';
 });
 
@@ -297,8 +311,12 @@ useHead({ title: '中走丝线切割机床' });
     <SiteHeader home-psd />
     <HomeImmersiveMotion />
     <section id="home" class="hero lifecycle-panel" v-bind="sectionPresentationAttributes(heroContent)" :class="{ 'hero-ended': heroState.stageVisible }" data-cms-preview-key="hero" data-panel-label="首页" aria-label="首页视频">
-      <img class="hero-end-frame cms-media" :src="heroEndFrame" alt="" :data-cms-preview-field-path="heroContent.image ? 'image' : undefined" data-cms-preview-media-role="background">
-      <video v-if="heroState.videoVisible && (!videoCompleted || videoFading) || cmsVisualEditMode" :key="heroVideoSource" ref="heroVideo" class="hero-video cms-media" :src="heroVideoSource" autoplay playsinline :muted="heroMedia?.muted !== false" :loop="heroMedia?.loop === true || cmsVisualEditMode" :poster="heroEndFrame" data-cms-preview-field-path="hero_video_asset_id" data-cms-preview-placement-key="home.hero.video" data-cms-preview-media-role="video" data-cms-preview-allow-default="true" @ended="finishHeroVideo" @error="handleHeroVideoError"></video>
+      <div v-if="cmsVisualEditMode" class="cms-hero-image-slots">
+        <figure><figcaption>视频海报</figcaption><img :src="heroPosterSource" :data-cms-preview-field-path="heroPoster?.fieldPath" data-cms-preview-placement-key="home.hero.poster" data-cms-preview-media-role="poster" data-cms-preview-readonly-reason="尚未绑定视频海报，请在首页首屏图片与背景中添加 home.hero.poster 素材，展示位置填写 poster。" alt="视频海报"></figure>
+        <figure><figcaption>结束静帧</figcaption><img :src="heroEndFrame" :data-cms-preview-field-path="heroStill?.fieldPath" data-cms-preview-placement-key="home.hero.poster" data-cms-preview-media-role="background" data-cms-preview-readonly-reason="尚未绑定结束静帧，请在首页首屏图片与背景中添加 home.hero.poster 素材，展示位置填写 end-frame。" alt="结束静帧"></figure>
+      </div>
+      <img class="hero-end-frame cms-media" :src="heroEndFrame" alt="" :data-cms-preview-field-path="heroStill?.fieldPath" data-cms-preview-placement-key="home.hero.poster" data-cms-preview-media-role="background">
+      <video v-if="heroState.videoVisible && (!videoCompleted || videoFading) || cmsVisualEditMode" :key="heroVideoSource" ref="heroVideo" class="hero-video cms-media" :src="heroVideoSource" autoplay playsinline :muted="heroMedia?.muted !== false" :loop="heroMedia?.loop === true || cmsVisualEditMode" :poster="heroPosterSource" data-cms-preview-field-path="hero_video_asset_id" data-cms-preview-placement-key="home.hero.video" data-cms-preview-media-role="video" data-cms-preview-allow-default="true" @ended="finishHeroVideo" @error="handleHeroVideoError"></video>
       <button v-if="heroState.videoVisible && !videoCompleted" type="button" class="hero-sound-toggle" :class="{ 'is-muted': autoplaySoundBlocked }" :aria-pressed="!autoplaySoundBlocked" aria-live="polite" @click="toggleHeroSound">{{ autoplaySoundBlocked ? '开启视频声音' : '关闭视频声音' }}</button>
 <div v-if="heroContent.body || heroContent.label" class="hero-cms-copy cms-positioned"><p v-if="heroContent.body" v-bind="fieldPresentationAttributes(heroContent, 'body')" data-cms-preview-field="body" data-cms-preview-field-path="body" data-cms-preview-position-field-path="field_presentation.body">{{ heroContent.body }}</p><a v-if="heroContent.label" v-bind="fieldPresentationAttributes(heroContent, 'label')" data-cms-preview-field="label" data-cms-preview-field-path="label" data-cms-preview-link-field-path="href" data-cms-preview-position-field-path="field_presentation.label" :href="heroContent.href || '#reasons'">{{ heroContent.label }}</a></div>
       <!-- Keep the legacy selector contract stable while binding the visible fallback CTA. -->
@@ -306,7 +324,7 @@ useHead({ title: '中走丝线切割机床' });
     </section>
 
     <section id="reasons" class="reason-intro lifecycle-panel" v-bind="sectionPresentationAttributes(reasonsHeading)" data-cms-preview-key="why-ruijun" data-panel-label="选择瑞钧" aria-labelledby="reasons-title">
-      <div class="intro-machine-wrap" aria-hidden="true"><div class="intro-machine-glow"></div><img src="/assets/psd/hero-machine.png" alt=""></div>
+      <div class="intro-machine-wrap" aria-hidden="true"><div class="intro-machine-glow"></div><img src="/assets/psd/hero-machine.png" alt="" data-cms-preview-readonly="decoration" data-cms-preview-readonly-reason="固定首页装饰机器图，不属于 CMS 媒体字段。"></div>
 <div class="intro-copy cms-positioned"><h2 id="reasons-title" class="cms-styled-text" v-bind="fieldPresentationAttributes(reasonsHeading, 'title')" data-cms-preview-field="title" data-cms-preview-field-path="title" data-cms-preview-position-field-path="field_presentation.title">{{ reasonsHeadingLines[0] }}<span v-if="reasonsHeadingLines[1]">{{ reasonsHeadingLines.slice(1).join(' ') }}</span></h2><ol class="reason-list"><li v-for="reason in reasons" :key="reason.id" :data-cms-preview-key="reason.id" :data-cms-preview-collection="reason.cmsBinding?.collection" :data-cms-preview-item-id="reason.cmsBinding?.itemId"><b v-bind="fieldPresentationAttributes(reason, 'introTitle')" :data-cms-preview-field-path="reason.cmsBinding?.fields.introTitle" :data-cms-preview-position-field-path="homepageFieldPresentationPath(reason.cmsBinding, 'introTitle')">{{ reason.introTitle }}</b><span v-bind="fieldPresentationAttributes(reason, 'introDetail')" :data-cms-preview-field-path="reason.cmsBinding?.fields.introDetail" :data-cms-preview-position-field-path="homepageFieldPresentationPath(reason.cmsBinding, 'introDetail')">{{ reason.introDetail }}</span></li></ol></div>
     </section>
 
@@ -314,9 +332,9 @@ useHead({ title: '中走丝线切割机床' });
       <div class="reason-tabs" aria-label="首页横移图文"><a v-for="tab in marqueeItems" :key="tab.id" :href="reasonAnchor(tab.id)" :data-cms-preview-key="tab.id" :data-cms-preview-collection="tab.cmsBinding?.collection" :data-cms-preview-item-id="tab.cmsBinding?.itemId"><img class="reason-tab-icon" :src="tab.icon" alt="" data-cms-preview-placement-key="home.reason.icon" :data-cms-preview-media-role="tab.cmsBinding?.fields.icon ? 'icon' : undefined" :data-cms-preview-field-path="tab.cmsBinding?.fields.icon"><span class="reason-tab-label" v-bind="fieldPresentationAttributes(tab, 'shortTitle')" :data-cms-preview-field-path="tab.cmsBinding?.fields.shortTitle" :data-cms-preview-position-field-path="homepageFieldPresentationPath(tab.cmsBinding, 'shortTitle')">{{ tab.shortTitle }}</span></a></div>
       <div class="reason-horizontal-track">
         <article v-for="(reason, index) in marqueeItems" :id="reasonAnchor(reason.id).slice(1)" :key="reason.id" class="reason-scene" v-bind="sectionPresentationAttributes(reason)" :class="reason.mode === 'machine' ? 'reason-performance' : 'photo-scene'" :data-cms-preview-key="reason.id" :data-cms-preview-collection="reason.cmsBinding?.collection" :data-cms-preview-item-id="reason.cmsBinding?.itemId" :data-reason-slide="index">
-          <img v-if="reason.mode === 'photo'" class="scene-photo cms-media" :src="reason.image" :alt="reason.shortTitle" :data-cms-preview-placement-key="reason.mode === 'machine' ? 'home.reason.machine' : 'home.reason.background'" :data-cms-preview-media-role="reason.cmsBinding?.fields.image ? 'background' : undefined" :data-cms-preview-field-path="reason.cmsBinding?.fields.image">
+          <img v-if="reason.mode === 'photo'" class="scene-photo cms-media" :src="reason.image" :alt="reason.shortTitle" :data-cms-preview-placement-key="reason.mode === 'machine' ? 'home.reason.machine' : 'home.reason.background'" data-cms-preview-media-role="background" :data-cms-preview-field-path="reason.cmsBinding?.fields.image" :data-cms-preview-readonly="reason.cmsBinding?.fields.image ? undefined : 'media-pending'" :data-cms-preview-readonly-reason="reason.cmsBinding?.fields.image ? undefined : '当前显示静态回退图片，尚未绑定受管媒体。请在该理由的图片与背景中添加对应素材，填写 background（背景）或 foreground（设备前景），保存后重新预览。'">
           <div v-if="reason.mode === 'photo'" class="scene-shade" :class="{ 'scene-shade-strong': index === 2 }"></div>
-          <div v-if="reason.mode === 'machine'" class="performance-group"><div class="performance-content cms-positioned"><p class="performance-statement cms-styled-text" v-bind="fieldPresentationAttributes(reason, 'body')" :data-cms-preview-field-path="reason.cmsBinding?.fields.body" :data-cms-preview-position-field-path="homepageFieldPresentationPath(reason.cmsBinding, 'body')">{{ reason.body || reason.introDetail }}</p></div><img class="performance-machine cms-media" :src="reason.image" alt="瑞钧中走丝线切割机床" @error="(event) => { const image = event.currentTarget as HTMLImageElement; if (image.dataset.fallbackApplied !== 'true') { image.dataset.fallbackApplied = 'true'; image.src = '/assets/psd/reason-efficiency-machine.png'; } }" :data-cms-preview-placement-key="'home.reason.machine'" :data-cms-preview-media-role="reason.cmsBinding?.fields.image ? 'foreground' : undefined" :data-cms-preview-field-path="reason.cmsBinding?.fields.image"></div>
+          <div v-if="reason.mode === 'machine'" class="performance-group"><div class="performance-content cms-positioned"><p class="performance-statement cms-styled-text" v-bind="fieldPresentationAttributes(reason, 'body')" :data-cms-preview-field-path="reason.cmsBinding?.fields.body" :data-cms-preview-position-field-path="homepageFieldPresentationPath(reason.cmsBinding, 'body')">{{ reason.body || reason.introDetail }}</p></div><img class="performance-machine cms-media" :src="reason.image" alt="瑞钧中走丝线切割机床" @error="(event) => { const image = event.currentTarget as HTMLImageElement; if (image.dataset.fallbackApplied !== 'true') { image.dataset.fallbackApplied = 'true'; image.src = '/assets/psd/reason-efficiency-machine.png'; } }" :data-cms-preview-placement-key="'home.reason.machine'" data-cms-preview-media-role="foreground" :data-cms-preview-field-path="reason.cmsBinding?.fields.image" :data-cms-preview-readonly="reason.cmsBinding?.fields.image ? undefined : 'media-pending'" :data-cms-preview-readonly-reason="reason.cmsBinding?.fields.image ? undefined : '当前显示静态回退图片，尚未绑定受管媒体。请在该理由的图片与背景中添加对应素材，填写 background（背景）或 foreground（设备前景），保存后重新预览。'"></div>
           <div v-else class="cms-positioned photo-copy" :class="{ 'photo-copy-center': index === 2 }"><h2 class="cms-styled-text" v-bind="fieldPresentationAttributes(reason, 'title')" :data-cms-preview-field-path="reason.cmsBinding?.fields.title" :data-cms-preview-position-field-path="homepageFieldPresentationPath(reason.cmsBinding, 'title')">{{ reason.title }}</h2></div>
         </article>
       </div>
@@ -337,11 +355,12 @@ useHead({ title: '中走丝线切割机床' });
 
     <section id="history" class="history lifecycle-panel" v-bind="sectionPresentationAttributes(historySection)" :style="historyBackground ? { backgroundImage: `url(${historyBackground})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined" :data-cms-preview-field-path="historyBackgroundFieldPath || undefined" :data-cms-preview-placement-key="historyBackgroundFieldPath ? 'about.timeline.background' : undefined" data-cms-preview-media-role="background" data-cms-preview-key="history" data-panel-label="发展历程" aria-labelledby="history-title">
 <div class="history-copy cms-positioned"><p id="history-title" class="history-en" v-bind="fieldPresentationAttributes(historySection, 'kicker')" data-cms-preview-field="kicker" data-cms-preview-field-path="kicker" data-cms-preview-position-field-path="field_presentation.kicker"><span v-for="line in historyEnglishLines" :key="line">{{ line }}</span></p><p class="history-cn cms-styled-text" v-bind="fieldPresentationAttributes(historySection, 'title')" data-cms-preview-field="title" data-cms-preview-field-path="title" data-cms-preview-position-field-path="field_presentation.title">{{ historyTitle }}</p></div>
-        <div class="history-viewport"><div class="history-track"><article v-for="(milestone, index) in milestones" :key="milestone[0]" class="history-event" :data-cms-preview-key="`milestones.${index}`" :data-cms-preview-collection="milestone[3].collection" :data-cms-preview-item-id="milestone[3].itemId"><b data-cms-preview-field="year" data-cms-preview-field-path="year">{{ milestone[0] }}</b><span><span data-cms-preview-field="event" data-cms-preview-field-path="event">{{ milestone[1] }}</span><template v-if="!milestone[3].collection && milestone[2]"><br>（{{ milestone[2] }}）</template></span></article></div></div>
+        <div class="history-viewport"><div class="history-track"><article v-for="(milestone, index) in milestones" :key="milestone[0]" class="history-event" :data-cms-preview-key="`milestones.${index}`" :data-cms-preview-collection="milestone[3].collection" :data-cms-preview-item-id="milestone[3].itemId"><b data-cms-preview-field="year" data-cms-preview-field-path="year">{{ milestone[0] }}</b><span><span data-cms-preview-field="event" data-cms-preview-field-path="event">{{ milestone[1] }}</span><template v-if="!milestone[3].collection && milestone[2]"><br>（{{ milestone[2] }}）</template><template v-if="cmsVisualEditMode && milestone[3].collection"><br><span data-cms-preview-field-path="evidence">{{ milestone[2] }}</span></template></span></article></div></div>
        <i class="history-wheel-cursor" aria-hidden="true"><img class="history-wheel" :src="historyIcon.path" :alt="historyIcon.alt" data-cms-preview-field="icon" :data-cms-preview-field-path="historyIcon.fieldPath || undefined" :data-cms-preview-placement-key="historyIcon.fieldPath ? 'about.timeline.icon' : undefined" data-cms-preview-media-role="icon"></i><div class="history-orbit"><i class="history-orbit-ring"></i><i class="history-cursor"></i></div><div class="history-progress" aria-hidden="true"><i></i><i></i><i></i></div><p class="history-hint" v-bind="fieldPresentationAttributes(historySection, 'label')" data-cms-preview-field="label" data-cms-preview-field-path="label" data-cms-preview-position-field-path="field_presentation.label">{{ historyHint }} <span>→</span></p>
     </section>
 
 <section id="contact" class="contact-panel lifecycle-panel" v-bind="sectionPresentationAttributes(productTask)" data-cms-preview-key="product-task" data-panel-label="联系瑞钧"><div class="contact-hero cms-positioned"><p v-bind="fieldPresentationAttributes(productTask, 'kicker')" data-cms-preview-field="kicker" data-cms-preview-field-path="kicker" data-cms-preview-position-field-path="field_presentation.kicker">{{ productTask.kicker || 'RUIJUN MEDIUM SPEED WIRE EDM' }}</p><h2 class="cms-styled-text" v-bind="fieldPresentationAttributes(productTask, 'title')" data-cms-preview-field="title" data-cms-preview-field-path="title" data-cms-preview-position-field-path="field_presentation.title">{{ productTask.title }}</h2><p class="contact-copy" v-bind="fieldPresentationAttributes(productTask, 'body')" data-cms-preview-field="body" data-cms-preview-field-path="body" data-cms-preview-position-field-path="field_presentation.body">{{ productTask.body }}</p><NuxtLink :to="productTask.href || '/contact'" v-bind="fieldPresentationAttributes(productTask, 'label')" data-cms-preview-field="label" data-cms-preview-field-path="label" data-cms-preview-link-field-path="href" data-cms-preview-position-field-path="field_presentation.label">{{ productTask.label || '获取选型建议' }} <span aria-hidden="true">→</span></NuxtLink></div><PsdFooter /></section>
+  <CmsCustomSections :page="pageContent" page-slug="home" :visual-edit-mode="cmsVisualEditMode" />
   </main>
 </template>
 
@@ -573,4 +592,12 @@ html[data-cms-preview-edit-mode="true"] .hero-cms-copy [data-cms-preview-editabl
    receive the selection click. */
 html[data-cms-preview-edit-mode="true"] .hero.hero-ended .hero-end-frame{pointer-events:none}
 html[data-cms-preview-edit-mode="true"] .hero.hero-ended .hero-video{opacity:1;pointer-events:auto}
+</style>
+
+<style>
+html[data-cms-preview-edit-mode="true"] #history .history-wheel-cursor { z-index:8; }
+html[data-cms-preview-edit-mode="true"] #history .history-wheel-cursor img[data-cms-preview-editable="true"] { pointer-events:auto; cursor:pointer; }
+.cms-hero-image-slots { position:absolute; right:20px; top:110px; z-index:30; display:flex; gap:12px; padding:12px; background:#fff; color:#222; }
+.cms-hero-image-slots figure { margin:0; width:180px; font-size:12px; }
+.cms-hero-image-slots img { display:block; width:180px; height:102px; object-fit:contain; cursor:pointer; }
 </style>

@@ -226,9 +226,10 @@ test('a JPEG draft candidate keeps its verified MIME type in the asset record', 
   assert.equal(payload.placement_key, 'service.hero.image');
 });
 
-test('media below its selected placement specification is skipped before any upload', () => {
+test('media below its selected placement specification is still importable', () => {
+  // 尺寸不再阻断导入：运营手里常常只有一种素材，卡尺寸等于没法上线。
   const input = importer.localMediaDraftManifest[0];
   const assessment = importer.assessLocalMediaCandidate(input, { byteSize: 123, width: 1000, height: 800 });
-  assert.equal(assessment.importable, false);
-  assert.match(assessment.reason, /1200x900/);
+  assert.equal(assessment.importable, true);
+  assert.equal(assessment.reason, '');
 });

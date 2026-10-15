@@ -49,7 +49,7 @@ const { data: seriesResponse } = await useFetch('/api/public/v1/product-series',
 const { data: productPageResponse } = await useFetch('/api/public/v1/pages/product', {
   default: () => ({ data: null as any })
 });
-const { overlayRecord, overlayList, recordFor, recordsFor, session: previewSession } = useCmsDraftPreview();
+const { overlayRecord, overlayList, recordFor, recordsFor, session: previewSession, visualEditMode: cmsVisualEditMode } = useCmsDraftPreview();
 
 if (responseError.value?.statusCode === 410) {
   throw createError({ statusCode: 410, statusMessage: 'Product is no longer published', fatal: true });
@@ -331,9 +331,31 @@ const activeIntro = computed(() => {
 });
 const displayName = computed(() => normalizeModelLabel(selectedModelRecord.value?.name || activeCard.value?.name || selectedModel.value));
 const displayModel = computed(() => normalizeModelLabel(selectedModelRecord.value?.model_code || selectedModel.value));
-const displayImage = computed(() => displayConfig.value.machineImage || selectedModelRecord.value?.media?.[0]?.path || activeSeriesDetail.value.machine);
+// The public reader intentionally strips `machine_asset_id` and also bakes the
+// legacy PSD path into `machineImage`. In an authorized preview the raw draft
+// record wins, so `machineImage` can still point at a stale static file after
+// the operator binds a managed asset. Prefer the managed slot in that case and
+// serve it through the token-authorized preview endpoint.
+const managedMachineAssetId = computed(() => {
+  const assetId = displayConfig.value.machine_asset_id;
+  return assetId == null ? '' : String(assetId).trim();
+});
+const hasManagedMachineAsset = computed(() => managedMachineAssetId.value !== '');
+const displayImage = computed(() => {
+  if (hasManagedMachineAsset.value) return `/api/preview/media/${encodeURIComponent(managedMachineAssetId.value)}`;
+  return displayConfig.value.machineImage || selectedModelRecord.value?.media?.[0]?.path || activeSeriesDetail.value.machine;
+});
 const displayImageAlt = computed(() => selectedModelRecord.value?.media?.[0]?.alt || `${displayName.value} 机床设备`);
-const displayImageFieldPath = computed(() => selectedModelRecord.value?.media?.[0]?.path && selectedModelRecord.value.media[0].path === displayImage.value ? 'media.0' : '');
+const displayImageFieldPath = computed(() => {
+  if (hasManagedMachineAsset.value) return 'configuration.machine_asset_id';
+  // A model whose image comes from the generic media array keeps that binding.
+  if (selectedModelRecord.value?.media?.[0]?.path && selectedModelRecord.value.media[0].path === displayImage.value) return 'media.0';
+  // Otherwise still expose the dedicated machine slot. Returning '' here made
+  // the canvas report the machine image as an uneditable static asset, so an
+  // operator could not even bind one; binding it simply takes precedence over
+  // the static fallback.
+  return 'configuration.machine_asset_id';
+});
 const featureReasons = computed(() => Array.isArray(displayConfig.value.features) && displayConfig.value.features.length ? displayConfig.value.features : activeSeriesDetail.value.features);
 function featurePresentationPath(index: number, field: 'label' | 'detail' | 'note' | 'image') {
   return `features_${index}_${field}`;
@@ -543,7 +565,7 @@ useSeoMeta({
       <div class="product-grid cms-positioned" :class="{ 'has-selection': detailsOpen }">
         <div v-for="(family, pageIndex) in visibleCatalogCards" :key="family.id" class="product-card-wrap" data-cms-preview-collection="product_series" :data-cms-preview-item-id="seriesCardItemId((catalogPage - 1) * catalogPageSize + pageIndex, family.id)" :data-cms-preview-key="seriesCardItemId((catalogPage - 1) * catalogPageSize + pageIndex, family.id) ? seriesCardValue((catalogPage - 1) * catalogPageSize + pageIndex, 'series_code', seriesCardValue((catalogPage - 1) * catalogPageSize + pageIndex, 'slug', family.id)) : undefined">
           <button :id="family.id" type="button" class="product-card" :class="{ 'is-selected': detailsOpen && selectedCard === family.id }" :aria-expanded="detailsOpen && selectedCard === family.id" data-cms-preview-field-path="name" @click="openProduct(family.id)">
-          <img :src="seriesCardValue((catalogPage - 1) * catalogPageSize + pageIndex, 'cover_asset', family.image)" data-cms-preview-field-path="cover_asset" data-cms-preview-media-role="cover" :alt="`${seriesCardValue((catalogPage - 1) * catalogPageSize + pageIndex, 'name', family.name)} 产品图`">
+          <img :src="seriesCardValue((catalogPage - 1) * catalogPageSize + pageIndex, 'cover_asset', family.image)" data-cms-preview-field-path="cover_asset" data-cms-preview-placement-key="product.series.cover" data-cms-preview-media-role="cover" :alt="`${seriesCardValue((catalogPage - 1) * catalogPageSize + pageIndex, 'name', family.name)} 产品图`">
           <span class="product-copy"><span class="product-kicker" v-bind="fieldPresentationAttributes(seriesCardPresentation((catalogPage - 1) * catalogPageSize + pageIndex), 'positioning')" data-cms-preview-field-path="positioning" data-cms-preview-position-field-path="presentation.field_presentation.positioning">{{ family.index.replace(/^0/, '') }}/{{ seriesCardValue((catalogPage - 1) * catalogPageSize + pageIndex, 'positioning', family.category) }}</span><span class="product-name" v-bind="fieldPresentationAttributes(seriesCardPresentation((catalogPage - 1) * catalogPageSize + pageIndex), 'name')" data-cms-preview-field-path="name" data-cms-preview-position-field-path="presentation.field_presentation.name">{{ seriesCardValue((catalogPage - 1) * catalogPageSize + pageIndex, 'name', family.name) }}</span></span>
           </button>
           <button v-if="detailsOpen && selectedCard === family.id" class="details-jump" type="button" aria-label="向下查看系列详情" @click="scrollToDetails">&#8595;</button>
@@ -639,6 +661,7 @@ useSeoMeta({
       <article v-if="caseStudies.length" v-bind="sectionPresentationAttributes(casesCopy)" data-cms-preview-key="cases"><p class="eyebrow" data-cms-preview-field-path="kicker">{{ casesCopy.kicker }}</p><a v-for="caseStudy in caseStudies" :key="caseStudy.url" :href="caseStudy.url" :target="caseStudy.url.startsWith('https://') ? '_blank' : undefined" :rel="caseStudy.url.startsWith('https://') ? 'noreferrer' : undefined"><strong>{{ caseStudy.title }}</strong><span v-if="caseStudy.summary">{{ caseStudy.summary }}</span><b aria-hidden="true">-></b></a></article>
     </section>
 
+    <CmsCustomSections :page="productPageRecord" page-slug="product" :visual-edit-mode="cmsVisualEditMode" />
     <PsdFooter />
   </main>
 </template>

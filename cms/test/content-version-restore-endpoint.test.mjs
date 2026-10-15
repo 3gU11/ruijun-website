@@ -99,6 +99,7 @@ test('restore endpoint allows publishers to restore a snapshot only as an unpubl
   const router = { get() {}, post: (_path, callback) => { handler = callback; } };
   const database = (table) => ({
     where() { return this; },
+    count() { return this; },
     async first() {
       if (table === 'directus_roles') return { name: '发布人员' };
       if (table === 'content_versions') return { id: 9, content_collection: 'product_models', content_item_id: '7', snapshot: JSON.stringify({ model_code: 'OLD', name: 'Old model', parameters: { travel: '400' }, status: 'published', publication_state: 'published' }) };
@@ -110,11 +111,48 @@ test('restore endpoint allows publishers to restore a snapshot only as an unpubl
   let response;
   await handler({ params: { versionId: '9' }, body: { restoreNote: 'Restore approved version.' }, accountability: { user: 'publisher-1', role: 'role-1' } }, { status(code) { assert.equal(code, 200); return this; }, json(value) { response = value; } }, (error) => { throw error; });
 
-  assert.deepEqual(response.data, { content_collection: 'product_models', content_item_id: '7', status: 'draft' });
+  assert.deepEqual(response.data, { content_collection: 'product_models', content_item_id: '7', status: 'draft', discardedNewerVersions: 0 });
   assert.equal(updates[0].table, 'product_models');
   assert.equal(updates[0].value.status, 'draft');
   assert.deepEqual(JSON.parse(updates[0].value.parameters), { travel: '400' });
   assert.equal(updates[1].table, 'content_versions');
   assert.equal(updates[1].value.status, 'restored');
   assert.match(updates[1].value.restored_at, /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/);
+});
+
+test('restore endpoint refuses to silently discard newer changes', async () => {
+  // Restoring an older snapshot overwrites the whole record, so any version
+  // recorded after it is lost. Without this guard picking the wrong entry wiped
+  // recent edits and still reported success.
+  let handler;
+  let updated = false;
+  let versionLookups = 0;
+  const router = { get() {}, post: (_path, callback) => { handler = callback; } };
+  const database = (table) => ({
+    where() { return this; },
+    count() { return this; },
+    async first() {
+      if (table === 'directus_roles') return { name: '发布人员' };
+      if (table === 'content_versions') {
+        // First call resolves the version being restored, second resolves the
+        // count of versions recorded after it.
+        versionLookups += 1;
+        return versionLookups === 1
+          ? { id: 9, content_collection: 'product_models', content_item_id: '7', snapshot: JSON.stringify({ name: 'Old model' }) }
+          : { total: 3 };
+      }
+      return { id: 7, status: 'draft', publication_state: 'unpublished', publication_log: [] };
+    },
+    update() { updated = true; return Promise.resolve(1); }
+  });
+  registerContentVersionRestoreEndpoint(router, { database });
+  let response;
+  let statusCode = 0;
+  await handler({ params: { versionId: '9' }, body: { restoreNote: 'Restore.' }, accountability: { user: 'publisher-1', role: 'role-1' } }, { status(code) { statusCode = code; return this; }, json(value) { response = value; } }, (error) => { throw error; });
+
+  assert.equal(statusCode, 409);
+  assert.equal(response.errors[0].extensions.code, 'NEWER_VERSIONS_EXIST');
+  assert.equal(response.errors[0].extensions.newerVersions, 3);
+  assert.match(response.errors[0].message, /confirmDiscardNewer/);
+  assert.equal(updated, false, 'nothing may be written when confirmation is missing');
 });

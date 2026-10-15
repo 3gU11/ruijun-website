@@ -2,6 +2,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { pageAllowsPreviewMedia } from '../content-preview/page-preview-media-policy.mjs';
 
+test('home history grants only the shared about timeline placements', () => {
+ const page={slug:'home',sections:[{id:'history'}]};
+ const asset={usage_scope:'brand',page_key:'about',section_key:'history',media_type:'image',placement_key:'about.timeline.background'};
+ assert.equal(pageAllowsPreviewMedia(page,asset),true);
+ assert.equal(pageAllowsPreviewMedia(page,{...asset,placement_key:'about.timeline.icon'}),true);
+ assert.equal(pageAllowsPreviewMedia(page,{...asset,placement_key:'about.hero.background'}),false);
+ assert.equal(pageAllowsPreviewMedia({...page,sections:[]},asset),false);
+ assert.equal(pageAllowsPreviewMedia({...page,slug:'service'},asset),false);
+});
+
 test('page preview media belongs to a known page, usage scope and governed placement', () => {
  for(const [slug,scope,placement,type] of [
   ['home','homepage','home.hero.poster','image'],

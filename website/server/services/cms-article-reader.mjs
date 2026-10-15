@@ -28,18 +28,27 @@ async function sanitizeArticle(record, mediaAssets) {
   const mediaEntries = hasMedia ? article.media : [];
   const coverReference = { media_asset_id: article.cover_asset };
   const bodyMediaEntries = Array.isArray(article.body_media) ? article.body_media : [];
-  const resolvedAssets = await mediaAssets.resolve(collectMediaAssetIds([...mediaEntries, coverReference, ...bodyMediaEntries]));
-  const resolvedBodyMedia = bodyMediaEntries.flatMap((item) => { const id = collectMediaAssetIds([item])[0]; const resolved = id ? resolvedAssets.get(id) : null; return resolved?.path ? [{ ...item, path: resolved.path, alt: item?.alt || resolved.alt || resolved.title || '' }] : []; });
+  // A video entry may name its own poster. Resolve that reference alongside the
+  // entry so the cover can be edited separately from the video file itself.
+  const posterReferences = mediaEntries
+    .filter((item) => item && typeof item === 'object' && item.poster_asset_id != null && item.poster_asset_id !== '')
+    .map((item) => ({ media_asset_id: item.poster_asset_id }));
+  const resolvedAssets = await mediaAssets.resolve(collectMediaAssetIds([...mediaEntries, coverReference, ...bodyMediaEntries, ...posterReferences]));
+  const resolvedBodyMedia = bodyMediaEntries.flatMap((item) => { const id = collectMediaAssetIds([item])[0]; const resolved = id ? resolvedAssets.get(id) : null; return resolved?.path && resolved.mediaType === 'image' ? [{ ...item, managed: true, path: resolved.path, alt: item?.alt || resolved.alt || resolved.title || '' }] : []; });
   if (resolvedBodyMedia.length) article.body_media = resolvedBodyMedia;
   else delete article.body_media;
   const sanitizedMedia = mediaEntries.flatMap((item) => {
     const referenceId = collectMediaAssetIds([item])[0];
     const resolved = referenceId ? resolvedAssets.get(referenceId) : null;
+    // The entry's own poster reference wins over the asset-level default, so an
+    // operator can pick a cover per video without touching the asset record.
+    const posterId = collectMediaAssetIds([{ media_asset_id: item?.poster_asset_id }])[0];
+    const posterResolved = posterId ? resolvedAssets.get(posterId) : null;
     if (resolved?.path) return [{
       path: resolved.path,
       alt: String(item?.alt || item?.title || resolved.alt || resolved.title || ''),
       mediaType: resolved.mediaType,
-      posterPath: resolved.posterPath,
+      posterPath: posterResolved?.path || resolved.posterPath,
       title: resolved.title,
       description: resolved.description
     }];
@@ -116,7 +125,7 @@ export function createCmsArticleReader({ endpoint, mediaAssetsEndpoint = '', pub
         const url = new URL(endpoint);
         url.searchParams.set('filter[status][_eq]', 'published');
         url.searchParams.set('filter[publication_state][_eq]', 'published');
-        url.searchParams.set('fields', 'id,slug,category,title,display_date,sort_order,summary,body,transcript,field_presentation,media,cover_asset,video_url,seo,status,publication_state,published_at');
+        url.searchParams.set('fields', 'id,slug,category,title,display_date,sort_order,summary,body,body_media,transcript,field_presentation,media,cover_asset,video_url,seo,status,publication_state,published_at');
         url.searchParams.set('sort', '-display_date,sort_order,-id');
         url.searchParams.set('limit', '100');
         // Directus may enforce a lower server-side maximum than the requested
@@ -186,7 +195,7 @@ export function createCmsArticleReader({ endpoint, mediaAssetsEndpoint = '', pub
         url.searchParams.set('filter[slug][_eq]', slug);
         url.searchParams.set('filter[status][_eq]', 'published');
         url.searchParams.set('filter[publication_state][_eq]', 'published');
-        url.searchParams.set('fields', 'id,slug,category,title,display_date,sort_order,summary,body,transcript,field_presentation,media,cover_asset,video_url,seo,status,publication_state,published_at');
+        url.searchParams.set('fields', 'id,slug,category,title,display_date,sort_order,summary,body,body_media,transcript,field_presentation,media,cover_asset,video_url,seo,status,publication_state,published_at');
         url.searchParams.set('limit', '1');
         const response = await fetchImpl(url, { headers });
         if (!response.ok) throw new Error(`CMS responded ${response.status}`);

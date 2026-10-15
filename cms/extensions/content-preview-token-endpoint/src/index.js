@@ -1,4 +1,4 @@
-import { pageAllowsPreviewMedia } from '../../../content-preview/page-preview-media-policy.mjs';
+import { pageAllowsPreviewMedia, homepageSectionAllowsPreviewMedia } from '../../../content-preview/page-preview-media-policy.mjs';
 import {
   createPreviewToken,
   hashPreviewToken,
@@ -195,14 +195,15 @@ export function registerContentPreviewTokenEndpoint(router, { database, now = ()
       if (!user) return responseError(res, 403, '当前账号不能授权预览素材。', 'PREVIEW_MEDIA_FORBIDDEN');
       const target = normalizePreviewTarget(req.body?.contentCollection, req.body?.contentItemId);
       const assetId = String(req.body?.assetId || '');
-      if (!target || !['articles', 'pages', 'service_resources', 'product_series', 'product_models', 'qualifications'].includes(target.contentCollection) || !user.scopes.has(target.contentCollection) || !/^[1-9]\d*$/.test(assetId)) return responseError(res, 400, '预览素材目标无效。', 'PREVIEW_MEDIA_INVALID');
+      if (!target || !['articles', 'pages', 'homepage_sections', 'service_resources', 'product_series', 'product_models', 'qualifications'].includes(target.contentCollection) || !user.scopes.has(target.contentCollection) || !/^[1-9]\d*$/.test(assetId)) return responseError(res, 400, '预览素材目标无效。', 'PREVIEW_MEDIA_INVALID');
       const record = await database(target.contentCollection).where({ id: target.contentItemId }).first();
       const asset = await database('media_assets').where({ id: assetId }).first();
       const homeHero = target.contentCollection === 'pages' && record?.slug === 'home'
         && asset?.usage_scope === 'homepage' && asset?.page_key === 'home' && asset?.section_key === 'hero'
         && asset?.media_type === 'video' && asset?.placement_key === 'home.hero.video';
       const articlePlacement = target.contentCollection === 'articles' && (record?.category === 'news'
-        ? asset?.media_type === 'image' && asset?.placement_key === 'news.dynamic_news.cover' && asset?.section_key === 'dynamic-news'
+        ? ((asset?.media_type === 'image' && asset?.placement_key === 'news.dynamic_news.cover' && asset?.section_key === 'dynamic-news')
+          || (asset?.media_type === 'image' && asset?.placement_key === 'news.article.body' && asset?.section_key === 'article'))
         : record?.category === 'video' && asset?.media_type === 'video' && asset?.placement_key === 'news.video_share.list' && asset?.section_key === 'video-sharing');
       const servicePlacement = target.contentCollection === 'service_resources' && asset?.usage_scope === 'service' && asset?.page_key === 'service'
         && ((asset?.placement_key === 'service.document' && asset?.media_type === 'document')
@@ -213,8 +214,9 @@ export function registerContentPreviewTokenEndpoint(router, { database, now = ()
       const productGallery = target.contentCollection === 'product_models' && asset?.usage_scope === 'product' && asset?.page_key === 'product'
         && asset?.placement_key === 'product.gallery.image' && asset?.media_type === 'image';
       const productSeriesCover = target.contentCollection === 'product_series' && asset?.usage_scope === 'product' && asset?.page_key === 'product'
-        && asset?.placement_key === 'product.gallery.image' && asset?.media_type === 'image';
-      const pagePlacement = target.contentCollection === 'pages' && pageAllowsPreviewMedia(record, asset);
+        && asset?.placement_key === 'product.series.cover' && asset?.media_type === 'image';
+      const pagePlacement = (target.contentCollection === 'pages' && pageAllowsPreviewMedia(record, asset))
+        || (target.contentCollection === 'homepage_sections' && homepageSectionAllowsPreviewMedia(record, asset));
       const qualificationSection = new Map([['certificate', 'certificates'], ['honor', 'honors'], ['patent', 'patents']]).get(record?.type);
       const qualificationPlacement = target.contentCollection === 'qualifications' && qualificationSection
         && asset?.usage_scope === 'qualification' && asset?.page_key === 'about' && asset?.section_key === qualificationSection

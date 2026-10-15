@@ -16,7 +16,7 @@ const { data: videoShareResponse } = await useFetch('/api/public/v1/media/news.v
 const { data: newsPageResponse } = await useFetch('/api/public/v1/pages/news', {
   default: () => ({ data: null as Record<string, any> | null }),
 });
-const { overlayList, overlayRecord } = useCmsDraftPreview();
+const { overlayList, overlayRecord, visualEditMode: cmsVisualEditMode } = useCmsDraftPreview();
 
 // Do not render placeholder/demo articles when the CMS has no published content.
 // An explicit empty state makes publication status visible to editors.
@@ -298,6 +298,7 @@ function markVideoPreviewError(event: Event, key = 'video') {
         ><button class="pagination-next" type="button" :aria-label="videoSharingSection.pagination?.next_label || '下一页'" :disabled="videoSharePage === videoSharePageCount" @click="setVideoSharePage(videoSharePage + 1)">›</button>
       </nav>
     </section>
+    <CmsCustomSections :page="newsPage" page-slug="news" :visual-edit-mode="cmsVisualEditMode" />
   </main>
 </template>
 

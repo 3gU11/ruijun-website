@@ -77,6 +77,14 @@ test('service page resolves every visual section through its owning pages record
   }
 });
 
+test('service page delegates registered blocks to the shared renderer', async () => {
+  const source = await readFile(new URL('../pages/service.vue', import.meta.url), 'utf8');
+  assert.match(source, /<CmsCustomSections :page="servicePageContent" page-slug="service" :visual-edit-mode="cmsVisualEditMode" \/>/);
+  // The per-type markup now lives in the shared component, not this page.
+  assert.doesNotMatch(source, /section\.type === 'rich-text'/);
+  assert.doesNotMatch(source, /customSections/);
+});
+
 test('service page binds media replacements to their actual rendered source paths', async () => {
   const source = await readFile(new URL('../pages/service.vue', import.meta.url), 'utf8');
   assert.match(source, /function sectionMediaAsset\(/);

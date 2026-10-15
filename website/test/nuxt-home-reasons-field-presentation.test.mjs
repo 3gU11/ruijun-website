@@ -19,4 +19,3 @@ test('homepage reason images expose governed media placements on their rendered 
   const source = await readFile(new URL('../pages/index.vue', import.meta.url), 'utf8');
   assert.match(source, /:data-cms-preview-placement-key="reason\.mode === 'machine' \? 'home\.reason\.machine' : 'home\.reason\.background'"/);
 });
-import assert from 'node:assert/strict';

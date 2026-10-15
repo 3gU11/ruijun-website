@@ -33,6 +33,35 @@ function endpointHarness(tables, options = {}) {
   return handlers;
 }
 
+test('independent homepage media grants enforce section, placement, state and collection isolation', async () => {
+ const record = {id:'3',page_key:'home',section_key:'advanced-manufacturing',status:'draft',publication_state:'unpublished'};
+ const asset = {id:'90',file_id:'file',enabled:true,status:'draft',publication_state:'unpublished',usage_scope:'homepage',page_key:'home',section_key:'advanced-manufacturing',placement_key:'home.reason.background',media_type:'image'};
+ const handlers = endpointHarness({directus_roles:[{id:'editor-role',name:'内容编辑'}],homepage_sections:[record],media_assets:[asset]});
+ const invoke = async (path, body, auth = true) => {
+  const result = responseCapture();
+  await handlers.get(`POST ${path}`)({body,...(auth ? {accountability:{user:'editor',role:'editor-role'}} : {})}, result.response, error => {throw error;});
+  return result.capture;
+ };
+ const input = {contentCollection:'homepage_sections',contentItemId:'3',assetId:'90'};
+ assert.equal((await invoke('/media/issue',input,false)).statusCode,403);
+ for (const placement of ['home.reason.background','home.reason.machine','home.reason.icon']) {
+  asset.placement_key = placement;
+  const result = await invoke('/media/issue',input);
+  assert.equal(result.statusCode,201);
+  const token = result.body.data.token;
+  assert.equal((await invoke('/media/consume',{...input,token,contentCollection:'pages'})).statusCode,404);
+  assert.equal((await invoke('/media/consume',{...input,token,contentItemId:'4'})).statusCode,404);
+  assert.equal((await invoke('/media/consume',{...input,token})).statusCode,200);
+ }
+ for (const [key,value] of [['page_key','about'],['section_key','performance'],['usage_scope','brand'],['placement_key','home.hero.video'],['media_type','video'],['enabled',false],['publication_state','private']]) {
+  const before=asset[key]; asset[key]=value;
+  assert.equal((await invoke('/media/issue',input)).statusCode,400,key);
+  asset[key]=before;
+ }
+ record.publication_state='published';
+ assert.equal((await invoke('/media/issue',input)).statusCode,400);
+});
+
 test('qualification grants enforce gallery type, scope and draft state', async () => {
  const record = {id:'7',type:'certificate',status:'draft',publication_state:'unpublished'};
  const asset = {id:'113',file_id:'file',enabled:true,status:'draft',publication_state:'unpublished',usage_scope:'qualification',page_key:'about',section_key:'certificates',placement_key:'qualification.image',media_type:'image'};
@@ -77,6 +106,13 @@ test('news cover grants require an editor and matching placement, then bind sing
  assert.equal(redeemed.body.data.assetId,'98');
  assert.equal((await invoke(consume,{body:{token,...input}})).statusCode,404);
  tables.articles[0].category='video';
+ Object.assign(tables.media_assets[0], { placement_key: 'news.article.body', section_key: 'article' });
+ tables.articles[0].category='news';
+ assert.equal((await invoke(issue,req)).statusCode,201,'正文图片允许独立授权');
+ tables.media_assets[0].section_key='dynamic-news';
+ assert.equal((await invoke(issue,req)).statusCode,400,'正文用途不能冒用封面区块');
+ tables.media_assets[0].section_key='article';
+ tables.articles[0].category='video';
  assert.equal((await invoke(issue,req)).statusCode,400);
  Object.assign(tables.media_assets[0],{media_type:'video',placement_key:'news.video_share.list',section_key:'video-sharing'});
  const videoGrant=await invoke(issue,req);
@@ -96,11 +132,11 @@ test('news cover grants require an editor and matching placement, then bind sing
   assert.equal((await invoke(issue,homeReq)).statusCode,400);
 });
 
-test('product series cover grants require the governed product gallery image placement', async () => {
+test('product series cover grants require its dedicated governed placement', async () => {
  const tables = {
   directus_roles: [{ id: 'editor-role', name: '内容编辑' }],
   product_series: [{ id: '1', status: 'draft', publication_state: 'unpublished' }],
-  media_assets: [{ id: '50', file_id: 'file', enabled: true, status: 'draft', publication_state: 'unpublished', usage_scope: 'product', page_key: 'product', placement_key: 'product.gallery.image', media_type: 'image' }]
+  media_assets: [{ id: '50', file_id: 'file', enabled: true, status: 'draft', publication_state: 'unpublished', usage_scope: 'product', page_key: 'product', placement_key: 'product.series.cover', media_type: 'image' }]
  };
  const issue = endpointHarness(tables).get('POST /media/issue');
  const call = async () => {
@@ -109,9 +145,9 @@ test('product series cover grants require the governed product gallery image pla
   return result.capture.statusCode;
  };
  assert.equal(await call(), 201);
- tables.media_assets[0].placement_key = 'product.document';
- assert.equal(await call(), 400);
  tables.media_assets[0].placement_key = 'product.gallery.image';
+ assert.equal(await call(), 400);
+ tables.media_assets[0].placement_key = 'product.series.cover';
  tables.media_assets[0].media_type = 'video';
  assert.equal(await call(), 400);
 });

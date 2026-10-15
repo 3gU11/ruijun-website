@@ -1,5 +1,9 @@
 import { collectMediaAssetIds, createCmsMediaAssetResolver } from './cms-media-asset-resolver.mjs';
 import { hasSectionPresentation, normalizeFieldPresentations, normalizeSectionPresentation } from './cms-section-presentation.mjs';
+// Server code is bundled by Nitro, so a cross-directory relative path would
+// resolve against the build output ('.nuxt/dev') instead of this file. The
+// package "imports" map keeps one specifier working for both Node tests and Nitro.
+import { getPageSectionDefinition, validatePageSectionInstance } from '#shared/page-section-registry.mjs';
 
 function isPublished(record, now) {
   if (record?.status !== 'published' || record?.publication_state !== 'published') return false;
@@ -138,7 +142,71 @@ function publicContent(value, mediaAssets = new Map()) {
   return Object.keys(copy).length ? copy : null;
 }
 
-function publicSection(section, mediaAssets) {
+function publicListEntries(value, field) {
+  if (!Array.isArray(value)) return [];
+  const itemFields = Array.isArray(field.itemFields) ? field.itemFields : [];
+  const max = Number.isInteger(field.maxItems) ? field.maxItems : 20;
+  return value.slice(0, max).flatMap((item) => {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return [];
+    const entry = {};
+    for (const itemField of itemFields) {
+      if (itemField.type !== 'text' && itemField.type !== 'textarea') continue;
+      const raw = item[itemField.key];
+      if (typeof raw !== 'string') continue;
+      const limit = Number.isInteger(itemField.maxLength) ? itemField.maxLength : 4000;
+      entry[itemField.key] = raw.trim().slice(0, limit);
+    }
+    return [entry];
+  });
+}
+
+function publicSection(section, mediaAssets, pageSlug = '') {
+  if (section?.type) {
+    const definition = getPageSectionDefinition(section.type, pageSlug);
+    if (!definition || validatePageSectionInstance(section, pageSlug) || section.enabled === false) return null;
+    // Emit only the fields this registered type declares, dispatched by kind, so
+    // a media or list field can never leak an undeclared shape to the page.
+    const declared = {};
+    for (const field of definition.fields) {
+      const raw = section[field.key];
+      if (field.type === 'text' || field.type === 'textarea') {
+        if (typeof raw === 'string') {
+          const limit = Number.isInteger(field.maxLength) ? field.maxLength : 4000;
+          declared[field.key] = raw.trim().slice(0, limit);
+        }
+        continue;
+      }
+      if (field.type === 'media') {
+        const media = publicMediaEntries(raw, mediaAssets);
+        if (media.length) declared[field.key] = media;
+        continue;
+      }
+      if (field.type === 'list') {
+        const items = publicListEntries(raw, field);
+        if (items.length) declared[field.key] = items;
+        continue;
+      }
+      if (field.type === 'select') {
+        const options = Array.isArray(field.options) ? field.options : [];
+        if (typeof raw === 'string' && options.includes(raw)) declared[field.key] = raw;
+        continue;
+      }
+      if (field.type === 'number') {
+        if (typeof raw === 'number' && Number.isFinite(raw)) declared[field.key] = raw;
+      }
+    }
+    const presentation = hasSectionPresentation(section) ? normalizeSectionPresentation(section) : null;
+    const fieldPresentation = normalizeFieldPresentations(section.field_presentation, definition.fields.map((field) => field.key));
+    return {
+      id: String(section.id || ''),
+      type: definition.type,
+      version: definition.version,
+      enabled: true,
+      ...declared,
+      ...(presentation || {}),
+      ...(Object.keys(fieldPresentation).length ? { field_presentation: fieldPresentation } : {})
+    };
+  }
   const copy = {};
   for (const field of ['id', 'kicker', 'title', 'body', 'description', 'detail', 'processTitle', 'outputText', 'image', 'video', 'label', 'href', 'shortTitle', 'introTitle', 'introDetail', 'mode', 'introImage']) {
     if (typeof section?.[field] !== 'string') continue;
@@ -201,7 +269,7 @@ async function publicPage(record, mediaAssetResolver) {
   const mediaAssets = await mediaAssetResolver.resolve(mediaAssetIds);
   return {
     ...record,
-    sections: sections.map((section) => publicSection(section, mediaAssets))
+    sections: sections.map((section) => publicSection(section, mediaAssets, record.slug)).filter(Boolean)
   };
 }
 

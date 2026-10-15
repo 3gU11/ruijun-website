@@ -1,0 +1,116 @@
+/* Global styles for the content editor workbench canvas
+ * Deliberately unscoped: these reach the live-preview iframe and the visual canvas,
+ * which live outside this component's subtree.
+ *
+ * Moved verbatim out of module.vue. Loaded through the SFC's <style src> so the
+ * scoped/global semantics are unchanged.
+ */
+html.ruijun-workbench-active .live-website-preview .visual-canvas-viewport > iframe{height:var(--canvas-height)!important;min-height:0!important;position:absolute!important;top:20px!important;left:max(20px,calc((100% - var(--canvas-width) * var(--visual-zoom)) / 2))!important}
+
+/* Final canvas sizing overrides keep the zoom controlled by the toolbar. */
+.visual-canvas-viewport{position:absolute;inset:72px 0 0;overflow:auto;background:#e9ecef;padding:20px}
+.visual-canvas-viewport iframe{position:relative!important;top:auto!important;left:auto!important;width:calc(100% / var(--visual-zoom))!important;height:calc(100% / var(--visual-zoom))!important;min-height:900px;border:0;transform:scale(var(--visual-zoom))!important;transform-origin:top left!important}
+.visual-canvas-viewport iframe{width:var(--canvas-width)!important}
+.live-website-preview{--visual-toolbar-height:136px;--visual-property-panel-width:clamp(200px,34%,300px)}.live-website-preview.visual-property-panel-open .visual-canvas-viewport{right:var(--visual-property-panel-width)}.visual-property-panel{position:absolute;z-index:5;top:var(--visual-toolbar-height);right:0;bottom:0;width:var(--visual-property-panel-width);overflow:auto;box-sizing:border-box;border-left:1px solid var(--theme--border-color);background:var(--theme--background);padding:14px}.visual-property-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.visual-property-heading strong{display:block;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.visual-property-heading button{width:28px;height:28px;border:1px solid var(--theme--border-color);border-radius:4px;background:var(--theme--background);cursor:pointer}.visual-property-source{margin:8px 0 14px;color:var(--theme--foreground-subdued);font-size:11px;overflow-wrap:anywhere}.visual-property-field{display:grid;gap:6px;margin-bottom:12px;color:var(--theme--foreground-subdued);font-size:12px}.visual-property-field textarea,.visual-property-field select,.visual-property-grid input,.visual-property-grid select{box-sizing:border-box;width:100%;border:1px solid var(--theme--border-color);border-radius:4px;background:var(--theme--background);color:var(--theme--foreground);padding:8px;font:inherit}.visual-property-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}.visual-property-grid label{display:grid;gap:5px;color:var(--theme--foreground-subdued);font-size:11px}.visual-list-order{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 12px;padding:8px;border:1px solid var(--theme--border-color);border-radius:4px;color:var(--theme--foreground-subdued);font-size:11px}.visual-list-order>div{display:flex;gap:4px}.visual-list-order button{border:1px solid var(--theme--border-color);border-radius:4px;background:var(--theme--background);color:var(--theme--foreground);padding:4px 7px;font:inherit;cursor:pointer}.visual-list-order button:disabled{cursor:not-allowed;opacity:.45}.visual-property-help{margin:8px 0;color:var(--theme--foreground-subdued);font-size:11px;line-height:1.5}
+.visual-canvas-focus>.toolbar,.visual-canvas-focus>.editor-guide,.visual-canvas-focus>.message,.visual-canvas-focus>.wp-admin-menu,.visual-canvas-focus>section:not(.live-website-preview),.visual-canvas-focus>.empty{display:none!important}.visual-canvas-focus>.live-website-preview{position:fixed!important;inset:64px 0 0!important;width:100%!important;height:calc(100vh - 64px)!important;z-index:120}.visual-canvas-focus .visual-canvas-viewport{inset:72px 0 0!important}
+.live-website-preview>header.visual-editor-toolbar{height:72px}
+@media(max-width:1100px){.visual-canvas-viewport{inset:108px 0 0}}
+@media(max-width:720px){.visual-canvas-viewport{inset:126px 0 0;padding:8px}}
+/* 工作台导航覆盖 Directus 项目导航区域；宿主 DOM 不被修改，其它页面不受影响。 */
+@media (min-width: 901px) {
+  html.ruijun-workbench-active .v-sidebar,
+  html.ruijun-workbench-active .private-view__sidebar,
+  html.ruijun-workbench-active aside[aria-label="主导航"],
+  html.ruijun-workbench-active aside[aria-label="Main navigation"] {
+    display: none !important;
+  }
+  html.ruijun-workbench-active .editor-page {
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+    grid-template-columns: 222px minmax(0, 1fr);
+  }
+  html.ruijun-workbench-active .editor-page:not(.live-website-preview-active) {
+    grid-template-columns: 238px minmax(0, 1fr);
+  }
+  html.ruijun-workbench-active .editor-page > .wp-admin-menu {
+    position: fixed;
+    z-index: 100;
+    top: 64px;
+    left: 56px;
+    width: 222px;
+    height: calc(100vh - 64px);
+    max-height: none;
+    overflow-y: auto;
+    box-sizing: border-box;
+  }
+  /* The fixed WordPress-style menu is removed from normal grid flow. Keep the
+     workbench header and guide in the second track so they cannot sit beneath it. */
+  html.ruijun-workbench-active .editor-page:not(.live-website-preview-active) > .toolbar,
+  html.ruijun-workbench-active .editor-page:not(.live-website-preview-active) > .editor-guide,
+  html.ruijun-workbench-active .editor-page:not(.live-website-preview-active) > .message,
+    html.ruijun-workbench-active .editor-page:not(.live-website-preview-active) > .retry-save-action {
+      grid-column: 2;
+      margin-left: 16px;
+    }
+    /* The content cards share the second track with the fixed menu. Match the
+       toolbar gap so a section cannot begin underneath the menu edge. */
+    html.ruijun-workbench-active .editor-page:not(.live-website-preview-active) > section:not(.editor-guide),
+    html.ruijun-workbench-active .editor-page:not(.live-website-preview-active) > .empty {
+      grid-column: 2;
+      margin-left: 16px;
+    }
+    html.ruijun-workbench-active .editor-page.live-website-preview-active {
+    grid-template-columns: 222px minmax(0, 1fr) clamp(460px, 38vw, 920px);
+    width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+@media(min-width:901px) and (max-width:1279px){
+  html.ruijun-workbench-active .editor-page.live-website-preview-active{grid-template-columns:222px minmax(0,1fr)}
+  html.ruijun-workbench-active .editor-page.live-website-preview-active>.wp-admin-menu{position:static!important;z-index:auto!important;grid-column:1!important;grid-row:4;width:auto;height:auto;min-height:0;overflow:visible}
+  html.ruijun-workbench-active .editor-page.live-website-preview-active>section:not(.editor-guide),html.ruijun-workbench-active .editor-page.live-website-preview-active>.empty{grid-column:2;grid-row:4}
+  /* The canvas viewport is absolutely positioned. Keep the preview itself as
+     its containing block, otherwise the iframe escapes this grid cell and
+     covers the workbench toolbar. */
+  html.ruijun-workbench-active .editor-page.live-website-preview-active>.live-website-preview{position:relative!important;top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;grid-column:2;grid-row:5;width:auto;min-width:0;height:680px}
+}
+.visual-editor-toolbar{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;align-items:center;gap:4px;min-height:var(--visual-toolbar-height);padding:6px 10px}
+.visual-editor-brand{grid-row:1;overflow:hidden}.visual-editor-tools{grid-row:2;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;white-space:nowrap}.visual-editor-actions{grid-row:3;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;white-space:nowrap}
+.visual-editor-actions>*,.visual-editor-tools>*{flex-shrink:0}
+.visual-editor-tools::-webkit-scrollbar,.visual-editor-actions::-webkit-scrollbar{height:3px}.visual-editor-tools::-webkit-scrollbar-thumb,.visual-editor-actions::-webkit-scrollbar-thumb{background:var(--theme--border-color)}
+.live-website-preview>header.visual-editor-toolbar{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;min-height:var(--visual-toolbar-height);height:var(--visual-toolbar-height)!important}.live-preview-error{top:var(--visual-toolbar-height)!important}.visual-canvas-viewport{inset:var(--visual-toolbar-height) 0 0}.visual-canvas-focus .visual-canvas-viewport{inset:var(--visual-toolbar-height) 0 0!important}
+/* The scoped legacy iframe rule otherwise shrinks a desktop canvas to the
+   preview column. Preserve the chosen device viewport and let this surface scroll. */
+html.ruijun-workbench-active .live-website-preview .visual-canvas-viewport > iframe{width:var(--canvas-width)!important}
+/* At common desktop widths, a third column leaves insufficient space for a
+   page form and lets the canvas property panel intercept its save action.
+   Keep the editor in the first content row and place the preview after it.
+   Wide desktops retain the side-by-side authoring layout below. */
+@media(min-width:1280px) and (max-width:1599px){
+  html.ruijun-workbench-active .editor-page.live-website-preview-active{
+    grid-template-columns:176px minmax(0,1fr);
+    gap:12px;
+  }
+  html.ruijun-workbench-active .editor-page.live-website-preview-active .editor-form{grid-template-columns:minmax(0,1fr)}
+  html.ruijun-workbench-active .editor-page.live-website-preview-active .editor-form>*{min-width:0;max-width:100%;box-sizing:border-box}
+  html.ruijun-workbench-active .editor-page.live-website-preview-active>.live-website-preview{position:relative!important;top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;grid-column:2;grid-row:5;width:auto;min-width:0;height:680px}
+  html.ruijun-workbench-active .editor-page.live-website-preview-active .model-layout{grid-template-columns:minmax(0,1fr)}
+  html.ruijun-workbench-active .editor-page.live-website-preview-active>.wp-admin-menu{width:176px}
+}
+@media(min-width:1600px){
+  html.ruijun-workbench-active .editor-page.live-website-preview-active{
+    grid-template-columns:222px minmax(400px,.85fr) minmax(640px,1.15fr);
+    gap:16px;
+  }
+}
+.live-preview-error{pointer-events:none}
+@media(max-width:720px){
+  html.ruijun-workbench-active .live-website-preview .visual-canvas-viewport > iframe{
+    width:100%!important;
+    height:calc(100% - 16px)!important;
+    min-height:0!important;
+    transform:none!important;
+  }
+}

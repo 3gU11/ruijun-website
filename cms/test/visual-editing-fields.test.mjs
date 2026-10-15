@@ -38,6 +38,26 @@ test('media property controls show the asset already bound to the selected canva
   assert.equal(getVisualMediaAssetId({ title: '生产核心设备' }, 'title'), '');
 });
 
+test('legacy product model machine image materializes machine_asset_id on first replacement', () => {
+  // Legacy records only carry a static configuration.machineImage URL.
+  const legacy = { configuration: { machineImage: '/assets/psd/product-detail/auto-machine.png', intro: { title: '标题' } } };
+  assert.equal(applyVisualMediaReplacement(legacy, 'configuration.machine_asset_id', '542'), true);
+  assert.equal(legacy.configuration.machine_asset_id, '542');
+  assert.equal(legacy.configuration.machineImage, '/assets/psd/product-detail/auto-machine.png');
+  assert.equal(legacy.configuration.intro.title, '标题');
+
+  // Existing bindings keep working and can be replaced repeatedly.
+  assert.equal(applyVisualMediaReplacement(legacy, 'configuration.machine_asset_id', '543'), true);
+  assert.equal(legacy.configuration.machine_asset_id, '543');
+
+  // Invalid ids and non-object configuration must not create a partial write.
+  assert.equal(applyVisualMediaReplacement({ configuration: {} }, 'configuration.machine_asset_id', '../etc/passwd'), false);
+  assert.equal(applyVisualMediaReplacement({ configuration: [] }, 'configuration.machine_asset_id', '542'), false);
+  const noConfig = {};
+  assert.equal(applyVisualMediaReplacement(noConfig, 'configuration.machine_asset_id', '542'), false);
+  assert.equal(Object.hasOwn(noConfig, 'configuration'), false);
+});
+
 test('service office item media resolves its governed role slot', () => {
   const target = {
     items: [{ image: '', map: '', media_role: 'office-1', map_media_role: 'office-map-1' }],
@@ -423,6 +443,68 @@ test('duplicated service cards get independent number and media roles', () => {
 
   assert.deepEqual(section.items.map((item) => item.number), ['01', '03', '02']);
   assert.deepEqual(section.items.map((item) => item.media_role), ['action-1', 'action-3', 'action-2']);
+});
+
+test('product resources support duplicate, delete and reorder from the canvas', () => {
+  const model = {
+    resources: [
+      { title: '资料A', type: 'PDF', url: '/service/download?a' },
+      { title: '资料B', type: 'DOC', url: '/service/download?b' }
+    ]
+  };
+
+  assert.deepEqual(duplicateVisualListItem(model, 'resources.0.title'), {
+    arrayPath: 'resources', index: 1, length: 3, fieldPath: 'resources.1.title'
+  });
+  assert.deepEqual(model.resources.map((item) => item.title), ['资料A', '资料A', '资料B']);
+  // The copy is independent: editing it must not touch the source entry.
+  model.resources[1].title = '资料A-副本';
+  assert.equal(model.resources[0].title, '资料A');
+
+  assert.deepEqual(removeVisualListItem(model, 'resources.1.url'), {
+    arrayPath: 'resources', index: 1, length: 2, fieldPath: 'resources.1.url'
+  });
+  assert.deepEqual(model.resources.map((item) => item.title), ['资料A', '资料B']);
+  assert.deepEqual(moveVisualListItem(model, 'resources.1.title', -1), {
+    arrayPath: 'resources', index: 0, length: 2, fieldPath: 'resources.0.title'
+  });
+  assert.deepEqual(model.resources.map((item) => item.title), ['资料B', '资料A']);
+  // A single remaining entry must not be removable.
+  assert.equal(removeVisualListItem({ resources: [{ title: '唯一资料' }] }, 'resources.0.title'), null);
+});
+
+test('product drawings resolve through the nested configuration object', () => {
+  const model = {
+    configuration: {
+      drawings: [
+        { title: 'FL1610 尺寸参数图', caption: 'FL1610 技术参数与尺寸图', media_asset_id: '27' },
+        { title: 'FL1180 尺寸参数图', caption: 'FL1180 技术参数与尺寸图', media_asset_id: '28' }
+      ]
+    }
+  };
+
+  assert.deepEqual(getVisualListReorder(model, 'configuration.drawings.0.media_asset_id'), {
+    arrayPath: 'configuration.drawings', index: 0, length: 2
+  });
+  assert.deepEqual(duplicateVisualListItem(model, 'configuration.drawings.0.media_asset_id'), {
+    arrayPath: 'configuration.drawings', index: 1, length: 3, fieldPath: 'configuration.drawings.1.media_asset_id'
+  });
+  assert.deepEqual(model.configuration.drawings.map((item) => item.media_asset_id), ['27', '27', '28']);
+  assert.deepEqual(removeVisualListItem(model, 'configuration.drawings.1.caption'), {
+    arrayPath: 'configuration.drawings', index: 1, length: 2, fieldPath: 'configuration.drawings.1.caption'
+  });
+  assert.deepEqual(model.configuration.drawings.map((item) => item.media_asset_id), ['27', '28']);
+});
+
+test('governed gallery media stays replace-only and never offers list reordering', () => {
+  // Gallery slots are declared by the template, not stored, so duplicating or
+  // deleting them would produce entries that never render (or reappear).
+  const section = { media: [{ role: 'factory-1', media_asset_id: '101' }, { role: 'factory-2', media_asset_id: '102' }] };
+  assert.equal(getVisualListReorder(section, 'media.0'), null);
+  assert.equal(getVisualListReorder(section, 'media.1.path'), null);
+  assert.equal(duplicateVisualListItem(section, 'media.0'), null);
+  assert.equal(removeVisualListItem(section, 'media.0'), null);
+  assert.equal(moveVisualListItem(section, 'media.0', 1), null);
 });
 
 test('service action icon slots can return to the original Nuxt icon without clearing ordinary media', () => {

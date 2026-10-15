@@ -1,5 +1,6 @@
 import { contentCollections } from '../schema/content-model.mjs';
 import { normalizeFieldPresentations } from '../extensions/content-editor-workbench/src/section-presentation.js';
+import { getPageSectionDefinition, validatePageSectionInstance } from '../../website/shared/page-section-registry.mjs';
 
 // Draft previews are deliberately smaller than a Directus record.  The preview
 // endpoint is a bearer-token boundary, so never forward source evidence,
@@ -12,7 +13,7 @@ const previewFields = Object.freeze({
   product_models: ['id', 'series_code', 'model_code', 'slug', 'name', 'parameters', 'parameter_groups', 'configuration', 'presentation', 'media', 'resources', 'case_studies', 'status', 'publication_state', 'published_at'],
   product_parameters: ['id', 'model_code', 'group_name', 'field_name', 'value', 'unit', 'presentation', 'sort_order', 'test_conditions', 'status', 'publication_state', 'published_at'],
   case_studies: ['id', 'slug', 'industry', 'material', 'thickness', 'model_code', 'process', 'result', 'authorization_status', 'status', 'publication_state', 'published_at'],
-  articles: ['id', 'slug', 'category', 'title', 'display_date', 'summary', 'body', 'transcript', 'field_presentation', 'media', 'video_url', 'cover_asset', 'seo', 'status', 'publication_state', 'published_at'],
+  articles: ['id', 'slug', 'category', 'title', 'display_date', 'summary', 'body', 'body_media', 'transcript', 'field_presentation', 'media', 'video_url', 'cover_asset', 'seo', 'status', 'publication_state', 'published_at'],
   manufacturing_evidence: ['id', 'source_key', 'process', 'description', 'media', 'inspection_evidence', 'sort_order', 'status', 'publication_state', 'published_at'],
   qualifications: ['id', 'source_key', 'type', 'name', 'certificate_number', 'issuer', 'valid_until', 'assets', 'sort_order', 'authorization_status', 'status', 'publication_state', 'published_at'],
   milestones: ['id', 'source_key', 'year', 'event', 'evidence', 'media', 'icon_asset', 'sort_order', 'status', 'publication_state', 'published_at'],
@@ -51,7 +52,7 @@ function cleanSectionValue(value, depth = 0) {
   if (depth > 2 || value == null || ['string', 'number', 'boolean'].includes(typeof value)) return value;
   if (Array.isArray(value)) return value.slice(0, 100).map((entry) => cleanSectionValue(entry, depth + 1));
   if (typeof value !== 'object') return null;
-  const allowed = new Set(['id', 'key', 'label', 'title', 'body', 'description', 'kicker', 'shortTitle', 'introTitle', 'introDetail', 'image', 'icon', 'video', 'introImage', 'mode', 'href', 'items', 'links', 'media', 'pagination', 'layout', 'text_style', 'responsive', 'media_presentation', 'field_presentation', 'sort_order', 'order', 'enabled', 'alt', 'role', 'media_role', 'media_asset_id', 'poster_asset_id', 'anchor', 'connection_label', 'assistant_eyebrow', 'assistant_brand', 'assistant_brand_short', 'assistant_title', 'assistant_heading', 'assistant_intro', 'assistant_cta', 'assistant_empty', 'assistant_loading', 'assistant_input_placeholder', 'assistant_send_label', 'assistant_send', 'assistant_stop', 'assistant_dialog_label', 'assistant_close', 'assistant_answer_label', 'assistant_matched_label', 'assistant_human_label', 'assistant_entry', 'assistant_direct_entry', 'step_1_title', 'step_1_body', 'step_2_title', 'step_2_body', 'step_3_title', 'step_3_body', 'feedback_prompt', 'feedback_yes', 'feedback_no', 'handoff_consent', 'handoff_summary_label', 'handoff_summary_placeholder', 'handoff_continue', 'handoff_draft', 'map_eyebrow', 'map_title', 'map_choice_label', 'map_close_label', 'map_amap_label', 'map_amap_description', 'map_baidu_label', 'map_baidu_description', 'map_system_label', 'map_system_description', 'exit_eyebrow', 'exit_title', 'exit_body', 'exit_cancel', 'exit_continue', 'exit_confirm', 'human_support_label', 'online_title', 'online_intro', 'assistant_copy_json',
+  const allowed = new Set(['id', 'type', 'version', 'enabled', 'key', 'label', 'title', 'body', 'description', 'kicker', 'shortTitle', 'introTitle', 'introDetail', 'image', 'icon', 'video', 'introImage', 'mode', 'href', 'items', 'links', 'media', 'pagination', 'layout', 'text_style', 'responsive', 'media_presentation', 'field_presentation', 'sort_order', 'order', 'enabled', 'alt', 'role', 'media_role', 'media_asset_id', 'poster_asset_id', 'anchor', 'connection_label', 'assistant_eyebrow', 'assistant_brand', 'assistant_brand_short', 'assistant_title', 'assistant_heading', 'assistant_intro', 'assistant_cta', 'assistant_empty', 'assistant_loading', 'assistant_input_placeholder', 'assistant_send_label', 'assistant_send', 'assistant_stop', 'assistant_dialog_label', 'assistant_close', 'assistant_answer_label', 'assistant_matched_label', 'assistant_human_label', 'assistant_entry', 'assistant_direct_entry', 'step_1_title', 'step_1_body', 'step_2_title', 'step_2_body', 'step_3_title', 'step_3_body', 'feedback_prompt', 'feedback_yes', 'feedback_no', 'handoff_consent', 'handoff_summary_label', 'handoff_summary_placeholder', 'handoff_continue', 'handoff_draft', 'map_eyebrow', 'map_title', 'map_choice_label', 'map_close_label', 'map_amap_label', 'map_amap_description', 'map_baidu_label', 'map_baidu_description', 'map_system_label', 'map_system_description', 'exit_eyebrow', 'exit_title', 'exit_body', 'exit_cancel', 'exit_continue', 'exit_confirm', 'human_support_label', 'online_title', 'online_intro', 'assistant_copy_json',
     // Repeated cards share the bounded presentation schema used by sections.
     'template', 'align_x', 'align_y', 'width', 'gap', 'z_index', 'desktop', 'mobile', 'offset_x', 'offset_y', 'number', 'map_media_role', 'offices',
     'preset', 'weight', 'size_desktop', 'size_mobile', 'line_height', 'color', 'max_width',
@@ -63,9 +64,77 @@ function cleanSectionValue(value, depth = 0) {
   ]));
 }
 
-function previewSection(section) {
+function previewListEntries(value, field) {
+  if (!Array.isArray(value)) return [];
+  const itemFields = Array.isArray(field.itemFields) ? field.itemFields : [];
+  const max = Number.isInteger(field.maxItems) ? field.maxItems : 20;
+  return value.slice(0, max).flatMap((item) => {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return [];
+    const entry = {};
+    for (const itemField of itemFields) {
+      if (itemField.type !== 'text' && itemField.type !== 'textarea') continue;
+      const raw = item[itemField.key];
+      if (typeof raw !== 'string') continue;
+      const limit = Number.isInteger(itemField.maxLength) ? itemField.maxLength : 4000;
+      entry[itemField.key] = raw.slice(0, limit);
+    }
+    return [entry];
+  });
+}
+
+function previewSection(section, pageSlug = '') {
   if (!section || typeof section !== 'object') return null;
-  // These fields have their own server-side normalizer.  Keeping the same
+  if (section.type) {
+    if (validatePageSectionInstance(section, pageSlug)) return null;
+    const definition = getPageSectionDefinition(section.type, pageSlug);
+    if (!definition) return null;
+    const preview = {
+      id: clonePreviewValue(section.id),
+      type: definition.type,
+      version: definition.version,
+      enabled: section.enabled !== false
+    };
+    // Draft preview mirrors the public reader: only declared fields survive, and
+    // media keeps its governed reference so the preview authorizer can grant it.
+    for (const field of definition.fields) {
+      const raw = section[field.key];
+      if (field.type === 'text' || field.type === 'textarea') {
+        if (typeof raw === 'string') {
+          const limit = Number.isInteger(field.maxLength) ? field.maxLength : 4000;
+          preview[field.key] = raw.slice(0, limit);
+        }
+        continue;
+      }
+      if (field.type === 'media') {
+        preview[field.key] = cleanSectionValue(Array.isArray(raw) ? raw : []);
+        continue;
+      }
+      if (field.type === 'list') {
+        preview[field.key] = previewListEntries(raw, field);
+        continue;
+      }
+      if (field.type === 'select') {
+        const options = Array.isArray(field.options) ? field.options : [];
+        if (typeof raw === 'string' && options.includes(raw)) preview[field.key] = raw;
+        continue;
+      }
+      if (field.type === 'number') {
+        if (typeof raw === 'number' && Number.isFinite(raw)) preview[field.key] = raw;
+      }
+    }
+    const presentation = section.layout || section.text_style || section.responsive || section.media_presentation
+      ? section : null;
+    if (presentation) {
+      for (const field of ['layout', 'text_style', 'responsive', 'media_presentation']) {
+        if (Object.hasOwn(section, field)) preview[field] = clonePreviewValue(section[field]);
+      }
+      if (section.field_presentation && typeof section.field_presentation === 'object') {
+        preview.field_presentation = normalizeFieldPresentations(section.field_presentation, definition.fields.map((field) => field.key));
+      }
+    }
+    return preview;
+  }
+  // These fields have their own server-side normalizer. Keeping the same
   // controlled contract in the preview makes position and typography edits
   // visible without exposing arbitrary CSS or internal editorial metadata.
   const allowed = [
@@ -114,7 +183,7 @@ export function previewContentRecord(collection, record) {
     if (!Object.hasOwn(record, field)) continue;
     const value = parseStructuredPreviewValue(collection, field, record[field]);
     result[field] = field === 'sections'
-      ? (Array.isArray(value) ? value.map(previewSection).filter(Boolean) : [])
+      ? (Array.isArray(value) ? value.map((section) => previewSection(section, record.slug)).filter(Boolean) : [])
       : collection === 'product_parameters' && field === 'presentation'
         ? previewProductParameterPresentation(value)
         : collection === 'product_series' && field === 'presentation'

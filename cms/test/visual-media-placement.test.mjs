@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { resolveHomepageReasonMediaPlacement, resolveNewsCoverMediaPlacement, resolveQualificationMediaPlacement, qualificationDraftAssets } from '../extensions/content-editor-workbench/src/visual-media-placement.js';
+import { resolveHomepageReasonMediaPlacement, resolveNewsBodyMediaPlacement, resolveNewsCoverMediaPlacement, resolveQualificationMediaPlacement, qualificationDraftAssets } from '../extensions/content-editor-workbench/src/visual-media-placement.js';
 import { applyVisualMediaReplacement } from '../extensions/content-editor-workbench/src/visual-editing-fields.js';
 
 test('qualification replacement preserves legacy slots and updates the persistable reference', () => {
@@ -35,6 +35,15 @@ test('news canvas cover uses news placement instead of the individual article sl
   }
 });
 
+test('news body media uses a dedicated placement and never falls back to cover placement', () => {
+  assert.deepEqual(resolveNewsBodyMediaPlacement({ collection: 'articles', category: 'news', fieldPath: 'body_media.0.media_asset_id', elementType: 'image' }), {
+    scope: 'article', placementKey: 'news.article.body', elementType: 'image', pageKey: 'news', sectionKey: 'article'
+  });
+  for (const change of [{ category: 'video' }, { collection: 'pages' }, { fieldPath: 'cover_asset' }, { elementType: 'video' }]) {
+    assert.equal(resolveNewsBodyMediaPlacement({ collection: 'articles', category: 'news', fieldPath: 'body_media.0.media_asset_id', elementType: 'image', ...change }), null);
+  }
+});
+
 test('homepage reason icon selections use the icon placement for all three sections', () => {
   for (const sectionKey of ['performance', 'advanced-manufacturing', 'industry-leadership']) {
     assert.deepEqual(resolveHomepageReasonMediaPlacement({
@@ -49,4 +58,22 @@ test('homepage reason background and foreground keep their separate placements',
   assert.equal(resolveHomepageReasonMediaPlacement({ collection: 'pages', slug: 'home', sectionKey: 'performance', mediaRole: 'foreground' }).placementKey, 'home.reason.machine');
   assert.equal(resolveHomepageReasonMediaPlacement({ collection: 'pages', slug: 'home', sectionKey: 'advanced-manufacturing', mediaRole: 'background' }).placementKey, 'home.reason.background');
   assert.equal(resolveHomepageReasonMediaPlacement({ collection: 'pages', slug: 'about', sectionKey: 'performance', mediaRole: 'icon' }), null);
+});
+
+test('homepage_sections records use the same governed reason placements', () => {
+  assert.equal(resolveHomepageReasonMediaPlacement({ collection: 'homepage_sections', slug: 'home', sectionKey: 'advanced-manufacturing', mediaRole: 'background' }).placementKey, 'home.reason.background');
+  assert.equal(resolveHomepageReasonMediaPlacement({ collection: 'homepage_sections', slug: 'home', sectionKey: 'performance', mediaRole: 'foreground' }).placementKey, 'home.reason.machine');
+});
+
+test('every reason resolves its explicit role independently of its section and collection', () => {
+  for (const collection of ['pages', 'homepage_sections']) {
+    for (const sectionKey of ['performance', 'advanced-manufacturing', 'industry-leadership']) {
+      for (const [mediaRole, placement] of [['background', 'background'], ['foreground', 'machine'], ['icon', 'icon']]) {
+        assert.equal(resolveHomepageReasonMediaPlacement({ collection, slug: 'home', sectionKey, mediaRole }).placementKey, `home.reason.${placement}`);
+      }
+      for (const mediaRole of ['', 'unknown', 'video']) {
+        assert.equal(resolveHomepageReasonMediaPlacement({ collection, slug: 'home', sectionKey, mediaRole }), null);
+      }
+    }
+  }
 });

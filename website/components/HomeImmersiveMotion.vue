@@ -704,7 +704,7 @@ function jumpTo(index: number) {
 <template>
   <div class="machine-morph-cover" aria-hidden="true"></div>
   <div class="machine-morph-stage" aria-hidden="true"></div>
-  <img class="machine-model-morph" src="/assets/psd/hero-machine.png" alt="" aria-hidden="true">
+<img class="machine-model-morph" src="/assets/psd/hero-machine.png" alt="" aria-hidden="true" data-cms-preview-readonly="decoration" data-cms-preview-readonly-reason="固定动画变形装饰，不属于 CMS 媒体字段。">
   <nav class="immersive-indicator" :class="{ 'is-scrolling': indicatorVisible }" aria-label="页面段落导航">
     <span class="immersive-indicator__thumb" :style="{ transform: `translate3d(0, calc((100vh - 38px) * ${indicatorProgress}), 0)` }" aria-hidden="true"></span>
     <button v-for="(label, index) in labels" :key="label" type="button" :class="{ active: activePanel === index }" :style="{ top: `${index / labels.length * 100}%`, height: `${100 / labels.length}%` }" :aria-label="label" :aria-current="activePanel === index ? 'true' : undefined" @click="jumpTo(index)"></button>

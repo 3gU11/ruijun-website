@@ -4,6 +4,7 @@ import { preferVisualDraftRecord, resolveActiveVisualEditingTarget, resolveVisua
 
 const state = {
   pages: [{ id: 'page-1', slug: 'news', sections: [] }],
+  homepageSections: [{ id: 'home-section-1', page_key: 'home', section_key: 'advanced-manufacturing', media: [] }],
   series: [{ id: 'series-1', series_code: 'FR', name: '系列' }],
   parameters: [{ id: 'parameter-1', model_code: 'fl1180', field_name: 'XY 行程', value: '1100*800' }],
   editorial: { articles: [{ id: 'article-1', slug: 'story-1', title: '新闻' }], case_studies: [] },
@@ -16,6 +17,7 @@ test('visual selection resolves a cross-collection record without guessing field
   assert.deepEqual(resolveVisualEditingRecord(state, { collection: 'product_series', itemId: 'series-1' }), { collection: 'product_series', record: state.series[0] });
   assert.deepEqual(resolveVisualEditingRecord(state, { collection: 'product_parameters', itemId: 'parameter-1', fieldPath: 'value' }), { collection: 'product_parameters', record: state.parameters[0] });
   assert.deepEqual(resolveVisualEditingRecord(state, { collection: 'service_locations', itemId: 'loc-1' }), { collection: 'service_locations', record: state.service.service_locations[0] });
+  assert.deepEqual(resolveVisualEditingRecord(state, { collection: 'homepage_sections', itemId: 'home-section-1' }), { collection: 'homepage_sections', record: state.homepageSections[0] });
 });
 
 test('visual selection resolves a read-only media target without inventing a writable field path', () => {

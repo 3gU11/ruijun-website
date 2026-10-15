@@ -408,7 +408,19 @@ export function useCmsDraftPreview() {
           } else {
             element.setAttribute('aria-disabled', 'true');
           }
-          element.setAttribute('title', '此为静态素材；请先在媒体资产中导入、审核并发布后再替换。');
+          // Tell the two reasons apart, because only one of them is something an
+          // operator can fix: a registered placement means the slot is meant to
+          // be managed and merely has no asset bound yet, while no placement
+          // means the element is part of the fixed layout.
+          const placement = String(element.dataset.cmsPreviewPlacementKey || '').trim();
+          const fallbackReason = placement
+            ? `尚未绑定受管素材。请在所在段落的「图片与背景」中添加素材，并把展示位置填写为 ${placement.split('.').pop()}。`
+            : '此素材是版式的组成部分，不能单独替换。如需更换，请在 Nuxt 模板中新增经确认的版式位置。';
+          const reason = String(element.dataset.cmsPreviewReadonlyReason || '').trim() || fallbackReason;
+          // Publish the resolved reason so the workbench panel shows the same
+          // text instead of its own generic fallback.
+          element.dataset.cmsPreviewReadonlyReason = reason;
+          element.setAttribute('title', reason);
           continue;
         }
         element.removeAttribute('data-cms-preview-readonly');
@@ -445,6 +457,9 @@ export function useCmsDraftPreview() {
     return [...document.querySelectorAll<HTMLElement>('[data-cms-preview-editable="true"]')]
       .map((element) => ({ element, rect: element.getBoundingClientRect() }))
       .filter(({ element, rect }) => {
+        // Decorative images may be aria-hidden for screen readers while still
+        // being editable. Exclude inactive slides, not all decorative media.
+        if (element.closest('[data-reason-slide][aria-hidden="true"]')) return false;
         const supportsTool = visualTool.value !== 'media' || element.matches('img,video') || Boolean(element.dataset.cmsPreviewMediaRole);
         return supportsTool && rect.width > 0 && rect.height > 0 && clientX >= rect.left && clientX <= rect.right && clientY >= rect.top && clientY <= rect.bottom;
       })
@@ -467,7 +482,11 @@ export function useCmsDraftPreview() {
     }
     // Browser hit testing can retarget a full-card image click to its button.
     // In media mode, resolve the card's sole governed media binding instead.
-    if (visualTool.value === 'media') element = mediaBindingInInteractiveContainer(source) || element;
+    if (visualTool.value === 'media') {
+      const directMedia = mediaBindingInInteractiveContainer(source);
+      const elementIsMedia = element?.matches('img,video') || Boolean(element?.dataset.cmsPreviewMediaRole);
+      element = directMedia || (elementIsMedia ? element : controlledVisualElementAtPoint(clientX, clientY));
+    }
     // Images commonly cover an entire interactive card. In selection and text
     // modes, choose the card's nearest text binding so the card title can be
     // edited; the media tool deliberately keeps the image as the target.
@@ -509,7 +528,7 @@ export function useCmsDraftPreview() {
         sectionKey: readonly.sectionKey,
         ...meta,
         readonly: true,
-        readonlyReason: String(readonly.element.dataset.cmsPreviewReadonlyReason || '此为静态素材；请先在媒体资产中导入、审核并发布后再替换。')
+        readonlyReason: String(readonly.element.dataset.cmsPreviewReadonlyReason || '此素材当前不能替换：可能是版式的组成部分（需在模板中新增版式位置），也可能是尚未绑定受管素材（可在所在段落的「图片与背景」中添加）。')
       });
       return;
     }

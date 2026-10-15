@@ -194,14 +194,14 @@ test('Nuxt CMS product reader resolves published media asset IDs without exposin
     fetchImpl: async (url) => {
       const request = new URL(url);
       if (request.pathname.endsWith('/media_assets')) return Response.json({ data: [
-        { id: 7, file_id: 'approved-file', alt_text: '审核替代文本', status: 'published', publication_state: 'published', published_at: '2026-07-31T00:00:00.000Z' }
+        { id: 7, file_id: 'bbbbbbbb-bbbb-4bbb-8bbb-000000000001', alt_text: '审核替代文本', status: 'published', publication_state: 'published', published_at: '2026-07-31T00:00:00.000Z' }
       ] });
       return Response.json({ data: [{ ...publishedModel, slug: 'fr400xs', media: [{ media_asset_id: 7, alt: '产品自定义替代文本' }] }] });
     }
   });
 
   const result = await reader.getModel('fr400xs');
-  assert.deepEqual(result.data?.media, [{ path: 'https://cms.example.test/assets/approved-file', alt: '产品自定义替代文本' }]);
+  assert.deepEqual(result.data?.media, [{ path: '/api/public/v1/media/asset/bbbbbbbb-bbbb-4bbb-8bbb-000000000001', alt: '产品自定义替代文本' }]);
   assert.deepEqual(Object.keys(result.data?.media?.[0] || {}).sort(), ['alt', 'path']);
 });
 
@@ -212,7 +212,7 @@ test('Nuxt CMS product reader resolves a published product attachment asset into
     fetchImpl: async (url) => {
       const request = new URL(url);
       if (request.pathname.endsWith('/media_assets')) return Response.json({ data: [
-        { id: 41, file_id: 'product-manual-pdf', media_type: 'document', mime_type: 'application/pdf', status: 'published', publication_state: 'published' }
+        { id: 41, file_id: 'bbbbbbbb-bbbb-4bbb-8bbb-000000000008', media_type: 'document', mime_type: 'application/pdf', status: 'published', publication_state: 'published' }
       ] });
       return Response.json({ data: [{ ...publishedModel, slug: 'fr400xs', resources: [
         { title: '产品说明书', type: 'PDF', media_asset_id: 41 },
@@ -222,7 +222,7 @@ test('Nuxt CMS product reader resolves a published product attachment asset into
   });
 
   const result = await reader.getModel('fr400xs');
-  assert.deepEqual(result.data?.resources, [{ title: '产品说明书', type: 'PDF', url: 'https://cms.example.test/assets/product-manual-pdf' }]);
+  assert.deepEqual(result.data?.resources, [{ title: '产品说明书', type: 'PDF', url: '/api/public/v1/media/asset/bbbbbbbb-bbbb-4bbb-8bbb-000000000008' }]);
 });
 
 test('Nuxt CMS product reader keeps the protected preview path for a draft product attachment', async () => {
@@ -245,9 +245,9 @@ test('Nuxt CMS product reader resolves structured feature and drawing media with
     fetchImpl: async (url) => {
       const request = new URL(url);
       if (request.pathname.endsWith('/media_assets')) return Response.json({ data: [
-        { id: 21, file_id: 'feature-file', status: 'published', publication_state: 'published' },
-        { id: 22, file_id: 'drawing-file', status: 'published', publication_state: 'published' },
-        { id: 23, file_id: 'label-file', status: 'published', publication_state: 'published' }
+        { id: 21, file_id: 'bbbbbbbb-bbbb-4bbb-8bbb-000000000004', status: 'published', publication_state: 'published' },
+        { id: 22, file_id: 'bbbbbbbb-bbbb-4bbb-8bbb-000000000003', status: 'published', publication_state: 'published' },
+        { id: 23, file_id: 'bbbbbbbb-bbbb-4bbb-8bbb-000000000006', status: 'published', publication_state: 'published' }
       ] });
       return Response.json({ data: [{ ...publishedModel, slug: 'fr400xs', configuration: {
         labels: { technical: '技术参数', drawing: '工程视图', technical_image_asset_id: '23' },
@@ -258,9 +258,9 @@ test('Nuxt CMS product reader resolves structured feature and drawing media with
   });
 
   const configuration = (await reader.getModel('fr400xs')).data.configuration;
-  assert.equal(configuration.labels.technicalImage, 'https://cms.example.test/assets/label-file');
-  assert.deepEqual(configuration.features, [{ label: '自动穿丝', detail: '全自动', note: '', image: 'https://cms.example.test/assets/feature-file' }]);
-  assert.deepEqual(configuration.drawings, [{ image: 'https://cms.example.test/assets/drawing-file', title: 'FR400', caption: '尺寸图' }]);
+  assert.equal(configuration.labels.technicalImage, '/api/public/v1/media/asset/bbbbbbbb-bbbb-4bbb-8bbb-000000000006');
+  assert.deepEqual(configuration.features, [{ label: '自动穿丝', detail: '全自动', note: '', image: '/api/public/v1/media/asset/bbbbbbbb-bbbb-4bbb-8bbb-000000000004' }]);
+  assert.deepEqual(configuration.drawings, [{ image: '/api/public/v1/media/asset/bbbbbbbb-bbbb-4bbb-8bbb-000000000003', title: 'FR400', caption: '尺寸图' }]);
   assert.doesNotMatch(JSON.stringify(configuration), /media_asset_id/);
 });
 
@@ -354,13 +354,13 @@ test('Nuxt CMS product reader resolves controlled workstation intro and machine 
     now: () => Date.parse('2026-08-01T00:00:00.000Z'),
     fetchImpl: async (url) => {
       const request = new URL(url);
-      if (request.pathname.endsWith('/media_assets')) return Response.json({ data: [{ id: 31, file_id: 'machine-file', status: 'published', publication_state: 'published' }] });
+      if (request.pathname.endsWith('/media_assets')) return Response.json({ data: [{ id: 31, file_id: 'bbbbbbbb-bbbb-4bbb-8bbb-000000000007', status: 'published', publication_state: 'published' }] });
       return Response.json({ data: [{ ...publishedModel, slug: 'workstation', configuration: { machine_asset_id: '31', intro: { title: '后台标题', subtitle: '后台副标题', scene: '后台场景', body: '后台正文' } } }] });
     }
   });
   const configuration = (await reader.getModel('workstation')).data.configuration;
   assert.deepEqual(configuration.intro, { title: '后台标题', subtitle: '后台副标题', scene: '后台场景', body: '后台正文' });
-  assert.equal(configuration.machineImage, 'https://cms.example.test/assets/machine-file');
+  assert.equal(configuration.machineImage, '/api/public/v1/media/asset/bbbbbbbb-bbbb-4bbb-8bbb-000000000007');
   assert.doesNotMatch(JSON.stringify(configuration), /machine_asset_id/);
 });
 
@@ -429,14 +429,14 @@ test('Nuxt CMS product release snapshot resolves product-series cover asset IDs 
       requests.push(request);
       if (request.pathname.endsWith('product_release_snapshots')) return Response.json({ data: [release] });
       if (request.pathname.endsWith('media_assets')) return Response.json({ data: [
-        { id: 77, file_id: 'series-cover-file', mime_type: 'image/png', media_type: 'image', status: 'published', publication_state: 'published', published_at: '2026-07-31T00:00:00.000Z' }
+        { id: 77, file_id: 'bbbbbbbb-bbbb-4bbb-8bbb-000000000009', mime_type: 'image/png', media_type: 'image', status: 'published', publication_state: 'published', published_at: '2026-07-31T00:00:00.000Z' }
       ] });
       throw new Error('release snapshot should prevent legacy product reads');
     }
   });
 
   const result = await reader.listSeries();
-  assert.equal(result.data[0].cover_asset, 'https://cms.example.test/assets/series-cover-file');
+  assert.equal(result.data[0].cover_asset, '/api/public/v1/media/asset/bbbbbbbb-bbbb-4bbb-8bbb-000000000009');
   const mediaRequest = requests.find((request) => request.pathname.endsWith('media_assets'));
   assert.equal(mediaRequest.searchParams.get('filter[id][_in]'), '77');
 });

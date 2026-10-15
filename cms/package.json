@@ -65,6 +65,7 @@
     "visual:verify-service-action-card-title-presentation": "node ./scripts/verify-service-action-card-title-presentation-preview.mjs",
     "visual:verify-service-office-first-region-title-presentation": "node ./scripts/verify-service-office-first-region-title-presentation-preview.mjs",
     "visual:verify-homepage-reason-intro-title-presentation": "node ./scripts/verify-homepage-reason-intro-title-presentation-preview.mjs",
+    "acceptance": "node ./scripts/acceptance/run.mjs",
     "test": "node --test ./test/*.test.mjs"
   },
   "dependencies": {

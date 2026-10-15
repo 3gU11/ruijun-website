@@ -1,4 +1,6 @@
 import { normalizeFieldPresentations } from '../shared/section-presentation.mjs';
+import { registeredPageSectionFieldKeys } from '../shared/page-section-registry.mjs';
+import { isPublicMediaAssetPath } from '../shared/public-media-path.mjs';
 
 export const CMS_LIVE_PREVIEW_UPDATE = 'ruijun:cms-preview:update';
 export const CMS_LIVE_PREVIEW_READY = 'ruijun:cms-preview:ready';
@@ -112,6 +114,7 @@ export function resolveCmsLivePreviewParentOrigin({ ancestorOrigin = '', referre
 export function normalizeCmsLivePreviewMediaUrl(value, allowedOrigin) {
   const raw = String(value || '').trim();
   if (!raw) return '';
+  if (isPublicMediaAssetPath(raw)) return raw;
   if (/^\/assets\/[A-Za-z0-9._~%/-]+$/.test(raw) && !raw.slice('/assets/'.length).split('/').some((part) => part === '.' || part === '..' || !part)) return raw;
   try {
     const url = new URL(raw);
@@ -257,13 +260,14 @@ export function acceptCmsLivePreviewCommand({ event, allowedOrigin, session, par
 }
 
 const previewFields = Object.freeze({
+  homepage_sections: ['id', 'page_key', 'section_key', 'title', 'kicker', 'body', 'content', 'media', 'sort_order', 'enabled', 'language', 'status', 'publication_state', 'published_at'],
   pages: ['id', 'slug', 'title', 'language', 'sections', 'seo', 'status', 'publication_state', 'published_at'],
   repair_page_configs: ['id', 'page_key', 'title', 'intro', 'hero_asset', 'model_cards', 'action_cards', 'process_steps', 'notices', 'faq_refs', 'seo', 'language', 'status', 'publication_state', 'published_at'],
   product_series: ['id', 'series_code', 'slug', 'name', 'positioning', 'presentation', 'scenarios', 'capabilities', 'cover_asset', 'sort_order', 'language', 'status', 'publication_state', 'published_at'],
   product_models: ['id', 'series_code', 'model_code', 'slug', 'name', 'parameters', 'parameter_groups', 'configuration', 'media', 'resources', 'case_studies', 'status', 'publication_state', 'published_at'],
   product_parameters: ['id', 'model_code', 'group_name', 'field_name', 'value', 'unit', 'sort_order', 'test_conditions', 'status', 'publication_state', 'published_at'],
   case_studies: ['id', 'slug', 'industry', 'material', 'thickness', 'model_code', 'process', 'result', 'authorization_status', 'status', 'publication_state', 'published_at'],
-  articles: ['id', 'slug', 'category', 'title', 'display_date', 'summary', 'body', 'transcript', 'field_presentation', 'media', 'video_url', 'cover_asset', 'cover_media_asset_id', 'seo', 'status', 'publication_state', 'published_at'],
+  articles: ['id', 'slug', 'category', 'title', 'display_date', 'summary', 'body', 'body_media', 'transcript', 'field_presentation', 'media', 'video_url', 'cover_asset', 'cover_media_asset_id', 'seo', 'status', 'publication_state', 'published_at'],
   manufacturing_evidence: ['id', 'source_key', 'process', 'description', 'media', 'inspection_evidence', 'sort_order', 'status', 'publication_state', 'published_at'],
   qualifications: ['id', 'source_key', 'type', 'name', 'certificate_number', 'issuer', 'valid_until', 'assets', 'sort_order', 'authorization_status', 'status', 'publication_state', 'published_at'],
   milestones: ['id', 'source_key', 'year', 'event', 'evidence', 'sort_order', 'status', 'publication_state', 'published_at'],
@@ -312,9 +316,17 @@ function cleanSectionValue(value, depth = 0) {
 function cleanSections(value) {
   if (!Array.isArray(value)) return [];
   const fields = [
-    'id', 'kicker', 'title', 'body', 'description', 'detail', 'label', 'href', 'shortTitle', 'introTitle', 'introDetail', 'processTitle', 'outputText', 'value', 'unit',
+    // `type` / `version` / `enabled` identify a registry block. They must survive
+    // the postMessage round-trip: the canvas merges the pushed record OVER its
+    // session data, so dropping them here erases every custom block from the
+    // live preview while legacy (typeless) sections stay intact.
+    'id', 'type', 'version', 'enabled',
+    'kicker', 'title', 'body', 'description', 'detail', 'label', 'href', 'shortTitle', 'introTitle', 'introDetail', 'processTitle', 'outputText', 'value', 'unit',
     'image', 'icon', 'video', 'introImage', 'mode', 'content', 'items', 'links', 'media', 'pagination',
-    'layout', 'text_style', 'responsive', 'media_presentation', 'field_presentation', 'requires_claim_review'
+    'layout', 'text_style', 'responsive', 'media_presentation', 'field_presentation', 'requires_claim_review',
+    // Registry-declared keys are derived, not hand-copied: a new block field must
+    // never need a matching edit here to survive the live preview.
+    ...registeredPageSectionFieldKeys
   ];
   return value.filter((section) => section && typeof section === 'object').map((section) => {
     const cleanSection = Object.fromEntries(fields

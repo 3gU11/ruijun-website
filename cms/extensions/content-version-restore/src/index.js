@@ -92,10 +92,28 @@ export function registerContentVersionRestoreEndpoint(router, { database }) {
       if (!version || !publicationWorkflowCollections.includes(version.content_collection)) return res.status(404).json({ errors: [{ message: 'Content version was not found' }] });
       const current = await database(version.content_collection).where({ id: version.content_item_id }).first();
       if (!current) return res.status(404).json({ errors: [{ message: 'Original content record was not found' }] });
+
+      // Restoring an older snapshot overwrites the record wholesale, so every
+      // change recorded after it is discarded. Picking the wrong entry used to
+      // wipe recent edits silently; ids are monotonic, so ordering by id is a
+      // reliable way to count what would be lost.
+      const newer = await database('content_versions')
+        .where({ content_collection: version.content_collection, content_item_id: version.content_item_id })
+        .where('id', '>', version.id)
+        .count({ total: '*' })
+        .first();
+      const newerCount = Number(newer?.total || 0);
+      if (newerCount > 0 && req.body?.confirmDiscardNewer !== true) {
+        return res.status(409).json({ errors: [{
+          message: `该版本之后还有 ${newerCount} 次改动，恢复会一并丢弃。确认请携带 confirmDiscardNewer: true。`,
+          extensions: { code: 'NEWER_VERSIONS_EXIST', newerVersions: newerCount }
+        }] });
+      }
+
       const restored = buildRestoredDraft({ snapshot: version.snapshot, current, actorId: actor.id, versionId: version.id, restoreNote: note });
       await database(version.content_collection).where({ id: version.content_item_id }).update(databasePayload(restored));
       await database('content_versions').where({ id: version.id }).update({ status: 'restored', restored_by: actor.id, restored_at: databaseDateTime(new Date()), restore_note: note.trim() });
-      return res.status(200).json({ data: { content_collection: version.content_collection, content_item_id: String(version.content_item_id), status: 'draft' } });
+      return res.status(200).json({ data: { content_collection: version.content_collection, content_item_id: String(version.content_item_id), status: 'draft', discardedNewerVersions: newerCount } });
     } catch (error) {
       return next(error);
     }

@@ -4,13 +4,32 @@ import test from 'node:test';
 
 const root = new URL('../', import.meta.url);
 
+const readWorkbenchSource = async () => {
+  // The workbench now spans the SFC, its extracted modules, and two stylesheets.
+  // Assertions about behaviour or layout should not depend on which of those a
+  // rule happens to live in.
+  const parts = await Promise.all([
+    readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8'),
+    readFile(new URL('../extensions/content-editor-workbench/src/draft-shapes.js', import.meta.url), 'utf8'),
+    readFile(new URL('../extensions/content-editor-workbench/src/module.css', import.meta.url), 'utf8'),
+    readFile(new URL('../extensions/content-editor-workbench/src/module-global.css', import.meta.url), 'utf8')
+  ]);
+  return parts.join('\n');
+};
+
+
 test('content editor workbench provides structured page and product edits through the current Directus session', async () => {
-  const [manifestText, index, module, nativeBridge] = await Promise.all([
+  const [manifestText, index, moduleSource, nativeBridge, scopedStyles, globalStyles] = await Promise.all([
     readFile(new URL('extensions/content-editor-workbench/package.json', root), 'utf8'),
     readFile(new URL('extensions/content-editor-workbench/src/index.js', root), 'utf8'),
     readFile(new URL('extensions/content-editor-workbench/src/module.vue', root), 'utf8'),
-    readFile(new URL('extensions/content-editor-workbench/src/native-live-preview-bridge.js', root), 'utf8')
+    readFile(new URL('extensions/content-editor-workbench/src/native-live-preview-bridge.js', root), 'utf8'),
+    readFile(new URL('extensions/content-editor-workbench/src/module.css', root), 'utf8'),
+    readFile(new URL('extensions/content-editor-workbench/src/module-global.css', root), 'utf8')
   ]);
+  // The workbench's source spans the SFC plus its extracted stylesheets; this
+  // test asserts what the extension provides, not which file holds it.
+  const module = [moduleSource, scopedStyles, globalStyles].join('\n');
   const manifest = JSON.parse(manifestText);
 
   assert.equal(manifest['directus:extension'].type, 'module');
@@ -28,7 +47,7 @@ test('content editor workbench provides structured page and product edits throug
   assert.match(nativeBridge, /windowObject\.setTimeout\(send, 300\)/);
   assert.match(nativeBridge, /event\.source/);
   assert.doesNotMatch(nativeBridge, /localStorage|sessionStorage/);
-  assert.match(nativeBridge, /articles: \['id', 'slug', 'category', 'title', 'summary', 'body', 'transcript', 'display_date', 'sort_order'/);
+  assert.match(nativeBridge, /articles: \['id', 'slug', 'category', 'title', 'summary', 'body', 'body_media', 'transcript', 'display_date', 'sort_order'/);
   assert.match(module, /页面段落/);
   assert.match(module, /const visiblePageSections = computed\(/);
   assert.match(module, /v-for="\(section, index\) in visiblePageSections"/);
@@ -177,7 +196,10 @@ test('content editor workbench provides structured page and product edits throug
   assert.match(module, /选择已发布制造素材/);
   assert.match(module, /loadMediaAssets/);
   assert.match(module, /loadMediaCandidates/);
-  assert.match(module, /const everyday = \[loadPages\(\), loadSeries\(\), loadCompany\(\), loadEditorial\(\), loadMediaAssets\(\), loadMediaCandidates\(\)\];/);
+  // The everyday loaders are rebuilt per attempt: load() retries once after the
+  // initial failure, and a pre-built array of promises cannot be awaited twice.
+  assert.match(module, /const everyday = \(\) => \[loadPages\(\), loadHomepageSections\(\), loadSeries\(\), loadCompany\(\), loadEditorial\(\), loadMediaAssets\(\), loadMediaCandidates\(\)\];/);
+  assert.match(module, /const technical = \(\) =>/);
   assert.doesNotMatch(module, /loadRepairPages\(\), loadMediaCandidates\(\), loadKnowledge\(\)/);
   assert.match(module, /if \(slug === 'home'\) return 'homepage';/);
   assert.match(module, /homepage: '网站主页'/);
@@ -363,7 +385,7 @@ test('content editor workbench provides structured page and product edits throug
 });
 
 test('workbench labels the home record as the website home instead of reusing its hero copy as a page name', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
 
   assert.match(module, /function pageDisplayName\(page\) \{[\s\S]*if \(slug === 'home'\) return '网站主页';/);
   assert.match(module, /\{\{ pageDisplayName\(page\) \}\}/);
@@ -373,14 +395,14 @@ test('workbench labels the home record as the website home instead of reusing it
 });
 
 test('about hero media editor exposes the shared backdrop role used by the website', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /<option value="backdrop">首屏共享背景<\/option>/);
   assert.match(module, /<option value="background">首屏背景图层<\/option>/);
   assert.match(module, /<option value="foreground">首屏机器前景<\/option>/);
 });
 
 test('about hero canvas media uses independent governed placements for the background and machine foreground', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /slug === 'about' && element\.mediaRole === 'foreground' \? 'about\.hero\.foreground'/);
   assert.match(module, /slug === 'about' \? 'about\.hero\.background'/);
   assert.match(module, /\{ key: 'about\.hero\.background', label: '关于瑞钧首屏背景', mediaType: 'image', minWidth: 1920, minHeight: 900/);
@@ -388,23 +410,23 @@ test('about hero canvas media uses independent governed placements for the backg
 });
 
 test('product-series cover selections use the governed product gallery placement', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /if \(collection === 'product_series' && String\(element\.mediaRole \|\| ''\)\.trim\(\) === 'cover'\) \{[\s\S]*placementKey: 'product\.gallery\.image'/);
 });
 
 test('homepage shared timeline media uses the governed about-timeline placements', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /'history': \(slug === 'home' \|\| slug === 'about'\) \? \(element\.mediaRole === 'icon' \? 'about\.timeline\.icon' : 'about\.timeline\.background'\)/);
   assert.match(module, /pageKey: slug === 'home' && String\(element\.sectionKey \|\| ''\)\.trim\(\) === 'history' \? '' : slug/);
 });
 
 test('service office region images and maps use distinct governed placements', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /'office-directory': element\.mediaRole === 'map' \? 'service\.office\.map' : 'service\.office\.image'/);
 });
 
 test('manufacturing PSD page layers use their own governed media placement in form and canvas filters', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /manufacturing\.layer\.image.*制造页面 PSD 图层图片/);
   assert.match(module, /'precision-machining': 'manufacturing\.layer\.image'/);
   assert.match(module, /'smart-warehouse': 'manufacturing\.layer\.image'/);
@@ -412,14 +434,14 @@ test('manufacturing PSD page layers use their own governed media placement in fo
 });
 
 test('video share media form keeps poster and transcript optional while preserving required hero posters', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /:required="Boolean\(selectedMediaPlacement\?\.posterRequired\)"/);
   assert.match(module, /未填写使用视频首帧/);
   assert.match(module, /视频分享可选；教学视频和首屏说明建议填写/);
 });
 
 test('canvas selection keeps the current product preview when Directus serializes its id as text', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
 
   // Canvas postMessage payloads carry item IDs as strings, while Directus list
   // records may expose numeric IDs. A same-record selection must not clear the
@@ -429,7 +451,7 @@ test('canvas selection keeps the current product preview when Directus serialize
 });
 
 test('ordinary product models do not expose workstation-only copy that their Nuxt canvas cannot render', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
 
   assert.match(module, /const modelSupportsWorkstationIntro = computed\(\(\) => String\(modelDraft\.value\?\.series_code \|\| ''\)\.trim\(\) === 'workstation'\);/);
   assert.match(module, /<section v-if="modelSupportsWorkstationIntro" class="section-editor" aria-labelledby="model-intro-title">/);
@@ -437,23 +459,23 @@ test('ordinary product models do not expose workstation-only copy that their Nux
 });
 
 test('page section normalization materializes the controlled label field for canvas writes', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readFile(new URL('../extensions/content-editor-workbench/src/draft-shapes.js', import.meta.url), 'utf8');
   assert.match(module, /kicker: typeof section\.kicker === 'string' \? section\.kicker : '',\s*label: typeof section\.label === 'string' \? section\.label : '',\s*title:/);
 });
 
 test('home page normalization materializes the controlled hero video field inside the persisted hero section', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /if \(record\.slug === 'home'\) \{\s*const hero = sections\.find\(\(section\) => String\(section\?\.id \|\| ''\) === 'hero'\);\s*if \(hero\) hero\.hero_video_asset_id = String\(hero\.hero_video_asset_id \|\| ''\);\s*\}/);
   assert.doesNotMatch(module, /normalized\.hero_video_asset_id/);
 });
 
 test('page saves compact unbound canvas media slots before writing sections to Directus', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /async function savePage\(\) \{[\s\S]*const persistedSections = normalizeSections\(pageDraft\.value\.sections\);[\s\S]*sections: persistedSections/);
 });
 
 test('visual property panel exposes bounded card sorting, duplication, and deletion', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /getVisualListReorder/);
   assert.match(module, /duplicateVisualListItem/);
   assert.match(module, /moveVisualListItem/);
@@ -485,7 +507,7 @@ test('homepage sections use a native structured Directus interface instead of a 
 });
 
 test('visual editing exposes a bound-element property panel and governed media replacement workflow', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /visual-property-panel/);
   assert.match(module, /selectedVisualElement/);
   assert.match(module, /fieldPath/);
@@ -502,7 +524,7 @@ test('visual editing exposes a bound-element property panel and governed media r
 });
 
 test('visual media slots show only matching approved media or private draft preview candidates', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /selectedVisualIsMedia && visualMediaOptions\.length/);
   assert.match(module, /isVisualMediaSelection/);
   assert.match(module, /草稿素材，仅当前内部预览/);
@@ -513,36 +535,40 @@ test('visual media slots show only matching approved media or private draft prev
 });
 
 test('visual property panel preserves the preview-provided reason for a read-only target', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /readonlyReason: String\(event\.data\.readonlyReason \|\| '请先在媒体资产中导入、审核并发布后再替换。'\)/);
 });
 
 test('core equipment canvas images use their fixed-card media placement instead of the full gallery rule', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /'core-equipment': element\.elementType === 'video' \? 'manufacturing\.gallery\.video' : 'manufacturing\.equipment\.image'/);
   assert.match(module, /\{ key: 'manufacturing\.equipment\.image', label: '生产核心设备卡图', mediaType: 'image', minWidth: 740, minHeight: 415/);
 });
 
 test('service hero canvas background uses its own governed media placement', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /slug === 'service' \? 'service\.hero\.image'/);
   assert.match(module, /\{ key: 'service\.hero\.image', label: '服务支持首屏背景', mediaType: 'image', minWidth: 1920, minHeight: 960/);
 });
 
 test('about timeline canvas background uses its own governed media placement', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /'history': \(slug === 'home' \|\| slug === 'about'\) \? \(element\.mediaRole === 'icon' \? 'about\.timeline\.icon' : 'about\.timeline\.background'\)/);
   assert.match(module, /\{ key: 'about\.timeline\.background', label: '关于页时间轴背景'/);
 });
 
 test('homepage reason canvas media uses section-specific governed placements', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /home\.reason\.machine/);
   assert.match(module, /home\.reason\.background/);
+  assert.match(module, /items\/homepage_sections\?fields=/);
+  assert.match(module, /homepageSections: homepageSections\.value/);
+  assert.match(module, /homepage_sections: saveHomepageSection/);
+  assert.match(module, /handlers\[selectedVisualRecord\.value\?\.collection\] \|\| handlers\[activeTab\.value\]/);
 });
 
 test('media upload form exposes every currently supported homepage reason and service action placement', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /\{ key: 'home\.reason\.background', label: '首页三大特点背景', mediaType: 'image', minWidth: 1600, minHeight: 900/);
   assert.match(module, /\{ key: 'home\.reason\.icon', label: '首页横移图标', mediaType: 'image', minWidth: 80, minHeight: 96/);
   assert.match(module, /\{ key: 'home\.reason\.machine', label: '首页三大特点设备前景', mediaType: 'image', minWidth: 160, minHeight: 240/);
@@ -550,14 +576,14 @@ test('media upload form exposes every currently supported homepage reason and se
 });
 
 test('media upload form uses the same minimum source dimensions as governance for about galleries and qualifications', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /\{ key: 'qualification\.image', label: '证书或资质图片', mediaType: 'image', minWidth: 365, minHeight: 410/);
   assert.match(module, /\{ key: 'about\.gallery\.image', label: '关于页厂区图库', mediaType: 'image', minWidth: 792, minHeight: 446/);
   assert.match(module, /\{ key: 'about\.client\.image', label: '关于页客户图片', mediaType: 'image', minWidth: 542, minHeight: 406/);
 });
 
 test('media upload placement selection pre-fills an explicit video-sharing context instead of splitting the placement key', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /@change="applyMediaPlacementContext\(mediaDraft\.placement_key, true\)"/);
   assert.match(module, /'news\.video_share\.list': \{ pageKey: 'news', sectionKey: 'video-sharing' \}/);
   assert.match(module, /function applyMediaPlacementContext\(placementKey, force = false\) \{/);
@@ -565,7 +591,7 @@ test('media upload placement selection pre-fills an explicit video-sharing conte
 });
 
 test('page drafts can attach matching private preview media without presenting it as publicly selectable', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /function pageMediaOptions\(scope\)/);
   assert.match(module, /filterPreviewStagingMediaAssets\(mediaCandidates\.value, \{ scope \}\)/);
   assert.match(module, /function isPageMediaOption\(assetId, scope\)/);
@@ -574,24 +600,24 @@ test('page drafts can attach matching private preview media without presenting i
 });
 
 test('empty page media slots are shown as website defaults rather than unverified asset references', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /function pageMediaLabel\(reference\) \{[\s\S]*if \(!String\(reference\.media_asset_id \?\? ''\)\.trim\(\)\) return '沿用官网默认图案';/);
   assert.match(module, /当前引用 \$\{reference\.media_asset_id\}（尚未通过此选择器验证）/);
 });
 
 test('media selectors prefer the CMS asset title so same-named files remain distinguishable', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /function mediaAssetLabel\(asset\) \{\s*const title = String\(asset\?\.title \|\| ''\)\.trim\(\);\s*const filename = String\(asset\?\.original_file_name \|\| `素材 \$\{asset\?\.id \|\| ''\}`\)\.trim\(\);\s*return `\$\{title \|\| filename\} · \$\{filename\} · \$\{asset\?\.mime_type \|\| '未知类型'\}`;/);
 });
 
 test('product drawing draft media is resolved into the live canvas record before the iframe receives it', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /const drawingMedia = previewMediaAsset\(drawing\?\.media_asset_id\)/);
   assert.match(module, /configuration\.drawings = parseArray\(configuration\.drawings\)\.map\(\(drawing\) => \{[\s\S]*return drawingMedia \? \{ \.\.\.drawing, \.\.\.drawingMedia \} : drawing;/);
 });
 
 test('product download resources can select an uploaded document asset instead of requiring a hand-written URL', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /产品附件<select v-model="resource\.media_asset_id"/);
   assert.match(module, /function productResourceMediaAssets\(\)[\s\S]*filterPreviewStagingMediaAssets/);
   assert.match(module, /resources: parseArray\(record\.resources\)\.map\(\(item\) => \(\{ title: String\(item\?\.title \|\| ''\), type: String\(item\?\.type \|\| ''\), url: String\(item\?\.url \|\| item\?\.path \|\| ''\), media_asset_id: String\(item\?\.media_asset_id \|\| ''\) \}\)\)/);
@@ -599,7 +625,7 @@ test('product download resources can select an uploaded document asset instead o
 });
 
 test('service resource downloads can select an uploaded service document draft for internal preview', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /受控下载文件[\s\S]*<select v-model="serviceDraft\.asset"[\s\S]*serviceResourceMediaAssets\(serviceDraft\.type\)/);
   assert.match(module, /function serviceResourceMediaAssets\(type = serviceDraft\.value\?\.type\)/);
   assert.match(module, /function serviceResourceMediaAssetLabel\(asset, type = serviceDraft\.value\?\.type\)/);
@@ -607,7 +633,7 @@ test('service resource downloads can select an uploaded service document draft f
 });
 
 test('service resources select only their governed video or document draft candidates', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /function serviceResourceMediaPlacement\(type\)[\s\S]*service\.tutorial\.video[\s\S]*service\.document/);
   assert.match(module, /function serviceResourceMediaAssets\(type = serviceDraft\.value\?\.type\)[\s\S]*elementType: isVideo \? 'video' : ''/);
   assert.match(module, /serviceResourceMediaAssets\(serviceDraft\.type\)/);
@@ -615,7 +641,7 @@ test('service resources select only their governed video or document draft candi
 });
 
 test('service tutorial covers use their own governed poster placement, including matching internal-preview drafts', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /service\.tutorial\.poster/);
   assert.match(module, /function serviceTutorialPosterAssets\(\)[\s\S]*editableMediaAssetsForPlacement\('service', 'service\.tutorial\.poster', 'image'\)/);
   assert.match(module, /serviceDraft\.cover_asset && !isServiceTutorialPosterAsset\(serviceDraft\.cover_asset\)/);
@@ -624,7 +650,7 @@ test('service tutorial covers use their own governed poster placement, including
 });
 
 test('service resource live previews materialize the selected document and cover through the protected media proxy', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /collection === 'service_resources'[\s\S]*const asset = previewMediaAsset\(record\.asset\?\.media_asset_id \|\| record\.asset\)/);
   assert.match(module, /const coverAsset = previewMediaAsset\(record\.cover_asset\?\.media_asset_id \|\| record\.cover_asset\)/);
   assert.match(module, /record\.asset_media_asset_id = asset\.media_asset_id;/);
@@ -633,14 +659,14 @@ test('service resource live previews materialize the selected document and cover
 });
 
 test('draft media sent from the workbench to Nuxt uses the private preview-media proxy instead of a Directus asset URL', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /path: `\/api\/preview\/media\/\$\{encodeURIComponent\(String\(asset\.id\)\)\}`/);
   assert.match(module, /posterPath: `\/api\/preview\/media\/\$\{encodeURIComponent\(String\(poster\.id\)\)\}`/);
   assert.doesNotMatch(module, /path: `\$\{window\.location\.origin\}\/assets\/\$\{encodeURIComponent\(asset\.file_id\)\}`/);
 });
 
 test('opening the visual property panel reserves canvas width instead of covering it', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /:class="\{ 'visual-property-panel-open': selectedVisualElement \}"/);
   assert.match(module, /--visual-property-panel-width:clamp\(200px,34%,300px\)/);
   assert.match(module, /\.live-website-preview\.visual-property-panel-open \.visual-canvas-viewport\{right:var\(--visual-property-panel-width\)\}/);
@@ -648,7 +674,7 @@ test('opening the visual property panel reserves canvas width instead of coverin
 });
 
 test('the visual editor toolbar uses stable rows inside the bounded preview column', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /--visual-toolbar-height:136px/);
   assert.match(module, /\.visual-editor-toolbar\{[^}]*grid-template-columns:minmax\(0,1fr\)[^}]*min-height:var\(--visual-toolbar-height\)/);
   assert.match(module, /\.visual-editor-tools\{[^}]*grid-row:2[^}]*overflow-x:auto/);
@@ -660,7 +686,7 @@ test('the visual editor toolbar uses stable rows inside the bounded preview colu
 });
 
 test('desktop visual preview stays within the Directus shell at 1440px', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /grid-template-columns:220px minmax\(0,1fr\) clamp\(460px,38vw,920px\)/);
   assert.match(module, /grid-template-columns: 222px minmax\(0, 1fr\) clamp\(460px, 38vw, 920px\)/);
   assert.doesNotMatch(module, /grid-template-columns:220px minmax\(520px,1fr\) clamp\(720px,38vw,920px\)/);
@@ -670,37 +696,37 @@ test('desktop visual preview stays within the Directus shell at 1440px', async (
 });
 
 test('1440px visual editing keeps the form above an in-flow preview instead of squeezing it behind preview chrome', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /@media\(min-width:1280px\) and \(max-width:1599px\)\{[\s\S]*?grid-template-columns:176px minmax\(0,1fr\);[\s\S]*?\.live-website-preview\{position:relative!important;[\s\S]*?grid-column:2;grid-row:5/);
   assert.match(module, /@media\(min-width:1280px\) and \(max-width:1599px\)\{[\s\S]*?\.editor-page\.live-website-preview-active \.model-layout\{grid-template-columns:minmax\(0,1fr\)\}/);
   assert.match(module, /@media\(min-width:1600px\)\{[\s\S]*?grid-template-columns:222px minmax\(400px,\.85fr\) minmax\(640px,1\.15fr\)/);
 });
 
 test('medium desktop visual editing keeps the workbench menu in flow so it cannot cover canvas controls', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /@media\(min-width:901px\) and \(max-width:1279px\)\{[\s\S]*?\.editor-page\.live-website-preview-active>\.wp-admin-menu\{position:static!important;[\s\S]*?z-index:auto!important;[\s\S]*?grid-column:1!important/);
 });
 
 test('fixed desktop workbench navigation reserves the header and guide column before live preview opens', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /html\.ruijun-workbench-active \.editor-page:not\(\.live-website-preview-active\) \{[\s\S]*grid-template-columns: 238px minmax\(0, 1fr\);/);
   assert.match(module, /@media \(min-width: 901px\) \{[\s\S]*html\.ruijun-workbench-active \.editor-page:not\(\.live-website-preview-active\) > \.toolbar,[\s\S]*html\.ruijun-workbench-active \.editor-page:not\(\.live-website-preview-active\) > \.editor-guide,[\s\S]*html\.ruijun-workbench-active \.editor-page:not\(\.live-website-preview-active\) > \.message,[\s\S]*html\.ruijun-workbench-active \.editor-page:not\(\.live-website-preview-active\) > \.retry-save-action \{[\s\S]*grid-column: 2;[\s\S]*margin-left: 16px;/);
 });
 
 test('form edits enter the same visual history without duplicating undo snapshots', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /watch\(\(\) => currentDraftState\(\), \(next, previous\) => \{[\s\S]*recordVisualHistory\(\);[\s\S]*\}, \{ deep: true, flush: 'post' \}\)/);
   assert.match(module, /let suppressDraftHistory = false/);
   assert.match(module, /if \(suppressDraftHistory\) return/);
 });
 
 test('discarding visual changes immediately resynchronizes the live iframe', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /function discardVisualChanges\(\) \{[\s\S]*markDraftSaved\(\);[\s\S]*postLivePreviewUpdate\(\);[\s\S]*\}/);
 });
 
 test('visual draft save exposes a retry action without discarding the local draft', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /v-if="error && retrySaveAction"/);
   assert.match(module, /重新保存/);
   assert.match(module, /const retrySaveAction = ref\(null\)/);
@@ -710,44 +736,44 @@ test('visual draft save exposes a retry action without discarding the local draf
 });
 
 test('visual text property input syncs the live iframe before the field loses focus', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /<textarea[^>]+:value="selectedVisualFieldValue"[^>]+@input="commitVisualField\(\$event\.target\.value\)"/);
   assert.doesNotMatch(module, /<textarea[^>]+:value="selectedVisualFieldValue"[^>]+@change="commitVisualField/);
 });
 
 test('visual property edits explain rejected numeric or controlled-field input without discarding the current value', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /const normalizedValue = options\.length \? options\.find\(\(option\) => option\.value === value\)\?\.value : value;[\s\S]*if \(normalizedValue == null \|\| !setVisualFieldValue\(target, path, normalizedValue\)\) \{[\s\S]*error\.value = '请输入有效数值或符合字段格式的内容。';[\s\S]*return;[\s\S]*\}/);
   assert.match(module, /if \(error\.value === '请输入有效数值或符合字段格式的内容。'\) error\.value = '';/);
 });
 
 test('page visual edits resolve the active page draft instead of the stale page-list record', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /pages:\s*preferVisualDraftRecord\(pages\.value, pageDraft\.value\)/);
   assert.match(module, /resolveActiveVisualEditingTarget\(websitePreviewTarget\.value, resolved, selection\)/);
   assert.match(module, /resolveVisualFieldTarget\(selectedVisualRecord\.value\?\.record, selectedVisualElement\.value \|\| \{\}\)/);
 });
 
 test('switching elements on the same page canvas keeps unsaved page edits instead of reloading the saved record', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /if \(collection === 'pages' && activeTab\.value === 'pages' && String\(selectedPageId\.value\) === String\(resolvedItemId\) && pageDraft\.value\) \{\s*activePageSectionKey\.value = String\(selection\.sectionKey \|\| activePageSectionKey\.value \|\| ''\);\s*return resolved;\s*\}/);
   assert.match(module, /if \(collection === 'pages'\) \{\s*activeTab\.value = 'pages';\s*selectPage\(resolvedItemId, true\);/);
 });
 
 test('visual text property input supports text-bound command buttons', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /selectedVisualElement\.elementType === 'text' \|\| selectedVisualElement\.elementType === 'button'/);
 });
 
 test('article category uses the controlled news or video selector in the canvas property panel', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /const selectedVisualFieldOptions = computed\(\(\) => \{[\s\S]*collection === 'articles'[\s\S]*fieldPath === 'category'[\s\S]*value: 'news'[\s\S]*value: 'video'/);
   assert.match(module, /v-if="selectedVisualFieldOptions\.length" class="visual-property-field">内容类型<select[^>]+@change="commitVisualField\(\$event\.target\.value\)"/);
   assert.match(module, /v-else-if="selectedVisualElement\.fieldPath && \(selectedVisualElement\.elementType === 'text' \|\| selectedVisualElement\.elementType === 'button'\)" class="visual-property-field">文字内容<textarea/);
 });
 
 test('visual button properties expose and validate the explicitly bound destination link', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /selectedVisualElement\.elementType === 'button' && selectedVisualElement\.linkFieldPath/);
   assert.match(module, /aria-label="按钮链接"/);
   assert.match(module, /:value="selectedVisualLinkValue"/);
@@ -758,7 +784,7 @@ test('visual button properties expose and validate the explicitly bound destinat
 });
 
 test('live preview sends a freshly built snapshot after an indirect nested visual edit', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /function buildLivePreviewRecord\(target = websitePreviewTarget\.value\)/);
   assert.match(module, /function postLivePreviewUpdate\(forcedTarget = null\) \{[\s\S]{0,600}const pageTarget = websitePreviewTarget\.value;[\s\S]{0,600}const selected = forcedTarget \|\| selectedVisualRecord\.value;[\s\S]{0,600}const target = selected && \(String\(selected\.collection\) !== String\(pageTarget\?\.collection \|\| ''\) \|\| selected\.record !== pageTarget\?\.record\) \? selected : pageTarget;[\s\S]{0,600}const preview = buildLivePreviewRecord\(target\);/);
   assert.match(module, /function queueLivePreviewUpdate\(target = null\) \{[\s\S]*const explicitTarget = target\?\.collection && target\?\.record \? target : null;[\s\S]*if \(explicitTarget\) pendingLivePreviewTarget = explicitTarget;[\s\S]*const updateTarget = pendingLivePreviewTarget \|\| explicitTarget;[\s\S]*pendingLivePreviewTarget = null;[\s\S]*postLivePreviewUpdate\(updateTarget\);/);
@@ -768,12 +794,12 @@ test('live preview sends a freshly built snapshot after an indirect nested visua
 });
 
 test('visual text commit immediately posts the current page snapshot before reactive watchers can supersede its debounce', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /function commitVisualField\(value\) \{[\s\S]*recordVisualHistory\(\);[\s\S]*postLivePreviewUpdate\(selectedVisualRecord\.value\);/);
 });
 
 test('live preview materializes governed media for every supported record snapshot', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /import \{ materializeVisualMediaRecord \} from '\.\/visual-preview-media\.js';/);
   assert.match(module, /collection === 'articles'/);
   assert.match(module, /record\.media = normalizeMediaReferences\(record\.mediaReferences \|\| record\.media \|\| \[\]\)\.flatMap/);
@@ -784,19 +810,19 @@ test('live preview materializes governed media for every supported record snapsh
 });
 
 test('live preview resolves a persisted private draft asset after the candidate list finishes loading', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /const stagingAsset = mediaCandidates\.value\.find\(\(item\) => String\(item\.id\) === String\(assetId\) && isPreviewStagingMedia\(item\)\);/);
   assert.match(module, /const asset = previewableMediaAssets\.value\.find\(\(item\) => String\(item\.id\) === String\(assetId\)\) \|\| stagingAsset;/);
 });
 
 test('homepage visual preview sends a transient resolved URL while retaining the persisted video asset id', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /const hero = record\.sections\.find\(\(section\) => String\(section\?\.id \|\| ''\) === 'hero'\);/);
   assert.match(module, /hero\.hero_video_asset_url = heroVideo\.path;/);
 });
 
 test('video article media canvas inherits the governed news video placement', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /collection === 'articles'/);
   assert.match(module, /media\\\.\\d\+\\\.path/);
   assert.match(module, /collection === 'articles' && articleMediaField && String\(element\.elementType \|\| ''\) === 'video'/);
@@ -806,21 +832,21 @@ test('video article media canvas inherits the governed news video placement', as
 });
 
 test('live visual edits reach the iframe within the immediate-preview budget', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   const delay = Number(module.match(/postLivePreviewUpdate\(updateTarget\);[\s\S]{0,100}?\}, (\d+)\)/)?.[1]);
   assert.ok(Number.isFinite(delay), 'live preview debounce must be explicit');
   assert.ok(delay <= 100, `live preview debounce must be <= 100ms, received ${delay}ms`);
 });
 
 test('opening the visual preview enables canvas editing only when the current viewport allows it', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   const startPreview = module.match(/async function startLiveWebsitePreview\([^)]*\) \{([\s\S]*?)\n\}/)?.[1] || '';
   assert.match(startPreview, /liveWebsitePreviewVisible\.value = true/);
   assert.match(startPreview, /visualEditMode\.value = visualCanvasEditable\.value/);
 });
 
 test('reconnecting live preview cannot let a stale page token overwrite the current canvas target', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   const startPreview = module.match(/async function startLiveWebsitePreview\([^)]*\) \{([\s\S]*?)\n\}/)?.[1] || '';
   const activateTarget = module.match(/function activateVisualEditingTarget\(selection(?:, \{ discardConfirmed = false \} = \{\})?\) \{([\s\S]*?)\n\}/)?.[1] || '';
 
@@ -834,7 +860,7 @@ test('reconnecting live preview cannot let a stale page token overwrite the curr
 });
 
 test('live preview keeps the token form mounted until the iframe POST navigation is queued', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   const submitPreview = module.match(/function submitPreviewToken\([\s\S]*?\n\}/)?.[0] || '';
   assert.match(submitPreview, /document\.body\.append\(form\);\s*form\.submit\(\);/);
   assert.match(submitPreview, /window\.setTimeout\(\(\) => form\.remove\(\), 0\);/);
@@ -842,7 +868,7 @@ test('live preview keeps the token form mounted until the iframe POST navigation
 });
 
 test('visual preview is opt-in so it cannot cover the initial editing workflow', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /const liveWebsitePreviewVisible = ref\(false\);/);
 });
 
@@ -865,12 +891,12 @@ test('an expired live-preview token automatically renews once while preserving t
 });
 
 test('expired preview notice remains visible without blocking the reconnect control', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /\.live-preview-error\{[^}]*pointer-events:none/);
 });
 
 test('article same-day order preserves an unset value instead of silently writing zero', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /function normalizeOptionalSortOrder\(value\)/);
   assert.match(module, /sort_order: normalizeOptionalSortOrder\(record\.sort_order\)/);
   assert.match(module, /<label>同日排序<input v-model\.number="editorialDraft\.sort_order"[^>]*placeholder="留空表示按系统默认顺序"/);
@@ -879,7 +905,7 @@ test('article same-day order preserves an unset value instead of silently writin
 });
 
 test('editorial cleanup only exposes deletion for an unpublished draft and clears its canvas state', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /v-if="canDeleteEditorialDraft\(editorialDraft\)"[\s\S]*@click="deleteEditorialDraft"/);
   assert.match(module, /function canDeleteEditorialDraft\(record\) \{\s*return Boolean\(record\?\.id\) && record\.status === 'draft' && record\.publication_state === 'unpublished';\s*\}/);
   assert.match(module, /async function deleteEditorialDraft\(\) \{[\s\S]*const collection = editorialMode\.value;[\s\S]*await api\.delete\(`\/items\/\$\{encodeURIComponent\(collection\)\}\/\$\{encodeURIComponent\(id\)\}`\);[\s\S]*clearVisualSelection\(\);[\s\S]*await loadEditorial\(\);/);
@@ -887,12 +913,12 @@ test('editorial cleanup only exposes deletion for an unpublished draft and clear
 });
 
 test('page link validation preserves same-page anchor links used by the PSD navigation', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /href\.startsWith\('#'\)/);
 });
 
 test('visual editing routes cross-collection selections through an explicit target resolver', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /resolveVisualEditingRecord/);
   assert.match(module, /activateVisualEditingTarget/);
   assert.match(module, /event\.data\.collection/);
@@ -914,17 +940,17 @@ test('visual editing routes cross-collection selections through an explicit targ
 });
 
 test('unresolved canvas edit requests cannot retain the previous record as a write target', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /if \(event\.data\?\.type === 'ruijun:cms-preview:edit-request' \|\| event\.data\?\.type === 'ruijun:cms-preview:edit-commit'\) \{\s*const resolved = activateVisualEditingTarget\(event\.data\);\s*if \(!resolved\) return;\s*selectedVisualElement\.value =/);
 });
 
 test('switching a preview record clears stale visual selection state', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /watch\(livePreviewIdentity, \(identity, previousIdentity\) => \{[\s\S]*if \(preserveLivePreviewSessionOnce\)[\s\S]*return;[\s\S]*selectedVisualElement\.value = null;[\s\S]*visualMediaSelection\.value = '';/);
 });
 
 test('live preview provides a compact record switcher when the active collection has multiple records', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /v-if="visualRecordChoices\.length > 1"/);
   assert.match(module, /aria-label="切换预览条目"/);
   assert.match(module, /v-for="choice in visualRecordChoices"/);
@@ -935,14 +961,14 @@ test('live preview provides a compact record switcher when the active collection
 });
 
 test('cross-collection visual entries retain their page section context for preview navigation', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /if \(entry\.action === 'milestones' \|\| entry\.action === 'qualifications'\) \{\s*activePageSectionKey\.value = entry\.sectionKey \|\| '';/);
   assert.match(module, /function websitePreviewContextFor\(target, requestedSectionKey = activePageSectionKey\.value\) \{[\s\S]*if \(target\?\.collection !== 'pages'\) return requestedSectionKey \? \{ sectionKey: requestedSectionKey \} : \{\};/);
   assert.match(module, /const websitePreviewContext = computed\(\(\) => websitePreviewContextFor\(websitePreviewTarget\.value\)\);/);
 });
 
 test('article visual preview can use an authorized list-card canvas without changing the public route', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /v-if="websitePreviewTarget\?\.collection === 'articles'"[\s\S]*aria-label="新闻画布"/);
   assert.match(module, /<option value="detail">详情画布<\/option>/);
   assert.match(module, /<option value="list">列表卡片画布<\/option>/);
@@ -952,37 +978,37 @@ test('article visual preview can use an authorized list-card canvas without chan
 });
 
 test('switching a site section clears the previous canvas selection before selecting another target', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /function clearVisualSelection\(\) \{\s*selectedVisualElement\.value = null;\s*visualMediaSelection\.value = '';\s*\}/);
   assert.match(module, /function openSiteAreaEntry\(entry\) \{\s*if \(!confirmDiscardChanges\('切换官网内容模块'\)\) return;\s*clearVisualSelection\(\);/);
   assert.match(module, /function selectSiteArea\(area\) \{[\s\S]*activePageSectionKey\.value = '';\s*clearVisualSelection\(\);/);
 });
 
 test('closing the live preview clears stale canvas selection state', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /function toggleLiveWebsitePreview\(\) \{\s*if \(liveWebsitePreviewVisible\.value\) \{\s*livePreviewRequestSequence \+= 1;\s*clearVisualSelection\(\);\s*liveWebsitePreviewVisible\.value = false;/);
 });
 
 test('site-area cards reload the page list once instead of silently ignoring a missing in-memory page', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /let page = pages\.value\.find\(\(record\) => record\.slug === siteArea\.value\);\s*if \(!page\) \{\s*await loadPages\(\);\s*page = pages\.value\.find\(\(record\) => record\.slug === siteArea\.value\);\s*\}/);
   assert.match(module, /if \(!page\) \{\s*error\.value = `未找到“\$\{siteAreaLabel\.value\}”对应的页面草稿，请重新加载后再试。`;\s*return;\s*\}/);
 });
 
 test('service location editing reads the nested contact object that its form saves', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /service_locations:\s*\[[^\]]*'contact'[^\]]*\]/);
   assert.match(module, /payload = \{ region:[\s\S]*contact,[\s\S]*business_status:/);
 });
 
 test('desktop workbench content keeps a safety gap from its fixed CMS navigation', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /html\.ruijun-workbench-active \.editor-page:not\(\.live-website-preview-active\) > section:not\(\.editor-guide\),[\s\S]*margin-left: 16px;/);
   assert.match(module, /html\.ruijun-workbench-active \.editor-page:not\(\.live-website-preview-active\) > \.empty[\s\S]*margin-left: 16px;/);
 });
 
 test('draft preview stays in the workbench flow instead of covering the editor', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /<section v-if="previewOpen" class="preview-panel" role="region" aria-labelledby="draft-preview-title">/);
   assert.doesNotMatch(module, /class="preview-backdrop"/);
   assert.doesNotMatch(module, /aria-modal="true" aria-labelledby="draft-preview-title"/);
@@ -990,13 +1016,13 @@ test('draft preview stays in the workbench flow instead of covering the editor',
 });
 
 test('medium desktop live preview keeps form actions in a separate row instead of hiding the form', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /@media\(min-width:1280px\) and \(max-width:1599px\)\{[\s\S]*\.editor-page\.live-website-preview-active\{[\s\S]*grid-template-columns:176px minmax\(0,1fr\);[\s\S]*\.live-website-preview\{position:relative!important;[\s\S]*grid-column:2;grid-row:5/);
   assert.doesNotMatch(module, /@media\(min-width:1280px\) and \(max-width:1599px\)\{[\s\S]*\.editor-page\.live-website-preview-active>section:not\(\.editor-guide\),[\s\S]*display:none!important/);
 });
 
 test('mobile and narrow workbench canvases remain preview-only and explicitly disable visual editing state', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /function setVisualDevice\(device\) \{[\s\S]*?if \(device !== 'desktop'\) \{[\s\S]*?visualEditMode\.value = false;[\s\S]*?clearVisualSelection\(\);[\s\S]*?\}[\s\S]*?postLivePreviewUpdate\(\);/);
   assert.match(module, /const visualCanvasEditable = computed\(\(\) => canEditVisualCanvas\(\{ device: visualDevice\.value, viewportWidth: visualViewportWidth\.value \}\)\);/);
   assert.match(module, /function postLivePreviewUpdate\(forcedTarget = null\) \{[\s\S]*?const previewEditMode = visualCanvasEditable\.value && visualEditMode\.value;[\s\S]*?editMode: previewEditMode,/);
@@ -1006,7 +1032,7 @@ test('mobile and narrow workbench canvases remain preview-only and explicitly di
 });
 
 test('homepage hero uses a dedicated governed video selector instead of the disconnected generic media list', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /from '\.\/homepage-hero-video\.js'/);
   assert.match(module, /v-if="isHomeHeroSection\(section\)" class="home-hero-video-editor"/);
   assert.match(module, /aria-label="首页首屏视频"/);
@@ -1015,7 +1041,7 @@ test('homepage hero uses a dedicated governed video selector instead of the disc
 });
 
 test('qualification media editor offers governed internal-preview drafts and materializes them for the canvas', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /function qualificationMediaAssets\(\) \{/);
   assert.match(module, /filterPreviewStagingMediaAssets\(mediaCandidates\.value, \{ scope: 'qualification', placementKey: 'qualification\.image', elementType: 'image' \}\)/);
   assert.match(module, /<option value="">选择已上传资质素材<\/option>[\s\S]*v-for="asset in qualificationMediaAssets\(\)"/);
@@ -1024,10 +1050,16 @@ test('qualification media editor offers governed internal-preview drafts and mat
 });
 
 test('workbench uploads create explicitly unpublished draft media assets', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   const start = module.indexOf('async function createMediaCandidate()');
   assert.ok(start >= 0, 'createMediaCandidate must remain available for media uploads');
-  const end = module.indexOf('\nfunction nextDraftSlug(', start);
+  // Bound the body by the next top-level function rather than naming one: a
+  // specific name is a hidden dependency on file layout, and it broke the moment
+  // that neighbour was extracted into a module.
+  const next = module.indexOf('\nasync function ', start + 1);
+  const nextSync = module.indexOf('\nfunction ', start + 1);
+  const candidates = [next, nextSync].filter((i) => i > start);
+  const end = candidates.length ? Math.min(...candidates) : module.length;
   assert.ok(end > start, 'createMediaCandidate must have a bounded function body');
   const body = module.slice(start, end);
 
@@ -1036,7 +1068,7 @@ test('workbench uploads create explicitly unpublished draft media assets', async
 });
 
 test('successful saves renew the live preview authorization for the current target', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /async function renewLivePreviewAfterSuccessfulSave\(\) \{[\s\S]*liveWebsitePreviewVisible\.value[\s\S]*websitePreviewTarget\.value\?\.record\?\.id[\s\S]*startLiveWebsitePreview\(\);/);
   assert.match(module, /let livePreviewRootTarget = null;/);
   assert.match(module, /async function startLiveWebsitePreview\(\{ automatic = false, targetOverride = null, preserveRoot = false \} = \{\}\)/);
@@ -1067,20 +1099,233 @@ test('successful saves renew the live preview authorization for the current targ
 });
 
 test('canvas media selections preserve the default-media flag and allow product covers to restore the website fallback', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /allowDefaultMedia: event\.data\.allowDefaultMedia === true/);
   assert.match(module, /function canRestoreVisualMediaDefault\([\s\S]*collection === 'product_series' && path === 'cover_asset'/);
   assert.match(module, /selectedVisualCanRestoreDefault \? '沿用官网原图' : '选择媒体'/);
 });
 
 test('manual live-preview reconnect preserves the original page canvas after selecting a related record', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /@click="reconnectLiveWebsitePreview"/);
   assert.match(module, /function reconnectLiveWebsitePreview\(\)[\s\S]*targetOverride: livePreviewRootTarget, preserveRoot: true/);
 });
 
 test('canvas page selection keeps the website-area navigation aligned with the selected page slug', async () => {
-  const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
   assert.match(module, /function syncSiteAreaForPage\(page\) \{[\s\S]*const slug = String\(page\?\.slug \|\| ''\)\.trim\(\);[\s\S]*if \(Object\.hasOwn\(siteAreaLabels, slug\)\) siteArea\.value = slug;/);
   assert.match(module, /const resolved = resolveVisualEditingRecord\([\s\S]*if \(!resolved\) return null;[\s\S]*requiresVisualDraftSwitchConfirmation\([\s\S]*if \(collection === 'pages'\) syncSiteAreaForPage\(resolved\.record\);/);
+});
+
+test('failed saves preserve the draft and show a specific expired-session recovery message', async () => {
+  const module = await readWorkbenchSource();
+  // These are two separate facts, asserted separately. The original single
+  // pattern spanned from apiStatus to the 401/403 branch purely because both sat
+  // in one file, in that order; extracting apiStatus into a module made the
+  // ordering accidental rather than meaningful.
+  assert.match(module, /function apiStatus\(reason\)/);
+  assert.match(module, /status === 401 \|\| status === 403/);
+  assert.match(module, /登录会话已失效或当前账号没有保存权限。未保存内容仍保留在页面中，请先复制重要内容，再重新登录后保存。/);
+  assert.match(module, /function setSaveError\(reason, fallback\)[\s\S]*message\.value = '';/);
+  assert.match(module, /async function savePage\(\)[\s\S]*catch \(reason\) \{[\s\S]*setSaveError\(reason, '保存页面失败，内容没有更新。'\);/);
+  assert.match(module, /async function saveModel\(\)[\s\S]*catch \(reason\) \{[\s\S]*setSaveError\(reason, '保存型号失败，内容没有更新。'\);/);
+  assert.match(module, /async function saveEditorialRecord\(\)[\s\S]*catch \(reason\) \{[\s\S]*setSaveError\(reason, '保存内容草稿失败，内容没有更新。'\);/);
+});
+
+test('adding a page media asset assigns a bindable role instead of an empty one', async () => {
+  const module = await readWorkbenchSource();
+  // An empty role matches no binding, which leaves the canvas element read-only
+  // and made the homepage reason background impossible to replace.
+  assert.doesNotMatch(module, /media_asset_id: assetId, role: ''/);
+  assert.match(module, /function defaultPageMediaRole\(section, assetId\)/);
+  assert.match(module, /if \(tail === 'machine'\) return 'foreground';/);
+  assert.match(module, /if \(pageMediaSlotRoles\.has\(tail\)\) return tail;/);
+  assert.match(module, /if \(section\?\.mode === 'machine'\) return 'foreground';/);
+  assert.match(module, /if \(section\?\.mode === 'photo'\) return 'background';/);
+  assert.match(module, /role: defaultPageMediaRole\(section, assetId\)/);
+  assert.match(module, /const pageMediaSlotRoles = new Set\(\[[\s\S]*'background'[\s\S]*'foreground'[\s\S]*\]\);/);
+});
+
+test('page section insertion uses registered types and generated IDs instead of an unsaveable blank id', async () => {
+  const module = await readWorkbenchSource();
+  assert.match(module, /listPageSectionDefinitions\(String\(pageDraft\.value\?\.slug \|\| ''\)\)/);
+  assert.match(module, /@click="openSectionLibrary"/);
+  assert.match(module, /function addPageSection\(type\)[\s\S]*createPageSectionInstance\(type, pageDraft\.value\.slug, pageDraft\.value\.sections\)/);
+  assert.match(module, /function validateSections\(sections, pageSlug = pageDraft\.value\?\.slug\)[\s\S]*validatePageSectionInstance\(section, pageSlug\)/);
+  assert.doesNotMatch(module, /function addPageSection\(\)\s*\{\s*pageDraft\.value\?\.sections\.push\(\{ id: ''/);
+  assert.match(module, /function toggleRegisteredPageSection\(section\)/);
+  assert.match(module, /确定删除.*删除会在保存草稿后生效/);
+});
+
+test('registered media and list fields render a working panel driven by the schema', async () => {
+  const module = await readWorkbenchSource();
+
+  // Field controls branch on the registry's field type instead of a hardcoded table.
+  assert.match(module, /v-for="field in registeredPageSectionFields\(section\)"/);
+  assert.match(module, /field\.type === 'media'/);
+  assert.match(module, /field\.type === 'list'/);
+
+  // Media reuses the governed picker; list reuses the repeating-item editor.
+  assert.match(module, /function addRegisteredSectionMedia\(section, field\)/);
+  assert.match(module, /function removeRegisteredSectionMedia\(section, field, assetId\)/);
+  assert.match(module, /function addRegisteredSectionItem\(section, field\)/);
+  assert.match(module, /function moveRegisteredSectionItem\(section, field, index, delta\)/);
+  assert.match(module, /function removeRegisteredSectionItem\(section, field, index\)/);
+
+  // A media field must respect its declared cap rather than growing unbounded.
+  assert.match(module, /field\.maxItems \?\? 1|Number\.isInteger\(field\.maxItems\) \? field\.maxItems : 1/);
+  assert.match(module, /最多只能有 \$\{max\} 个素材/);
+  assert.match(module, /最多只能有 \$\{max\} 项/);
+
+  // List items are created from the declared item fields, never a free-form object.
+  assert.match(module, /field\.itemFields \|\| \[\]\)\.map\(\(itemField\) => \[itemField\.key, ''\]\)/);
+});
+
+test('page section reordering and duplication stay schema-driven and keep ids unique', async () => {
+  const module = await readWorkbenchSource();
+
+  // Dragging is only offered for registry blocks, which carry generated ids.
+  assert.match(module, /:draggable="canEdit\(pageDraft\) && !!section\.type"/);
+  assert.match(module, /@dragstart="handleSectionDragStart\(section, \$event\)"/);
+  assert.match(module, /@drop="handleSectionDrop\(section\)"/);
+  assert.match(module, /function handleSectionDrop\(section\)/);
+  assert.match(module, /function movePageSection\(from, to\)/);
+  assert.match(module, /sections\.splice\(from, 1\)[\s\S]*sections\.splice\(to, 0, entry\)/);
+
+  // Duplication mints a fresh registered id and carries the editable content over.
+  assert.match(module, /@click="duplicatePageSection\(section\)"/);
+  assert.match(module, /function duplicatePageSection\(section\)/);
+  assert.match(module, /createPageSectionInstance\(section\.type, pageDraft\.value\.slug, sections\)/);
+  assert.match(module, /sections\.splice\(index \+ 1, 0, \{ \.\.\.section, \.\.\.clone \}\)/);
+
+  // The rendered list can be a filtered group, so edits resolve the real position
+  // from the section object rather than trusting the v-for index.
+  assert.match(module, /function pageSectionIndex\(section\)/);
+  assert.match(module, /@click="removePageSection\(section\)"/);
+  assert.doesNotMatch(module, /@click="removePageSection\(index\)"/);
+});
+
+test('the workbench exposes a full-page outline and a categorized section library', async () => {
+  const module = await readWorkbenchSource();
+
+  // The outline maps the whole page, independent of the editor's group filter.
+  assert.match(module, /const sectionOutline = computed\(\(\) => \{[\s\S]*pageDraft\.value\?\.sections/);
+  assert.match(module, /class="section-outline"/);
+  assert.match(module, /@click="focusPageSection\(entry\.id\)"/);
+  assert.match(module, /function focusPageSection\(sectionId\)/);
+  assert.match(module, /scrollIntoView\(\{ behavior: 'smooth', block: 'start' \}\)/);
+  assert.match(module, /v-if="entry\.hidden"/);
+
+  // The library groups registered types by their declared category.
+  assert.match(module, /const sectionLibraryGroups = computed\(\(\) => \{[\s\S]*definition\.category/);
+  assert.match(module, /@click="openSectionLibrary"/);
+  assert.match(module, /@click="addLibrarySection\(definition\.type\)"/);
+  assert.match(module, /function addLibrarySection\(type\)/);
+  assert.match(module, /role="dialog"/);
+  assert.match(module, /definition\.description/);
+
+  // Adding a block now goes through the library, not a flat dropdown.
+  assert.doesNotMatch(module, /class="section-type-picker"/);
+  assert.doesNotMatch(module, /addSelectedPageSection/);
+});
+
+test('select and number fields get schema-driven controls', async () => {
+  const module = await readWorkbenchSource();
+
+  assert.match(module, /field\.type === 'select'/);
+  assert.match(module, /field\.type === 'number'/);
+  // Select renders the declared options only, labelled through the source catalogue.
+  assert.match(module, /v-for="option in field\.options"/);
+  assert.match(module, /sectionSelectOptionLabel\(field, option\)/);
+  assert.match(module, /field\?\.optionLabels\?\.\[value\]/);
+  // Number input is clamped to the declared range.
+  assert.match(module, /v-model\.number="section\[field\.key\]"/);
+  assert.match(module, /:min="field\.min" :max="field\.max"/);
+});
+
+test('declared presets are offered on the block and applied without per-type logic', async () => {
+  const module = await readWorkbenchSource();
+
+  assert.match(module, /registeredPageSectionPresets\(section\)/);
+  assert.match(module, /listPageSectionPresets\(section\.type, pageDraft\.value\?\.slug \|\| ''\)/);
+  assert.match(module, /@click="applyRegisteredSectionPreset\(section\)"/);
+  assert.match(module, /function applyRegisteredSectionPreset\(section\)/);
+  // The whole application is a registry call — no per-type branching here.
+  assert.match(module, /Object\.assign\(section, applyPageSectionPreset\(section, key, pageDraft\.value\.slug\)\)/);
+  // The selection resets so the same preset can be re-applied.
+  assert.match(module, /sectionPresetSelection\.value\[section\.id\] = ''/);
+});
+
+test('a block can be copied on one page and pasted onto another', async () => {
+  const module = await readWorkbenchSource();
+
+  assert.match(module, /const copiedPageSection = ref\(null\)/);
+  assert.match(module, /function copyPageSectionForReuse\(section\)/);
+  assert.match(module, /function pastePageSection\(\)/);
+  assert.match(module, /@click="copyPageSectionForReuse\(section\)"/);
+  assert.match(module, /@click="pastePageSection"/);
+
+  // Paste is only offered when the target page registers the type.
+  assert.match(module, /const canPastePageSection = computed\(\(\) => \{[\s\S]*getPageSectionDefinition\(copied\.type, pageDraft\.value\.slug\)/);
+  assert.match(module, /当前页面没有注册该区块类型，无法粘贴。/);
+
+  // The pasted block is a fresh instance, so the two stay independent.
+  assert.match(module, /createPageSectionInstance\(copied\.type, pageDraft\.value\.slug, sections\)/);
+  assert.match(module, /sections\.push\(\{ \.\.\.copied, \.\.\.clone \}\)/);
+});
+
+test('registry field edits reach the live canvas as they are typed', async () => {
+  const module = await readWorkbenchSource();
+
+  assert.match(module, /function pushPageDraftToPreview\(\)/);
+  assert.match(module, /queueLivePreviewUpdate\(\{ collection: 'pages', record: pageDraft\.value \}\)/);
+
+  // Text, textarea, select, number and both list-item inputs must all be wired —
+  // a missing one leaves the panel and the canvas disagreeing with no error.
+  const wiring = (module.match(/pushPageDraftToPreview/g) || []).length;
+  assert.ok(wiring >= 7, `expected the preview push on every registry input, found ${wiring}`);
+  assert.match(module, /@change="pushPageDraftToPreview"/);
+});
+
+test('the service page stays saveable: canvas-only media slots are stripped before validation', async () => {
+  const { hydrateServiceActionMediaFields } = await import('../extensions/content-editor-workbench/src/visual-editing-fields.js');
+  const { normalizePageMediaReferences } = await import('../extensions/content-editor-workbench/src/page-media-references.js');
+  const { validatePageSectionInstance } = await import('../../website/shared/page-section-registry.mjs');
+
+  // The canvas hydrates one selectable slot per card so an editor can click any
+  // position to attach an image. Those slots carry no asset id.
+  const hydrated = hydrateServiceActionMediaFields({
+    id: 'support-actions',
+    type: 'card-grid',
+    version: 1,
+    enabled: true,
+    items: [{ title: '我的维修申请' }, { title: '保修状态验核' }]
+  });
+  assert.equal(hydrated.media.length, 2, 'the canvas expects one slot per card');
+  assert.deepEqual(hydrated.media.map((entry) => entry.media_asset_id), ['', '']);
+
+  // Validating the canvas draft rejects the placeholders as "未登记的素材". This
+  // is why savePage() must normalize first: validating the raw draft blocked every
+  // save on a page that hydrates slots.
+  assert.match(validatePageSectionInstance(hydrated, 'service'), /未登记的素材/);
+
+  // Normalizing first — the order savePage() now uses — drops the empty slots and
+  // the section validates, so the save proceeds.
+  const persisted = { ...hydrated, media: normalizePageMediaReferences(hydrated.media) };
+  assert.deepEqual(persisted.media, []);
+  assert.equal(validatePageSectionInstance(persisted, 'service'), '');
+
+  // A real asset reference must still survive normalization and still validate.
+  const withAsset = { ...hydrated, media: normalizePageMediaReferences([{ role: 'action-1', media_asset_id: ' 42 ' }]) };
+  assert.deepEqual(withAsset.media, [{ media_asset_id: '42', role: 'action-1' }]);
+  assert.equal(validatePageSectionInstance(withAsset, 'service'), '');
+});
+
+test('savePage validates the persisted section shape, not the canvas draft', async () => {
+  const module = await readWorkbenchSource();
+
+  assert.match(module, /const persistedSections = normalizeSections\(pageDraft\.value\.sections\);\s*\n\s*const sectionError = validateSections\(persistedSections\);/);
+
+  // The reverse order is the bug: validation must not run on the raw draft.
+  assert.doesNotMatch(module, /validateSections\(pageDraft\.value\.sections\)/);
 });

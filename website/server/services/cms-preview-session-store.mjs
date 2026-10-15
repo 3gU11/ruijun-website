@@ -35,10 +35,16 @@ export function createCmsPreviewSessionStore({ now = () => Date.now(), ttlMs = C
     if (!id) return null;
     const session = sessions.get(id);
     if (!session) return null;
-    if (session.expiresAt <= now()) {
+    const timestamp = now();
+    if (session.expiresAt <= timestamp) {
       sessions.delete(id);
       return null;
     }
+    // Sliding expiry. Previously the window was fixed at creation, so an
+    // operator who was still actively editing got signed out mid-session and
+    // every preview image turned into a 401. Only a genuinely idle session
+    // lapses now.
+    session.expiresAt = timestamp + ttlMs;
     return { data: session.data, expiresAt: new Date(session.expiresAt).toISOString() };
   }
 

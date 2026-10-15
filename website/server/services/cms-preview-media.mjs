@@ -28,6 +28,11 @@ export function collectPreviewMediaAssetIds(value, result = new Set(), depth = 0
   if (serviceAssetId) result.add(serviceAssetId);
   const serviceCoverAssetId = mediaAssetId(value.cover_media_asset_id) || mediaAssetId(value.cover_asset);
   if (serviceCoverAssetId) result.add(serviceCoverAssetId);
+  // Product model machine images are a dedicated scalar slot, not the generic
+  // media array. Authorize the bound asset so the proxy endpoint serves it
+  // instead of answering 404 on the machine cover.
+  const machineAssetId = mediaAssetId(value.machine_asset_id);
+  if (machineAssetId) result.add(machineAssetId);
   Object.values(value).forEach((entry) => collectPreviewMediaAssetIds(entry, result, depth + 1));
   return result;
 }
@@ -54,6 +59,15 @@ export function decoratePreviewMedia(value, depth = 0) {
   if (productCoverId && !String(copy.cover_asset || '').startsWith('/api/preview/media/')) {
     copy.cover_media_asset_id = productCoverId;
     copy.cover_asset = previewMediaPath(productCoverId);
+  }
+  // Product model machine images are a controlled scalar slot. The legacy
+  // `machineImage` static path must not win over a bound managed asset, so
+  // decorate the slot with the same-origin proxy URL.
+  const machineAssetId = mediaAssetId(copy.machine_asset_id);
+  if (machineAssetId) {
+    copy.machine_asset_id = machineAssetId;
+    copy.machineImage = previewMediaPath(machineAssetId);
+    copy.machine_asset_url = previewMediaPath(machineAssetId);
   }
   const path = previewMediaPath(copy.media_asset_id);
   return path ? { ...copy, path, managed: true } : copy;

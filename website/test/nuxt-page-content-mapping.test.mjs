@@ -26,7 +26,7 @@ test('Nuxt home and about pages map published CMS sections through the safe sect
   assert.match(home, /product\.cmsBinding/);
   assert.match(home, /milestone\[3\]\.collection/);
   assert.match(home, /data-cms-preview-field-path="hero_video_asset_id"/);
-  assert.match(home, /:data-cms-preview-field-path="heroContent\.image \? 'image' : undefined"/);
+  assert.match(home, /:data-cms-preview-field-path="heroStill\?\.fieldPath"/);
   assert.match(home, /imageFieldPath/);
   assert.match(home, /:data-cms-preview-field-path="product\.imageFieldPath"/);
   assert.match(home, /data-cms-preview-field-path="evidence"/);
@@ -87,7 +87,7 @@ test('homepage timeline media declares the shared governed timeline placements',
 
 test('homepage reason elements use explicit collection-specific field paths without fabricated media fields', async () => {
   const source = await readFile(new URL('../pages/index.vue', import.meta.url), 'utf8');
-  assert.match(source, /import \{ homepageFieldPresentationPath, homepageReasonBinding, homepageSectionItemBinding \} from '~\/shared\/visual-binding-paths\.mjs'/);
+  assert.match(source, /import \{ homepageFieldPresentationPath, homepageReasonBinding, homepageSectionItemBinding, selectSectionMediaEntry, managedPageSectionMediaBinding \} from '~\/shared\/visual-binding-paths\.mjs'/);
   assert.match(source, /cmsBinding: homepageReasonBinding\(section, sourceSection\)/);
   assert.match(source, /:data-cms-preview-collection="reason\.cmsBinding\?\.collection"/);
   assert.match(source, /:data-cms-preview-item-id="reason\.cmsBinding\?\.itemId"/);
@@ -121,8 +121,8 @@ test('six visual editing pages expose explicit field paths and media roles for r
   assert.match(about, /data-cms-preview-collection="qualifications"/);
   assert.match(about, /qualification\.name/);
   assert.match(about, /data-cms-preview-field-path="asset\.nameFieldPath"/);
-  assert.match(about, /qualificationAssetBinding\(qualification, assetIndex\)/);
-  assert.match(about, /data-cms-preview-field-path=\"asset\.fieldPath\" data-cms-preview-media-role=\"gallery\"/);
+  assert.match(about, /qualificationAssetBinding\(qualification, asset\.sourceIndex \?\? assetIndex\)/);
+  assert.match(about, /data-cms-preview-field-path=\"asset\.fieldPath\"[^>]*data-cms-preview-media-role=\"gallery\"/);
   assert.match(about, /pageSectionMediaBinding\(assetIndex\)/);
   assert.doesNotMatch(about, /data-cms-preview-field-path="`assets\.\$\{index\}`"/);
   assert.match(about, /partnerImages[\s\S]*?:data-cms-preview-field-path="asset\.fieldPath"/);
@@ -150,7 +150,7 @@ test('six visual editing pages expose explicit field paths and media roles for r
   assert.match(product, /data-cms-preview-media-role="drawing"/);
   assert.match(product, /configuration\.drawings\.\$\{activeDrawing\.sourceIndex\}\.media_asset_id/);
   assert.match(product, /productBinding\(/);
-  assert.match(product, /data-cms-preview-collection="productBinding\('title'\)\.collection"/);
+  assert.match(product, /data-cms-preview-collection="productBinding\('title'\)\['data-cms-preview-collection'\]"/);
 });
 
 test('homepage scalar visual text fields expose exact paths for canvas editing', async () => {

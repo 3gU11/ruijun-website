@@ -24,6 +24,7 @@ const mediaPlacementChoices = [
   ['home.reason.icon', '首页横移图标（PNG/WebP，至少 80×96，保留原图比例）'],
   ['news.hero.video', '新闻首屏视频（MP4/H.264，16:9，建议 1920×1080，封面必填）'],
   ['news.video_share.list', '视频分享（MP4/WebM，16:9，建议 1280×720；未选择海报时默认使用视频首帧，字幕可选）'],
+  ['news.article.body', '新闻正文图片（JPG/PNG/WebP，至少 800×450，按原图比例）'],
   ['service.tutorial.video', '服务教程视频（MP4/WebM，16:9，建议 1280×720，封面必填）'],
   ['brand.logo.image', '品牌标志（至少 400×120 px）'],
   ['footer.icon.image', '页脚联系图标（64×64 px，1:1）'],

@@ -2,6 +2,68 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 const { resolvePageSection } = await import('../shared/page-sections.mjs');
+test('registered page-section instances overlay their schema-approved fields', () => {
+  const page = {
+    id: 12,
+    slug: 'service',
+    sections: [{
+      id: 'custom-rich-text-case1', type: 'rich-text', version: 1, enabled: true,
+      kicker: '补充内容', title: '设备维护', body: '请按周期检查设备。', internal_note: 'must not render'
+    }]
+  };
+  const result = resolvePageSection(page, 'custom-rich-text-case1', { kicker: '', title: '', body: '' });
+
+  assert.equal(result.type, 'rich-text');
+  assert.equal(result.version, 1);
+  assert.equal(result.kicker, '补充内容');
+  assert.equal(result.title, '设备维护');
+  assert.equal(result.body, '请按周期检查设备。');
+  assert.equal(result.cms_collection, 'pages');
+  assert.equal(result.cms_item_id, '12');
+  assert.equal(Object.hasOwn(result, 'internal_note'), false);
+});
+
+test('registered page-section instances fail closed for an unsupported version or template', () => {
+  const base = { id: 'custom-rich-text-case1', type: 'rich-text', version: 1, title: '自定义' };
+  const page = { id: 12, slug: 'service', sections: [{ ...base, version: 2 }] };
+  assert.deepEqual(resolvePageSection(page, base.id, { title: 'fallback' }), { title: 'fallback' });
+  // 'repair' has not adopted the block system, so the same section must not render there.
+  assert.deepEqual(resolvePageSection({ ...page, sections: [base], slug: 'repair' }, base.id, { title: 'fallback' }), { title: 'fallback' });
+});
+
+test('registered media and list sections resolve their declared fields by key', () => {
+  const page = {
+    id: 12,
+    slug: 'service',
+    sections: [
+      {
+        id: 'custom-image-shot1', type: 'image', version: 1, enabled: true,
+        title: '设备全景', body: '车间实拍。',
+        media: [{ media_asset_id: '7', role: 'image', path: '/shot.jpg', mediaType: 'image' }]
+      },
+      {
+        id: 'custom-card-grid-grid1', type: 'card-grid', version: 1, enabled: true,
+        title: '服务能力',
+        media: [{ media_asset_id: '9', role: 'card-1', path: '/card.jpg', mediaType: 'image' }],
+        items: [{ title: '上门安装', body: '全国范围。', media_role: 'card-1' }]
+      }
+    ]
+  };
+
+  // No fallback entries: a registered type renders from its schema alone.
+  const image = resolvePageSection(page, 'custom-image-shot1', {});
+  assert.equal(image.type, 'image');
+  assert.equal(image.title, '设备全景');
+  assert.equal(image.media.length, 1);
+  assert.equal(image.media[0].path, '/shot.jpg');
+
+  const grid = resolvePageSection(page, 'custom-card-grid-grid1', {});
+  assert.equal(grid.type, 'card-grid');
+  assert.equal(grid.items.length, 1);
+  // The card's media_role binds to the section media entry carrying the same role.
+  assert.equal(grid.items[0].image, '/card.jpg');
+});
+
 test('independent background does not replace foreground machine', () => {
   const result = resolvePageSection({ sections: [{ id: 'performance', media: [{ role: 'background', path: '/bg.jpg' }, { role: 'foreground', path: '/machine.png' }] }] }, 'performance', { image: '/machine.png', background: '' });
   assert.equal(result.background, '/bg.jpg');

@@ -64,16 +64,23 @@ test('content publication hook blocks review submission until every managed medi
   const hooks = new Map();
   registerContentPublicationWorkflowHook({ filter: (event, handler) => hooks.set(event, handler) });
 
+  // The message must name the offending asset: an operator cannot act on a bare
+  // id like "draft-asset".
   await assert.rejects(
     hooks.get('product_models.items.update')(
       { status: 'review' }, { keys: ['model-1'] },
       hookContext({
         roleName: '内容编辑',
         record: { id: 'model-1', status: 'draft', publication_state: 'unpublished', publication_log: [], media: [{ media_asset_id: 'draft-asset' }] },
-        mediaAssets: [{ id: 'draft-asset', status: 'draft', publication_state: 'unpublished' }]
+        mediaAssets: [{ id: 'draft-asset', title: '车间实拍图', placement_key: 'home.reason.background', status: 'draft', publication_state: 'unpublished' }]
       })
     ),
-    /not published/
+    (error) => {
+      assert.match(error.message, /车间实拍图/);
+      assert.match(error.message, /home\.reason\.background/);
+      assert.match(error.message, /尚未发布/);
+      return true;
+    }
   );
 });
 

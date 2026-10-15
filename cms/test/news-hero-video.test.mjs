@@ -55,5 +55,5 @@ test('workbench exposes the dedicated news hero video editor without hiding post
   assert.match(module, /aria-label="视频新闻首屏视频"/);
   assert.match(module, /newsHeroVideoOptionsForSection\(section\)/);
   assert.match(module, /@change="setNewsHeroVideo\(section, \$event\.target\.value\)"/);
-  assert.match(module, /v-if="!isHomeHeroSection\(section\)" class="media-reference-editor"/);
+  assert.match(module, /v-if="!section\.type && !isHomeHeroSection\(section\)" class="media-reference-editor"/);
 });

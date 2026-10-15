@@ -150,7 +150,7 @@ const baseEditableTexts: PsdText[] = [
 const { data: manufacturingResponse } = await useFetch('/api/public/v1/manufacturing-evidence', { default: () => ({ data: [] as Array<Record<string, any>> }) });
 const { data: manufacturingPageResponse } = await useFetch('/api/public/v1/pages/manufacturing', { default: () => ({ data: null as Record<string, any> | null }) });
 const { data: settingsResponse } = await useFetch('/api/public/v1/navigation', { default: () => ({ data: null as Record<string, any> | null }) });
-const { overlayList, overlayRecord } = useCmsDraftPreview();
+const { overlayList, overlayRecord, visualEditMode: cmsVisualEditMode } = useCmsDraftPreview();
 const manufacturingEvidence = computed(() => overlayList('manufacturing_evidence', Array.isArray(manufacturingResponse.value?.data) ? manufacturingResponse.value.data : []));
 const manufacturingPage = computed(() => overlayRecord('pages', manufacturingPageResponse.value?.data || null, (draft) => draft.slug === 'manufacturing'));
 const siteSettings = computed(() => overlayRecord('site_settings', settingsResponse.value?.data || {}));
@@ -299,12 +299,21 @@ const mobileManufacturingSteps = computed(() => [
   { id: 'core-equipment', fallbackTitle: '生产核心设备', fallbackBody: '点击图片查看设备素材。', fallbackImage: asset('equipment-1') }
 ].map((step) => {
   const section = manufacturingSections.value.get(step.id) || {};
+  const evidence = evidenceByKey.value.get(step.id);
+  const pageMedia = pageSectionMediaEntry(step.id);
+  const resolved = pageMedia || mediaEntry(evidence?.media?.[0]);
   return {
     ...step,
     title: String(section.title || step.fallbackTitle),
     body: String(section.description || section.body || step.fallbackBody),
-    media: pageSectionMediaEntry(step.id) || mediaEntry(evidenceByKey.value.get(step.id)?.media?.[0]) || mediaEntry(step.fallbackImage),
-    image: pageSectionMedia(step.id) || mediaPath(evidenceByKey.value.get(step.id)?.media?.[0]) || step.fallbackImage
+    media: resolved || mediaEntry(step.fallbackImage),
+    image: pageSectionMedia(step.id) || mediaPath(evidence?.media?.[0]) || step.fallbackImage,
+    // Mirror the desktop binding so the mobile step is classifiable: a governed
+    // section asset yields an editable slot, while a static fallback stays
+    // read-only with the explicit pending-media reason instead of being neither.
+    binding: resolved && section.cms_item_id
+      ? createManufacturingMediaBinding({ collection: String(section.cms_collection || 'pages'), itemId: section.cms_item_id, index: 0, entry: resolved, role: step.id })
+      : null
   };
 }));
 const mobileManufacturingFlow = computed(() => {
@@ -314,7 +323,14 @@ const mobileManufacturingFlow = computed(() => {
     title: String(node.title || node.label || `工艺步骤 ${index + 1}`),
     body: String(node.body || node.description || ''),
     media: node.media || pageSectionMediaEntry('process', index) || hero?.media,
-    image: node.image || pageSectionMedia('process', index) || hero?.image
+    image: node.image || pageSectionMedia('process', index) || hero?.image,
+    // `processNodes` already resolves the governed slot for each step, including
+    // the media role. Reuse that binding so the mobile step is classifiable in
+    // the visual editing contract instead of sitting between editable and
+    // read-only with no slot at all.
+    binding: node.collection && node.itemId && node.mediaFieldPath
+      ? { collection: node.collection, itemId: String(node.itemId), fieldPath: node.mediaFieldPath, mediaRole: node.media?.mediaType === 'video' ? 'video' : 'image' }
+      : null
   }));
   return [hero, ...nodes, ...zones].filter(Boolean);
 });
@@ -341,14 +357,15 @@ const equipmentGallery = computed(() => {
   // PSD position visible and give each empty position its own governed slot.
   const equipmentPageEntryByIndex = new Map(entries.map((entry) => [entry.sourceIndex, entry]));
   const visibleEntries = equipmentFallbackGallery.map((fallback, index) => {
-    const entry = equipmentPageEntryByIndex.get(index);
+    const roleIndex = pageMedia.findIndex((item: any) => String(item?.role || '').trim().toLowerCase() === fallback.name);
+    const entry = equipmentPageEntryByIndex.get(roleIndex >= 0 ? roleIndex : index);
     if (entry) return {
       ...fallback,
       name: `equipment-cms-${index}`,
       alt: entry.media.alt || entry.media.title || fallback.alt,
       image: entry.media.path,
       media: entry.media,
-      binding: createManufacturingMediaBinding({ collection: 'pages', itemId: section.cms_item_id, index, entry: entry.media })
+      binding: createManufacturingMediaBinding({ collection: 'pages', itemId: section.cms_item_id, index: entry.sourceIndex, entry: entry.media, role: fallback.name })
     };
     const fallbackMedia = mediaEntry(asset(fallback.name));
     return {
@@ -752,7 +769,10 @@ onMounted(async () => {
       const lines = [...root.querySelectorAll<HTMLElement>(`[data-motion-scene="${scene.id}"][data-motion-line]`)];
       const timeline = gsap.timeline({ defaults: { ease: 'none' } });
 
-      timeline.fromTo(backdrops,
+      // A scene may legitimately have no backdrop or no line elements. GSAP warns
+      // ("target not found") when handed an empty array, so skip the tween instead
+      // of animating nothing loudly — the warnings otherwise drown real problems.
+      if (backdrops.length) timeline.fromTo(backdrops,
         { autoAlpha: 0, scale: 1.025, transformOrigin: '50% 50%' },
         { autoAlpha: 1, scale: 1, duration: .72 },
         0
@@ -765,7 +785,7 @@ onMounted(async () => {
           .08 + index * .045
         );
       });
-      timeline.fromTo(lines,
+      if (lines.length) timeline.fromTo(lines,
         { autoAlpha: 0, yPercent: 72 },
         { autoAlpha: 1, yPercent: 0, duration: .46, stagger: .075 },
         .16
@@ -861,7 +881,7 @@ onBeforeUnmount(() => {
       </p>
       <ol v-if="processNodes.length" class="cms-process-nodes" data-cms-preview-key="process" aria-label="可编辑制造工艺节点">
         <li v-for="(node, index) in processNodes" :key="`${node.anchor}-${node.sourceIndex}`" v-bind="positionedItemPresentationAttributes(node)" :data-cms-preview-collection="node.collection" :data-cms-preview-item-id="node.itemId" :data-cms-preview-key="node.sectionKey" :data-cms-preview-editable="node.collection && node.itemId ? 'true' : undefined" :style="styleFor({ name: `process-node-${index}`, x: node.position.x, y: node.position.y, width: 520, height: 300, alt: '' })">
-          <video v-if="node.media?.mediaType === 'video'" class="cms-media" :src="node.media.path" :poster="node.media.posterPath" :data-cms-preview-field-path="node.mediaFieldPath" data-cms-preview-media-role="video" muted loop autoplay playsinline preload="metadata" :aria-label="node.alt || node.title || ''"></video><img v-else-if="node.image" class="cms-media" :src="node.image" :data-cms-preview-field-path="node.mediaFieldPath" data-cms-preview-media-role="image" :alt="node.alt || node.title || ''"><div><strong class="cms-styled-text" v-bind="fieldPresentationAttributes(node, node.titlePresentationKey)" :data-cms-preview-field-path="node.titleFieldPath" :data-cms-preview-position-field-path="node.titlePresentationFieldPath">{{ node.title || node.label }}</strong><p v-bind="fieldPresentationAttributes(node, node.bodyPresentationKey)" :data-cms-preview-field-path="node.bodyFieldPath" :data-cms-preview-position-field-path="node.bodyPresentationFieldPath">{{ node.body || node.description }}</p><small v-if="node.connection_label" class="process-connection-label" v-bind="fieldPresentationAttributes(node, node.connectionPresentationKey)" :data-cms-preview-field-path="node.connectionFieldPath" :data-cms-preview-position-field-path="node.connectionPresentationFieldPath">{{ node.connection_label }}</small></div>
+          <video v-if="node.media?.mediaType === 'video'" class="cms-media" :src="node.media.path" :poster="node.media.posterPath" :data-cms-preview-field-path="node.mediaFieldPath" data-cms-preview-media-role="video" :data-cms-preview-readonly="node.mediaFieldPath ? undefined : 'media-pending'" :data-cms-preview-readonly-reason="node.mediaFieldPath ? undefined : '当前工艺节点使用静态或未建模媒体，暂不能替换。'" muted loop autoplay playsinline preload="metadata" :aria-label="node.alt || node.title || ''"></video><img v-else-if="node.image" class="cms-media" :src="node.image" :data-cms-preview-field-path="node.mediaFieldPath" data-cms-preview-media-role="image" :data-cms-preview-readonly="node.mediaFieldPath ? undefined : 'media-pending'" :data-cms-preview-readonly-reason="node.mediaFieldPath ? undefined : '当前工艺节点使用静态或未建模媒体，暂不能替换。'" :alt="node.alt || node.title || ''"><div><strong class="cms-styled-text" v-bind="fieldPresentationAttributes(node, node.titlePresentationKey)" :data-cms-preview-field-path="node.titleFieldPath" :data-cms-preview-position-field-path="node.titlePresentationFieldPath">{{ node.title || node.label }}</strong><p v-bind="fieldPresentationAttributes(node, node.bodyPresentationKey)" :data-cms-preview-field-path="node.bodyFieldPath" :data-cms-preview-position-field-path="node.bodyPresentationFieldPath">{{ node.body || node.description }}</p><small v-if="node.connection_label" class="process-connection-label" v-bind="fieldPresentationAttributes(node, node.connectionPresentationKey)" :data-cms-preview-field-path="node.connectionFieldPath" :data-cms-preview-position-field-path="node.connectionPresentationFieldPath">{{ node.connection_label }}</small></div>
         </li>
       </ol>
       <button
@@ -876,6 +896,7 @@ onBeforeUnmount(() => {
         :data-cms-preview-key="equipment.binding ? 'core-equipment' : undefined"
         :data-cms-preview-field-path="equipment.binding?.fieldPath"
         :data-cms-preview-media-role="equipment.binding?.mediaRole"
+        :data-cms-preview-media-slot="equipment.binding?.mediaSlot"
         :data-cms-preview-editable="equipment.binding ? 'true' : undefined"
         @click="openEquipmentGallery(index)"
       />
@@ -925,7 +946,7 @@ onBeforeUnmount(() => {
     </section>
     <section class="mobile-manufacturing" aria-label="先进制造流程">
       <article v-for="(step, index) in mobileManufacturingFlow" :key="step.id" class="mobile-manufacturing-step">
-        <video v-if="step.media?.mediaType === 'video'" :src="step.media.path" :poster="step.media.posterPath" muted loop autoplay playsinline preload="metadata" :aria-label="step.title"></video><img v-else :src="step.image" :alt="step.title">
+        <video v-if="step.media?.mediaType === 'video'" :src="step.media.path" :poster="step.media.posterPath" :data-cms-preview-collection="step.binding?.collection" :data-cms-preview-item-id="step.binding?.itemId" :data-cms-preview-field-path="step.binding?.fieldPath" :data-cms-preview-media-role="step.binding?.mediaRole" :data-cms-preview-readonly="step.media?.managed || step.binding ? undefined : 'media-pending'" :data-cms-preview-readonly-reason="step.media?.managed || step.binding ? undefined : '移动端工艺图使用静态或未建模媒体，暂不能替换。'" muted loop autoplay playsinline preload="metadata" :aria-label="step.title"></video><img v-else :src="step.image" :data-cms-preview-collection="step.binding?.collection" :data-cms-preview-item-id="step.binding?.itemId" :data-cms-preview-field-path="step.binding?.fieldPath" :data-cms-preview-media-role="step.binding?.mediaRole" :data-cms-preview-readonly="step.media?.managed || step.binding ? undefined : 'media-pending'" :data-cms-preview-readonly-reason="step.media?.managed || step.binding ? undefined : '移动端工艺图使用静态或未建模媒体，暂不能替换。'" :alt="step.title">
         <div><span>{{ String(index + 1).padStart(2, '0') }}</span><h1 v-if="index === 0">{{ step.title }}</h1><h2 v-else>{{ step.title }}</h2><p>{{ step.body }}</p></div>
       </article>
     </section>
@@ -941,6 +962,7 @@ onBeforeUnmount(() => {
         <button class="manufacturing-lightbox-arrow next" type="button" aria-label="下一张" @click="moveEquipmentGallery(1)">→</button>
       </div>
     </Teleport>
+    <CmsCustomSections :page="manufacturingPage" page-slug="manufacturing" :visual-edit-mode="cmsVisualEditMode" />
   </main>
 </template>
 

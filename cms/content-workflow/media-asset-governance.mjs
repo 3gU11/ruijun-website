@@ -61,6 +61,10 @@ export const mediaPlacementSpecs = Object.freeze({
   'home.reason.icon': { mediaType: 'image', minWidth: 80, minHeight: 96, aspectRatio: '按原图比例', maxBytes: 5 * mib },
   'news.hero.video': { mediaType: 'video', minWidth: 1920, minHeight: 1080, aspectRatio: '16:9', maxBytes: 500 * mib, posterRequired: true, autoplay: true, muted: true },
   'news.dynamic_news.cover': { mediaType: 'image', minWidth: 1600, minHeight: 900, aspectRatio: '16:9', maxBytes: 25 * mib },
+  'news.article.body': { mediaType: 'image', minWidth: 800, minHeight: 450, aspectRatio: '按原图比例', maxBytes: 25 * mib },
+  // A video article's cover is edited separately from the video file, so it
+  // needs its own governed image placement.
+  'news.article.poster': { mediaType: 'image', minWidth: 1280, minHeight: 720, aspectRatio: '16:9', maxBytes: 25 * mib },
   // Video shares use the video's first decoded frame when no custom poster is
   // supplied.  A transcript is useful, but is not a publishing prerequisite.
   'news.video_share.list': { mediaType: 'video', minWidth: 1280, minHeight: 720, aspectRatio: '16:9', maxBytes: 500 * mib, maxDurationSeconds: 600, posterRequired: false, transcriptRequired: false },
@@ -69,6 +73,7 @@ export const mediaPlacementSpecs = Object.freeze({
   'brand.logo.image': { mediaType: 'image', minWidth: 400, minHeight: 120, maxBytes: 25 * mib },
   'footer.icon.image': { mediaType: 'image', minWidth: 64, minHeight: 64, aspectRatio: '1:1', maxBytes: 25 * mib },
   'product.gallery.image': { mediaType: 'image', minWidth: 1200, minHeight: 900, maxBytes: 25 * mib },
+  'product.series.cover': { mediaType: 'image', minWidth: 800, minHeight: 500, maxBytes: 25 * mib },
   'manufacturing.gallery.image': { mediaType: 'image', minWidth: 1600, minHeight: 900, aspectRatio: '16:9', maxBytes: 25 * mib },
   // PSD source layers are positioned inside the fixed manufacturing artboard.
   // Their smallest existing slot is 452x254, so they must not be validated as
@@ -191,9 +196,17 @@ export function assertMediaAssetRecord(input, file) {
   }
   assertMediaAssetUpload(file);
   const originalFileName = requiredText(input?.original_file_name, 'original_file_name');
+  // `requiredText` runs NFKC over the recorded name, which folds full-width
+  // punctuation to its ASCII twin (，→ , and so on). Comparing that against the
+  // file's raw name made any CJK filename containing full-width punctuation
+  // impossible to satisfy: the asset could be uploaded but never transitioned,
+  // so it stayed permanently stuck in draft. Normalise both sides the same way
+  // and compare case-insensitively, the same treatment `mime_type` already gets.
+  const fileFileName = typeof file.filename_download === 'string' ? file.filename_download.normalize('NFKC').trim().toLowerCase() : '';
+  const fileMimeType = typeof file.type === 'string' ? file.type.normalize('NFKC').trim().toLowerCase() : '';
   const mimeType = requiredText(input?.mime_type, 'mime_type').toLowerCase();
   const byteSize = Number(input?.byte_size);
-  if (originalFileName !== file.filename_download || mimeType !== file.type || byteSize !== Number(file.filesize)) {
+  if (originalFileName.toLowerCase() !== fileFileName || mimeType !== fileMimeType || byteSize !== Number(file.filesize)) {
     throw new MediaAssetGovernanceError('MEDIA_FILE_METADATA_MISMATCH', 'Media asset metadata does not match the uploaded file');
   }
   reviewerRoleForMediaUsageScope(input?.usage_scope);
@@ -222,16 +235,29 @@ export function assertMediaAssetPlacement(input, placementKey) {
   const spec = mediaPlacementSpecs[placementKey];
   if (!spec) throw new MediaAssetGovernanceError('MEDIA_PLACEMENT_INVALID', 'A supported placement_key is required');
   const mediaType = String(input?.media_type || '').trim().toLowerCase();
-  const width = Number(input?.width); const height = Number(input?.height); const bytes = Number(input?.byte_size);
   if (mediaType !== spec.mediaType) throw new MediaAssetGovernanceError('MEDIA_PLACEMENT_TYPE_INVALID', `${placementKey} requires a ${spec.mediaType}`);
-  if (spec.minWidth && (width < spec.minWidth || height < spec.minHeight)) throw new MediaAssetGovernanceError('MEDIA_DIMENSIONS_INVALID', `${placementKey} requires at least ${spec.minWidth}x${spec.minHeight}`);
-  if (spec.maxBytes && bytes > spec.maxBytes) throw new MediaAssetGovernanceError('MEDIA_FILE_TOO_LARGE', `${placementKey} exceeds its size limit`);
-  if (spec.maxDurationSeconds && Number(input?.duration_seconds || 0) > spec.maxDurationSeconds) throw new MediaAssetGovernanceError('MEDIA_DURATION_INVALID', `${placementKey} exceeds its duration limit`);
+  // 尺寸 / 体积 / 时长不再硬拦截。这三项原本是画质兜底，但会挡住运营手里唯一可用的
+  // 素材（例如常见的 1080×1920 竖屏视频，宽 1080 < 1280）。画质提示改由
+  // mediaPlacementQualityNotice() 以「提示」形式给出，不再阻断流程。
+  // 仍然保留的硬约束是「缺了页面就坏」的那些：位置合法、类型匹配、视频必须有封面、
+  // 需要文稿的位置要有文稿、播放行为（autoplay/muted）。
   if (spec.posterRequired && !String(input?.poster_asset_id || '').trim()) throw new MediaAssetGovernanceError('MEDIA_POSTER_REQUIRED', `${placementKey} requires a poster asset`);
   if (spec.transcriptRequired && !String(input?.transcript || '').trim()) throw new MediaAssetGovernanceError('MEDIA_TRANSCRIPT_REQUIRED', `${placementKey} requires a transcript`);
   if (spec.autoplay && input?.autoplay !== true) throw new MediaAssetGovernanceError('MEDIA_PLAYBACK_INVALID', `${placementKey} requires autoplay`);
   if (spec.muted && input?.muted !== true) throw new MediaAssetGovernanceError('MEDIA_PLAYBACK_INVALID', `${placementKey} autoplay must be muted`);
   return spec;
+}
+
+// 实际尺寸低于推荐尺寸时返回提示文案，供工作台以「提示」而非「错误」展示。
+// 返回 null 表示达标或该位置无尺寸要求。
+export function mediaPlacementQualityNotice(input, placementKey) {
+  const spec = mediaPlacementSpecs[placementKey];
+  if (!spec?.minWidth) return null;
+  const width = Number(input?.width);
+  const height = Number(input?.height);
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1) return null;
+  if (width >= spec.minWidth && height >= spec.minHeight) return null;
+  return `建议 ${spec.minWidth}×${spec.minHeight} 以上，当前 ${width}×${height}，显示时可能偏模糊。`;
 }
 
 export function collectMediaAssetReferenceIds(record) {
@@ -282,7 +308,17 @@ export function assertPublishedMediaReferences(record, assetsById) {
   for (const id of references) {
     const asset = getAsset(id);
     if (asset?.status !== 'published' || asset?.publication_state !== 'published') {
-      throw new MediaAssetGovernanceError('MEDIA_NOT_PUBLISHED', `Referenced media asset ${id} is not published`);
+      // Name the asset and its registered placement: an operator cannot act on a
+      // bare id like "143", which is all this used to report.
+      const title = String(asset?.title || '').trim();
+      const placement = String(asset?.placement_key || '').trim();
+      const described = title ? `「${title}」` : `ID ${id}`;
+      const where = placement ? `（用途：${placement}）` : '';
+      const state = asset ? `当前状态 ${asset.status}/${asset.publication_state}` : '素材记录不存在';
+      throw new MediaAssetGovernanceError(
+        'MEDIA_NOT_PUBLISHED',
+        `引用的素材 ${described}${where} 尚未发布（${state}）。请先在「媒体资产」中完成版权确认与发布，再发布本内容。`
+      );
     }
   }
   return references;

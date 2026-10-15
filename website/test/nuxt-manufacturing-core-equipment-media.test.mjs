@@ -8,7 +8,7 @@ test('core equipment keeps four visible PSD slots when its CMS media list is par
 
   assert.match(gallery, /const equipmentPageEntryByIndex = new Map/);
   assert.match(gallery, /equipmentFallbackGallery\.map\(\(fallback, index\) =>/);
-  assert.match(gallery, /equipmentPageEntryByIndex\.get\(index\)/);
+  assert.match(gallery, /equipmentPageEntryByIndex\.get\(roleIndex >= 0 \? roleIndex : index\)/);
   assert.match(gallery, /index, entry: fallbackMedia, role: fallback\.name/);
 });
 

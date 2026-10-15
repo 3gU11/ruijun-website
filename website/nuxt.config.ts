@@ -11,7 +11,11 @@ export default defineNuxtConfig({
   modules: ['motion-v/nuxt'],
   css: ['~/assets/inspira.css', '~/assets/cms-presentation.css'],
   vite: {
-    plugins: [tailwindcss()]
+    plugins: [tailwindcss()],
+    // Local-run escape hatch: some sandboxed dev environments forbid Vite from
+    // removing its dependency cache dir. Pointing cacheDir elsewhere avoids the
+    // bulk-delete without changing production behaviour (unset by default).
+    ...(process.env.NUXT_VITE_CACHE_DIR ? { cacheDir: process.env.NUXT_VITE_CACHE_DIR } : {})
   },
   runtimeConfig: {
     cmsHomepageSectionsUrl: process.env.CMS_HOMEPAGE_SECTIONS_URL || '',

@@ -13,14 +13,40 @@ function Test-LocalPort {
   return [bool](Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue)
 }
 
+function Get-LanIPv4Addresses {
+  # A machine can sit on several real networks at once (for example wired and
+  # wireless). Only probing the default route picks one of them, so a colleague
+  # whose traffic arrives over the other link is refused by the preview
+  # allowlist. Return every usable LAN address and let callers allowlist them all.
+  $candidates = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+    Where-Object {
+      $_.IPAddress -notlike '127.*' -and
+      $_.IPAddress -notlike '169.254.*' -and
+      $_.AddressState -ne 'Tentative' -and
+      $_.PrefixOrigin -ne 'WellKnown'
+    } |
+    Sort-Object -Property SkipAsSource, InterfaceMetric -ErrorAction SilentlyContinue |
+    Select-Object -ExpandProperty IPAddress -Unique
+  return @($candidates)
+}
+
 function Get-LanIPv4Address {
+  $addresses = Get-LanIPv4Addresses
+  if (-not $addresses.Count) { return $null }
+
+  # Prefer the interface that actually carries the default route: that is the
+  # address colleagues are most likely to reach, while the full list still goes
+  # into the allowlist as a fallback.
   $route = Get-NetRoute -AddressFamily IPv4 -DestinationPrefix '0.0.0.0/0' -ErrorAction SilentlyContinue |
     Sort-Object RouteMetric, InterfaceMetric |
     Select-Object -First 1
-  if (-not $route) { return $null }
-  return Get-NetIPAddress -AddressFamily IPv4 -InterfaceIndex $route.InterfaceIndex -ErrorAction SilentlyContinue |
-    Where-Object { $_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.254.*' } |
-    Select-Object -First 1 -ExpandProperty IPAddress
+  if ($route) {
+    $preferred = Get-NetIPAddress -AddressFamily IPv4 -InterfaceIndex $route.InterfaceIndex -ErrorAction SilentlyContinue |
+      Where-Object { $addresses -contains $_.IPAddress } |
+      Select-Object -First 1 -ExpandProperty IPAddress
+    if ($preferred) { return $preferred }
+  }
+  return $addresses[0]
 }
 
 function Start-ServiceWindow {
@@ -159,6 +185,16 @@ if (-not $lanAddress) {
   $lanAddress = '127.0.0.1'
   Write-Warning 'No LAN IPv4 address was found. Local preview will use 127.0.0.1 only.'
 }
+# Every local LAN address joins the preview allowlist so a colleague arriving
+# over a secondary network is not refused when their hostname differs from the
+# default-route address.
+$lanAddresses = @(Get-LanIPv4Addresses)
+$previewAllowedHosts = (@('127.0.0.1', 'localhost') + $lanAddresses | Where-Object { $_ } | Select-Object -Unique) -join ','
+# Origins are scheme-qualified, so enumerate both services for each address.
+$previewOrigins = (@('http://127.0.0.1:8055', 'http://127.0.0.1:4175', 'http://localhost:8055', 'http://localhost:4175') + ($lanAddresses | ForEach-Object { "http://${_}:8055"; "http://${_}:4175" }) | Select-Object -Unique) -join ','
+$cspHosts = (@('http://127.0.0.1', 'http://localhost') + ($lanAddresses | ForEach-Object { "http://${_}" }) | Select-Object -Unique)
+$cspChildSrc = 'array:' + ((($cspHosts | ForEach-Object { "$_`:8055"; "$_`:4175" }) + @('blob:') | Select-Object -Unique) -join ',')
+$cspFormAction = "array:'self'," + (($cspHosts | ForEach-Object { "$_`:4175" }) -join ',')
 
 foreach ($path in @($cmsRoot, $websiteRoot, $repairRoot, $cmsNode, $projectNpm, $directusCli, $cmsEnv, $mysqlIni, $minioExe, $websitePackage, $repairPackage, $repairEnv, $workbenchRoot, $workbenchSourceRoot)) {
   if (-not (Test-Path -LiteralPath $path)) {
@@ -233,17 +269,20 @@ $cmsCommand = @"
 Get-Content -LiteralPath '.env.local' | ForEach-Object { if (`$_ -match '^([^#=]+)=(.*)$') { Set-Item -Path "Env:`$(`$matches[1].Trim())" -Value `$matches[2] } }
 Set-Item -Path 'Env:PUBLIC_URL' -Value 'http://$lanAddress`:8055'
 Set-Item -Path 'Env:WEBSITE_PREVIEW_OPEN_URL' -Value 'http://$lanAddress`:4175/api/preview/open'
-Set-Item -Path 'Env:WEBSITE_PREVIEW_ALLOWED_HOSTS' -Value '127.0.0.1,$lanAddress'
-Set-Item -Path 'Env:CONTENT_SECURITY_POLICY_DIRECTIVES__CHILD_SRC' -Value "array:http://127.0.0.1:8055,http://$lanAddress`:8055,http://127.0.0.1:4175,http://$lanAddress`:4175,blob:"
-Set-Item -Path 'Env:CONTENT_SECURITY_POLICY_DIRECTIVES__FRAME_SRC' -Value "array:http://127.0.0.1:8055,http://$lanAddress`:8055,http://127.0.0.1:4175,http://$lanAddress`:4175,blob:"
-Set-Item -Path 'Env:CONTENT_SECURITY_POLICY_DIRECTIVES__FORM_ACTION' -Value "array:'self',http://127.0.0.1:4175,http://$lanAddress`:4175"
+Set-Item -Path 'Env:WEBSITE_PREVIEW_ALLOWED_HOSTS' -Value '$previewAllowedHosts'
+Set-Item -Path 'Env:CONTENT_SECURITY_POLICY_DIRECTIVES__CHILD_SRC' -Value "$cspChildSrc"
+Set-Item -Path 'Env:CONTENT_SECURITY_POLICY_DIRECTIVES__FRAME_SRC' -Value "$cspChildSrc"
+Set-Item -Path 'Env:CONTENT_SECURITY_POLICY_DIRECTIVES__FORM_ACTION' -Value "$cspFormAction"
 & '$cmsNode' '$directusCli' start
 "@
 Start-IfStopped -Name 'CMS (Directus)' -Port 8055 -WorkingDirectory $cmsRoot -Command $cmsCommand
 $cmsReady = Wait-Service -Name 'CMS (Directus)' -Port 8055 -HealthUrl 'http://127.0.0.1:8055/server/health'
 
 $nodePathCommand = "`$env:Path = '$projectNodeBin;' + `$env:Path"
-$websiteCommand = "$nodePathCommand; Set-Item -Path 'Env:NUXT_PUBLIC_CMS_PREVIEW_ORIGINS' -Value 'http://127.0.0.1:8055,http://$lanAddress`:8055'; & '$projectNpm' run dev -- --force --dotenv .env.local --host 0.0.0.0 --port 4175"
+# The canvas validates the postMessage origin against this allowlist, so it must
+# cover every address an operator could use to reach the CMS - not just the
+# default-route address.
+$websiteCommand = "$nodePathCommand; Set-Item -Path 'Env:NUXT_PUBLIC_CMS_PREVIEW_ORIGINS' -Value '$previewOrigins'; & '$projectNpm' run dev -- --force --dotenv .env.local --host 0.0.0.0 --port 4175"
 Clear-StaleNuxtDevLock -WebsiteRoot $websiteRoot -Port 4175
 Start-IfStopped -Name 'Website (Nuxt)' -Port 4175 -WorkingDirectory $websiteRoot -Command $websiteCommand
 $repairEnvLoader = 'Get-Content -LiteralPath ''.env'' | ForEach-Object { if ($_ -match ''^([^#=]+)=(.*)$'') { Set-Item -Path "Env:$($matches[1].Trim())" -Value $matches[2] } }'

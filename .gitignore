@@ -25,6 +25,7 @@ output/
 __pycache__/
 *.py[cod]
 .tools/
+.workbuddy-ai/
 
 # Generated document inspection files
 docx_qa_*/

@@ -1,5 +1,5 @@
 const supportedCollections = new Set([
-  'pages', 'product_series', 'product_models', 'product_parameters', 'articles', 'case_studies',
+  'pages', 'homepage_sections', 'product_series', 'product_models', 'product_parameters', 'articles', 'case_studies',
   'milestones', 'qualifications', 'manufacturing_evidence', 'service_resources',
   'service_locations', 'external_service_entries', 'repair_page_configs', 'site_settings'
 ]);
@@ -16,6 +16,7 @@ export function preferVisualDraftRecord(records, draft) {
 
 function recordsFor(state, collection) {
   if (collection === 'pages') return state.pages;
+  if (collection === 'homepage_sections') return state.homepageSections;
   if (collection === 'product_series') return state.series;
   if (collection === 'product_models') return state.models;
   if (collection === 'product_parameters') return state.parameters;

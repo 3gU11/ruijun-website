@@ -63,10 +63,27 @@ test('materializes collection cover fields, product configuration images, and vi
   assert.deepEqual(result.media[0], {
     media_asset_id: '12', role: 'video', poster_asset_id: '13', path: '/assets/video.mp4', managed: true, alt: '视频', mediaType: 'video', posterPath: '/assets/poster.jpg', video: '/assets/video.mp4'
   });
-  assert.equal(result.configuration.machine_asset_id, '/assets/machine.png');
+  // `machine_asset_id` is a persisted scalar slot: the governed ID must survive
+  // so the preview authorizer can see it and so a later save writes back an ID,
+  // not a URL. The renderable path travels on the `machineImage` sibling.
+  assert.equal(result.configuration.machine_asset_id, 14);
+  assert.equal(result.configuration.machineImage, '/assets/machine.png');
   assert.equal(result.configuration.labels.technical_image_asset_id, '/assets/technical.png');
   assert.equal(result.configuration.features[0].image, '/assets/feature.png');
   assert.equal(result.configuration.drawings[0].image, '/assets/drawing.png');
+});
+
+test('keeps the product machine asset ID intact and exposes the resolved machine image path', () => {
+  const result = materializeVisualMediaRecord(
+    { configuration: { machine_asset_id: '25', intro: { title: '标题' } } },
+    resolver({ 25: { path: '/api/preview/media/25', alt: '机床', mediaType: 'image' } })
+  );
+  assert.equal(result.configuration.machine_asset_id, '25');
+  assert.equal(result.configuration.machineImage, '/api/preview/media/25');
+  assert.equal(result.configuration.intro.title, '标题');
+  // An unset slot must not gain a path, and an unresolvable ID must stay as-is.
+  assert.equal(materializeVisualMediaRecord({ configuration: { machineImage: '/assets/psd/m.png' } }, resolver({})).configuration.machineImage, '/assets/psd/m.png');
+  assert.equal(materializeVisualMediaRecord({ configuration: { machine_asset_id: '404' } }, resolver({})).configuration.machine_asset_id, '404');
 });
 
 test('materializes product download attachments as protected resource URLs in the live preview', () => {

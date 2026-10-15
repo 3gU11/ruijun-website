@@ -85,7 +85,7 @@ test('Nuxt evidence reader resolves published asset IDs for qualifications and m
     fetchImpl: async (url) => {
       const request = new URL(url);
       if (request.pathname.endsWith('/media_assets')) return Response.json({ data: [
-        { id: 9, file_id: 'certificate-file', alt_text: '审核证书', status: 'published', publication_state: 'published', published_at: '2026-07-31T00:00:00.000Z' }
+        { id: 9, file_id: 'aaaaaaaa-aaaa-4aaa-8aaa-000000000005', alt_text: '审核证书', status: 'published', publication_state: 'published', published_at: '2026-07-31T00:00:00.000Z' }
       ] });
       if (request.pathname.endsWith('/qualifications')) return Response.json({ data: [
         { id: 'qualification-01', source_key: 'certificate-01', type: 'certificate', name: 'Quality certificate', assets: [{ media_asset_id: 9 }], authorization_status: 'approved', sort_order: 1, ...published }
@@ -98,7 +98,7 @@ test('Nuxt evidence reader resolves published asset IDs for qualifications and m
 
   const qualification = (await reader.listQualifications()).data[0];
   assert.equal(qualification?.id, 'qualification-01');
-  assert.deepEqual(qualification?.assets, [{ path: 'https://cms.example.test/assets/certificate-file', sourceIndex: 0, managed: true, alt: '审核证书', mediaType: 'image' }]);
+  assert.deepEqual(qualification?.assets, [{ path: '/api/public/v1/media/asset/aaaaaaaa-aaaa-4aaa-8aaa-000000000005', sourceIndex: 0, managed: true, alt: '审核证书', mediaType: 'image' }]);
   assert.equal((await reader.listManufacturingEvidence()).data[0]?.id, '42');
-  assert.deepEqual((await reader.listManufacturingEvidence()).data[0]?.media, [{ path: 'https://cms.example.test/assets/certificate-file', managed: true, alt: '审核证书', mediaType: 'image' }]);
+  assert.deepEqual((await reader.listManufacturingEvidence()).data[0]?.media, [{ path: '/api/public/v1/media/asset/aaaaaaaa-aaaa-4aaa-8aaa-000000000005', managed: true, alt: '审核证书', mediaType: 'image' }]);
 });

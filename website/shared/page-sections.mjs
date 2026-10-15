@@ -1,4 +1,5 @@
 import { hasSectionPresentation, normalizeFieldPresentations, normalizeSectionPresentation } from './section-presentation.mjs';
+import { getPageSectionDefinition, validatePageSectionInstance } from './page-section-registry.mjs';
 
 function nonEmptyString(value, fallback) {
   const normalized = typeof value === 'string' ? value.trim() : '';
@@ -10,6 +11,8 @@ export function resolvePageSection(page, id, fallback, { allowClaimReview = fals
   if (!page || !Array.isArray(page.sections) || typeof id !== 'string') return base;
   const section = page.sections.find((candidate) => candidate && typeof candidate === 'object' && candidate.id === id);
   if (!section || (section.requires_claim_review === true && !allowClaimReview)) return base;
+  const registeredDefinition = section.type ? getPageSectionDefinition(section.type, page.slug) : null;
+  if (section.type && (!registeredDefinition || validatePageSectionInstance(section, page.slug))) return base;
 
   // Pages sections are nested under the owning page record. Keep the
   // server-issued identity so visual edits route to the correct Directus item.
@@ -32,6 +35,7 @@ export function resolvePageSection(page, id, fallback, { allowClaimReview = fals
   // back to its actual Directus record. These are never inferred client-side.
   if (typeof section.cms_collection === 'string' && section.cms_collection.trim()) base.cms_collection = section.cms_collection.trim();
   if (section.cms_item_id != null && String(section.cms_item_id).trim()) base.cms_item_id = String(section.cms_item_id).trim();
+  if (base.cms_collection && base.cms_item_id) base.cms_section_key = id;
 
   for (const field of ['kicker', 'title', 'body', 'description', 'detail', 'processTitle', 'outputText', 'image', 'video', 'label', 'href', 'shortTitle', 'introTitle', 'introDetail', 'icon', 'introImage', 'mode', 'unit']) {
     if (Object.hasOwn(base, field)) base[field] = nonEmptyString(source[field], base[field]);
@@ -43,6 +47,30 @@ export function resolvePageSection(page, id, fallback, { allowClaimReview = fals
   if (id === 'hero') {
     for (const field of ['hero_video_asset_id', 'hero_video_asset_url']) {
       if (typeof source[field] === 'string' && source[field].trim()) base[field] = source[field].trim();
+    }
+  }
+  if (registeredDefinition) {
+    base.type = registeredDefinition.type;
+    base.version = registeredDefinition.version;
+    base.enabled = section.enabled !== false;
+    // Every declared field is copied by key, so a registered type renders from
+    // its schema alone and needs no matching entry in a page's fallback object.
+    for (const field of registeredDefinition.fields) {
+      if (field.type === 'text' || field.type === 'textarea') {
+        if (typeof source[field.key] === 'string') base[field.key] = source[field.key].trim();
+        continue;
+      }
+      if (field.type === 'select') {
+        if (typeof source[field.key] === 'string') base[field.key] = source[field.key];
+        continue;
+      }
+      if (field.type === 'number') {
+        if (typeof source[field.key] === 'number' && Number.isFinite(source[field.key])) base[field.key] = source[field.key];
+        continue;
+      }
+      if ((field.type === 'media' || field.type === 'list') && Array.isArray(source[field.key])) {
+        base[field.key] = source[field.key];
+      }
     }
   }
   if (Object.hasOwn(base, 'value') && source.value !== '' && source.value !== null && source.value !== undefined && Number.isFinite(Number(source.value))) {

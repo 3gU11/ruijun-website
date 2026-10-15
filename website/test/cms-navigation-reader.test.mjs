@@ -34,13 +34,13 @@ test('navigation reader resolves governed header and footer assets without chang
         status: 'published', publication_state: 'published'
       }] });
       return Response.json({ data: [
-        { id: 11, file_id: 'logo-file', media_type: 'image', status: 'published', publication_state: 'published' },
-        { id: 12, file_id: 'phone-file', media_type: 'image', status: 'published', publication_state: 'published' }
+        { id: 11, file_id: 'aaaaaaaa-aaaa-4aaa-8aaa-000000000006', media_type: 'image', status: 'published', publication_state: 'published' },
+        { id: 12, file_id: 'aaaaaaaa-aaaa-4aaa-8aaa-000000000007', media_type: 'image', status: 'published', publication_state: 'published' }
       ] });
     }
   });
   const result = await reader.get();
-  assert.equal(result.data.brand.logo_path, 'https://cms.test/assets/logo-file');
-  assert.equal(result.data.footer.phone_icon_path, 'https://cms.test/assets/phone-file');
+  assert.equal(result.data.brand.logo_path, '/api/public/v1/media/asset/aaaaaaaa-aaaa-4aaa-8aaa-000000000006');
+  assert.equal(result.data.footer.phone_icon_path, '/api/public/v1/media/asset/aaaaaaaa-aaaa-4aaa-8aaa-000000000007');
   assert.equal(requests.length, 2);
 });

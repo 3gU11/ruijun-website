@@ -157,14 +157,14 @@ test('Nuxt CMS article reader resolves only published cover media and never expo
       const request = new URL(url);
       requests.push(request);
       if (request.pathname.endsWith('/media_assets')) {
-        return Response.json({ data: [{ id: 17, file_id: 'approved-cover', alt_text: 'Approved cover', status: 'published', publication_state: 'published' }, { id: 18, file_id: 'draft-cover', status: 'draft', publication_state: 'unpublished' }] });
+        return Response.json({ data: [{ id: 17, file_id: 'aaaaaaaa-aaaa-4aaa-8aaa-000000000003', alt_text: 'Approved cover', status: 'published', publication_state: 'published' }, { id: 18, file_id: 'draft-cover', status: 'draft', publication_state: 'unpublished' }] });
       }
       return Response.json({ data: [article] });
     }
   });
 
   const result = await reader.get('media-news');
-  assert.equal(result.data.cover_asset, 'https://cdn.example.test/assets/approved-cover');
+  assert.equal(result.data.cover_asset, '/api/public/v1/media/asset/aaaaaaaa-aaaa-4aaa-8aaa-000000000003');
   assert.equal(requests.some((request) => request.pathname.endsWith('/media_assets') && request.searchParams.get('filter[status][_eq]') === 'published'), true);
 
   const unresolved = createCmsArticleReader({
@@ -183,14 +183,14 @@ test('Nuxt CMS article reader resolves controlled article media and keeps only s
   const reader = createCmsArticleReader({
     endpoint: 'https://cms.example.test/items/articles', mediaAssetsEndpoint: 'https://cms.example.test/items/media_assets', publicAssetBaseUrl: 'https://cdn.example.test',
     fetchImpl: async (url) => new URL(url).pathname.endsWith('/media_assets')
-      ? Response.json({ data: [{ id: 17, file_id: 'approved-video', media_type: 'video', poster_asset_id: null, status: 'published', publication_state: 'published' }] })
+      ? Response.json({ data: [{ id: 17, file_id: 'aaaaaaaa-aaaa-4aaa-8aaa-000000000004', media_type: 'video', poster_asset_id: null, status: 'published', publication_state: 'published' }] })
       : Response.json({ data: [article] })
   });
 
   const result = await reader.get('video-news');
   assert.equal(result.data.transcript, '字幕内容');
   assert.deepEqual(result.data.media, [
-    { path: 'https://cdn.example.test/assets/approved-video', alt: '现场视频', mediaType: 'video', posterPath: null, title: '', description: '' },
+    { path: '/api/public/v1/media/asset/aaaaaaaa-aaaa-4aaa-8aaa-000000000004', alt: '现场视频', mediaType: 'video', posterPath: null, title: '', description: '' },
     { path: '/assets/legacy-image.jpg', alt: '旧图片' }
   ]);
 });

@@ -54,7 +54,7 @@ test('news hero CTA keeps its own editable label binding and uses an in-page tar
   ]);
 
   assert.match(page, /<NuxtLink :to="newsHero\.href \|\| '#dynamic-news-title'" class="hero-link" v-bind="fieldPresentationAttributes\(newsHero, 'label'\)" data-cms-preview-field-path="label" data-cms-preview-position-field-path="field_presentation\.label">/);
-  assert.match(preview, /elementType: element\.matches\('img'\) \? 'image' : element\.matches\('video'\) \? 'video' : element\.matches\('button,a'\) \? 'button' : 'text'/);
+  assert.match(preview, /elementType: element\.matches\('video'\) \? 'video' : element\.dataset\.cmsPreviewMediaRole \? 'image' : element\.matches\('button,a'\) \? 'button' : 'text'/);
   assert.match(preview, /function handleVisualClick\(event: MouseEvent\) \{[\s\S]*?event\.preventDefault\(\);[\s\S]*?event\.stopPropagation\(\);/);
 });
 

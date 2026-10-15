@@ -309,3 +309,67 @@ test('product model draft preview retains only the model-code presentation', () 
   assert.equal(Object.hasOwn(result.presentation.field_presentation.model_code.text_style, 'css'), false);
   assert.equal(Object.hasOwn(result.presentation.field_presentation, 'internal_note'), false);
 });
+
+test('draft preview preserves only registered service section settings and hides unknown component types', () => {
+  const result = previewContentRecord('pages', {
+    id: 3,
+    slug: 'service',
+    sections: [
+      { id: 'custom-rich-text-one', type: 'rich-text', version: 1, enabled: true, kicker: '补充说明', title: '保养提示', body: '草稿预览内容', internal_note: 'never expose' },
+      { id: 'custom-rich-text-bad', type: 'unknown-component', version: 1, enabled: true, title: '不允许预览' }
+    ]
+  });
+
+  assert.deepEqual(result.sections, [{
+    id: 'custom-rich-text-one', type: 'rich-text', version: 1, enabled: true,
+    kicker: '补充说明', title: '保养提示', body: '草稿预览内容'
+  }]);
+});
+
+test('draft preview keeps governed media references and declared list item fields only', () => {
+  const result = previewContentRecord('pages', {
+    id: 3,
+    slug: 'service',
+    sections: [
+      {
+        id: 'custom-image-shot1', type: 'image', version: 1, enabled: true,
+        title: '设备全景', body: '车间实拍。',
+        media: [{ media_asset_id: '7', role: 'image', internal_note: 'never expose' }],
+        internal_note: 'never expose'
+      },
+      {
+        id: 'custom-card-grid-grid1', type: 'card-grid', version: 1, enabled: true,
+        title: '服务能力',
+        items: [{ title: '上门安装', body: '全国范围。', media_role: 'card-1', secret_cost: 1200 }]
+      }
+    ]
+  });
+
+  const [image, grid] = result.sections;
+
+  // The preview authorizer needs the asset id, so the governed reference survives
+  // while undeclared fields are dropped.
+  assert.equal(image.type, 'image');
+  assert.deepEqual(image.media, [{ media_asset_id: '7', role: 'image' }]);
+  assert.equal(image.internal_note, undefined);
+
+  assert.equal(grid.type, 'card-grid');
+  assert.deepEqual(grid.items, [{ title: '上门安装', body: '全国范围。', media_role: 'card-1' }]);
+});
+
+test('draft preview keeps select and number fields but drops off-catalogue sources', () => {
+  const result = previewContentRecord('pages', {
+    id: 3,
+    slug: 'service',
+    sections: [
+      { id: 'custom-data-list-feed1', type: 'data-list', version: 1, enabled: true, title: '最新动态', source: 'articles', limit: 4, columns: 2, variant: 'compact', internal_note: 'never expose' },
+      { id: 'custom-data-list-bad', type: 'data-list', version: 1, enabled: true, title: '越界来源', source: 'not-a-source', limit: 4, columns: 2 }
+    ]
+  });
+
+  // The block pointing outside the catalogue is rejected, not previewed.
+  assert.deepEqual(result.sections, [{
+    id: 'custom-data-list-feed1', type: 'data-list', version: 1, enabled: true,
+    title: '最新动态', source: 'articles', limit: 4, columns: 2, variant: 'compact'
+  }]);
+});

@@ -142,7 +142,7 @@ test('Nuxt home freezes the opening video on its final frame and exposes the emb
   assert.match(page, /video\.muted = true/);
   assert.match(page, /function restoreHeroSoundAfterInteraction\(\)/);
   assert.match(page, /addEventListener\('pointerdown', restoreHeroSoundAfterInteraction/);
-  assert.match(page, /const heroEndFrame = computed\(\(\) => heroContent\.value\.image \|\| heroMedia\.value\?\.posterPath \|\| '\/assets\/home-intro-end-video-sharpened\.png\?v=1'/);
+  assert.match(page, /const heroEndFrame = computed\(\(\) => heroStill\.value\?\.path \|\| heroContent\.value\.image \|\| heroMedia\.value\?\.posterPath/);
   assert.match(page, /<img class="hero-end-frame cms-media" :src="heroEndFrame"/);
   assert.doesNotMatch(page, /hero-cms-title|<h1 v-if="heroContent\.title"/);
   assert.match(page, /v-if="heroContent\.body \|\| heroContent\.label" class="hero-cms-copy cms-positioned"/);

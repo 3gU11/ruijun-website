@@ -178,14 +178,37 @@ async function loadDiff(version) {
   }
 }
 
+// The restore endpoint answers 409 when newer versions exist, because restoring
+// an older snapshot discards every change recorded after it.
+function newerVersionCount(reason) {
+  const detail = reason?.response?.data?.errors?.[0];
+  return detail?.extensions?.code === 'NEWER_VERSIONS_EXIST' ? Number(detail.extensions.newerVersions || 0) : 0;
+}
+
 async function restoreSelected() {
   if (!selectedVersion.value || !restoreNote.value.trim()) return;
   loading.value = true;
   error.value = '';
   message.value = '';
+  const versionId = selectedVersion.value.id;
+  const payload = { restoreNote: restoreNote.value.trim() };
   try {
-    await api.post(`/content-version-restore/${selectedVersion.value.id}/restore`, { restoreNote: restoreNote.value.trim() });
-    message.value = `版本 #${selectedVersion.value.id} 已恢复为未发布草稿。`;
+    let response;
+    try {
+      response = await api.post(`/content-version-restore/${versionId}/restore`, payload);
+    } catch (reason) {
+      const newer = newerVersionCount(reason);
+      if (!newer) throw reason;
+      if (!window.confirm(`该版本之后还有 ${newer} 次改动，恢复会一并丢弃。确定继续吗？`)) {
+        error.value = '已取消恢复，内容未被修改。';
+        return;
+      }
+      response = await api.post(`/content-version-restore/${versionId}/restore`, { ...payload, confirmDiscardNewer: true });
+    }
+    const discarded = Number(response?.data?.discardedNewerVersions || 0);
+    message.value = discarded
+      ? `版本 #${versionId} 已恢复为未发布草稿，并丢弃了其后的 ${discarded} 次改动。`
+      : `版本 #${versionId} 已恢复为未发布草稿。`;
     cancelRestore();
     await loadVersions();
   } catch (reason) {

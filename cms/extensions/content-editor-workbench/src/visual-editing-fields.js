@@ -3,11 +3,29 @@ const scalarMediaFields = new Set([
   'asset', 'cover_asset', 'hero_asset', 'icon_asset', 'image', 'icon', 'video',
   'poster', 'background', 'introImage', 'cover', 'media_asset_id', 'technical_image_asset_id', 'hero_video_asset_id'
   , 'logo_asset', 'footer_logo_asset', 'address_icon_asset', 'phone_icon_asset', 'email_icon_asset'
+  , 'machine_asset_id'
 ]);
 const restorableMediaFields = new Set(['logo_asset', 'footer_logo_asset', 'address_icon_asset', 'phone_icon_asset', 'email_icon_asset']);
 const productProofValueSectionIds = new Set(['proof-efficiency', 'proof-years']);
-const visualReorderableArrays = new Set(['items', 'features']);
-const visualReorderableItemFields = new Set(['title', 'label', 'description', 'body', 'detail', 'note', 'connection_label', 'image', 'map']);
+// Arrays whose entries the canvas may duplicate, delete and reorder. Entries
+// must be stored list data: page section items, reason features, product
+// resources and product drawings.
+//
+// Governed media arrays (`media`) are deliberately excluded. Gallery slots are
+// declared by the template (see `hydrateFactoryMediaSlots`) rather than stored,
+// so deleting one would be re-created on the next render and duplicating one
+// would add a slot with no media that never renders. Galleries stay
+// replace-only, which is what the page actually supports.
+//
+// Nested record arrays such as office contacts are excluded for the same
+// reason: they own a separate order and must not move with the outer list.
+const visualReorderableArrays = new Set(['items', 'features', 'resources', 'drawings']);
+// Scalar fields that may address a list entry. A path either stops at the entry
+// itself (`media.2`) or names one of its scalar fields (`resources.0.title`).
+const visualReorderableItemFields = new Set([
+  'title', 'label', 'description', 'body', 'detail', 'note', 'connection_label', 'image', 'map',
+  'media_asset_id', 'caption', 'url', 'type', 'role', 'name'
+]);
 
 const visualFieldLengthLimits = Object.freeze({
   articles: Object.freeze({ title: 240, summary: 1000, body: 30000, transcript: 30000 }),
@@ -260,21 +278,34 @@ export function shouldKeepVisualDraft(current = {}, selection = {}) {
 // Canvas sorting is deliberately limited to a directly bound card/node/feature
 // field. Nested records such as office contacts keep their own order and are
 // not reordered accidentally when an address is selected.
+//
+// A path may address a list entry in two shapes:
+//   - the entry itself, e.g. `media.2` for a gallery photo
+//   - one of the entry's scalar fields, e.g. `resources.0.title`
+// Arrays reached through an intermediate object (`configuration.drawings.0.*`)
+// resolve the same way, because the array name is matched wherever it appears.
 export function getVisualListReorder(target, fieldPath) {
   const parts = pathParts(fieldPath);
-  if (!target || !parts || parts.length < 3) return null;
+  if (!target || !parts || parts.length < 2) return null;
   let cursor = target;
-  for (let index = 0; index < parts.length - 1; index += 1) {
+  for (let index = 0; index < parts.length; index += 1) {
     const part = parts[index];
     if (cursor == null || typeof cursor !== 'object' || !Object.hasOwn(cursor, part)) return null;
-    cursor = cursor[part];
-    if (!Array.isArray(cursor)) continue;
+    const next = cursor[part];
     const itemPart = parts[index + 1];
-    const leafField = parts[index + 2];
-    if (!visualReorderableArrays.has(part) || !/^\d+$/.test(itemPart) || !visualReorderableItemFields.has(leafField) || parts.length !== index + 3) return null;
-    const itemIndex = Number(itemPart);
-    if (!Number.isSafeInteger(itemIndex) || itemIndex < 0 || itemIndex >= cursor.length) return null;
-    return { arrayPath: parts.slice(0, index + 1).join('.'), index: itemIndex, length: cursor.length };
+    if (Array.isArray(next) && visualReorderableArrays.has(part) && /^\d+$/.test(String(itemPart ?? ''))) {
+      const itemIndex = Number(itemPart);
+      if (!Number.isSafeInteger(itemIndex) || itemIndex < 0 || itemIndex >= next.length) return null;
+      const stopsAtItem = parts.length === index + 2;
+      const namesScalarField = parts.length === index + 3 && visualReorderableItemFields.has(parts[index + 2]);
+      if (stopsAtItem || namesScalarField) {
+        return { arrayPath: parts.slice(0, index + 1).join('.'), index: itemIndex, length: next.length };
+      }
+      // The path reaches past this entry into a nested list, which owns its own
+      // ordering. Stop here instead of reordering the outer list by mistake.
+      return null;
+    }
+    cursor = next;
   }
   return null;
 }
@@ -346,7 +377,10 @@ function nextVisualListIdentity(items, field, value) {
 }
 
 function assignDuplicateVisualListIdentities(items, copy) {
-  for (const field of ['number', 'media_role', 'map_media_role']) {
+  // A duplicated entry must not share the identity its template uses for keys
+  // or media slots, otherwise the canvas renders two nodes with the same key.
+  // `role` covers governed media lists such as galleries.
+  for (const field of ['number', 'media_role', 'map_media_role', 'role']) {
     if (!Object.hasOwn(copy, field)) continue;
     const next = nextVisualListIdentity(items, field, copy[field]);
     if (next) copy[field] = next;
@@ -456,6 +490,24 @@ export function applyVisualMediaReplacement(target, fieldPath, assetId, { mediaS
   }
   const parts = pathParts(fieldPath);
   const replacementFieldName = parts?.at(-1);
+  // The article form persists its JSON editor, not the resolved preview array.
+  // Read the current editor value so a canvas replacement retains unsaved captions.
+  if (parts?.length === 3 && parts[0] === 'body_media' && /^\d+$/.test(parts[1]) && parts[2] === 'media_asset_id') {
+    if (!/^[1-9]\d*$/.test(id)) return false;
+    let entries;
+    try {
+      entries = Object.hasOwn(target, 'body_media_text')
+        ? JSON.parse(target.body_media_text)
+        : structuredClone(target.body_media);
+    } catch { return false; }
+    const index = Number(parts[1]);
+    if (!Array.isArray(entries) || !entries[index] || typeof entries[index] !== 'object' || Array.isArray(entries[index])) return false;
+    entries[index].media_asset_id = id;
+    delete entries[index].path;
+    target.body_media = entries;
+    if (Object.hasOwn(target, 'body_media_text')) target.body_media_text = JSON.stringify(entries, null, 2);
+    return true;
+  }
   // Product model drawings may be edited from the fallback image before a
   // drawing record exists in configuration. Materialize the selected slot so
   // the visual editor can persist the first replacement instead of silently
@@ -465,6 +517,14 @@ export function applyVisualMediaReplacement(target, fieldPath, assetId, { mediaS
     if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(id) || index > target.configuration.drawings.length) return false;
     if (!target.configuration.drawings[index] || typeof target.configuration.drawings[index] !== 'object') target.configuration.drawings[index] = { title: '', caption: '' };
     target.configuration.drawings[index].media_asset_id = id;
+    return true;
+  }
+  // Legacy product models store only a static `configuration.machineImage`
+  // URL and have no `machine_asset_id` key yet. Materialize the scalar slot so
+  // the first canvas replacement persists instead of being treated as read-only.
+  if (parts?.length === 2 && parts[0] === 'configuration' && parts[1] === 'machine_asset_id' && target && typeof target.configuration === 'object' && target.configuration !== null && !Array.isArray(target.configuration)) {
+    if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(id)) return false;
+    target.configuration.machine_asset_id = id;
     return true;
   }
   if (!(/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(id) || (!id && (allowEmpty || restorableMediaFields.has(replacementFieldName))))) return false;

@@ -43,7 +43,7 @@ if (responseError.value?.statusCode === 410 && route.query.cmsPreview !== '1')
     statusMessage: 'Article is no longer published',
     fatal: true,
   });
-const { overlayRecord } = useCmsDraftPreview();
+const { overlayRecord, visualEditMode: cmsVisualEditMode } = useCmsDraftPreview();
 const article = computed(() =>
   overlayRecord(
     'articles',
@@ -113,7 +113,7 @@ useSeoMeta({
       ></div>
       <div v-if="bodyMediaEntries(article).length" class="article-body-media" data-cms-preview-field-path="body_media">
         <figure v-for="(media, index) in bodyMediaEntries(article)" :key="`${media.path}-${index}`" data-cms-preview-field-path="body_media">
-          <img :src="media.path" :alt="media.alt || media.caption || '正文图片'" :style="{width:`${media.width}%`,marginInline:media.align==='center'?'auto':media.align==='right'?'0 0 0 auto':'0 auto 0 0'}"><figcaption v-if="media.caption">{{ media.caption }}</figcaption>
+          <img :src="media.path" :alt="media.alt || media.caption || '正文图片'" :data-cms-preview-field-path="`body_media.${media.sourceIndex}.media_asset_id`" data-cms-preview-media-role="image" data-cms-preview-placement-key="news.article.body" :style="{width:`${media.width}%`,marginInline:media.align==='center'?'auto':media.align==='right'?'0 0 0 auto':'0 auto 0 0'}"><figcaption v-if="media.caption">{{ media.caption }}</figcaption>
         </figure>
       </div>
       <div
@@ -135,6 +135,19 @@ useSeoMeta({
             :data-cms-preview-field-path="`media.${index}.path`"
             data-cms-preview-media-role="video"
           ></video
+          ><figure
+            v-if="cmsVisualEditMode && isArticleVideoMedia(media)"
+            class="cms-hidden-media-preview"
+          >
+            <figcaption>视频封面（与视频分开编辑）</figcaption>
+            <img
+              :src="articleMediaPoster(media, article) || undefined"
+              :alt="`${article.title} 视频封面`"
+              :data-cms-preview-field-path="`media.${index}.poster_asset_id`"
+              data-cms-preview-media-role="poster"
+              data-cms-preview-placement-key="news.article.poster"
+            />
+          </figure
           ><img
             v-else
             :src="String(media.path)"
@@ -292,6 +305,25 @@ useSeoMeta({
 }
 .article-media figure {
   margin: 0;
+}
+/* The video cover is edited through its own panel so the poster can be replaced
+   without touching the video file. It only renders in canvas edit mode. */
+.cms-hidden-media-preview {
+  margin: 12px 0 0;
+  padding: 12px;
+  background: #fff;
+  color: #222;
+  border: 1px dashed #999;
+}
+.cms-hidden-media-preview img {
+  display: block;
+  width: 100%;
+  height: 150px;
+  object-fit: contain;
+  cursor: pointer;
+}
+.cms-hidden-media-preview figcaption {
+  font-size: 12px;
 }
 .article-media img,
 .article-media video {

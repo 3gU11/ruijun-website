@@ -17,8 +17,25 @@ test('preview session store expires opaque sessions and supports revocation', ()
   assert.equal(store.get(second.id), null);
 });
 
-test('CMS form post opens a server-side preview session before redirecting to the real page', async () => {
-  const source = await readFile(new URL('../server/api/preview/open.post.ts', import.meta.url), 'utf8');
+test('an active preview session keeps sliding forward instead of expiring mid-edit', () => {
+  let timestamp = 1_000;
+  const store = createCmsPreviewSessionStore({ now: () => timestamp, ttlMs: 1_000, random: () => Buffer.alloc(48, 5) });
+  const session = store.create({ collection: 'pages', itemId: '1', preview: {} });
+
+  // Each access within the window pushes the deadline out, so a long editing
+  // session no longer lapses while the operator is still working.
+  for (let step = 0; step < 5; step += 1) {
+    timestamp += 900;
+    assert.ok(store.get(session.id), `session should survive access ${step}`);
+  }
+  assert.equal(store.size(), 1);
+
+  // An idle gap longer than the window still expires it.
+  timestamp += 1_001;
+  assert.equal(store.get(session.id), null);
+});
+
+test('CMS form post opens a server-side preview session before redirecting to the real page', async () => {  const source = await readFile(new URL('../server/api/preview/open.post.ts', import.meta.url), 'utf8');
   assert.match(source, /readBody/);
   assert.match(source, /URLSearchParams/);
   assert.match(source, /typeof rawBody === 'string'/);

@@ -5,6 +5,7 @@ export function editorialPreviewGrantIds(preview) {
 }
 
 export function livePreviewGrantIds(collection, preview) {
+ if (collection === 'homepage_sections') return [...new Set((Array.isArray(preview?.media) ? preview.media : []).map(item => item?.media_asset_id).filter(value => /^[1-9]\d*$/.test(String(value || ''))).map(String))];
  if (collection === 'qualifications') return [...new Set((Array.isArray(preview?.assets) ? preview.assets : []).map(item => item?.media_asset_id).filter(value => /^[1-9]\d*$/.test(String(value || ''))).map(String))];
  if (collection === 'articles') return editorialPreviewGrantIds(preview);
  if (collection === 'service_resources') return [...new Set([preview?.asset_media_asset_id, preview?.cover_media_asset_id].filter(Boolean).map(String))];

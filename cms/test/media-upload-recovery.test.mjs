@@ -4,7 +4,16 @@ import { readFile } from 'node:fs/promises';
 
 // Execute the actual workbench upload action with injected HTTP/UI dependencies.
 const source = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
-const action = source.slice(source.indexOf('async function createMediaCandidate()'), source.indexOf('\nfunction nextDraftSlug('));
+// Bound the body by the next top-level function rather than naming one. Naming a
+// neighbour couples this test to file layout: extracting that neighbour into a
+// module left indexOf() returning -1, which silently sliced to the end of the
+// file and fed the parser the template markup.
+const actionStart = source.indexOf('async function createMediaCandidate()');
+const boundaries = [
+  source.indexOf('\nasync function ', actionStart + 1),
+  source.indexOf('\nfunction ', actionStart + 1)
+].filter((i) => i > actionStart);
+const action = source.slice(actionStart, boundaries.length ? Math.min(...boundaries) : source.length);
 
 async function uploadScenario({ registrationFails = false, refreshFails = false } = {}) {
  const deleted = [];

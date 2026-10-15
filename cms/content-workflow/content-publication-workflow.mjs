@@ -149,7 +149,7 @@ function assertTransitionDoesNotMutateContent(input) {
   }
 }
 
-export function applyContentPublicationUpdate({ collection, current, input, actor, now = () => new Date() }) {
+function resolveContentPublicationUpdate({ collection, current, input, actor, now = () => new Date() }) {
   const existing = current && typeof current === 'object' ? current : null;
   const payload = input && typeof input === 'object' ? input : {};
   const actorInfo = validActor(actor);
@@ -172,6 +172,27 @@ export function applyContentPublicationUpdate({ collection, current, input, acto
       published_at: existing.published_at ?? null,
       publication_log: audit(existing, 'content_updated', actorInfo.id, timestamp, changedFields)
     };
+  }
+
+  // An administrator may start the review process, but must not skip it: the
+  // publish gate further down still applies. Without this an admin had no way
+  // to submit anything, since `draft -> review` was editor-only.
+  if (actorInfo.role === 'system_admin' && existing.status === 'draft' && target === 'review') {
+    assertKnowledgeReadiness(collection, existing, payload, target);
+    return {
+      ...base, status: 'review', ...unpublished,
+      publication_log: audit(existing, 'submitted_for_review', actorInfo.id, timestamp, changedFields)
+    };
+  }
+
+  // Same reasoning as `draft -> review` above. Reopening withdrawn content moves
+  // backwards, so it cannot shortcut the publish gate — the full
+  // draft -> review -> scheduled -> published chain still applies. Without this,
+  // an administrator could take a page down but never get it back to an editable
+  // state, which left the only route back through a second account in the
+  // 内容编辑 role. Editors keep the same ability below.
+  if (actorInfo.role === 'system_admin' && (existing.status === 'rejected' || existing.status === 'unpublished') && target === 'draft') {
+    return { ...base, status: 'draft', ...unpublished, publication_log: audit(existing, 'reopened_as_draft', actorInfo.id, timestamp, changedFields) };
   }
 
   if (actorInfo.role === 'content_editor') {
@@ -224,6 +245,25 @@ export function applyContentPublicationUpdate({ collection, current, input, acto
   }
 
   throw new ContentPublicationError('ROLE_SCOPE', 'This role cannot change publication state');
+}
+
+// `publication_state` is derived by the lifecycle and is never set directly.
+//
+// Two shapes must be told apart:
+//   * a payload that carries a `status` transition may also carry a stale or
+//     forged `publication_state` — it is ignored, and the transition decides.
+//   * a payload that sets ONLY `publication_state` cannot take effect at all.
+//     That used to return 200 while silently rewriting the value, which reads
+//     as a successful publish. Reject it so the caller learns nothing happened.
+export function applyContentPublicationUpdate(options) {
+  const payload = options?.input && typeof options.input === 'object' ? options.input : {};
+  if (Object.hasOwn(payload, 'publication_state') && !Object.hasOwn(payload, 'status')) {
+    throw new ContentPublicationError(
+      'PUBLICATION_STATE_DERIVED',
+      'publication_state follows the content lifecycle and cannot be set on its own; request a status transition instead'
+    );
+  }
+  return resolveContentPublicationUpdate(options);
 }
 
 export function applyContentPublicationCreate({ collection, input, actor, now = () => new Date() }) {

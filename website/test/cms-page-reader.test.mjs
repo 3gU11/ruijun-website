@@ -40,6 +40,25 @@ test('Nuxt CMS page reader excludes individual sections still marked for claim r
   });
 });
 
+test('Nuxt CMS page reader renders only registered and enabled section instances', async () => {
+  const section = {
+    id: 'custom-rich-text-case1', type: 'rich-text', version: 1, enabled: true,
+    kicker: '补充说明', title: '保养提示', body: '请按手册周期保养设备。', internal_note: 'never public'
+  };
+  const hidden = { ...section, id: 'custom-rich-text-hidden', enabled: false };
+  const unsupported = { ...section, id: 'custom-rich-text-bad', type: 'unknown-component' };
+  const reader = createCmsPageReader({
+    endpoint: 'https://cms.example.test/items/pages', now: () => Date.parse('2026-08-01T00:00:00.000Z'),
+    fetchImpl: async () => Response.json({ data: [{ ...publishedPage, slug: 'service', sections: [section, hidden, unsupported] }] })
+  });
+
+  const result = await reader.get('service');
+  assert.deepEqual(result.data.sections, [{
+    id: section.id, type: 'rich-text', version: 1, enabled: true,
+    kicker: '补充说明', title: '保养提示', body: '请按手册周期保养设备。'
+  }]);
+});
+
 test('Nuxt CMS page reader resolves only published media assets referenced by page sections', async () => {
   const reader = createCmsPageReader({
     endpoint: 'https://cms.example.test/items/pages',
@@ -49,8 +68,8 @@ test('Nuxt CMS page reader resolves only published media assets referenced by pa
       const request = new URL(url);
       if (request.pathname.endsWith('/media_assets')) {
         return Response.json({ data: [
-          { id: 7, file_id: 'published-machine', alt_text: '已审核机床图片', status: 'published', publication_state: 'published', published_at: '2026-07-31T00:00:00.000Z' },
-          { id: 8, file_id: 'draft-machine', alt_text: '草稿图片', status: 'draft', publication_state: 'unpublished' }
+          { id: 7, file_id: 'aaaaaaaa-aaaa-4aaa-8aaa-000000000008', alt_text: '已审核机床图片', status: 'published', publication_state: 'published', published_at: '2026-07-31T00:00:00.000Z' },
+          { id: 8, file_id: 'aaaaaaaa-aaaa-4aaa-8aaa-000000000009', alt_text: '草稿图片', status: 'draft', publication_state: 'unpublished' }
         ] });
       }
       return Response.json({ data: [{
@@ -67,7 +86,7 @@ test('Nuxt CMS page reader resolves only published media assets referenced by pa
   assert.equal(result.cache, 'fresh');
   assert.equal(result.source, 'cms');
   assert.equal(result.data.sections[0].media.length, 1);
-  assert.equal(result.data.sections[0].media[0].path, 'https://cms.example.test/assets/published-machine');
+  assert.equal(result.data.sections[0].media[0].path, '/api/public/v1/media/asset/aaaaaaaa-aaaa-4aaa-8aaa-000000000008');
   assert.equal(result.data.sections[0].media[0].alt, '已审核机床图片');
   assert.equal(Object.hasOwn(result.data.sections[0], 'internal_note'), false);
 });
@@ -212,9 +231,9 @@ test('Nuxt CMS page reader resolves media asset IDs nested in repeated page item
     fetchImpl: async (url) => {
       const request = new URL(url);
       if (request.pathname.endsWith('/media_assets')) return Response.json({ data: [
-        { id: 21, file_id: 'nested-image', media_type: 'image', mime_type: 'image/jpeg', status: 'published', publication_state: 'published' },
-        { id: 22, file_id: 'nested-video', media_type: 'video', mime_type: 'video/mp4', status: 'published', publication_state: 'published' },
-        { id: 23, file_id: 'draft-poster', media_type: 'image', mime_type: 'image/jpeg', status: 'draft', publication_state: 'unpublished' }
+        { id: 21, file_id: 'aaaaaaaa-aaaa-4aaa-8aaa-000000000010', media_type: 'image', mime_type: 'image/jpeg', status: 'published', publication_state: 'published' },
+        { id: 22, file_id: 'aaaaaaaa-aaaa-4aaa-8aaa-000000000011', media_type: 'video', mime_type: 'video/mp4', status: 'published', publication_state: 'published' },
+        { id: 23, file_id: 'aaaaaaaa-aaaa-4aaa-8aaa-000000000012', media_type: 'image', mime_type: 'image/jpeg', status: 'draft', publication_state: 'unpublished' }
       ] });
       return Response.json({ data: [{
         ...publishedPage,
@@ -224,8 +243,8 @@ test('Nuxt CMS page reader resolves media asset IDs nested in repeated page item
   });
 
   const section = (await reader.get('home')).data.sections[0];
-  assert.equal(section.items[0].image, 'https://cms.example.test/assets/nested-image');
-  assert.equal(section.items[0].media[0].path, 'https://cms.example.test/assets/nested-video');
+  assert.equal(section.items[0].image, '/api/public/v1/media/asset/aaaaaaaa-aaaa-4aaa-8aaa-000000000010');
+  assert.equal(section.items[0].media[0].path, '/api/public/v1/media/asset/aaaaaaaa-aaaa-4aaa-8aaa-000000000011');
   assert.equal(Object.hasOwn(section.items[0].media[0], 'posterPath'), false);
 });
 
@@ -293,8 +312,8 @@ test('Nuxt homepage section reader preserves structured reason fields and approv
     fetchImpl: async (url) => {
       const request = new URL(url);
       if (request.pathname.endsWith('/media_assets')) return Response.json({ data: [
-        { id: 101, file_id: 'reason-machine', media_type: 'image', mime_type: 'image/jpeg', status: 'published', publication_state: 'published' },
-        { id: 102, file_id: 'reason-icon', media_type: 'image', mime_type: 'image/png', status: 'published', publication_state: 'published' }
+        { id: 101, file_id: 'aaaaaaaa-aaaa-4aaa-8aaa-000000000013', media_type: 'image', mime_type: 'image/jpeg', status: 'published', publication_state: 'published' },
+        { id: 102, file_id: 'aaaaaaaa-aaaa-4aaa-8aaa-000000000014', media_type: 'image', mime_type: 'image/png', status: 'published', publication_state: 'published' }
       ] });
       if (request.pathname.endsWith('/homepage_sections')) return Response.json({ data: [{
         id: 701,
@@ -311,8 +330,8 @@ test('Nuxt homepage section reader preserves structured reason fields and approv
   assert.equal(section.cms_collection, 'homepage_sections');
   assert.equal(section.shortTitle, '效率');
   assert.equal(section.introDetail, 'CMS 说明');
-  assert.equal(section.image, 'https://cms.example.test/assets/reason-machine');
-  assert.equal(section.icon, 'https://cms.example.test/assets/reason-icon');
+  assert.equal(section.image, '/api/public/v1/media/asset/aaaaaaaa-aaaa-4aaa-8aaa-000000000013');
+  assert.equal(section.icon, '/api/public/v1/media/asset/aaaaaaaa-aaaa-4aaa-8aaa-000000000014');
 });
 
 test('Nuxt homepage section reader resolves nested item media assets', async () => {
@@ -325,7 +344,7 @@ test('Nuxt homepage section reader resolves nested item media assets', async () 
     fetchImpl: async (url) => {
       const request = new URL(url);
       if (request.pathname.endsWith('/media_assets')) return Response.json({ data: [
-        { id: 111, file_id: 'marquee-image', media_type: 'image', mime_type: 'image/jpeg', status: 'published', publication_state: 'published' }
+        { id: 111, file_id: 'aaaaaaaa-aaaa-4aaa-8aaa-000000000015', media_type: 'image', mime_type: 'image/jpeg', status: 'published', publication_state: 'published' }
       ] });
       if (request.pathname.endsWith('/homepage_sections')) return Response.json({ data: [{
         id: 702,
@@ -338,5 +357,86 @@ test('Nuxt homepage section reader resolves nested item media assets', async () 
 
   const section = (await reader.get('home')).data.sections.find((entry) => entry.id === 'marquee');
   assert.equal(section.cms_item_id, '702');
-  assert.equal(section.content.items[0].image, 'https://cms.example.test/assets/marquee-image');
+  assert.equal(section.content.items[0].image, '/api/public/v1/media/asset/aaaaaaaa-aaaa-4aaa-8aaa-000000000015');
+});
+
+test('Nuxt CMS page reader emits only declared media and list fields for registered sections', async () => {
+  const imageSection = {
+    id: 'custom-image-shot1', type: 'image', version: 1, enabled: true,
+    title: '设备全景', body: '车间实拍。',
+    media: [{ media_asset_id: 7, role: 'image' }],
+    internal_note: 'never public'
+  };
+  const draftImageSection = {
+    id: 'custom-image-draft1', type: 'image', version: 1, enabled: true,
+    title: '未审核图', body: '', media: [{ media_asset_id: 8 }]
+  };
+  const gridSection = {
+    id: 'custom-card-grid-grid1', type: 'card-grid', version: 1, enabled: true,
+    title: '服务能力',
+    items: [
+      { title: '上门安装', body: '全国范围。', media_role: 'card-1', secret_cost: 1200 },
+      { title: '远程诊断', body: '在线响应。', media_role: 'card-2' }
+    ]
+  };
+  const reader = createCmsPageReader({
+    endpoint: 'https://cms.example.test/items/pages',
+    mediaAssetsEndpoint: 'https://cms.example.test/items/media_assets',
+    now: () => Date.parse('2026-08-01T00:00:00.000Z'),
+    fetchImpl: async (url) => {
+      const request = new URL(url);
+      if (request.pathname.endsWith('/media_assets')) {
+        return Response.json({ data: [
+          { id: 7, file_id: 'aaaaaaaa-aaaa-4aaa-8aaa-000000000016', alt_text: '已审核图片', status: 'published', publication_state: 'published', published_at: '2026-07-31T00:00:00.000Z' },
+          { id: 8, file_id: 'aaaaaaaa-aaaa-4aaa-8aaa-000000000017', status: 'draft', publication_state: 'unpublished' }
+        ] });
+      }
+      return Response.json({ data: [{ ...publishedPage, slug: 'service', sections: [imageSection, draftImageSection, gridSection] }] });
+    }
+  });
+
+  const sections = (await reader.get('service')).data.sections;
+  const image = sections.find((entry) => entry.id === imageSection.id);
+  const draftImage = sections.find((entry) => entry.id === draftImageSection.id);
+  const grid = sections.find((entry) => entry.type === 'card-grid');
+
+  // Media keeps only assets the resolver authorizes, and no undeclared field leaks.
+  assert.equal(image.type, 'image');
+  assert.equal(image.media.length, 1);
+  assert.equal(image.media[0].path, '/api/public/v1/media/asset/aaaaaaaa-aaaa-4aaa-8aaa-000000000016');
+  assert.equal(image.media[0].role, 'image');
+  assert.equal(image.internal_note, undefined);
+
+  // An unpublished asset resolves to nothing, so the field is omitted entirely.
+  assert.equal(draftImage.type, 'image');
+  assert.equal(draftImage.media, undefined);
+
+  // List items keep only the item fields the registry declares.
+  assert.equal(grid.type, 'card-grid');
+  assert.deepEqual(grid.items, [
+    { title: '上门安装', body: '全国范围。', media_role: 'card-1' },
+    { title: '远程诊断', body: '在线响应。', media_role: 'card-2' }
+  ]);
+  assert.equal(grid.items[0].secret_cost, undefined);
+});
+
+test('Nuxt CMS page reader carries select and number fields for data-list blocks', async () => {
+  const section = {
+    id: 'custom-data-list-feed1', type: 'data-list', version: 1, enabled: true,
+    title: '最新动态', source: 'articles', limit: 4, columns: 2, internal_note: 'never public'
+  };
+  const offCatalogue = { ...section, id: 'custom-data-list-bad', source: 'not-a-source' };
+  const reader = createCmsPageReader({
+    endpoint: 'https://cms.example.test/items/pages', now: () => Date.parse('2026-08-01T00:00:00.000Z'),
+    fetchImpl: async () => Response.json({ data: [{ ...publishedPage, slug: 'service', sections: [section, offCatalogue] }] })
+  });
+
+  const sections = (await reader.get('service')).data.sections;
+  assert.equal(sections.length, 1, 'a source outside the catalogue must not reach the page');
+  const [out] = sections;
+  assert.equal(out.type, 'data-list');
+  assert.equal(out.source, 'articles');
+  assert.equal(out.limit, 4);
+  assert.equal(out.columns, 2);
+  assert.equal(out.internal_note, undefined);
 });

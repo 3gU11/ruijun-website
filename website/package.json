@@ -2,6 +2,9 @@
   "name": "ruijun-website-nuxt",
   "private": true,
   "type": "module",
+  "imports": {
+    "#shared/*": "./shared/*"
+  },
   "scripts": {
     "predev": "node ./scripts/sync-demo-assets.mjs",
     "dev": "nuxt dev --dotenv .env.local --host 0.0.0.0 --port 4175",

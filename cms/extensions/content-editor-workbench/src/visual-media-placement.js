@@ -22,18 +22,27 @@ export function resolveNewsCoverMediaPlacement({ collection = '', category = '',
   return { scope: 'article', placementKey: 'news.dynamic_news.cover', elementType: 'image', pageKey: 'news', sectionKey: 'dynamic-news' };
 }
 
+export function resolveNewsBodyMediaPlacement({ collection = '', category = '', fieldPath = '', elementType = '' } = {}) {
+  if (collection !== 'articles' || category !== 'news' || elementType !== 'image') return null;
+  if (!/^body_media\.\d+\.media_asset_id$/.test(fieldPath)) return null;
+  return { scope: 'article', placementKey: 'news.article.body', elementType: 'image', pageKey: 'news', sectionKey: 'article' };
+}
+
 /**
  * Resolve the governed placement for homepage reason media selected from the
  * live canvas. The icon and background share a section, so mediaRole is the
  * discriminator that prevents an icon from receiving a background candidate.
  */
 export function resolveHomepageReasonMediaPlacement({ collection = '', slug = '', sectionKey = '', mediaRole = '', elementType = '' } = {}) {
-  if (collection !== 'pages' || slug !== 'home' || !homepageReasonSections.has(sectionKey)) return null;
+  if (!['pages', 'homepage_sections'].includes(collection) || slug !== 'home' || !homepageReasonSections.has(sectionKey)) return null;
   if (mediaRole === 'icon') {
     return { scope: 'homepage', placementKey: 'home.reason.icon', elementType: 'image', pageKey: 'home', sectionKey };
   }
-  if (mediaRole === 'foreground' || sectionKey === 'performance') {
+  if (mediaRole === 'foreground') {
     return { scope: 'homepage', placementKey: 'home.reason.machine', elementType: elementType || 'image', pageKey: 'home', sectionKey };
   }
-  return { scope: 'homepage', placementKey: 'home.reason.background', elementType: elementType || 'image', pageKey: 'home', sectionKey };
+  if (mediaRole === 'background') {
+    return { scope: 'homepage', placementKey: 'home.reason.background', elementType: elementType || 'image', pageKey: 'home', sectionKey };
+  }
+  return null;
 }

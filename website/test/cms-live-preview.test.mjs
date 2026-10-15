@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
+import { listPageSectionDefinitions } from '../shared/page-section-registry.mjs';
 import { acceptCmsLivePreviewCommand, acceptCmsLivePreviewMediaReplaceMessage, acceptCmsLivePreviewMessage, applyCmsLivePreviewMediaElement, CMS_LIVE_PREVIEW_COMMAND, CMS_LIVE_PREVIEW_MEDIA_REPLACE, CMS_LIVE_PREVIEW_UPDATE, cmsPreviewScrollOptions, cmsPreviewSectionSelector, cmsPreviewStatusLabel, createCmsVisualEditRequest, isCmsLivePreviewSessionExpired, makeCmsPreviewRecordRenderable, normalizeCmsLivePreviewMediaUrl, normalizeCmsLivePreviewOrigins, resolveCmsLivePreviewParentOrigin, resolveCmsVisualElementBinding, resolveCmsVisualRootBinding, sanitizeCmsLivePreviewRecord } from '../utils/cms-live-preview.mjs';
 
 const session = { collection: 'articles', itemId: '42', expiresAt: '2030-01-01T00:00:00.000Z' };
@@ -524,7 +525,9 @@ test('media mode resolves a uniquely bound image inside an interactive product c
   const source = await (await import('node:fs/promises')).readFile(new URL('../composables/useCmsDraftPreview.ts', import.meta.url), 'utf8');
   assert.match(source, /function mediaBindingInInteractiveContainer\(source: HTMLElement \| null\)/);
   assert.match(source, /\[data-cms-preview-editable="true"\]\[data-cms-preview-media-role\]/);
-  assert.match(source, /if \(visualTool\.value === 'media'\) element = mediaBindingInInteractiveContainer\(source\) \|\| element;/);
+  assert.match(source, /if \(visualTool\.value === 'media'\) \{\s*const directMedia = mediaBindingInInteractiveContainer\(source\);/);
+  assert.match(source, /element = directMedia \|\| \(elementIsMedia \? element : controlledVisualElementAtPoint\(clientX, clientY\)\);/);
+  assert.match(source, /if \(element\.closest\('\[data-reason-slide\]\[aria-hidden="true"\]'\)\) return false;/);
 });
 
 test('visual editing decorates bold homepage reason titles as selectable text', async () => {
@@ -603,9 +606,10 @@ test('brand story paragraphs select one safe body field instead of fabricated in
 });
 
 test('about timeline page fields use their actual workbench section entry in the reusable browser verifier', async () => {
-  const verifier = await (await import('node:fs/promises')).readFile(new URL('../../output/playwright/verify-news-hero-caption-e2e.cjs', import.meta.url), 'utf8');
-  assert.match(verifier, /about: \{[^\n]*entries: \{[^\n]*history: '发展历程标题'/);
-  assert.match(verifier, /'body', 'kicker', 'label'/);
+  const verifier = await (await import('node:fs/promises')).readFile(new URL('../../cms/scripts/verify-about-timeline-workbench.mjs', import.meta.url), 'utf8');
+  assert.match(verifier, /name: '发展历程标题', exact: true/);
+  assert.match(verifier, /\['kicker', 'label'\]/);
+  assert.match(verifier, /frameLocator\('iframe'\)/);
 });
 
 test('about timeline declares the visible kicker and hint fields in its section fallback', async () => {
@@ -644,7 +648,10 @@ test('product dimensions notice keeps an independent field-level presentation bi
 
 test('product technical parameter side label declares the same governed media placement as product dimensions', async () => {
   const source = await (await import('node:fs/promises')).readFile(new URL('../pages/product/[slug].vue', import.meta.url), 'utf8');
-  assert.match(source, /data-cms-preview-field-path="'configuration\.labels\.technical_image_asset_id'" data-cms-preview-placement-key="product\.gallery\.image" data-cms-preview-media-role="technical"/);
+  assert.match(source, /v-bind="productBinding\('configuration\.labels\.technical_image_asset_id'\)"[^>]*data-cms-preview-placement-key="product\.gallery\.image"[^>]*data-cms-preview-media-role="technical"/);
+  assert.match(source, /'data-cms-preview-collection': productItemId \? 'product_models' : undefined/);
+  assert.match(source, /'data-cms-preview-item-id': productItemId \|\| undefined/);
+  assert.match(source, /'data-cms-preview-field-path': fieldPath/);
 });
 
 test('homepage visual editing keeps the governed hero video selectable before or after its public intro completes', async () => {
@@ -699,6 +706,19 @@ test('visual editing marks fieldless static media as read-only instead of presen
   assert.match(app, /data-cms-preview-readonly="media-pending"/);
 });
 
+test('manufacturing static process media exposes an explicit pending-media reason', async () => {
+  const source = await (await import('node:fs/promises')).readFile(new URL('../pages/manufacturing.vue', import.meta.url), 'utf8');
+  assert.match(source, /:data-cms-preview-readonly="node\.mediaFieldPath \? undefined : 'media-pending'"/);
+  assert.match(source, /当前工艺节点使用静态或未建模媒体，暂不能替换。/);
+  // The mobile step must expose the governed slot when one resolves, and fall
+  // back to an explicit read-only reason only when it does not. Without this the
+  // node would be neither editable nor classified.
+  assert.match(source, /:data-cms-preview-readonly="step\.media\?\.managed \|\| step\.binding \? undefined : 'media-pending'"/);
+  assert.match(source, /移动端工艺图使用静态或未建模媒体，暂不能替换。/);
+  assert.match(source, /:data-cms-preview-field-path="step\.binding\?\.fieldPath"/);
+  assert.match(source, /:data-cms-preview-media-role="step\.binding\?\.mediaRole"/);
+});
+
 test('a static background does not block a bound text child from visual editing', async () => {
   const source = await (await import('node:fs/promises')).readFile(new URL('../composables/useCmsDraftPreview.ts', import.meta.url), 'utf8');
   assert.match(source, /function readonlyVisualTarget\(node: EventTarget \| null\) \{[\s\S]*?const editable = source\?\.closest<HTMLElement>\('\[data-cms-preview-editable="true"\]'\);[\s\S]*?if \(editable\) return null;/);
@@ -707,7 +727,9 @@ test('a static background does not block a bound text child from visual editing'
 test('read-only canvas targets can provide a specific CMS modelling reason', async () => {
   const source = await (await import('node:fs/promises')).readFile(new URL('../composables/useCmsDraftPreview.ts', import.meta.url), 'utf8');
   assert.match(source, /source\?\.closest\?\.<HTMLElement>\('\[data-cms-preview-readonly\]'\)/);
-  assert.match(source, /readonlyReason: String\(readonly\.element\.dataset\.cmsPreviewReadonlyReason \|\| '此为静态素材；请先在媒体资产中导入、审核并发布后再替换。'\)/);
+  // The fallback covers both causes, since a readonly element reaching here did
+  // not go through the placement-aware branch that sets a precise reason.
+  assert.match(source, /readonlyReason: String\(readonly\.element\.dataset\.cmsPreviewReadonlyReason \|\| '此素材当前不能替换：可能是版式的组成部分（需在模板中新增版式位置），也可能是尚未绑定受管素材（可在所在段落的「图片与背景」中添加）。'\)/);
 });
 
 test('a static background does not inherit disabled semantics into a bound CTA child', async () => {
@@ -888,7 +910,7 @@ test('homepage exposes nonvisual live-preview render diagnostics', async () => {
   const source = await (await import('node:fs/promises')).readFile(new URL('../pages/index.vue', import.meta.url), 'utf8');
   assert.match(source, /const \{ enabled: cmsPreviewEnabled, record: cmsPreviewRecord, recordsFor: cmsPreviewRecords, visualEditMode: cmsVisualEditMode \} = useCmsDraftPreview\(\);/);
   assert.match(source, /const pageContent = shallowRef<Record<string, any> \| null>\(null\);/);
-  assert.match(source, /watchEffect\(\(\) => \{[\s\S]*const draft = cmsPreviewRecord\.value;[\s\S]*const currentPage = !draft \|\| draft\.slug !== 'home'[\s\S]*pageContent\.value = currentPage;[\s\S]*rebuildHomepageDerivedContent\(currentPage\);[\s\S]*\}\);/);
+  assert.match(source, /watchEffect\(\(\) => \{[\s\S]*const draft = cmsPreviewRecord\.value;[\s\S]*const currentPage = !draft \|\| draft\.slug !== 'home'[\s\S]*pageContent\.value = previewPage;[\s\S]*rebuildHomepageDerivedContent\(previewPage\);[\s\S]*\}\);/);
   assert.match(source, /const reasons = shallowRef<Array<Record<string, any>>>\(\[\]\);/);
   assert.match(source, /const marqueeItems = shallowRef<Array<Record<string, any>>>\(\[\]\);/);
   assert.match(source, /function rebuildHomepageDerivedContent\(currentPage[\s\S]*reasons\.value = resolvedReasons;[\s\S]*marqueeItems\.value =/);
@@ -899,7 +921,7 @@ test('homepage exposes nonvisual live-preview render diagnostics', async () => {
 test('homepage rebuilds derived reasons from the same page snapshot as live preview', async () => {
   const source = await (await import('node:fs/promises')).readFile(new URL('../pages/index.vue', import.meta.url), 'utf8');
   assert.match(source, /function rebuildHomepageDerivedContent\(currentPage/);
-  assert.match(source, /pageContent\.value = currentPage;[\s\S]*rebuildHomepageDerivedContent\(currentPage\);/);
+  assert.match(source, /pageContent\.value = previewPage;[\s\S]*rebuildHomepageDerivedContent\(previewPage\);/);
   assert.doesNotMatch(source, /watch\(\[pageContent, cmsPreviewRecord\]/);
 });
 
@@ -959,4 +981,61 @@ test('visual element metadata prefers the nearest nested CMS root binding', () =
     rootCollection: '', rootItemId: '',
     sessionCollection: 'pages', sessionItemId: '7'
   }), { collection: 'pages', itemId: '7' });
+});
+
+test('a pushed record keeps the fields that identify a registry block', () => {
+  const record = sanitizeCmsLivePreviewRecord('pages', {
+    id: 3,
+    slug: 'service',
+    sections: [
+      { id: 'hero', title: '服务支持', body: '在线报单' },
+      { id: 'custom-rich-text-abc', type: 'rich-text', version: 1, enabled: true, title: '自定义区块' },
+      { id: 'custom-data-list-def', type: 'data-list', version: 1, enabled: false, title: '动态列表', source: 'articles', limit: 4 }
+    ]
+  });
+
+  const [legacy, richText, dataList] = record.sections;
+
+  // Legacy sections carry no type and must be unaffected.
+  assert.equal(legacy.type, undefined);
+  assert.equal(legacy.title, '服务支持');
+
+  // Dropping these three erases every custom block from the live preview: the
+  // canvas merges the pushed record OVER its session data, and the renderer
+  // rejects a section whose type it cannot resolve.
+  assert.equal(richText.type, 'rich-text');
+  assert.equal(richText.version, 1);
+  assert.equal(richText.enabled, true);
+  assert.equal(richText.title, '自定义区块');
+
+  // A disabled block must stay disabled rather than silently becoming enabled.
+  assert.equal(dataList.type, 'data-list');
+  assert.equal(dataList.enabled, false);
+  assert.equal(dataList.source, 'articles');
+  assert.equal(dataList.limit, 4);
+});
+
+test('every registry field key survives the live-preview sanitizer', () => {
+  // Guard: the sanitizer keeps a fixed field list, so a newly declared field key
+  // would be silently dropped from the live preview. This fails loudly instead.
+  const sample = {};
+  for (const slug of ['service', 'about', 'home', 'news', 'product', 'manufacturing', 'contact']) {
+    for (const definition of listPageSectionDefinitions(slug)) {
+      for (const field of definition.fields) {
+        if (field.type === 'media') sample[field.key] = [];
+        else if (field.type === 'list') sample[field.key] = [];
+        else if (field.type === 'number') sample[field.key] = 1;
+        else sample[field.key] = '值';
+      }
+      for (const variant of definition.variants || []) sample[`__${variant.key}`] = true;
+    }
+  }
+
+  const record = sanitizeCmsLivePreviewRecord('pages', {
+    id: 3, slug: 'service',
+    sections: [{ id: 'custom-probe', type: 'rich-text', version: 1, enabled: true, ...sample }]
+  });
+  const out = record.sections[0];
+  const missing = Object.keys(sample).filter((key) => !key.startsWith('__') && !Object.hasOwn(out, key));
+  assert.deepEqual(missing, [], `这些字段会在实时预览中被丢弃：${missing.join(', ')}`);
 });

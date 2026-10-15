@@ -45,12 +45,13 @@ test('product catalog keeps six desktop families in one viewport with single-lin
   assert.match(page, /data-cms-preview-field-path="positioning"/);
   assert.match(page, /data-cms-preview-field-path="name"/);
   assert.doesNotMatch(page, /:data-cms-preview-field-path="`items\.\$\{pageIndex\}\.(cover_asset|positioning|name)`"/);
-  assert.match(page, /id="product-details"[^>]*:data-cms-preview-collection="productBinding\('title'\)\.collection"/);
-  assert.match(page, /:data-cms-preview-item-id="productBinding\('title'\)\.itemId"/);
+  assert.match(page, /id="product-details"[^>]*:data-cms-preview-collection="productBinding\('title'\)\['data-cms-preview-collection'\]"/);
+  assert.match(page, /:data-cms-preview-item-id="productBinding\('title'\)\['data-cms-preview-item-id'\]"/);
   assert.match(page, /class="series-model-list"[^>]*aria-label="该系列机型"/);
   assert.match(page, /<span v-bind="fieldPresentationAttributes\(selectedModelRecord\?\.presentation, 'model_code'\)" data-cms-preview-field-path="model_code" data-cms-preview-position-field-path="presentation\.field_presentation\.model_code">\{\{ model \}\}<\/span>/);
   assert.match(page, /fieldPresentationAttributes\(displayConfig, featurePresentationPath\(index, 'label'\)\)[\s\S]*data-cms-preview-field-path="`configuration\.features\.\$\{index\}\.label`"[\s\S]*data-cms-preview-position-field-path="`configuration\.field_presentation\.\$\{featurePresentationPath\(index, 'label'\)\}`"/);
-  assert.match(page, /data-cms-preview-field-path="`configuration\.features\.\$\{index\}\.image`"[\s\S]*data-cms-preview-position-field-path="`configuration\.field_presentation\.\$\{featurePresentationPath\(index, 'image'\)\}`"/);
+  assert.match(page, /v-bind="productVisualBinding\(`configuration\.features\.\$\{index\}\.image`, featurePresentationPath\(index, 'image'\)\)"[^>]*data-cms-preview-position-field-path="`configuration\.field_presentation\.\$\{featurePresentationPath\(index, 'image'\)\}`"/);
+  assert.match(page, /return \{ \.\.\.productBinding\(fieldPath\), \.\.\.fieldPresentationAttributes\(displayConfig\.value, presentationPath\) \}/);
   assert.match(page, /const activeSeriesCode = computed\(\(\) => \{[\s\S]*previewModelSeries[\s\S]*return previewModelSeries/);
   assert.match(page, /previewSession\.value\?\.collection === 'product_models' \|\| !slug\.value/);
   assert.match(page, /product\.value\?\.series_code \|\| previewSession\.value\.preview\?\.series_code/);
@@ -72,10 +73,10 @@ test('product catalog keeps six desktop families in one viewport with single-lin
   assert.match(page, /onMounted\(\(\) => \{[\s\S]*proofDomReady\.value = true;[\s\S]*if \(previewSession\.value\) syncPreviewProofNumbers\(\);/);
   assert.match(page, /const animateProof = \(now: number\) => \{[\s\S]*if \(previewSession\.value\) \{\s*syncPreviewProofNumbers\(\);\s*return;[\s\S]*if \(previewSession\.value\) syncPreviewProofNumbers\(\);/);
   assert.match(page, /data-cms-preview-field-path="configuration\.intro\.title"/);
-  assert.match(page, /:data-cms-preview-field-path="displayImageFieldPath"/);
-  assert.match(page, /<img :src="String\(displayConfig\.labels\?\.technicalImage \|\| '\/assets\/psd\/technical-label-psd\.png'\)" :alt="String\(displayLabels\.technical \|\| parametersCopy\.title \|\| '技术参数'\)" :data-cms-preview-field-path="'configuration\.labels\.technical_image_asset_id'"[^>]*data-cms-preview-media-role="technical">/);
+  assert.match(page, /v-bind="productBinding\(displayImageFieldPath\)"/);
+  assert.match(page, /<img :src="String\(displayConfig\.labels\?\.technicalImage \|\| '\/assets\/psd\/technical-label-psd\.png'\)" :alt="String\(displayLabels\.technical \|\| parametersCopy\.title \|\| '技术参数'\)" v-bind="productBinding\('configuration\.labels\.technical_image_asset_id'\)"[^>]*data-cms-preview-media-role="technical">/);
   assert.match(page, /:data-cms-preview-field-path="`configuration\.drawings\.\$\{activeDrawing\.sourceIndex\}\.caption`"/);
-  assert.match(page, /:data-cms-preview-field-path="`configuration\.drawings\.\$\{activeDrawing\.sourceIndex\}\.media_asset_id`"/);
+  assert.match(page, /v-bind="productBinding\(`configuration\.drawings\.\$\{activeDrawing\.sourceIndex\}\.media_asset_id`\)"/);
   assert.match(page, /:data-cms-preview-placement-key="'product\.gallery\.image'"/);
   assert.doesNotMatch(page, /<img v-else src="\/assets\/psd\/product-dimensions\.png"[^>]*data-cms-preview-field-path/);
   assert.match(page, /class="catalog-pager"/);
@@ -123,7 +124,7 @@ test('product catalog keeps six desktop families in one viewport with single-lin
 test('visible resource and case section kickers retain their exact CMS field bindings', async () => {
   const page = await readFile(new URL('../pages/product/[slug].vue', import.meta.url), 'utf8');
 
-  assert.match(page, /data-cms-preview-key="resources"[^>]*:data-cms-preview-collection="productBinding\('resources'\)\.collection"[^>]*:data-cms-preview-item-id="productBinding\('resources'\)\.itemId"/);
+  assert.match(page, /data-cms-preview-key="resources"[^>]*:data-cms-preview-collection="productBinding\('resources'\)\['data-cms-preview-collection'\]"[^>]*:data-cms-preview-item-id="productBinding\('resources'\)\['data-cms-preview-item-id'\]"/);
   assert.match(page, /data-cms-preview-key="resources"[\s\S]{0,420}<p class="eyebrow">\{\{ resourcesCopy\.kicker \}\}<\/p>/);
   assert.doesNotMatch(page, /data-cms-preview-key="resources"[\s\S]{0,420}<p class="eyebrow" data-cms-preview-field-path="kicker"/);
   assert.match(page, /v-for="\(resource, resourceIndex\) in resources"/);

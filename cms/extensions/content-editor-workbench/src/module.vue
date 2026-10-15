@@ -10,7 +10,7 @@
         <div class="toolbar-actions">
           <button type="button" class="guide-action" @click="helpOpen = !helpOpen">{{ helpOpen ? '收起操作说明' : '查看操作说明' }}</button>
           <button type="button" class="preview-action" :disabled="!previewAvailable" :title="previewAvailable ? '查看当前表单中的未保存修改' : '当前内容类型暂不支持画面预览'" @click="openPreview">预览当前草稿</button>
-          <button type="button" class="live-preview-toggle" :disabled="!websitePreviewAvailable" @click="toggleLiveWebsitePreview">{{ liveWebsitePreviewVisible ? '关闭实时预览' : '打开实时预览' }}</button>
+          <button type="button" class="live-preview-toggle" :disabled="!websitePreviewAvailable" :title="websitePreviewAvailable ? '在工作台内打开官网实时预览' : '实时预览只对未公开的草稿内容开放：请先把该内容恢复为草稿，并在左侧选中一个页面区块'" @click="toggleLiveWebsitePreview">{{ liveWebsitePreviewVisible ? '关闭实时预览' : '打开实时预览' }}</button>
           <button type="button" class="website-preview-action" :disabled="!websitePreviewAvailable || websitePreviewOpening" :title="websitePreviewAvailable ? '保存草稿后，在真实官网版式中检查显示效果' : '请先选择一条未发布的草稿内容'" @click="openWebsitePreview">{{ websitePreviewOpening ? '正在打开官网预览...' : '在官网中预览草稿' }}</button>
           <span v-if="hasUnsavedChanges" class="unsaved-indicator" role="status">有未保存修改</span>
           <button type="button" :disabled="loading" @click="requestReload">重新加载</button>
@@ -49,6 +49,10 @@
         <div class="tab-group area-tools" aria-label="常用内容：当前官网栏目内容">
           <span class="tab-group-label">{{ siteAreaLabel }}内容</span>
           <button v-for="entry in siteAreaContentEntries" :key="entry.key" type="button" :class="{ active: isSiteAreaEntryActive(entry) }" @click="openSiteAreaEntry(entry)">{{ entry.label }}</button>
+        </div>
+        <div v-if="workflowAccess" class="tab-group workflow-tabs" aria-label="内容流转">
+          <span class="tab-group-label">内容流转</span>
+          <button type="button" :class="{ active: activeTab === 'submit' }" :aria-current="activeTab === 'submit' ? 'page' : undefined" @click="selectTab('submit')">内容送审</button>
         </div>
         <div v-if="technicalAccess" class="tab-group advanced-tabs" :class="{ expanded: showAdvanced }" aria-label="更多工具">
           <button type="button" class="advanced-toggle" :aria-expanded="showAdvanced" @click="showAdvanced = !showAdvanced">{{ showAdvanced ? '收起高级设置' : '高级设置' }}<span aria-hidden="true">{{ showAdvanced ? '⌃' : '⌄' }}</span></button>
@@ -118,7 +122,7 @@
             <div class="field-grid">
               <label class="full">文件<input ref="mediaFileInput" type="file" accept="image/jpeg,image/png,image/webp,image/avif,video/mp4,video/webm,application/pdf" required @change="selectMediaFile"></label>
               <p v-if="mediaDraft.file" class="form-help full">已选择：{{ mediaDraft.file.name }} · {{ readableFileSize(mediaDraft.file.size) }} · {{ mediaMetadataLabel }}</p>
-              <label>使用范围<select v-model="mediaDraft.usage_scope" required @change="syncMediaScopeContext"><option value="homepage">网站主页</option><option value="product">产品展示</option><option value="manufacturing">先进制造</option><option value="news">视频新闻</option><option value="about">关于瑞钧</option><option value="service">服务支持</option></select></label>
+              <label>使用范围<select v-model="mediaDraft.usage_scope" required @change="syncMediaScopeContext"><option value="homepage">网站主页</option><option value="product">产品展示</option><option value="manufacturing">先进制造</option><option value="article">视频新闻</option><option value="brand">关于瑞钧</option><option value="service">服务支持</option></select></label>
               <label>官网展示位置<select v-model="mediaDraft.placement_key" required @change="applyMediaPlacementContext(mediaDraft.placement_key, true)"><option v-for="option in compatibleMediaPlacements" :key="option.key" :value="option.key">{{ option.label }}</option></select></label>
               <p class="field-help full">{{ selectedMediaPlacementHelp }}</p>
               <label>所属页面<input v-model.trim="mediaDraft.page_key" maxlength="80" placeholder="例如：home、news、product"></label>
@@ -201,15 +205,20 @@
 
       <section v-else-if="activeTab === 'submit'" class="workspace-grid review-workspace" aria-label="内容送审清单">
         <aside class="record-list-panel review-list">
-          <div class="panel-heading"><div><p class="eyebrow">提交审核</p><h3>{{ submissionMode === 'submit' ? '可提交草稿' : '待恢复内容' }}</h3></div><strong>{{ submissionQueue.length }}</strong></div>
+          <div class="panel-heading"><div><p class="eyebrow">提交审核</p><h3>{{ submissionMode === 'submit' ? '可提交草稿' : '待恢复内容' }}</h3></div><strong>{{ filteredSubmissionQueue.length }}<template v-if="filteredSubmissionQueue.length !== submissionQueue.length"> / {{ submissionQueue.length }}</template></strong></div>
           <div class="subtabs lifecycle-tabs"><button type="button" :class="{ active: submissionMode === 'submit' }" @click="setSubmissionMode('submit')">提交审核</button><button type="button" :class="{ active: submissionMode === 'restore' }" @click="setSubmissionMode('restore')">恢复草稿</button></div>
           <p class="form-help">{{ submissionMode === 'submit' ? '只显示当前账号可以读取的草稿。' : '只显示退回修改或下线内容；恢复后才能继续编辑或重新提交审核。' }}</p>
+          <div v-if="submissionQueue.length > 1" class="queue-filters">
+            <label>搜索内容<input v-model.trim="submissionQuery" type="search" placeholder="输入名称或标识，例如 测试1" maxlength="80"></label>
+            <label>内容类型<select v-model="submissionCollectionFilter"><option value="">全部类型（{{ submissionQueue.length }}）</option><option v-for="option in submissionCollectionOptions" :key="option.value" :value="option.value">{{ option.label }}（{{ option.count }}）</option></select></label>
+          </div>
           <button type="button" class="text-action refresh-queue" :disabled="submissionLoading" @click="loadSubmissionQueue">{{ submissionLoading ? '正在刷新...' : '刷新清单' }}</button>
-          <button v-for="record in submissionQueue" :key="submissionRecordKey(record)" type="button" class="record-choice" :class="{ active: submissionRecordKey(record) === selectedSubmissionKey }" @click="selectSubmissionRecord(record)">
+          <button v-for="record in filteredSubmissionQueue" :key="submissionRecordKey(record)" type="button" class="record-choice" :class="{ active: submissionRecordKey(record) === selectedSubmissionKey }" @click="selectSubmissionRecord(record)">
             <span>{{ record.label }}</span><small>{{ record.collectionLabel }} · {{ record.secondary || statusLabel(record.status) }}</small><i :data-status="record.status">{{ statusLabel(record.status) }}</i>
           </button>
           <p v-if="submissionLoading" class="empty compact">正在读取各内容类型的{{ submissionMode === 'submit' ? '草稿' : '待恢复记录' }}...</p>
           <p v-else-if="!submissionQueue.length" class="empty compact">当前账号没有{{ submissionMode === 'submit' ? '可提交审核的草稿' : '可恢复的内容' }}。</p>
+          <p v-else-if="!filteredSubmissionQueue.length" class="empty compact">没有符合筛选条件的{{ submissionMode === 'submit' ? '草稿' : '待恢复内容' }}。<button type="button" class="text-action" @click="clearSubmissionFilters">清除筛选</button></p>
         </aside>
 
         <section v-if="selectedSubmissionRecord" class="editor-form review-detail">
@@ -284,10 +293,55 @@
           </details>
 
           <section class="section-editor" aria-labelledby="section-copy-title">
-            <div class="section-heading"><div><p class="eyebrow">{{ activePageSectionKey ? '当前编辑区块' : '页面段落' }}</p><h4 id="section-copy-title">{{ activePageSectionLabel }}</h4></div><div class="section-heading-actions"><button v-if="pageDraft.slug === 'home'" type="button" :disabled="!canEdit(pageDraft)" @click="addHomeReasonSection">新增首页理由</button><button v-if="supportedPageSectionSlugs.has(pageDraft.slug)" type="button" :disabled="!canEdit(pageDraft)" @click="addRequiredPageSections">补齐本页全部栏目</button><button type="button" :disabled="!canEdit(pageDraft)" @click="addPageSection">新增段落</button></div></div>
-            <article v-for="(section, index) in visiblePageSections" :key="`${section.id}-${index}`" :data-section-key="section.id" class="section-card" @focusin="activePageSectionKey = section.id" @pointerdown="activePageSectionKey = section.id">
-              <div class="section-card-heading"><strong>{{ pageSectionName(section, index) }}</strong><div><span v-if="section.requires_claim_review" class="review-badge">宣传主张待审核</span><button type="button" class="text-action danger" :disabled="!canEdit(pageDraft) || pageDraft.sections.length < 2" @click="removePageSection(index)">删除</button></div></div>
+            <div v-if="pageDraft.slug === 'home' && homepageSections.length" class="section-heading-actions" aria-label="首页独立区块">
+              <button v-for="record in homepageSections" :key="record.id" type="button" @click="openHomepageSection(record)">编辑独立区块：{{ record.title || record.section_key }}</button>
+            </div>
+            <div class="section-heading"><div><p class="eyebrow">{{ activePageSectionKey ? '当前编辑区块' : '页面段落' }}</p><h4 id="section-copy-title">{{ activePageSectionLabel }}</h4></div><div class="section-heading-actions"><button v-if="pageDraft.slug === 'home'" type="button" :disabled="!canEdit(pageDraft)" @click="addHomeReasonSection">新增首页理由</button><button v-if="supportedPageSectionSlugs.has(pageDraft.slug)" type="button" :disabled="!canEdit(pageDraft)" @click="addRequiredPageSections">补齐本页全部栏目</button><button v-if="pageSectionTypeOptions.length" type="button" :disabled="!canEdit(pageDraft)" @click="openSectionLibrary">添加区块</button><button v-if="canPastePageSection" type="button" :disabled="!canEdit(pageDraft)" @click="pastePageSection">粘贴区块</button><p v-else-if="supportedPageSectionSlugs.has(pageDraft.slug)" class="form-help">此栏目暂未开放通用区块添加；可以使用“补齐本页全部栏目”管理模板定义的栏目。</p></div></div>
+            <nav v-if="sectionOutline.length > 1" class="section-outline" aria-label="本页区块大纲">
+              <details open>
+                <summary>本页区块大纲（{{ sectionOutline.length }}）</summary>
+                <ol>
+                  <li v-for="(entry, entryIndex) in sectionOutline" :key="entry.id">
+                    <button type="button" :class="{ active: activePageSectionKey === entry.id }" @click="focusPageSection(entry.id)">
+                      <span class="outline-index">{{ entryIndex + 1 }}</span>
+                      <span class="outline-label">{{ entry.label }}</span>
+                      <span class="outline-kind">{{ entry.kind }}</span>
+                      <span v-if="entry.hidden" class="review-badge">已隐藏</span>
+                    </button>
+                  </li>
+                </ol>
+              </details>
+            </nav>
+            <article v-for="(section, index) in visiblePageSections" :key="`${section.id}-${index}`" :data-section-key="section.id" class="section-card" :class="{ 'dragging-section': draggingPageSectionKey === section.id }" :draggable="canEdit(pageDraft) && !!section.type" @focusin="activePageSectionKey = section.id" @pointerdown="activePageSectionKey = section.id" @dragstart="handleSectionDragStart(section, $event)" @dragover.prevent @drop="handleSectionDrop(section)" @dragend="draggingPageSectionKey = ''">
+              <div class="section-card-heading"><strong>{{ pageSectionName(section, index) }}</strong><div><span v-if="section.requires_claim_review" class="review-badge">宣传主张待审核</span><span v-if="section.type && section.enabled === false" class="review-badge">已隐藏</span><button v-if="section.type" type="button" class="text-action" :disabled="!canEdit(pageDraft)" @click="toggleRegisteredPageSection(section)">{{ section.enabled === false ? '显示' : '隐藏' }}</button><button v-if="section.type" type="button" class="text-action" :disabled="!canEdit(pageDraft)" @click="duplicatePageSection(section)">复制</button><button v-if="section.type" type="button" class="text-action" :disabled="!canEdit(pageDraft)" @click="copyPageSectionForReuse(section)">复制到其他页</button><button type="button" class="text-action danger" :disabled="!canEdit(pageDraft) || pageDraft.sections.length < 2" @click="removePageSection(section)">删除</button></div></div>
               <div class="field-grid section-fields">
+                <template v-if="section.type">
+                  <div v-if="registeredPageSectionPresets(section).length" class="section-preset-row">
+                    <label>套用预设<select v-model="sectionPresetSelection[section.id]" :disabled="!canEdit(pageDraft)"><option value="">选择预设</option><option v-for="preset in registeredPageSectionPresets(section)" :key="preset.key" :value="preset.key">{{ preset.label }}</option></select></label>
+                    <button type="button" :disabled="!canEdit(pageDraft) || !sectionPresetSelection[section.id]" @click="applyRegisteredSectionPreset(section)">套用</button>
+                    <span class="form-help">{{ sectionPresetDescription(section) }}</span>
+                  </div>
+                  <template v-for="field in registeredPageSectionFields(section)" :key="field.key">
+                    <label v-if="field.type === 'text' || field.type === 'textarea'" :class="{ full: field.type === 'textarea' }">{{ field.label }}<textarea v-if="field.type === 'textarea'" v-model="section[field.key]" :disabled="!canEdit(pageDraft)" :maxlength="field.maxLength" rows="4" @input="pushPageDraftToPreview"></textarea><input v-else v-model.trim="section[field.key]" :disabled="!canEdit(pageDraft)" :maxlength="field.maxLength" @input="pushPageDraftToPreview"></label>
+                    <label v-else-if="field.type === 'select'">{{ field.label }}<select v-model="section[field.key]" :disabled="!canEdit(pageDraft)" @change="pushPageDraftToPreview"><option v-for="option in field.options" :key="option" :value="option">{{ sectionSelectOptionLabel(field, option) }}</option></select></label>
+                    <label v-else-if="field.type === 'number'">{{ field.label }}<input v-model.number="section[field.key]" type="number" :min="field.min" :max="field.max" :disabled="!canEdit(pageDraft)" @input="pushPageDraftToPreview"></label>
+                    <section v-else-if="field.type === 'media'" class="media-reference-editor full-field" :aria-label="`${field.label}受控素材`">
+                      <div class="section-card-heading"><strong>{{ field.label }}</strong><span>{{ (section[field.key] || []).length }} / {{ field.maxItems }}</span></div>
+                      <div class="media-reference-add"><select v-model="pageMediaSelection" :disabled="!canEdit(pageDraft)"><option value="">选择{{ pageMediaScopeLabel() }}素材</option><option v-for="asset in pageMediaOptionsForSection(pageMediaScope(), section)" :key="asset.id" :value="String(asset.id)">{{ pageMediaOptionLabel(asset, pageMediaScope()) }}</option></select><button type="button" :disabled="!canEdit(pageDraft) || !pageMediaSelection" @click="addRegisteredSectionMedia(section, field)">添加素材</button></div>
+                      <p v-if="!pageMediaOptionsForSection(pageMediaScope(), section).length" class="form-help">暂无可用于此区块的{{ pageMediaScopeLabel() }}素材。请先在“更多工具 - 媒体资产”上传。</p>
+                      <div v-for="reference in section[field.key] || []" :key="reference.media_asset_id" class="media-reference-row"><span>{{ pageMediaLabel(reference) }}</span><label>展示位置<input v-model.trim="reference.role" :disabled="!canEdit(pageDraft)" maxlength="60" placeholder="例如：image、card-1"></label><button type="button" class="text-action danger" :disabled="!canEdit(pageDraft)" @click="removeRegisteredSectionMedia(section, field, reference.media_asset_id)">移除</button></div>
+                    </section>
+                    <section v-else-if="field.type === 'list'" class="service-items-editor generic-items-editor full-field" :aria-label="`${field.label}列表`">
+                      <div class="section-card-heading"><strong>{{ field.label }}</strong><button type="button" :disabled="!canEdit(pageDraft)" @click="addRegisteredSectionItem(section, field)">新增一项</button></div>
+                      <div v-for="(item, itemIndex) in section[field.key] || []" :key="`${section.id}-${field.key}-${itemIndex}`" class="service-item-card">
+                        <div class="section-card-heading"><strong>第 {{ itemIndex + 1 }} 项</strong><div><button type="button" class="text-action" :disabled="!canEdit(pageDraft) || itemIndex === 0" @click="moveRegisteredSectionItem(section, field, itemIndex, -1)">上移</button><button type="button" class="text-action" :disabled="!canEdit(pageDraft) || itemIndex === (section[field.key] || []).length - 1" @click="moveRegisteredSectionItem(section, field, itemIndex, 1)">下移</button><button type="button" class="text-action danger" :disabled="!canEdit(pageDraft)" @click="removeRegisteredSectionItem(section, field, itemIndex)">删除</button></div></div>
+                        <label v-for="itemField in field.itemFields" :key="itemField.key" :class="{ full: itemField.type === 'textarea' }">{{ itemField.label }}<textarea v-if="itemField.type === 'textarea'" v-model="item[itemField.key]" :disabled="!canEdit(pageDraft)" :maxlength="itemField.maxLength" rows="3" @input="pushPageDraftToPreview"></textarea><input v-else v-model.trim="item[itemField.key]" :disabled="!canEdit(pageDraft)" :maxlength="itemField.maxLength" @input="pushPageDraftToPreview"></label>
+                      </div>
+                    </section>
+                  </template>
+                  <p v-if="!registeredPageSectionFields(section).length" class="read-only-note full">此区块类型没有可编辑字段定义，无法保存。</p>
+                </template>
+                <template v-else>
               <label v-if="sectionTitleIsRendered(section)" class="full">段落标题<input data-preview-field="title" v-model.trim="section.title" :disabled="!canEdit(pageDraft)" maxlength="240" placeholder="例如：我们为什么值得信赖"><small class="field-help">这一段的醒目标题，会直接显示在官网页面上。</small></label>
               <p v-else class="read-only-note full">此区块当前官网没有标题展示位，修改该字段不会出现在画布中。请管理已绑定的产品系列记录；如需展示标题，必须先在 Nuxt 模板中新增经确认的版式位置。</p>
               <label v-if="sectionBodyIsRendered(section)" class="full">正文<textarea data-preview-field="body" v-model="section.body" :disabled="!canEdit(pageDraft)" rows="5" maxlength="4000" placeholder="填写访客需要了解的内容"></textarea>
@@ -350,6 +404,7 @@
                   <label>按钮文字<input v-model.trim="section.label" :disabled="!canEdit(pageDraft)" maxlength="24" placeholder="可留空"></label>
                   <label>按钮链接<input v-model.trim="section.href" :disabled="!canEdit(pageDraft)" maxlength="1000" placeholder="例如：/contact"></label>
                 </template>
+                </template>
               </div>
               <details class="advanced-fields section-presentation-editor" open>
                 <summary>版式、位置与文字样式</summary>
@@ -403,13 +458,13 @@
                 <label>视频素材<select :value="newsHeroVideoAssetId(section)" :disabled="!canEdit(pageDraft)" @change="setNewsHeroVideo(section, $event.target.value)"><option value="">沿用官网原首屏视频</option><option v-for="asset in newsHeroVideoOptionsForSection(section)" :key="asset.id" :value="String(asset.id)">{{ pageMediaOptionLabel(asset, 'article') }}</option></select></label>
                 <p class="form-help">仅显示登记为“视频新闻首屏”的视频。草稿视频只在已登录后台的实时预览中显示；审核发布前不会替换公开官网。</p>
               </section>
-              <section v-if="!isHomeHeroSection(section)" class="media-reference-editor" :aria-label="`${section.title || '页面段落'}图片`">
+              <section v-if="!section.type && !isHomeHeroSection(section)" class="media-reference-editor" :aria-label="`${section.title || '页面段落'}图片`">
                 <div class="section-card-heading"><strong>图片与背景</strong><span>{{ section.media.length }}</span></div>
                 <div class="media-reference-add"><select v-model="pageMediaSelection" :disabled="!canEdit(pageDraft)"><option value="">选择{{ pageMediaScopeLabel() }}素材</option><option v-for="asset in pageMediaOptionsForSection(pageMediaScope(), section)" :key="asset.id" :value="String(asset.id)">{{ pageMediaOptionLabel(asset, pageMediaScope()) }}</option></select><button type="button" :disabled="!canEdit(pageDraft) || !pageMediaSelection" @click="addPageMedia(section)">添加素材</button></div>
                 <p v-if="!pageMediaOptionsForSection(pageMediaScope(), section).length" class="form-help">暂无可用于此区块的{{ pageMediaScopeLabel() }}素材。请先在“更多工具 - 媒体资产”上传；草稿素材必须填写当前页面和段落，且只供当前内部预览使用。</p>
                 <div v-for="reference in section.media" :key="reference.media_asset_id" class="media-reference-row"><span>{{ pageMediaLabel(reference) }}</span><label v-if="section.id === 'hero' && pageDraft.slug === 'about'">图片用途<select v-model="reference.role" :disabled="!canEdit(pageDraft)"><option value="backdrop">首屏共享背景</option><option value="background">首屏背景图层</option><option value="foreground">首屏机器前景</option></select></label><label v-else>展示位置<input v-model.trim="reference.role" :disabled="!canEdit(pageDraft)" maxlength="60" placeholder="例如：background、card-1、video、icon-1"></label><button type="button" class="text-action danger" :disabled="!canEdit(pageDraft)" @click="removePageMedia(section, reference.media_asset_id)">移除</button></div>
               </section>
-              <section v-if="pageDraft.slug === 'service' && ['hero', 'support-models', 'support-actions', 'office-directory'].includes(section.id)" class="service-items-editor">
+              <section v-if="!section.type && pageDraft.slug === 'service' && ['hero', 'support-models', 'support-actions', 'office-directory'].includes(section.id)" class="service-items-editor">
                 <div class="section-card-heading"><strong>{{ section.id === 'hero' ? '首屏说明文字' : section.id === 'support-models' ? '设备型号卡片' : section.id === 'support-actions' ? '服务入口卡片' : '区域与直属办事处' }}</strong><button type="button" :disabled="!canEdit(pageDraft)" @click="addServiceItem(section, section.id === 'support-models' ? 'model' : section.id === 'support-actions' ? 'action' : section.id === 'office-directory' ? 'office' : 'copy')">新增</button></div>
                 <div v-for="(item, itemIndex) in section.items || []" :key="`${section.id}-${itemIndex}`" class="service-item-card">
                   <template v-if="section.id === 'hero'"><label>说明文字<input v-model.trim="item.label" :disabled="!canEdit(pageDraft)" maxlength="160"></label></template>
@@ -419,7 +474,7 @@
                   <button type="button" class="text-action danger" :disabled="!canEdit(pageDraft)" @click="removeServiceItem(section, itemIndex)">删除</button>
                 </div>
               </section>
-              <section v-else class="service-items-editor generic-items-editor">
+              <section v-else-if="!section.type" class="service-items-editor generic-items-editor">
                 <div class="section-card-heading"><strong>{{ pageDraft.slug === 'manufacturing' && section.id === 'process' ? '制造工艺节点' : '重复内容（卡片、节点或列表）' }}</strong><button type="button" :disabled="!canEdit(pageDraft)" @click="addGenericSectionItem(section)">{{ pageDraft.slug === 'manufacturing' && section.id === 'process' ? '新增工艺节点' : '新增一项' }}</button></div>
                 <p class="form-help">{{ pageDraft.slug === 'manufacturing' && section.id === 'process' ? '每项都对应工艺画布中的一个固定位置。可维护标题、说明、连接说明和顺序；素材仍须在上方通过受控媒体流程添加。' : '可用于三大理由、首页横移图文、工艺节点、参数说明和画廊项目。首页的“marquee”段落就是横移图文；项目图片请在上方添加素材，并填写相同的“展示位置”。' }}</p>
                 <div v-for="(item, itemIndex) in section.items || []" :key="`${section.id}-generic-${itemIndex}`" class="service-item-card">
@@ -455,6 +510,25 @@
                 </div>
               </details>
             </article>
+
+            <Teleport to="body">
+              <div v-if="sectionLibraryOpen" class="section-library-overlay" @click.self="sectionLibraryOpen = false">
+                <section class="section-library" role="dialog" aria-modal="true" aria-labelledby="section-library-title">
+                  <header>
+                    <div><p class="eyebrow">区块库</p><h3 id="section-library-title">添加区块</h3></div>
+                    <button type="button" aria-label="关闭区块库" @click="sectionLibraryOpen = false">×</button>
+                  </header>
+                  <div v-for="group in sectionLibraryGroups" :key="group.category" class="section-library-group">
+                    <h4>{{ group.category }}</h4>
+                    <button v-for="definition in group.definitions" :key="definition.type" type="button" :disabled="!canEdit(pageDraft)" @click="addLibrarySection(definition.type)">
+                      <strong>{{ definition.label }}</strong>
+                      <span>{{ definition.description }}</span>
+                    </button>
+                  </div>
+                  <p v-if="!sectionLibraryGroups.length" class="form-help">当前页面暂未注册可添加的区块类型。</p>
+                </section>
+              </div>
+            </Teleport>
           </section>
 
           <section class="seo-editor" aria-labelledby="seo-title">
@@ -486,8 +560,8 @@
             <label>系列编码<input v-model.trim="seriesDraft.series_code" :disabled="!canEdit(seriesDraft)" required maxlength="80"></label>
             <label>访问标识<input v-model.trim="seriesDraft.slug" :disabled="!canEdit(seriesDraft)" required pattern="(?:[a-z]|[0-9])(?:[a-z]|[0-9]|-){0,79}" maxlength="80"></label>
             <label>排序<input v-model.number="seriesDraft.sort_order" :disabled="!canEdit(seriesDraft)" type="number" min="0" step="1"></label>
-            <label>受控系列封面<select v-model="seriesDraft.cover_asset" :disabled="!canEdit(seriesDraft)"><option value="">尚未选择</option><option v-if="seriesDraft.cover_asset && !isReviewedMediaAsset(seriesDraft.cover_asset, 'product')" :value="seriesDraft.cover_asset">当前引用 {{ seriesDraft.cover_asset }}（尚未通过选择器核验）</option><option v-for="asset in editableMediaAssetsForPlacement('product', 'product.gallery.image', 'image')" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select></label>
-            <p v-if="!editableMediaAssetsForPlacement('product', 'product.gallery.image', 'image').length" class="form-help full">暂无可用的产品素材。请先在“媒体资产”中登记素材；草稿可用于后台内部预览，公开展示仍需审核发布。</p>
+            <label>受控系列封面<select v-model="seriesDraft.cover_asset" :disabled="!canEdit(seriesDraft)"><option value="">尚未选择</option><option v-if="seriesDraft.cover_asset && !isReviewedMediaAsset(seriesDraft.cover_asset, 'product')" :value="seriesDraft.cover_asset">当前引用 {{ seriesDraft.cover_asset }}（尚未通过选择器核验）</option><option v-for="asset in editableMediaAssetsForPlacement('product', 'product.series.cover', 'image')" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select></label>
+            <p v-if="!editableMediaAssetsForPlacement('product', 'product.series.cover', 'image').length" class="form-help full">暂无可用的系列封面素材。请先登记用途为 product.series.cover 的媒体；尺寸图不会作为系列封面候选。</p>
             <label class="full">定位说明<textarea v-model="seriesDraft.positioning" :disabled="!canEdit(seriesDraft)" rows="3" maxlength="2000"></textarea></label>
             <label>应用场景（每行一项）<textarea v-model="seriesDraft.scenariosText" :disabled="!canEdit(seriesDraft)" rows="5" maxlength="3000" placeholder="例如：精密零件加工"></textarea></label>
             <label>核心能力（每行一项）<textarea v-model="seriesDraft.capabilitiesText" :disabled="!canEdit(seriesDraft)" rows="5" maxlength="3000" placeholder="例如：自动穿丝"></textarea></label>
@@ -651,7 +725,7 @@
             <label class="full">标题<input v-model.trim="editorialDraft.title" :disabled="!canEdit(editorialDraft)" required maxlength="240"></label>
             <label class="full">摘要<textarea v-model="editorialDraft.summary" :disabled="!canEdit(editorialDraft)" rows="3" maxlength="1000"></textarea></label>
             <label class="full">图文正文<textarea v-model="editorialDraft.body" :disabled="!canEdit(editorialDraft)" rows="10" maxlength="30000" placeholder="填写段落；可使用基础 HTML（p、strong、em、ul、ol、a），发布时会自动过滤危险标签。"></textarea><small class="field-help">视频分享只需上传视频并填写标题；正文和字幕属于可选补充。</small></label>
-            <label class="full">正文图片配置（受控媒体 JSON）<textarea v-model="editorialDraft.body_media_text" :disabled="!canEdit(editorialDraft)" rows="3" placeholder='[{"media_asset_id":"123","caption":"图片说明"}]'></textarea><small class="field-help">仅填写已登记的文章图片素材；正文图片可视化画布工具仍在后续切片实现。</small></label>
+            <label class="full">正文图片配置（受控媒体 JSON）<textarea v-model="editorialDraft.body_media_text" :disabled="!canEdit(editorialDraft)" rows="3" placeholder='[{"media_asset_id":"123","caption":"图片说明"}]'></textarea><small class="field-help">仅填写已登记的文章图片素材；保存后正文图片可在新闻详情画布中选中并按“新闻正文图片”用途替换。</small></label>
             <label v-if="editorialDraft.category === 'video'" class="full">字幕或文字稿<textarea v-model="editorialDraft.transcript" :disabled="!canEdit(editorialDraft)" rows="8" maxlength="30000" placeholder="可选：填写字幕或文字稿，便于检索和无障碍阅读。"></textarea></label>
             <section class="media-reference-editor full" aria-label="文章受控媒体">
               <div class="section-card-heading"><strong>{{ editorialDraft.category === 'video' ? '视频与正文受控媒体' : '动态新闻封面图' }}</strong><span>{{ editorialDraft.mediaReferences.length }}</span></div>
@@ -978,11 +1052,13 @@
 </template>
 
 <script setup>
+import { apiStatus, boundedFooterStyleNumber, clone, filterQueueRecords, footerTextStyleDefinitions, cloneVisualState, contentListText, defaultPageMediaRole, emptyMediaDraft, emptyParameter, greatestCommonDivisor, isPageMediaOption, isPageMediaOptionForSection, knowledgeSteps, mediaTypeForFile, nextDraftSlug, nextServiceKey, normalizeArticle, normalizeFooterTextStyles, normalizeKnowledge, normalizeLink, normalizeMediaReferences, normalizeModel, normalizeOptionalSortOrder, normalizePageMedia, normalizePagination, normalizeRepairPage, normalizeReviewRecord, normalizeSections, normalizeSeries, normalizeSettings, parseArray, parseObject, queueCollectionOptions, registeredSectionList, remapVisualListPath, reviewedMediaAssetsForPlacement, textList } from './draft-shapes.js';
 import { filterVisualMediaAssets } from './visual-media-filter.js';
 import { filterPreviewStagingMediaAssets, isPreviewStagingMedia } from './visual-media-staging.js';
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
-import { resolveHomepageReasonMediaPlacement, resolveNewsCoverMediaPlacement, resolveQualificationMediaPlacement, qualificationDraftAssets } from './visual-media-placement.js';
+import { resolveHomepageReasonMediaPlacement, resolveNewsBodyMediaPlacement, resolveNewsCoverMediaPlacement, resolveQualificationMediaPlacement, qualificationDraftAssets } from './visual-media-placement.js';
 import { filterEditorialRecords } from './editorial-record-filter.js';
+import { normalizePageMediaReferences } from './page-media-references.js';
 import { livePreviewGrantIds } from './editorial-preview-grants.js';
 import { useApi } from '@directus/extensions-sdk';
 import { defaultSectionPresentation, normalizeFieldPresentations, normalizeSectionPresentation, validateSectionPresentation } from './section-presentation.js';
@@ -1007,6 +1083,7 @@ import { visualPresentationFieldPath } from './visual-editing-presentation-path.
 import { createManufacturingProcessNode } from './manufacturing-process-node.js';
 import { validateMediaFileContent } from './media-file-validation.js';
 import { canEditVisualCanvas } from './visual-editing-viewport.js';
+import { applyPageSectionPreset, createPageSectionInstance, getPageSectionDefinition, listPageSectionDefinitions, listPageSectionPresets, validatePageSectionInstance } from '../../../../website/shared/page-section-registry.mjs';
 
 const api = useApi();
 const editableStatuses = new Set(['draft', 'rejected', 'unpublished']);
@@ -1041,12 +1118,6 @@ const pageSectionLabels = Object.freeze({
   'about:clients-domestic': '国内客户标题与图库',
   'about:clients-global': '国外客户标题与图库'
 });
-const footerTextStyleDefinitions = Object.freeze([
-  ['products', '产品中心标题'], ['workstation', '灵动切割工作站'], ['auto', 'FR-XS(auto)'], ['pro', 'FR-XS(pro)'], ['ft', 'FT-XS(pro)'], ['fr-y', 'FR-Y'], ['fl', 'FL-XS(pro)'],
-  ['manufacturing', '先进智造标题'], ['cnc', 'CNC车间'], ['metal', '钣金车间'], ['assembly', '装配车间'], ['about', '关于我们标题'], ['honors', '荣誉资质认证'], ['history', '品牌发展历程'],
-  ['address-changshu', '常熟工厂地址'], ['address-kunshan', '昆山工厂地址'], ['phone', '服务热线'], ['email-domestic', '国内邮箱'], ['email-export', '外贸邮箱'],
-  ['purchase-title', '采购区按钮文案'], ['purchase-copy', '采购区标题与说明'], ['purchase-phone', '采购联系电话']
-].map(([id, label]) => Object.freeze({ id, label })));
 const repairPageKeys = new Set(['repair_home', 'repair_new', 'repair_warranty', 'repair_progress']);
 const repairActionCodes = new Set(['01', '02', '09', '10']);
 const activeTab = ref('home');
@@ -1155,6 +1226,12 @@ function siteAreaEntryDescription(entry) {
   return descriptions[entry.label] || manufacturingDescriptions[entry.label] || '打开该栏目对应的内容、图片或资料。';
 }
 const technicalAccess = ref(false);
+// Submitting a draft for review is an editor's routine step, not an administrator
+// tool, so the 内容送审 entry cannot live inside the administrator-only advanced
+// group. Without it the tab was rendered but unreachable — no navigation anywhere
+// set activeTab to 'submit', so the only button that calls submitForReview() was
+// on a screen nobody could open, and the publish chain had no way past `draft`.
+const workflowAccess = ref(false);
 const showAdvanced = ref(false);
 const helpOpen = ref(false);
 const loading = ref(false);
@@ -1164,6 +1241,8 @@ const error = ref('');
 const message = ref('');
 const retrySaveAction = ref(null);
 const pages = ref([]);
+const homepageSections = ref([]);
+const homepageSectionDraft = ref(null);
 const series = ref([]);
 const models = ref([]);
 const parameters = ref([]);
@@ -1193,6 +1272,13 @@ const submissionQueueLoaded = ref(false);
 const selectedSubmissionKey = ref('');
 const submissionNote = ref('');
 const submissionMode = ref('submit');
+// The submission queue spans every content collection and routinely holds
+// hundreds of drafts (the FAQ knowledge base alone contributes 235), so the flat
+// list buried whatever the operator had just created. These two narrow it down
+// client-side — the API cannot sort by date_updated here because that field is
+// not readable through the collection permission.
+const submissionQuery = ref('');
+const submissionCollectionFilter = ref('');
 const settingsDraft = ref(null);
 const selectedPageId = ref('');
 const selectedSeriesId = ref('');
@@ -1207,6 +1293,61 @@ const editorialCategory = ref('');
 const selectedEditorialId = ref('');
 const selectedKnowledgeId = ref('');
 const pageDraft = ref(null);
+const draggingPageSectionKey = ref('');
+const sectionPresetSelection = ref({});
+const pageSectionTypeOptions = computed(() => listPageSectionDefinitions(String(pageDraft.value?.slug || '')));
+const sectionLibraryOpen = ref(false);
+
+// The library groups registered types by their declared category so an operator
+// can browse what a page supports instead of guessing from a flat dropdown.
+const sectionLibraryGroups = computed(() => {
+  const groups = new Map();
+  for (const definition of pageSectionTypeOptions.value) {
+    const category = String(definition.category || '其他');
+    if (!groups.has(category)) groups.set(category, []);
+    groups.get(category).push(definition);
+  }
+  return [...groups.entries()].map(([category, definitions]) => ({ category, definitions }));
+});
+
+// Outline is a full-page map: it always lists every section, even while the
+// editor itself is filtered down to one grouped entry.
+const sectionOutline = computed(() => {
+  const sections = Array.isArray(pageDraft.value?.sections) ? pageDraft.value.sections : [];
+  const slug = String(pageDraft.value?.slug || '');
+  return sections.map((section, index) => {
+    const definition = section?.type ? getPageSectionDefinition(section.type, slug) : null;
+    return {
+      id: String(section?.id || ''),
+      label: pageSectionName(section, index),
+      kind: definition ? definition.label : '模板栏目',
+      registered: Boolean(definition),
+      hidden: Boolean(section?.type) && section.enabled === false,
+      review: section?.requires_claim_review === true
+    };
+  });
+});
+
+function focusPageSection(sectionId) {
+  const key = String(sectionId || '').trim();
+  if (!key) return;
+  // Reveal the whole list first, otherwise the target may be filtered out.
+  if (activePageSection.value && String(activePageSection.value.id || '') !== key) activePageSectionKey.value = '';
+  nextTick(() => {
+    const escaped = typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(key) : key;
+    document.querySelector(`[data-section-key="${escaped}"]`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+}
+
+function openSectionLibrary() {
+  if (!canEdit(pageDraft.value) || !pageSectionTypeOptions.value.length) return;
+  sectionLibraryOpen.value = true;
+}
+
+function addLibrarySection(type) {
+  addPageSection(type);
+  sectionLibraryOpen.value = false;
+}
 const seriesDraft = ref(null);
 const modelDraft = ref(null);
 const modelSupportsWorkstationIntro = computed(() => String(modelDraft.value?.series_code || '').trim() === 'workstation');
@@ -1220,6 +1361,13 @@ const editorialDraft = ref(null);
 const knowledgeDraft = ref(null);
 const selectedReviewRecord = computed(() => reviewQueue.value.find((record) => reviewRecordKey(record) === selectedReviewKey.value) || null);
 const selectedSubmissionRecord = computed(() => submissionQueue.value.find((record) => submissionRecordKey(record) === selectedSubmissionKey.value) || null);
+// Content types present in the current queue, with counts, so the operator can
+// jump straight to the collection they are working on.
+const submissionCollectionOptions = computed(() => queueCollectionOptions(submissionQueue.value));
+const filteredSubmissionQueue = computed(() => filterQueueRecords(submissionQueue.value, {
+  query: submissionQuery.value,
+  collection: submissionCollectionFilter.value
+}));
 const newParameter = ref(emptyParameter());
 const mediaDraft = ref(emptyMediaDraft());
 const previewOpen = ref(false);
@@ -1277,6 +1425,7 @@ const savedDraftFingerprint = ref('');
 const savedDraftSnapshot = ref(null);
 
 const livePreviewFields = Object.freeze({
+  homepage_sections: ['id', 'page_key', 'section_key', 'title', 'kicker', 'body', 'content', 'media', 'sort_order', 'enabled', 'language', 'status', 'publication_state', 'published_at'],
   pages: ['id', 'slug', 'title', 'language', 'sections', 'seo', 'status', 'publication_state', 'published_at'],
   repair_page_configs: ['id', 'page_key', 'title', 'intro', 'hero_asset', 'model_cards', 'action_cards', 'process_steps', 'notices', 'faq_refs', 'seo', 'language', 'status', 'publication_state', 'published_at'],
   product_series: ['id', 'series_code', 'slug', 'name', 'positioning', 'presentation', 'scenarios', 'capabilities', 'cover_asset', 'cover_media_asset_id', 'sort_order', 'language', 'status', 'publication_state', 'published_at'],
@@ -1304,6 +1453,7 @@ const previewKind = computed(() => {
 const previewAvailable = computed(() => Boolean(previewKind.value));
 const previewTitle = computed(() => ({ page: pageDisplayName(pageDraft.value), article: editorialDraft.value?.title, series: seriesDraft.value?.name, model: modelDraft.value?.name }[previewKind.value] || '当前草稿'));
 const websitePreviewTarget = computed(() => {
+  if (activeTab.value === 'homepage_sections' && homepageSectionDraft.value) return { collection: 'homepage_sections', record: homepageSectionDraft.value };
   if (activeTab.value === 'pages' && pageDraft.value) return { collection: 'pages', record: pageDraft.value };
   if (activeTab.value === 'series' && seriesDraft.value) return { collection: 'product_series', record: seriesDraft.value };
   if (activeTab.value === 'models' && modelDraft.value) return { collection: 'product_models', record: modelDraft.value };
@@ -1320,6 +1470,7 @@ const websitePreviewAvailable = computed(() => {
   return Boolean(target?.record?.id && editableStatuses.has(target.record.status) && target.record.publication_state !== 'published');
 });
 function websitePreviewContextFor(target, requestedSectionKey = activePageSectionKey.value) {
+  if (target?.collection === 'homepage_sections') return { sectionKey: target.record.section_key };
   const articleSectionKey = articlePreviewSectionKey(target);
   if (articleSectionKey) return { sectionKey: articleSectionKey };
   if (target?.collection !== 'pages') return requestedSectionKey ? { sectionKey: requestedSectionKey } : {};
@@ -1348,6 +1499,7 @@ const livePreviewIdentity = computed(() => websitePreviewAvailable.value && webs
 const visualRecordChoices = computed(() => {
   const collection = String(websitePreviewTarget.value?.collection || '').trim();
   const recordsByCollection = {
+    homepage_sections: homepageSections.value,
     pages: pages.value,
     product_series: series.value,
     product_models: models.value,
@@ -1396,13 +1548,16 @@ watch(visualDevice, () => nextTick(fitVisualCanvas));
 onBeforeUnmount(() => canvasResizeObserver?.disconnect());
 function visualMediaFilterOptions() {
   const element = selectedVisualElement.value || {};
-  const collection = String(websitePreviewTarget.value?.collection || '').trim();
-  const slug = String(websitePreviewTarget.value?.record?.slug || '').trim();
-  const recordCategory = String(websitePreviewTarget.value?.record?.category || '').trim();
-  const qualificationPlacement = resolveQualificationMediaPlacement({ collection, type: websitePreviewTarget.value?.record?.type, fieldPath: element.fieldPath, elementType: element.elementType });
+  const target = selectedVisualRecord.value || websitePreviewTarget.value;
+  const collection = String(target?.collection || '').trim();
+  const slug = String(target?.record?.slug || target?.record?.page_key || '').trim();
+  const recordCategory = String(target?.record?.category || '').trim();
+  const qualificationPlacement = resolveQualificationMediaPlacement({ collection, type: target?.record?.type, fieldPath: element.fieldPath, elementType: element.elementType });
   if (qualificationPlacement) return qualificationPlacement;
   const newsCoverPlacement = resolveNewsCoverMediaPlacement({ collection, category: recordCategory, fieldPath: element.fieldPath, elementType: element.elementType });
   if (newsCoverPlacement) return newsCoverPlacement;
+  const newsBodyPlacement = resolveNewsBodyMediaPlacement({ collection, category: recordCategory, fieldPath: element.fieldPath, elementType: element.elementType });
+  if (newsBodyPlacement) return newsBodyPlacement;
   const articleMediaField = /^media\.\d+\.path$/.test(String(element.fieldPath || '').trim());
   const homepageReasonPlacement = resolveHomepageReasonMediaPlacement({
     collection,
@@ -1412,8 +1567,11 @@ function visualMediaFilterOptions() {
     elementType: String(element.elementType || '').trim()
   });
   if (homepageReasonPlacement) return homepageReasonPlacement;
+  if (collection === 'pages' && slug === 'home' && element.sectionKey === 'history') {
+    return {scope:'brand',pageKey:'about',sectionKey:'history',elementType:'image',placementKey:element.mediaRole === 'icon' ? 'about.timeline.icon' : 'about.timeline.background'};
+  }
   if (collection === 'product_series' && String(element.mediaRole || '').trim() === 'cover') {
-    return { scope: 'product', placementKey: 'product.gallery.image', elementType: 'image', pageKey: 'product', sectionKey: '' };
+    return { scope: 'product', placementKey: 'product.series.cover', elementType: 'image', pageKey: 'product', sectionKey: '' };
   }
   if (collection === 'product_models' && ['feature', 'drawing', 'technical', 'machine'].includes(String(element.mediaRole || '').trim())) {
     return { scope: 'product', placementKey: 'product.gallery.image', elementType: 'image', pageKey: 'product', sectionKey: '' };
@@ -1489,6 +1647,7 @@ const selectedVisualRecord = computed(() => {
   const selection = selectedVisualElement.value || {};
   const resolved = resolveVisualEditingRecord({
     pages: preferVisualDraftRecord(pages.value, pageDraft.value),
+    homepageSections: homepageSections.value,
     series: preferVisualDraftRecord(series.value, seriesDraft.value),
     models: preferVisualDraftRecord(models.value, modelDraft.value),
     parameters: parameters.value,
@@ -1555,6 +1714,7 @@ const selectedVisualFieldOptions = computed(() => {
 const advancedTabs = new Set(['media', 'knowledge', 'models', 'review', 'settings']);
 
 function currentDraftState() {
+  if (activeTab.value === 'homepage_sections') return homepageSectionDraft.value;
   if (activeTab.value === 'pages') return pageDraft.value;
   if (activeTab.value === 'series') return seriesDraft.value;
   if (activeTab.value === 'models') return { model: modelDraft.value, parameters: parameters.value, newParameter: newParameter.value };
@@ -1580,10 +1740,6 @@ function markDraftSaved() {
   resetVisualHistory();
 }
 
-function cloneVisualState(value) {
-  return cloneVisualSnapshot(value);
-}
-
 function resetVisualHistory() {
   const history = createVisualHistory(currentDraftState());
   visualHistory.value = history.entries;
@@ -1599,7 +1755,8 @@ function recordVisualHistory() {
 function applyVisualState(snapshot) {
   if (!snapshot) return;
   suppressDraftHistory = true;
-  if (activeTab.value === 'pages') pageDraft.value = snapshot;
+  if (activeTab.value === 'homepage_sections') homepageSectionDraft.value = snapshot;
+  else if (activeTab.value === 'pages') pageDraft.value = snapshot;
   else if (activeTab.value === 'series') seriesDraft.value = snapshot;
   else if (activeTab.value === 'models') { modelDraft.value = snapshot.model; parameters.value = snapshot.parameters || []; newParameter.value = snapshot.newParameter || emptyParameter(); }
   else if (activeTab.value === 'company') companyDraft.value = snapshot;
@@ -1662,8 +1819,8 @@ async function saveVisualDraft() {
     if (!error.value) retrySaveAction.value = null;
     return;
   }
-  const handlers = { pages: savePage, series: saveSeries, models: saveModel, company: saveCompanyRecord, service: saveServiceRecord, repair: saveRepairPage, editorial: saveEditorialRecord, knowledge: saveKnowledge, settings: saveSettings };
-  const handler = handlers[activeTab.value];
+  const handlers = { pages: savePage, homepage_sections: saveHomepageSection, series: saveSeries, models: saveModel, company: saveCompanyRecord, service: saveServiceRecord, repair: saveRepairPage, editorial: saveEditorialRecord, knowledge: saveKnowledge, settings: saveSettings };
+  const handler = handlers[selectedVisualRecord.value?.collection] || handlers[activeTab.value];
   if (typeof handler !== 'function') return;
   retrySaveAction.value = saveVisualDraft;
   await handler();
@@ -1756,15 +1913,6 @@ function commitVisualTextStyle() {
   })) return;
   recordVisualHistory();
   queueLivePreviewUpdate(selectedVisualRecord.value);
-}
-
-function remapVisualListPath(path, arrayPath, previousIndex, nextIndex) {
-  const parts = String(path || '').trim().split('.').filter(Boolean);
-  const arrayParts = String(arrayPath || '').trim().split('.').filter(Boolean);
-  if (arrayParts.length && arrayParts.every((part, index) => parts[index] === part) && parts[arrayParts.length] === String(previousIndex)) {
-    parts[arrayParts.length] = String(nextIndex);
-  }
-  return parts.join('.');
 }
 
 function moveSelectedVisualListItem(direction) {
@@ -1896,6 +2044,7 @@ function clearVisualSelection() {
 }
 
 function visualRecordLabel(collection, record) {
+  if (collection === 'homepage_sections') return record.title || record.section_key || '首页独立区块';
   if (collection === 'pages') return pageDisplayName(record);
   if (collection === 'product_series') return record.name || record.series_code || '未命名产品系列';
   if (collection === 'product_models') return record.name || record.model_code || '未命名型号';
@@ -2106,7 +2255,6 @@ function buildLivePreviewRecord(target = websitePreviewTarget.value) {
     if (/^[1-9]\d*$/.test(coverAssetId)) record.cover_media_asset_id = coverAssetId;
   } else if (collection === 'product_models') {
     Object.assign(record, productModelLivePreviewRecord(record, parameters.value));
-    record.body_media = parseArray(record.body_media).map((reference) => ({ ...reference, ...(previewMediaAsset(reference?.media_asset_id) || {}) }));
     record.media = normalizeMediaReferences(record.mediaReferences || record.media || []).flatMap((reference) => {
       const media = previewMediaAsset(reference.media_asset_id);
       return media ? [{ ...reference, ...media }] : [reference];
@@ -2121,6 +2269,7 @@ function buildLivePreviewRecord(target = websitePreviewTarget.value) {
     if (technicalImage) configuration.labels = { ...configuration.labels, technicalImage };
     record.configuration = configuration;
   } else if (collection === 'articles') {
+    record.body_media = parseArray(record.body_media).map((reference) => ({ ...reference, ...(previewMediaAsset(reference?.media_asset_id) || {}) }));
     // Article media references may point at a private draft video or image.
     // Resolve them to the signed preview proxy before the snapshot is sent to
     // Nuxt; retaining the asset id keeps the preview authorizer's allow-list
@@ -2366,11 +2515,23 @@ function handleLivePreviewFrameLoad() {
   if (livePreviewStatus.value === 'idle') livePreviewStatus.value = 'opening';
 }
 
+async function openHomepageSection(record) {
+  if (!confirmDiscardChanges('打开首页独立区块')) return;
+  clearVisualSelection();
+  homepageSectionDraft.value = clone(record);
+  activeTab.value = 'homepage_sections';
+  activePageSectionKey.value = record.section_key;
+  markDraftSaved();
+  await nextTick();
+  if (!liveWebsitePreviewVisible.value) startLiveWebsitePreview();
+}
+
 function activateVisualEditingTarget(selection, { discardConfirmed = false } = {}) {
   const collection = String(selection?.collection || '').trim();
   const itemId = String(selection?.itemId || '').trim();
   const state = {
     pages: pages.value,
+    homepageSections: homepageSections.value,
     series: series.value,
     models: models.value,
     parameters: parameters.value,
@@ -2396,6 +2557,14 @@ function activateVisualEditingTarget(selection, { discardConfirmed = false } = {
     && (String(currentTarget.collection) !== collection || String(currentTarget.record?.id) !== itemId)
   );
   const resolvedItemId = resolved.record.id;
+  if (collection === 'homepage_sections') {
+    if (activeTab.value !== 'homepage_sections' || String(homepageSectionDraft.value?.id) !== String(resolvedItemId)) {
+      homepageSectionDraft.value = clone(resolved.record);
+      activeTab.value = 'homepage_sections';
+      markDraftSaved();
+    }
+    return { collection, record: homepageSectionDraft.value };
+  }
   // postMessage turns numeric Directus IDs into strings. Re-selecting the
   // current model must retain its draft and mounted live-preview iframe.
   if (collection === 'product_models' && activeTab.value === 'models' && String(selectedModelId.value) === String(resolvedItemId) && modelDraft.value) {
@@ -2596,93 +2765,8 @@ function handleBeforeUnload(event) {
   event.returnValue = '';
 }
 
-function clone(value) {
-  return value == null ? value : JSON.parse(JSON.stringify(value));
-}
-
-function parseObject(value, fallback = {}) {
-  if (value && typeof value === 'object' && !Array.isArray(value)) return clone(value);
-  if (typeof value === 'string') {
-    try { const parsed = JSON.parse(value); return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : fallback; } catch { return fallback; }
-  }
-  return fallback;
-}
-
-function parseArray(value) {
-  if (Array.isArray(value)) return clone(value);
-  if (typeof value === 'string') {
-    try { const parsed = JSON.parse(value); return Array.isArray(parsed) ? parsed : []; } catch { return []; }
-  }
-  return [];
-}
-
-function textList(value) {
-  return parseArray(value).map((item) => typeof item === 'string' ? item.trim() : '').filter(Boolean).join('\n');
-}
-
 function fromTextList(value) {
   return String(value || '').split(/\r?\n/).map((item) => item.trim()).filter(Boolean);
-}
-
-function contentListText(value) {
-  return parseArray(value).map((item) => {
-    if (typeof item === 'string') return item.trim();
-    return typeof item?.content === 'string' ? item.content.trim() : '';
-  }).filter(Boolean).join('\n');
-}
-
-function knowledgeSteps(record) {
-  const steps = parseArray(record.troubleshooting_steps);
-  if (steps.length === 1 && steps[0] && typeof steps[0] === 'object' && typeof steps[0].content === 'string') {
-    return { text: steps[0].content, type: String(steps[0].type || 'manual_step') };
-  }
-  return { text: contentListText(steps), type: 'manual_step' };
-}
-
-function normalizePageMedia(value) {
-  const seen = new Set();
-  return parseArray(value).flatMap((entry) => {
-    const mediaAssetId = typeof entry?.media_asset_id === 'string' || Number.isSafeInteger(entry?.media_asset_id)
-      ? String(entry.media_asset_id).trim() : '';
-    if (!mediaAssetId || seen.has(mediaAssetId)) return [];
-    seen.add(mediaAssetId);
-    return [{ media_asset_id: mediaAssetId, role: typeof entry?.role === 'string' ? entry.role.trim().slice(0, 60) : '' }];
-  });
-}
-
-function normalizeSections(value) {
-  return parseArray(value).filter((section) => section && typeof section === 'object').map((section) => ({
-    ...section,
-    id: String(section.id || ''),
-    kicker: typeof section.kicker === 'string' ? section.kicker : '',
-    label: typeof section.label === 'string' ? section.label : '',
-    title: typeof section.title === 'string' ? section.title : '',
-    body: typeof section.body === 'string' ? section.body : '',
-    description: typeof section.description === 'string' ? section.description : '',
-    content: parseObject(section.content),
-    value: typeof section.value === 'number' && Number.isFinite(section.value) ? section.value : (typeof section.value === 'string' ? section.value : ''),
-    unit: typeof section.unit === 'string' ? section.unit : '',
-    items: parseArray(section.items).map((item, itemIndex) => ({
-      ...item,
-      sort_order: Number.isInteger(Number(item?.sort_order)) ? Number(item.sort_order) : itemIndex,
-      ...normalizeSectionPresentation(item)
-    })),
-    media: normalizePageMedia(section.media),
-    pagination: normalizePagination(section.pagination),
-    ...normalizeSectionPresentation(section)
-  }));
-}
-
-function normalizePagination(value) {
-  const source = value && typeof value === 'object' && !Array.isArray(value) ? value : {};
-  const pageSize = Number(source.page_size);
-  return {
-    page_size: Number.isInteger(pageSize) && pageSize >= 1 && pageSize <= 6 ? pageSize : 6,
-    sort: ['manual', 'published_at_desc', 'sort_order_asc'].includes(source.sort) ? source.sort : 'manual',
-    previous_label: String(source.previous_label || '上一页').slice(0, 120),
-    next_label: String(source.next_label || '下一页').slice(0, 120),
-    empty_label: String(source.empty_label || '').slice(0, 120)
-  };
 }
 
 function normalizePage(record) {
@@ -2708,28 +2792,6 @@ function normalizePage(record) {
   return normalized;
 }
 
-function normalizeSeries(record) {
-  const presentationSource = parseObject(record.presentation);
-  const fieldPresentation = normalizeFieldPresentations(presentationSource.field_presentation, ['name', 'positioning']);
-  return {
-    ...clone(record),
-    presentation: Object.keys(fieldPresentation).length ? { field_presentation: fieldPresentation } : {},
-    scenariosText: textList(record.scenarios), capabilitiesText: textList(record.capabilities),
-    sort_order: Number.isFinite(Number(record.sort_order)) ? Number(record.sort_order) : 0
-  };
-}
-
-function normalizeMediaReferences(value) {
-  const seen = new Set();
-  return parseArray(value).flatMap((entry) => {
-    const mediaAssetId = typeof entry?.media_asset_id === 'string' || Number.isSafeInteger(entry?.media_asset_id)
-      ? String(entry.media_asset_id).trim() : '';
-    if (!mediaAssetId || seen.has(mediaAssetId)) return [];
-    seen.add(mediaAssetId);
-    return [{ media_asset_id: mediaAssetId }];
-  });
-}
-
 function normalizeCompany(record) {
   const mediaField = companyMode.value === 'qualifications' ? record.assets : record.media;
   if (companyMode.value === 'qualifications') {
@@ -2748,48 +2810,6 @@ function mediaReferenceLabel(reference, scope) {
   const asset = [...reviewedMediaAssets(scope), ...mediaCandidates.value].find((candidate) => String(candidate.id) === String(reference.media_asset_id));
   if (!asset) return `当前引用 ${reference.media_asset_id}（尚未通过此选择器验证）`;
   return isPreviewStagingMedia(asset, { scope }) ? `${mediaAssetLabel(asset)}（草稿素材，仅当前内部预览）` : mediaAssetLabel(asset);
-}
-
-function normalizeModel(record) {
-  const source = parseObject(record.configuration);
-  const labels = parseObject(source.labels);
-  const fieldPresentation = normalizeProductModelFeaturePresentation(source);
-  return {
-    ...clone(record),
-    configurationSource: clone(source),
-    configuration: {
-      intro: {
-        title: String(source.intro?.title || ''),
-        subtitle: String(source.intro?.subtitle || ''),
-        scene: String(source.intro?.scene || ''),
-        body: String(source.intro?.body || '')
-      },
-      machine_asset_id: String(source.machine_asset_id || ''),
-      labels: {
-        technical: String(labels.technical || ''),
-        drawing: String(labels.drawing || ''),
-        technical_image_asset_id: String(labels.technical_image_asset_id || '')
-      },
-      features: parseArray(source.features).map((item) => ({ label: String(item?.label || ''), detail: String(item?.detail || ''), note: String(item?.note || ''), image: String(item?.image || ''), media_asset_id: String(item?.media_asset_id || '') })),
-      drawings: parseArray(source.drawings).map((item) => ({ title: String(item?.title || item?.label || ''), caption: String(item?.caption || item?.description || ''), media_asset_id: String(item?.media_asset_id || '') })),
-      ...(Object.keys(fieldPresentation).length ? { field_presentation: fieldPresentation } : {})
-    },
-    resources: parseArray(record.resources).map((item) => ({ title: String(item?.title || ''), type: String(item?.type || ''), url: String(item?.url || item?.path || ''), media_asset_id: String(item?.media_asset_id || '') })),
-    mediaReferences: normalizeMediaReferences(record.media)
-  };
-}
-
-function emptyParameter() {
-  return { group_name: '', field_name: '', value: '', unit: '', sort_order: 0, test_conditions: '' };
-}
-
-function emptyMediaDraft() {
-  return {
-    file: null, usage_scope: 'product', media_type: '', placement_key: '', page_key: '', section_key: '',
-    width: 0, height: 0, duration_seconds: 0, aspect_ratio: '', poster_asset_id: '', sort_order: 0,
-    enabled: true, autoplay: false, muted: true, loop: false, title: '', description: '', transcript: '',
-    copyright_status: 'owned', alt_text: '', authorization_note: ''
-  };
 }
 
 const mediaUploadRules = Object.freeze({
@@ -2818,6 +2838,8 @@ const mediaPlacementOptions = Object.freeze([
   { key: 'home.hero.poster', label: '首页首屏视频海报', mediaType: 'image', minWidth: 1920, minHeight: 1080, aspectRatio: '16:9', maxBytes: 25 * 1024 * 1024 },
   { key: 'news.hero.video', label: '视频新闻首屏', mediaType: 'video', minWidth: 1920, minHeight: 1080, aspectRatio: '16:9', maxBytes: 500 * 1024 * 1024, posterRequired: true, autoplay: true, muted: true },
   { key: 'news.dynamic_news.cover', label: '动态新闻封面图', mediaType: 'image', minWidth: 1600, minHeight: 900, aspectRatio: '16:9', maxBytes: 25 * 1024 * 1024 },
+  { key: 'news.article.body', label: '新闻正文图片', mediaType: 'image', minWidth: 800, minHeight: 450, aspectRatio: '按原图比例', maxBytes: 25 * 1024 * 1024 },
+  { key: 'news.article.poster', label: '新闻视频封面', mediaType: 'image', minWidth: 1280, minHeight: 720, aspectRatio: '16:9', maxBytes: 25 * 1024 * 1024 },
   { key: 'news.video_share.list', label: '视频分享列表', mediaType: 'video', minWidth: 1280, minHeight: 720, aspectRatio: '16:9', maxBytes: 500 * 1024 * 1024, maxDurationSeconds: 600, posterRequired: false, transcriptRequired: false },
   { key: 'service.tutorial.video', label: '服务教学视频', mediaType: 'video', minWidth: 1280, minHeight: 720, aspectRatio: '16:9', maxBytes: 500 * 1024 * 1024, posterRequired: true, transcriptRequired: true },
   { key: 'service.tutorial.poster', label: '服务教学视频海报', mediaType: 'image', minWidth: 1280, minHeight: 720, aspectRatio: '16:9', maxBytes: 25 * 1024 * 1024 },
@@ -2852,6 +2874,8 @@ const mediaPlacementContexts = Object.freeze({
   'home.reason.icon': { pageKey: 'home' },
   'news.hero.video': { pageKey: 'news', sectionKey: 'hero' },
   'news.dynamic_news.cover': { pageKey: 'news', sectionKey: 'dynamic-news' },
+  'news.article.body': { pageKey: 'news', sectionKey: 'article' },
+  'news.article.poster': { pageKey: 'news', sectionKey: 'article' },
   'news.video_share.list': { pageKey: 'news', sectionKey: 'video-sharing' },
   'about.timeline.background': { pageKey: 'about', sectionKey: 'history' },
   'about.timeline.icon': { pageKey: 'about', sectionKey: 'history' },
@@ -2872,6 +2896,7 @@ const mediaPlacementContexts = Object.freeze({
   'manufacturing.equipment.image': { pageKey: 'manufacturing', sectionKey: 'core-equipment' },
   'manufacturing.gallery.video': { pageKey: 'manufacturing', sectionKey: 'core-equipment' },
   'product.gallery.image': { pageKey: 'product' },
+  'product.series.cover': { pageKey: 'product' },
   'product.document': { pageKey: 'product' },
   'service.document': { pageKey: 'service' },
   'service.tutorial.poster': { pageKey: 'service', sectionKey: 'download' },
@@ -2886,7 +2911,10 @@ function applyMediaPlacementContext(placementKey, force = false) {
   if (force || !mediaDraft.value.section_key) mediaDraft.value.section_key = context.sectionKey || '';
 }
 
-const mediaScopePageKeys = Object.freeze({ homepage: 'home', product: 'product', manufacturing: 'manufacturing', news: 'news', about: 'about', service: 'service' });
+// 使用范围 → 页面 slug。取值必须用服务端的词表：视频新闻是 `article`、关于瑞钧是 `brand`，
+// 与 content-preview/page-preview-media-policy.mjs 的 pageScopes 保持一致。
+// 曾经这里写成 `news` / `about`，导致这两个页面选择时上传必然 400。
+const mediaScopePageKeys = Object.freeze({ homepage: 'home', product: 'product', manufacturing: 'manufacturing', article: 'news', brand: 'about', service: 'service' });
 const compatibleMediaPlacements = computed(() => mediaPlacementOptions.filter((option) => {
   const context = mediaPlacementContexts[option.key];
   return (!mediaDraft.value.media_type || option.mediaType === mediaDraft.value.media_type)
@@ -2905,13 +2933,21 @@ const selectedMediaPlacementHelp = computed(() => {
   const spec = selectedMediaPlacement.value;
   if (!spec) return '选择文件后再选择对应的官网展示位置。';
   const requirements = [];
-  if (spec.minWidth && spec.minHeight) requirements.push(`至少 ${spec.minWidth} x ${spec.minHeight} px`);
+  // 尺寸只是建议，不再拦截：运营手里常常只有一种素材，卡尺寸等于没法上线。
+  if (spec.minWidth && spec.minHeight) requirements.push(`建议 ${spec.minWidth} x ${spec.minHeight} px 以上（不达标也能上传，只是显示可能偏模糊）`);
   if (spec.aspectRatio) requirements.push(`建议比例 ${spec.aspectRatio}`);
   requirements.push(`最大 ${readableFileSize(spec.maxBytes)}`);
-  if (spec.maxDurationSeconds) requirements.push(`时长不超过 ${spec.maxDurationSeconds} 秒`);
+  if (spec.maxDurationSeconds) requirements.push(`建议时长不超过 ${spec.maxDurationSeconds} 秒`);
   if (spec.posterRequired) requirements.push('必须选择海报图片');
   if (spec.transcriptRequired) requirements.push('必须填写字幕或文字稿');
-  return `${spec.label}：${requirements.join('；')}。`;
+
+  // 已经量出实际尺寸时，直接对比给出结论，省得运营自己算。
+  const measured = [];
+  if (Number.isInteger(mediaDraft.value.width) && mediaDraft.value.width > 0
+    && Number.isInteger(mediaDraft.value.height) && mediaDraft.value.height > 0) {
+    measured.push(`当前素材 ${mediaDraft.value.width} x ${mediaDraft.value.height} px`);
+  }
+  return `${spec.label}：${requirements.join('；')}。${measured.length ? measured.join('；') + '。' : ''}`;
 });
 const mediaMetadataLabel = computed(() => {
   if (mediaDraft.value.media_type === 'document') return 'PDF 文档';
@@ -2956,25 +2992,12 @@ function readableFileSize(value) {
 }
 
 function usageScopeLabel(scope) {
-  return { homepage: '网站主页', product: '产品展示', manufacturing: '先进制造', news: '视频新闻', about: '关于瑞钧', service: '服务支持' }[scope] || scope || '未分类';
+  return { homepage: '网站主页', product: '产品展示', manufacturing: '先进制造', article: '视频新闻', brand: '关于瑞钧', service: '服务支持' }[scope] || scope || '未分类';
 }
 
 function videoPosterAssetLabel(asset) {
   const internalDraft = asset?.status !== 'published' || asset?.publication_state !== 'published';
   return `${mediaAssetLabel(asset)}${internalDraft ? '（仅内部预览草稿）' : ''}`;
-}
-
-function greatestCommonDivisor(left, right) {
-  let a = Math.abs(Math.round(left)); let b = Math.abs(Math.round(right));
-  while (b) [a, b] = [b, a % b];
-  return a || 1;
-}
-
-function mediaTypeForFile(file) {
-  if (String(file?.type || '').startsWith('image/')) return 'image';
-  if (String(file?.type || '').startsWith('video/')) return 'video';
-  if (file?.type === 'application/pdf') return 'document';
-  return '';
 }
 
 async function readMediaMetadata(file, mediaType) {
@@ -3028,9 +3051,10 @@ function validateMediaCandidate() {
   if (fileError) return fileError;
   const spec = selectedMediaPlacement.value;
   if (!spec || spec.mediaType !== mediaDraft.value.media_type) return '请选择与文件类型一致的官网展示位置。';
-  if (spec.minWidth && (mediaDraft.value.width < spec.minWidth || mediaDraft.value.height < spec.minHeight)) return `${spec.label}要求至少 ${spec.minWidth} x ${spec.minHeight} px。`;
-  if (mediaDraft.value.file.size > spec.maxBytes) return `${spec.label}文件超过 ${readableFileSize(spec.maxBytes)}。`;
-  if (spec.maxDurationSeconds && mediaDraft.value.duration_seconds > spec.maxDurationSeconds) return `${spec.label}时长不能超过 ${spec.maxDurationSeconds} 秒。`;
+  // 尺寸 / 体积 / 时长不再拦截（与后端 media-asset-governance.mjs 的策略一致）：
+  // 这些只影响画质，运营手里常常只有一种素材，卡住等于没法上线。
+  // 画质差距由 selectedMediaPlacementHelp 以提示形式展示。
+  // 下面这些保留，因为缺了页面会直接坏掉。
   if (spec.posterRequired && !mediaDraft.value.poster_asset_id) return `${spec.label}必须选择一张已发布图片作为海报。`;
   if (spec.transcriptRequired && !String(mediaDraft.value.transcript || '').trim()) return `${spec.label}必须填写字幕或文字稿。`;
   if (spec.autoplay && !mediaDraft.value.autoplay) return `${spec.label}必须启用自动播放。`;
@@ -3093,83 +3117,6 @@ function normalizeService(record) {
   if (serviceMode.value === 'service_resources') copy.applicableModelsText = textList(copy.applicable_models);
   if (serviceMode.value === 'service_locations') copy.contact = { ...parseObject(copy.contact), name: String(parseObject(copy.contact).name || ''), phone: String(parseObject(copy.contact).phone || ''), email: String(parseObject(copy.contact).email || ''), address: String(parseObject(copy.contact).address || '') };
   return copy;
-}
-
-function normalizeLink(value) {
-  const link = parseObject(value);
-  return { ...link, label: String(link.label || ''), href: String(link.href || '') };
-}
-
-function boundedFooterStyleNumber(value, minimum, maximum, fallback) {
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? Math.min(Math.max(parsed, minimum), maximum) : fallback;
-}
-
-function normalizeFooterTextStyles(value) {
-  const source = parseObject(value);
-  return Object.fromEntries(footerTextStyleDefinitions.map(({ id }) => {
-    const style = parseObject(source[id]);
-    const color = /^#[0-9a-f]{6}$/i.test(String(style.color || '').trim()) ? String(style.color).trim().toUpperCase() : '';
-    return [id, {
-      enabled: style.enabled === true,
-      weight: [300, 400, 500, 700, 800].includes(Number(style.weight)) ? Number(style.weight) : 400,
-      size_desktop: boundedFooterStyleNumber(style.size_desktop, 12, 72, 16),
-      size_mobile: boundedFooterStyleNumber(style.size_mobile, 12, 40, 14),
-      line_height: boundedFooterStyleNumber(style.line_height, 1, 2.2, 1.35),
-      color
-    }];
-  }));
-}
-
-function normalizeSettings(record) {
-  const visualDefaults = mergeVisualSiteSettingsDefaults(record);
-  const footer = parseObject(visualDefaults.footer);
-  const brand = parseObject(record.brand);
-  const contacts = parseObject(visualDefaults.contacts);
-  const headerCta = parseObject(contacts.header_cta);
-  const columns = parseArray(footer.columns).map((column, index) => ({
-    title: String(column?.title || ''),
-    sort_order: Number.isFinite(Number(column?.sort_order)) ? Number(column.sort_order) : index,
-    links: parseArray(column?.links).map(normalizeLink)
-  }));
-  return {
-    ...clone(record),
-    navigation: parseArray(record.navigation).map(normalizeLink),
-    footer: { ...footer, primary_links: parseArray(footer.primary_links).map(normalizeLink), columns, text_styles: normalizeFooterTextStyles(footer.text_styles), purchase_label: String(footer.purchase_label || ''), purchase_title: String(footer.purchase_title || ''), purchase_subtitle: String(footer.purchase_subtitle || ''), purchase_phone: String(footer.purchase_phone || ''), copyright: String(footer.copyright || ''), address_icon_asset: String(footer.address_icon_asset || ''), phone_icon_asset: String(footer.phone_icon_asset || ''), email_icon_asset: String(footer.email_icon_asset || ''), requires_business_review: footer.requires_business_review === true },
-    brand: { ...brand, display_name: String(brand.display_name || ''), logo_asset: String(brand.logo_asset || ''), footer_logo_asset: String(brand.footer_logo_asset || '') },
-    contacts: { ...contacts, service_phone: String(contacts.service_phone || ''), domestic_phone: String(contacts.domestic_phone || ''), export_phone: String(contacts.export_phone || ''), domestic_email: String(contacts.domestic_email || ''), export_email: String(contacts.export_email || ''), language_label: String(contacts.language_label || ''), addressesText: textList(contacts.addresses), header_cta: { ...headerCta, label: String(headerCta.label || ''), href: String(headerCta.href || '') } },
-    languagesText: textList(record.languages)
-  };
-}
-
-function normalizeOptionalSortOrder(value) {
-  if (value === null || value === undefined || String(value).trim() === '') return null;
-  const numeric = Number(value);
-  return Number.isInteger(numeric) && numeric >= 0 ? numeric : null;
-}
-
-function normalizeArticle(record) {
-  const seo = parseObject(record.seo);
-  const publishedAt = String(record.published_at || '').slice(0, 10);
-  const displayDate = String(record.display_date || publishedAt).slice(0, 10);
-  return { ...clone(record), category: record.category === 'video' ? 'video' : 'news', display_date: displayDate, sort_order: normalizeOptionalSortOrder(record.sort_order), published_at: publishedAt, transcript: String(record.transcript || ''), body_media_text: JSON.stringify(Array.isArray(record.body_media) ? record.body_media : [], null, 2), mediaReferences: normalizeMediaReferences(record.media), seo: { ...seo, title: typeof seo.title === 'string' ? seo.title : '', description: typeof seo.description === 'string' ? seo.description : '', keywords: Array.isArray(seo.keywords) ? seo.keywords.join(', ') : String(seo.keywords || '') } };
-}
-
-function normalizeKnowledge(record) {
-  const steps = knowledgeSteps(record);
-  return {
-    ...clone(record),
-    applicableModelsText: textList(record.applicable_models),
-    errorCodesText: textList(record.error_codes),
-    troubleshootingStepsText: steps.text,
-    troubleshootingStepType: steps.type,
-    safetyPreconditionsText: contentListText(record.safety_preconditions),
-    mediaReferences: normalizeMediaReferences(record.media),
-    symptoms: String(record.symptoms || ''),
-    escalation_guidance: String(record.escalation_guidance || ''),
-    version: String(record.version || ''),
-    technical_reviewer: String(record.technical_reviewer || '')
-  };
 }
 
 function riskLabel(value) {
@@ -3249,15 +3196,6 @@ function setNewsHeroVideo(section, assetId) {
     return;
   }
   if (error.value === '该素材不是视频新闻首屏视频，未保存修改。') error.value = '';
-}
-
-function isPageMediaOption(assetId, scope) {
-  return pageMediaOptions(scope).some((asset) => String(asset.id) === String(assetId));
-}
-
-function isPageMediaOptionForSection(assetId, scope, section) {
-  return isPageMediaOption(assetId, scope)
-    && pageMediaOptionsForSection(scope, section).some((asset) => String(asset.id) === String(assetId));
 }
 
 function pageMediaOptionLabel(asset, scope) {
@@ -3344,10 +3282,6 @@ function modelDrawingMediaAssetLabel(asset) {
   return isPreviewStagingMedia(asset, { scope: 'product', placementKey: 'product.gallery.image', elementType: 'image' })
     ? `${label}（仅内部预览草稿）`
     : label;
-}
-
-function reviewedMediaAssetsForPlacement(scope, placementKey) {
-  return reviewedMediaAssets(scope).filter((asset) => asset.placement_key === placementKey);
 }
 
 function qualificationMediaAssets() {
@@ -3444,7 +3378,19 @@ function nativeItemPath(collection, id) {
 }
 
 function apiError(reason, fallback) {
+  const status = apiStatus(reason);
+  if (status === 401 || status === 403) {
+    return '登录会话已失效或当前账号没有保存权限。未保存内容仍保留在页面中，请先复制重要内容，再重新登录后保存。';
+  }
   return reason?.response?.data?.errors?.[0]?.message || fallback;
+}
+
+function setSaveError(reason, fallback) {
+  error.value = apiError(reason, fallback);
+  // Keep the detached draft untouched so retry is the same button press after
+  // the server or login session recovers. A visible success message must never
+  // survive a failed request.
+  message.value = '';
 }
 
 const contentQueueDefinitions = Object.freeze([
@@ -3471,20 +3417,6 @@ function reviewRecordKey(record) {
 
 function submissionRecordKey(record) {
   return `${record.collection}:${record.id}`;
-}
-
-function normalizeReviewRecord(definition, record) {
-  const [primaryField, secondaryField] = definition.fields;
-  return {
-    id: record.id,
-    collection: definition.collection,
-    collectionLabel: definition.label,
-    label: String(record[primaryField] || record[secondaryField] || `${definition.label} ${record.id}`),
-    secondary: String(record[secondaryField] || ''),
-    status: record.status,
-    publication_state: record.publication_state,
-    review_note: String(record.review_note || '')
-  };
 }
 
 async function loadContentQueue(status) {
@@ -3545,8 +3477,24 @@ function setSubmissionMode(mode) {
   selectedSubmissionKey.value = '';
   submissionNote.value = '';
   submissionQueueLoaded.value = false;
+  // Filters describe one queue's contents, so they must not leak into the other.
+  clearSubmissionFilters();
   loadSubmissionQueue().then(markDraftSaved);
 }
+
+function clearSubmissionFilters() {
+  submissionQuery.value = '';
+  submissionCollectionFilter.value = '';
+}
+
+// Narrowing the list should land the operator on a visible record rather than
+// leaving the detail panel showing something that is no longer listed.
+watch(filteredSubmissionQueue, (visible) => {
+  if (!visible.length) return;
+  if (visible.some((record) => submissionRecordKey(record) === selectedSubmissionKey.value)) return;
+  selectedSubmissionKey.value = submissionRecordKey(visible[0]);
+  submissionNote.value = '';
+});
 
 function selectReviewRecord(record, force = false) {
   if (!force && !confirmDiscardChanges('切换审核记录')) return;
@@ -3803,6 +3751,10 @@ function sectionTitleIsRendered(section) {
   return !(pageDraft.value?.slug === 'product' && String(section?.id || '') === 'model-list');
 }
 
+function registeredPageSectionFields(section) {
+  return getPageSectionDefinition(section?.type, pageDraft.value?.slug)?.fields || [];
+}
+
 function sectionEmptyStateIsHiddenByRecords(section) {
   if (pageDraft.value?.slug !== 'news') return false;
   const sectionId = String(section?.id || '');
@@ -3928,6 +3880,7 @@ function pageSectionName(section, index) {
   const sectionKey = String(section?.id || '');
   return pageSectionLabels[`${pageKey}:${sectionKey}`]
     || String(section?.title || '').trim()
+    || (section?.type ? getPageSectionDefinition(section.type, pageKey)?.label : '')
     || `段落 ${index + 1}`;
 }
 
@@ -3999,11 +3952,22 @@ function removeOffice(section, region, index) {
   section?.items?.[region]?.offices?.splice(index, 1);
 }
 
+// Roles the website actually binds to a slot. A media entry whose role is empty
+// matches none of them, so the element stays read-only on the canvas and the
+// operator sees "此为静态素材" even after adding an asset. Derive the role from
+// the asset's registered placement so "添加素材" is enough on its own.
+const pageMediaSlotRoles = new Set([
+  'background', 'image', 'photo', 'primary', 'foreground', 'icon', 'video', 'cover',
+  'gallery', 'map', 'drawing', 'technical', 'equipment', 'feature', 'asset'
+]);
+
 function addPageMedia(section) {
   const assetId = String(pageMediaSelection.value || '').trim();
   if (!section || !assetId || !isPageMediaOptionForSection(assetId, pageMediaScope(), section)) return;
   section.media ||= [];
-  if (!section.media.some((entry) => String(entry.media_asset_id) === assetId)) section.media.push({ media_asset_id: assetId, role: '' });
+  if (!section.media.some((entry) => String(entry.media_asset_id) === assetId)) {
+    section.media.push({ media_asset_id: assetId, role: defaultPageMediaRole(section, assetId) });
+  }
   pageMediaSelection.value = '';
 }
 
@@ -4018,12 +3982,245 @@ function pageMediaLabel(reference) {
   return asset ? pageMediaOptionLabel(asset, pageMediaScope()) : `当前引用 ${reference.media_asset_id}（尚未通过此选择器验证）`;
 }
 
-function addPageSection() {
-  pageDraft.value?.sections.push({ id: '', kicker: '', title: '', body: '', description: '', media: [], ...defaultSectionPresentation() });
+// Registry-driven media and list editing. These stay generic so a newly
+// registered block type gets a working panel without touching this file.
+function sectionSelectOptionLabel(field, value) {
+  return field?.optionLabels?.[value] || String(value || '');
 }
 
-function removePageSection(index) {
-  if (pageDraft.value?.sections.length > 1) pageDraft.value.sections.splice(index, 1);
+function addRegisteredSectionMedia(section, field) {
+  if (!section || !canEdit(pageDraft.value)) return;
+  const assetId = String(pageMediaSelection.value || '').trim();
+  if (!assetId || !isPageMediaOptionForSection(assetId, pageMediaScope(), section)) return;
+  const list = registeredSectionList(section, field);
+  const max = Number.isInteger(field.maxItems) ? field.maxItems : 1;
+  if (list.length >= max) {
+    error.value = `“${field.label}”最多只能有 ${max} 个素材。`;
+    return;
+  }
+  if (list.some((entry) => String(entry.media_asset_id) === assetId)) return;
+  const roles = Array.isArray(field.roles) ? field.roles : [];
+  list.push({ media_asset_id: assetId, role: roles[0] || 'image' });
+  error.value = '';
+  pageMediaSelection.value = '';
+  recordVisualHistory();
+  queueLivePreviewUpdate({ collection: 'pages', record: pageDraft.value });
+}
+
+function removeRegisteredSectionMedia(section, field, assetId) {
+  if (!section || !canEdit(pageDraft.value)) return;
+  section[field.key] = registeredSectionList(section, field)
+    .filter((entry) => String(entry.media_asset_id) !== String(assetId));
+  recordVisualHistory();
+  queueLivePreviewUpdate({ collection: 'pages', record: pageDraft.value });
+}
+
+function addRegisteredSectionItem(section, field) {
+  if (!section || !canEdit(pageDraft.value)) return;
+  const list = registeredSectionList(section, field);
+  const max = Number.isInteger(field.maxItems) ? field.maxItems : 20;
+  if (list.length >= max) {
+    error.value = `“${field.label}”最多只能有 ${max} 项。`;
+    return;
+  }
+  list.push(Object.fromEntries((field.itemFields || []).map((itemField) => [itemField.key, ''])));
+  error.value = '';
+  recordVisualHistory();
+  queueLivePreviewUpdate({ collection: 'pages', record: pageDraft.value });
+}
+
+function removeRegisteredSectionItem(section, field, index) {
+  if (!section || !canEdit(pageDraft.value)) return;
+  registeredSectionList(section, field).splice(index, 1);
+  recordVisualHistory();
+  queueLivePreviewUpdate({ collection: 'pages', record: pageDraft.value });
+}
+
+function moveRegisteredSectionItem(section, field, index, delta) {
+  if (!section || !canEdit(pageDraft.value)) return;
+  const list = registeredSectionList(section, field);
+  const target = index + delta;
+  if (target < 0 || target >= list.length) return;
+  const [entry] = list.splice(index, 1);
+  list.splice(target, 0, entry);
+  recordVisualHistory();
+  queueLivePreviewUpdate({ collection: 'pages', record: pageDraft.value });
+}
+
+function toggleRegisteredPageSection(section) {
+  if (!section?.type || !canEdit(pageDraft.value)) return;
+  section.enabled = section.enabled === false;
+  recordVisualHistory();
+  postLivePreviewUpdate({ collection: 'pages', record: pageDraft.value });
+  queueLivePreviewUpdate({ collection: 'pages', record: pageDraft.value });
+}
+
+function addPageSection(type) {
+  if (!pageDraft.value || !canEdit(pageDraft.value)) return;
+  const section = createPageSectionInstance(type, pageDraft.value.slug, pageDraft.value.sections);
+  if (!section) {
+    error.value = '当前页面没有注册该区块类型。';
+    return;
+  }
+  pageDraft.value.sections.push({ ...section, ...defaultSectionPresentation() });
+  activePageSectionKey.value = section.id;
+  error.value = '';
+  message.value = `已添加“${pageSectionTypeOptions.value.find((item) => item.type === section.type)?.label || section.type}”区块，请填写内容后保存草稿。`;
+  recordVisualHistory();
+  queueLivePreviewUpdate({ collection: 'pages', record: pageDraft.value });
+}
+
+// The rendered list can be a filtered group, so an index from v-for does not
+// address the underlying array. Always resolve the true position by object.
+function pageSectionIndex(section) {
+  const sections = Array.isArray(pageDraft.value?.sections) ? pageDraft.value.sections : [];
+  return sections.indexOf(section);
+}
+
+function movePageSection(from, to) {
+  const sections = pageDraft.value?.sections;
+  if (!canEdit(pageDraft.value) || !Array.isArray(sections)) return;
+  if (from === to || from < 0 || to < 0 || from >= sections.length || to >= sections.length) return;
+  const [entry] = sections.splice(from, 1);
+  sections.splice(to, 0, entry);
+  recordVisualHistory();
+  postLivePreviewUpdate({ collection: 'pages', record: pageDraft.value });
+  queueLivePreviewUpdate({ collection: 'pages', record: pageDraft.value });
+}
+
+function handleSectionDragStart(section, event) {
+  if (!canEdit(pageDraft.value) || !section?.type) return;
+  draggingPageSectionKey.value = String(section.id || '');
+  if (event?.dataTransfer) {
+    event.dataTransfer.effectAllowed = 'move';
+    event.dataTransfer.setData('text/plain', String(section.id || ''));
+  }
+}
+
+function handleSectionDrop(section) {
+  const sections = Array.isArray(pageDraft.value?.sections) ? pageDraft.value.sections : [];
+  const from = sections.findIndex((entry) => String(entry?.id || '') === draggingPageSectionKey.value);
+  const to = sections.indexOf(section);
+  draggingPageSectionKey.value = '';
+  if (from < 0 || to < 0) return;
+  movePageSection(from, to);
+}
+
+function duplicatePageSection(section) {
+  const sections = pageDraft.value?.sections;
+  const index = pageSectionIndex(section);
+  if (!canEdit(pageDraft.value) || !Array.isArray(sections) || index < 0 || !section?.type) return;
+  const clone = createPageSectionInstance(section.type, pageDraft.value.slug, sections);
+  if (!clone) {
+    error.value = '当前页面没有注册该区块类型。';
+    return;
+  }
+  // Carry the editable content across; the fresh id keeps both blocks independent.
+  for (const field of registeredPageSectionFields(section)) {
+    if (field.type === 'text' || field.type === 'textarea') clone[field.key] = section[field.key];
+    else if (Array.isArray(section[field.key])) clone[field.key] = JSON.parse(JSON.stringify(section[field.key]));
+  }
+  sections.splice(index + 1, 0, { ...section, ...clone });
+  activePageSectionKey.value = clone.id;
+  error.value = '';
+  message.value = '已复制区块，请确认内容后保存草稿。';
+  recordVisualHistory();
+  postLivePreviewUpdate({ collection: 'pages', record: pageDraft.value });
+  queueLivePreviewUpdate({ collection: 'pages', record: pageDraft.value });
+}
+
+// Presets are declared by the block definition, so applying one is a pure data
+// copy. There is no per-type logic here, and an unknown key is a no-op.
+function registeredPageSectionPresets(section) {
+  if (!section?.type) return [];
+  return listPageSectionPresets(section.type, pageDraft.value?.slug || '');
+}
+
+function sectionPresetDescription(section) {
+  const key = sectionPresetSelection.value[section?.id];
+  return registeredPageSectionPresets(section).find((preset) => preset.key === key)?.description || '';
+}
+
+function applyRegisteredSectionPreset(section) {
+  const key = sectionPresetSelection.value[section?.id];
+  if (!section || !key || !canEdit(pageDraft.value)) return;
+  Object.assign(section, applyPageSectionPreset(section, key, pageDraft.value.slug));
+  sectionPresetSelection.value[section.id] = '';
+  error.value = '';
+  message.value = '已套用预设，请确认内容后保存草稿。';
+  recordVisualHistory();
+  postLivePreviewUpdate({ collection: 'pages', record: pageDraft.value });
+  queueLivePreviewUpdate({ collection: 'pages', record: pageDraft.value });
+}
+
+// Cross-page reuse. True "shared modules" would need a new collection plus
+// reference-integrity rules (what happens when a referenced block is edited or
+// deleted), and the site-wide chrome is already component-driven — so the real
+// remaining need is "I built this block, I want it on another page". A clipboard
+// covers that without inventing a reference graph.
+const copiedPageSection = ref(null);
+
+const canPastePageSection = computed(() => {
+  const copied = copiedPageSection.value;
+  if (!copied?.type || !pageDraft.value || !canEdit(pageDraft.value)) return false;
+  return Boolean(getPageSectionDefinition(copied.type, pageDraft.value.slug));
+});
+
+function copyPageSectionForReuse(section) {
+  if (!section?.type || !canEdit(pageDraft.value)) return;
+  copiedPageSection.value = JSON.parse(JSON.stringify(section));
+  error.value = '';
+  message.value = '已复制区块，切换到目标页面后点击「粘贴区块」。';
+}
+
+function pastePageSection() {
+  const copied = copiedPageSection.value;
+  if (!copied?.type || !pageDraft.value || !canEdit(pageDraft.value)) return;
+  const definition = getPageSectionDefinition(copied.type, pageDraft.value.slug);
+  if (!definition) {
+    error.value = '当前页面没有注册该区块类型，无法粘贴。';
+    return;
+  }
+  const sections = pageDraft.value.sections;
+  const clone = createPageSectionInstance(copied.type, pageDraft.value.slug, sections);
+  if (!clone) {
+    error.value = '无法为此区块生成唯一标识，请重试。';
+    return;
+  }
+  // Carry the source content across; the fresh id keeps the two blocks independent.
+  for (const field of definition.fields) {
+    if (field.type === 'text' || field.type === 'textarea') clone[field.key] = copied[field.key];
+    else if (Array.isArray(copied[field.key])) clone[field.key] = JSON.parse(JSON.stringify(copied[field.key]));
+  }
+  sections.push({ ...copied, ...clone });
+  activePageSectionKey.value = clone.id;
+  error.value = '';
+  message.value = '已粘贴区块，请确认内容后保存草稿。';
+  recordVisualHistory();
+  postLivePreviewUpdate({ collection: 'pages', record: pageDraft.value });
+  queueLivePreviewUpdate({ collection: 'pages', record: pageDraft.value });
+}
+
+// Registry field edits must reach the canvas as they are typed, otherwise the
+// panel and the preview disagree until the next explicit action. The underlying
+// queue debounces (80ms) and no-ops while the canvas is closed, so wiring this
+// to every input is safe.
+function pushPageDraftToPreview() {
+  queueLivePreviewUpdate({ collection: 'pages', record: pageDraft.value });
+}
+
+function removePageSection(section) {
+  const sections = pageDraft.value?.sections;
+  const index = pageSectionIndex(section);
+  if (!canEdit(pageDraft.value) || !Array.isArray(sections) || index < 0 || sections.length <= 1) return;
+  if (section.type && !window.confirm(`确定删除“${getPageSectionDefinition(section.type, pageDraft.value.slug)?.label || '自定义区块'}”吗？删除会在保存草稿后生效。`)) return;
+  sections.splice(index, 1);
+  if (activePageSectionKey.value === section.id) activePageSectionKey.value = '';
+  if (section.type) {
+    recordVisualHistory();
+    postLivePreviewUpdate({ collection: 'pages', record: pageDraft.value });
+    queueLivePreviewUpdate({ collection: 'pages', record: pageDraft.value });
+  }
 }
 
 function addSettingLink(target) {
@@ -4060,13 +4257,15 @@ function removeFooterColumnLink(columnIndex, linkIndex) {
   if (links?.length > 1) links.splice(linkIndex, 1);
 }
 
-function validateSections(sections) {
+function validateSections(sections, pageSlug = pageDraft.value?.slug) {
   if (!sections.length) return '至少保留一个页面段落。';
   const ids = new Set();
   for (const section of sections) {
     if (!/^[a-z0-9][a-z0-9-]{0,79}$/.test(section.id)) return '段落标识只能使用小写字母、数字和短横线。';
     if (ids.has(section.id)) return `段落标识“${section.id}”重复。`;
     ids.add(section.id);
+    const registeredSectionError = validatePageSectionInstance(section, pageSlug);
+    if (registeredSectionError) return registeredSectionError;
     if (section.href && !isValidSiteLink(section.href)) return `段落“${section.id}”的按钮链接只能使用站内路径或 HTTPS 地址。`;
     for (const item of Array.isArray(section.items) ? section.items : []) {
       if (item?.href && !isValidSiteLink(item.href)) return `段落“${section.id}”的重复内容链接只能使用站内路径或 HTTPS 地址。`;
@@ -4114,6 +4313,11 @@ async function loadPages() {
   if (nextId) selectPage(nextId, true); else { selectedPageId.value = ''; pageDraft.value = null; }
 }
 
+async function loadHomepageSections() {
+  const response = await api.get('/items/homepage_sections?fields=id,page_key,section_key,title,kicker,body,content,media,sort_order,enabled,language,status,publication_state,source_document,source_url,review_note&filter[page_key][_eq]=home&sort=sort_order&limit=-1');
+  homepageSections.value = Array.isArray(response.data?.data) ? response.data.data : [];
+}
+
 async function loadSeries() {
   const response = await api.get('/items/product_series?fields=id,series_code,slug,name,positioning,presentation,scenarios,capabilities,cover_asset,sort_order,status,publication_state,source_document,source_url,review_note&sort=sort_order,name&limit=-1');
   series.value = Array.isArray(response.data?.data) ? response.data.data : [];
@@ -4156,15 +4360,6 @@ async function loadService() {
     external_service_entries: Array.isArray(entries.data?.data) ? entries.data.data : []
   };
   selectServiceMode(serviceMode.value, true);
-}
-
-function normalizeRepairPage(record) {
-  const copy = clone(record);
-  for (const key of ['model_cards', 'action_cards', 'process_steps', 'notices', 'faq_refs', 'seo']) {
-    const value = copy[key];
-    copy[`${key}_text`] = JSON.stringify(value ?? (key === 'seo' ? {} : []), null, 2);
-  }
-  return copy;
 }
 
 async function loadRepairPages() {
@@ -4247,18 +4442,35 @@ async function load() {
   loading.value = true;
   error.value = '';
   message.value = '';
+  // The visual canvas needs private draft assets for authenticated preview,
+  // even when the current editor cannot access the advanced media manager.
+  const everyday = () => [loadPages(), loadHomepageSections(), loadSeries(), loadCompany(), loadEditorial(), loadMediaAssets(), loadMediaCandidates()];
+  const technical = () => (technicalAccess.value
+    ? [loadModels(), loadService(), loadRepairPages(), loadKnowledge(), loadSettings()]
+    : []);
+
   try {
-    // The visual canvas needs private draft assets for authenticated preview,
-    // even when the current editor cannot access the advanced media manager.
-    const everyday = [loadPages(), loadSeries(), loadCompany(), loadEditorial(), loadMediaAssets(), loadMediaCandidates()];
-    const technical = technicalAccess.value
-      ? [loadModels(), loadService(), loadRepairPages(), loadKnowledge(), loadSettings()]
-      : [];
-    await Promise.all([...everyday, ...technical]);
+    await Promise.all([...everyday(), ...technical()]);
     markDraftSaved();
     message.value = '已加载当前账号有权限查看的结构化内容。';
   } catch (reason) {
-    error.value = apiError(reason, '无法读取后台内容。请确认当前账号有内容读取权限。');
+    // A load right after a page reload can race the admin app's own session
+    // handoff: the extension mounts with no access token, /auth/refresh answers
+    // 400 ("The refresh token is required in either the payload or cookie"), and
+    // every content call comes back 403. The handshake completes a moment later,
+    // and Promise.all's siblings keep running anyway, so the page is in fact
+    // loaded and editable — leaving the panel reporting "无法读取后台内容" would
+    // send the operator hunting a permission problem that does not exist.
+    // One retry settles it; the error is only kept if it persists.
+    await new Promise((resolve) => window.setTimeout(resolve, 1500));
+    try {
+      await Promise.all([...everyday(), ...technical()]);
+      error.value = '';
+      markDraftSaved();
+      message.value = '已加载当前账号有权限查看的结构化内容。';
+    } catch (retryReason) {
+      error.value = apiError(retryReason, '无法读取后台内容。请确认当前账号有内容读取权限。');
+    }
   } finally {
     loading.value = false;
   }
@@ -4266,14 +4478,19 @@ async function load() {
 
 async function savePage() {
   if (!pageDraft.value || !canEdit(pageDraft.value)) return;
-  const sectionError = validateSections(pageDraft.value.sections);
+  // Canvas-only empty media slots make every editable location selectable, but
+  // they are not content: normalizePageMediaReferences drops any entry without an
+  // asset id. Validation therefore has to judge the shape that will actually be
+  // persisted, not the canvas draft — otherwise those placeholders are read as
+  // "未登记的素材" and every save is rejected. This only started biting once the
+  // service page's sections gained a registered `type`: unregistered legacy
+  // sections skip field validation entirely, so the placeholders went unnoticed.
+  const persistedSections = normalizeSections(pageDraft.value.sections);
+  const sectionError = validateSections(persistedSections);
   if (sectionError) { error.value = sectionError; return; }
   saving.value = true; error.value = ''; message.value = '';
   try {
     const seo = { ...pageDraft.value.seo };
-    // Canvas-only empty media slots make every editable location selectable,
-    // but must not become persistent CMS references until a real asset is set.
-    const persistedSections = normalizeSections(pageDraft.value.sections);
     if (seo.keywords) seo.keywords = String(seo.keywords).split(',').map((item) => item.trim()).filter(Boolean);
     else delete seo.keywords;
     if (!seo.title) delete seo.title;
@@ -4286,7 +4503,42 @@ async function savePage() {
     // the canvas keeps working without requiring a manual reconnect.
     await renewLivePreviewAfterSuccessfulSave();
   } catch (reason) {
-    error.value = apiError(reason, '保存页面失败，内容没有更新。');
+    setSaveError(reason, '保存页面失败，内容没有更新。');
+  } finally { saving.value = false; }
+}
+
+async function saveHomepageSection() {
+  const record = activeTab.value === 'homepage_sections' ? homepageSectionDraft.value : null;
+  if (!record || !canEdit(record)) return;
+  saving.value = true; error.value = ''; message.value = '';
+  try {
+    const payload = {
+      page_key: record.page_key,
+      section_key: record.section_key,
+      title: record.title,
+      kicker: record.kicker,
+      body: record.body,
+      content: record.content,
+      media: record.media,
+      sort_order: record.sort_order,
+      enabled: record.enabled,
+      language: record.language,
+      status: record.status,
+      publication_state: record.publication_state,
+      source_document: record.source_document,
+      source_url: record.source_url,
+      review_note: record.review_note
+    };
+    await api.patch(`/items/homepage_sections/${encodeURIComponent(record.id)}`, payload);
+    message.value = '首页区块草稿已保存，并已进入内容版本审计。';
+    await loadHomepageSections();
+    const persisted = homepageSections.value.find((item) => String(item.id) === String(record.id));
+    if (!persisted) throw new Error('保存后未能回读首页区块');
+    homepageSectionDraft.value = clone(persisted);
+    markDraftSaved();
+    await renewLivePreviewAfterSuccessfulSave();
+  } catch (reason) {
+    setSaveError(reason, '保存首页区块失败，内容没有更新。');
   } finally { saving.value = false; }
 }
 
@@ -4341,10 +4593,6 @@ async function saveCompanyRecord() {
   } catch (reason) {
     error.value = apiError(reason, '保存企业资料失败，内容没有更新。');
   } finally { saving.value = false; }
-}
-
-function nextServiceKey(prefix) {
-  return `${prefix}-${Date.now()}`;
 }
 
 async function createServiceResource() {
@@ -4504,10 +4752,6 @@ async function createMediaCandidate() {
   } finally { saving.value = false; }
 }
 
-function nextDraftSlug(prefix) {
-  return `cms-editor-${prefix}-${Date.now()}`;
-}
-
 async function createEditorialRecord() {
   saving.value = true; error.value = ''; message.value = '';
   try {
@@ -4599,7 +4843,7 @@ async function saveEditorialRecord() {
     await loadEditorial();
     await renewLivePreviewAfterSuccessfulSave();
   } catch (reason) {
-    error.value = apiError(reason, '保存内容草稿失败，内容没有更新。');
+    setSaveError(reason, '保存内容草稿失败，内容没有更新。');
   } finally { saving.value = false; }
 }
 
@@ -4698,7 +4942,7 @@ async function saveModel() {
     await loadModels();
     await renewLivePreviewAfterSuccessfulSave();
   } catch (reason) {
-    error.value = apiError(reason, '保存型号失败，内容没有更新。');
+    setSaveError(reason, '保存型号失败，内容没有更新。');
   } finally { saving.value = false; }
 }
 
@@ -4793,9 +5037,12 @@ onMounted(() => {
   window.addEventListener('resize', handleVisualViewportResize);
   api.get('/users/me?fields=id,role.name').then((response) => {
     const user = response.data?.data || {};
-    technicalAccess.value = ['Administrator', '系统管理员'].includes(String(user.role?.name || ''));
+    const roleName = String(user.role?.name || '');
+    technicalAccess.value = ['Administrator', '系统管理员'].includes(roleName);
+    workflowAccess.value = ['Administrator', '系统管理员', '内容编辑', '审核管理'].includes(roleName);
   }).catch(() => {
     technicalAccess.value = false;
+    workflowAccess.value = false;
   }).finally(load);
 });
 onBeforeUnmount(() => {
@@ -4809,288 +5056,7 @@ onBeforeUnmount(() => {
 });
 </script>
 
-<style scoped>
-.editor-page{grid-template-columns:220px minmax(0,1fr);align-items:start;max-width:1440px;gap:20px}
-.editor-page>.toolbar,.editor-page>.editor-guide,.editor-page>.message{grid-column:1/-1}
-.editor-page>.toolbar{grid-row:1}
-.editor-page>.editor-guide{grid-row:2}
-.editor-page>.message{grid-row:3}
-.editor-page>.wp-admin-menu,.editor-page>section:not(.editor-guide),.editor-page>.empty{grid-column:2;grid-row:4}
-.editor-page>.wp-admin-menu{grid-column:1!important;grid-row:4;position:sticky;top:14px;z-index:4;display:grid;align-self:start;align-content:start;grid-auto-rows:max-content;justify-content:start;gap:12px;min-height:calc(100vh - 112px);box-sizing:border-box;border:0;border-radius:0;background:#1d2327;padding:14px 10px;box-shadow:4px 0 16px rgb(0 0 0/8%)}
-.wp-admin-menu .tab-group{display:grid;align-content:start;gap:3px;min-height:0}
-.wp-admin-menu .tab-group-label{padding:4px 10px 8px;color:#9ea7ad;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
-.wp-admin-menu .workspace-tabs button,.wp-admin-menu .tab-group button{display:flex;align-items:center;width:100%;box-sizing:border-box;border:0;border-left:3px solid transparent;border-radius:2px;padding:10px 11px;text-align:left;color:#c3cbd0;font-size:13px}
-.wp-admin-menu .workspace-tabs button:hover,.wp-admin-menu .tab-group button:hover{background:#2c3338;color:#fff}
-.wp-admin-menu .workspace-tabs button.active,.wp-admin-menu .tab-group button.active{border-left-color:#f08016;background:#2c3338;color:#fff;font-weight:600}
-.wp-admin-menu .advanced-tabs{display:grid;align-content:start;justify-items:stretch;gap:5px;border-top:1px solid #3b4348;padding-top:12px}
-.wp-admin-menu .advanced-toggle{justify-content:space-between;color:#f0a35a!important}
-.wp-admin-menu .advanced-tab-list{display:grid;gap:3px;justify-content:stretch}
-.wp-admin-menu .advanced-tab-list button{font-size:12px}
-.editor-page>.toolbar{padding-bottom:2px}
-@media(max-width:900px){.editor-page{grid-template-columns:1fr}.editor-page>.wp-admin-menu,.editor-page>section,.editor-page>.empty{grid-column:1}.editor-page>.wp-admin-menu{position:static;min-height:0;display:block;overflow:auto;padding:8px}.wp-admin-menu .tab-group{display:flex;align-items:center;overflow:auto}.wp-admin-menu .tab-group-label{display:none}.wp-admin-menu .workspace-tabs button,.wp-admin-menu .tab-group button{width:auto;white-space:nowrap;border-left:0;border-bottom:2px solid transparent}.wp-admin-menu .workspace-tabs button.active,.wp-admin-menu .tab-group button.active{border-left:0;border-bottom-color:var(--theme--primary)}.wp-admin-menu .advanced-tabs{display:flex;border-top:0;border-left:1px solid var(--theme--border-color);padding:0 0 0 8px}.wp-admin-menu .advanced-tab-list{display:flex}.wp-admin-menu .advanced-tab-list button{display:none}.wp-admin-menu .advanced-tabs.expanded .advanced-tab-list button{display:flex}}
-.editor-page{display:grid;gap:18px;max-width:1320px;padding:4px 0 32px}.section-heading-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}.media-reference-row label{display:flex;align-items:center;gap:7px;color:var(--theme--foreground-subdued);font-size:12px}.media-reference-row select{border:1px solid var(--theme--border-color);border-radius:4px;background:var(--theme--background);color:var(--theme--foreground);padding:6px;font:inherit}.toolbar,.toolbar-actions,.form-actions,.section-heading,.form-heading,.panel-heading,.section-card-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.toolbar{align-items:end;flex-wrap:wrap}.toolbar h2,.toolbar p,.form-heading h3,.panel-heading h3,.section-heading h3,.section-heading h4,.seo-editor h4{margin:0}.toolbar h2{margin-top:6px;font-size:25px}.toolbar>div>p:last-child{max-width:760px;margin-top:8px;color:var(--theme--foreground-subdued)}.toolbar-actions{flex-wrap:wrap}.toolbar button,.native-link,.primary-action,.section-heading button{border:1px solid var(--theme--border-color);border-radius:4px;background:var(--theme--background);color:var(--theme--foreground);padding:9px 13px;font:inherit;text-decoration:none;cursor:pointer}.toolbar button:disabled,.primary-action:disabled,.section-heading button:disabled,.text-action:disabled{cursor:not-allowed;opacity:.5}.native-link{color:var(--theme--primary)}.unsaved-indicator{border:1px solid var(--theme--warning);border-radius:999px;background:var(--theme--background-accent);color:var(--theme--warning);padding:6px 9px;font-size:12px;white-space:nowrap}.eyebrow{margin:0;color:var(--theme--primary);font:600 12px ui-monospace,monospace;letter-spacing:.08em}.message,.empty,.record-list-panel,.editor-form,.parameters-panel{border:1px solid var(--theme--border-color);border-radius:6px;background:var(--theme--background);padding:16px}.message,.empty{margin:0}.error{border-color:var(--theme--danger);color:var(--theme--danger)}.workspace-tabs{display:flex;gap:6px;border-bottom:1px solid var(--theme--border-color)}.workspace-tabs button{border:0;border-bottom:2px solid transparent;background:transparent;color:var(--theme--foreground-subdued);padding:10px 13px;font:inherit;cursor:pointer}.workspace-tabs button.active{border-bottom-color:var(--theme--primary);color:var(--theme--foreground)}.workspace-grid,.model-layout{display:grid;grid-template-columns:minmax(220px,290px) minmax(0,1fr);gap:16px}.record-list-panel{align-self:start;display:grid;gap:6px;max-height:760px;overflow:auto}.panel-heading{padding-bottom:10px;border-bottom:1px solid var(--theme--border-color)}.panel-heading h3{margin-top:5px;font-size:18px}.panel-heading strong,.parameters-panel>.section-heading>strong{font-size:26px}.record-choice{position:relative;display:grid;gap:3px;width:100%;border:1px solid transparent;border-radius:4px;background:transparent;padding:10px;text-align:left;color:var(--theme--foreground);cursor:pointer}.record-choice:hover,.record-choice.active{border-color:var(--theme--border-color);background:var(--theme--background-accent)}.record-choice span,.record-choice small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.record-choice small{color:var(--theme--foreground-subdued)}.record-choice i{position:absolute;right:8px;top:9px;font-style:normal;font-size:11px;color:var(--theme--foreground-subdued)}.record-choice i[data-status="rejected"]{color:var(--theme--danger)}.record-choice i[data-status="draft"]{color:var(--theme--warning)}.editor-form,.parameters-panel{display:grid;gap:18px}.form-heading{align-items:start}.form-heading h3{margin-top:5px;font-size:21px}.status,.review-badge{border-radius:999px;background:var(--theme--background-accent);padding:4px 8px;color:var(--theme--foreground-subdued);font-size:12px;white-space:nowrap}.status[data-status="rejected"]{color:var(--theme--danger)}.status[data-status="draft"]{color:var(--theme--warning)}.read-only-note{margin:0;border-left:3px solid var(--theme--warning);background:var(--theme--background-accent);padding:10px 12px;color:var(--theme--foreground-subdued);font-size:13px}.field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.field-grid label{display:grid;gap:7px;color:var(--theme--foreground-subdued);font-size:13px}.field-grid label.full{grid-column:1/-1}.field-grid input,.field-grid select,.field-grid textarea,.table-wrap input{box-sizing:border-box;width:100%;border:1px solid var(--theme--border-color);border-radius:4px;background:var(--theme--background);color:var(--theme--foreground);padding:9px 10px;font:inherit}.field-grid textarea{resize:vertical;line-height:1.5}.field-grid input:disabled,.field-grid select:disabled,.field-grid textarea:disabled,.table-wrap input:disabled{cursor:not-allowed;opacity:.66}.section-editor,.seo-editor,.new-parameter{display:grid;gap:12px;border-top:1px solid var(--theme--border-color);padding-top:18px}.section-heading{align-items:start}.section-heading h4,.seo-editor h4{margin-top:5px;font-size:17px}.section-heading>div>p:last-child{margin:6px 0 0;color:var(--theme--foreground-subdued);font-size:13px}.section-heading button{color:var(--theme--primary)}.section-card{display:grid;gap:13px;border:1px solid var(--theme--border-color);border-radius:5px;padding:14px}.section-card-heading{align-items:start}.section-card-heading>div{display:flex;align-items:center;gap:9px}.review-badge{color:var(--theme--warning)}.text-action{border:0;background:transparent;padding:4px;color:var(--theme--primary);font:inherit;cursor:pointer}.text-action.danger{color:var(--theme--danger)}.form-actions{padding-top:2px}.form-actions a{color:var(--theme--primary);font-size:13px;text-decoration:none}.primary-action{border-color:var(--theme--primary);background:var(--theme--primary);color:var(--theme--primary-foreground)}.model-workspace{display:grid;gap:16px}.parameters-panel>.section-heading{align-items:start}.parameters-panel>.section-heading h3{margin-top:5px;font-size:19px}.table-wrap{overflow:auto;border:1px solid var(--theme--border-color);border-radius:5px}.table-wrap table{width:100%;min-width:920px;border-collapse:collapse;text-align:left}.table-wrap th,.table-wrap td{border-bottom:1px solid var(--theme--border-color);padding:9px;vertical-align:middle}.table-wrap th{color:var(--theme--foreground-subdued);font-size:12px;font-weight:600}.table-wrap tr:last-child td{border-bottom:0}.table-wrap input{min-width:100px;padding:7px 8px}.table-empty{text-align:center;color:var(--theme--foreground-subdued)}.new-parameter h4{margin:0;font-size:16px}.parameter-fields{grid-template-columns:repeat(4,minmax(0,1fr))}.compact{font-size:13px;color:var(--theme--foreground-subdued)}.subtabs{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding-bottom:8px}.subtabs button{border:1px solid var(--theme--border-color);border-radius:4px;background:var(--theme--background);color:var(--theme--foreground-subdued);padding:7px 8px;font:inherit;font-size:12px;cursor:pointer}.subtabs button:last-child{grid-column:1/-1}.subtabs button.active{border-color:var(--theme--primary);color:var(--theme--primary)}.form-help{margin:0;color:var(--theme--foreground-subdued);font-size:13px;line-height:1.55}.media-workspace{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(320px,.75fr);gap:16px}.media-form-fields{display:grid;gap:18px}.media-candidate-list{align-self:start;max-height:690px;overflow:auto}.media-candidate-row{display:flex;align-items:start;justify-content:space-between;gap:12px;border-top:1px solid var(--theme--border-color);padding:13px 0}.media-candidate-row>div{min-width:0}.media-candidate-row strong,.media-candidate-row p,.media-candidate-row small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.media-candidate-row p{margin:5px 0;color:var(--theme--foreground-subdued);font-size:13px}.media-candidate-row small{color:var(--theme--foreground-subdued);font-size:12px}@media(max-width:900px){.workspace-grid,.model-layout,.media-workspace{grid-template-columns:1fr}.record-list-panel{max-height:270px}.record-choice{grid-template-columns:1fr auto}.record-choice i{position:static;grid-column:2;grid-row:1/3;align-self:center}.parameter-fields{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:620px){.toolbar,.toolbar-actions,.form-actions{align-items:stretch}.toolbar-actions,.toolbar-actions>*{width:100%;box-sizing:border-box;text-align:center}.workspace-tabs{overflow:auto}.workspace-tabs button{white-space:nowrap}.field-grid,.parameter-fields{grid-template-columns:1fr}.field-grid label.full{grid-column:auto}.section-card-heading{display:grid}.section-card-heading>div{justify-content:space-between}.form-actions{display:grid}.primary-action{width:100%}}
-.toggle-field{display:flex!important;grid-template-columns:auto 1fr;align-items:center;gap:9px}.toggle-field input{width:auto}.toggle-field span{color:var(--theme--foreground)}
-.presentation-enable-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0;padding:10px;border:1px solid var(--theme--border-color);border-radius:4px;background:var(--theme--background-accent)}
-@media(max-width:900px){.presentation-enable-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:620px){.presentation-enable-grid{grid-template-columns:1fr}}
-.knowledge-list{gap:8px}.list-search{display:grid;gap:6px;padding:4px 2px 8px;color:var(--theme--foreground-subdued);font-size:12px}.list-search input{box-sizing:border-box;width:100%;border:1px solid var(--theme--border-color);border-radius:4px;background:var(--theme--background);color:var(--theme--foreground);padding:8px;font:inherit}
-.full-field{grid-column:1/-1}.media-reference-editor{display:grid;gap:10px;border:1px solid var(--theme--border-color);border-radius:5px;padding:13px}.media-reference-editor .section-card-heading{align-items:center}.media-reference-add{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:9px}.media-reference-add select{box-sizing:border-box;width:100%;border:1px solid var(--theme--border-color);border-radius:4px;background:var(--theme--background);color:var(--theme--foreground);padding:9px 10px;font:inherit}.media-reference-add button{border:1px solid var(--theme--primary);border-radius:4px;background:var(--theme--background);color:var(--theme--primary);padding:8px 12px;font:inherit;cursor:pointer}.media-reference-add button:disabled{cursor:not-allowed;opacity:.55}.media-reference-row{display:flex;align-items:center;justify-content:space-between;gap:12px;border-top:1px solid var(--theme--border-color);padding-top:9px}.media-reference-row span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px}
-.media-candidate-row{display:grid;grid-template-columns:72px minmax(0,1fr) auto;align-items:center}.media-preview{display:grid!important;place-items:center;width:72px;aspect-ratio:1.35;overflow:hidden;border:1px solid var(--theme--border-color);border-radius:4px;background:var(--theme--background-accent);color:var(--theme--foreground-subdued);font-size:11px}.media-preview img{width:100%;height:100%;object-fit:cover}
-.review-list{gap:8px}.refresh-queue{justify-self:start}.review-detail{align-self:start}.review-meta{display:flex;flex-wrap:wrap;gap:7px}.review-meta span{border-radius:999px;background:var(--theme--background-accent);padding:4px 8px;color:var(--theme--foreground-subdued);font-size:12px}.review-note-display{display:grid;gap:6px;margin:0;border-left:3px solid var(--theme--primary);background:var(--theme--background-accent);padding:10px 12px;color:var(--theme--foreground-subdued);font-size:13px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}.review-note-display strong{color:var(--theme--foreground)}.review-note{display:grid;gap:7px;color:var(--theme--foreground-subdued);font-size:13px}.review-note textarea{box-sizing:border-box;width:100%;resize:vertical;border:1px solid var(--theme--border-color);border-radius:4px;background:var(--theme--background);color:var(--theme--foreground);padding:9px 10px;font:inherit;line-height:1.5}.review-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:9px}.secondary-action{border:1px solid var(--theme--danger);border-radius:4px;background:var(--theme--background);color:var(--theme--danger);padding:9px 13px;font:inherit;cursor:pointer}.secondary-action:disabled{cursor:not-allowed;opacity:.5}@media(max-width:620px){.review-actions{display:grid;grid-template-columns:1fr}.secondary-action{width:100%}}
-.editor-guide{display:grid;gap:8px;border:1px solid var(--theme--border-color);border-left:4px solid var(--theme--primary);border-radius:6px;background:var(--theme--background-accent);padding:14px 16px;color:var(--theme--foreground)}.editor-guide strong{font-size:15px}.editor-guide ol{display:flex;flex-wrap:wrap;gap:8px 28px;margin:0;padding-left:20px;color:var(--theme--foreground);font-size:13px}.editor-guide li::marker{color:var(--theme--primary);font-weight:700}.editor-guide span{color:var(--theme--foreground-subdued);font-size:12px}.preview-action{border-color:var(--theme--primary)!important;color:var(--theme--primary)!important}.website-preview-action{border-color:var(--theme--primary)!important;background:var(--theme--primary)!important;color:var(--theme--primary-foreground)!important}.preview-backdrop{position:fixed;z-index:1000;inset:0;display:grid;place-items:center;padding:24px;background:rgb(0 0 0/64%)}.preview-dialog{display:grid;gap:16px;width:min(980px,calc(100vw - 48px));max-height:min(900px,calc(100vh - 48px));overflow:auto;border:1px solid var(--theme--border-color);border-radius:10px;background:var(--theme--background);box-shadow:0 22px 80px rgb(0 0 0/32%);padding:22px}.preview-dialog-heading{display:flex;align-items:start;justify-content:space-between;gap:18px}.preview-dialog-heading h3{margin:5px 0 0;font-size:23px}.preview-close{border:1px solid var(--theme--border-color);border-radius:4px;background:var(--theme--background);color:var(--theme--foreground);padding:8px 13px;font:inherit;cursor:pointer}.preview-notice{margin:0;border-radius:5px;background:var(--theme--background-accent);padding:10px 12px;color:var(--theme--foreground-subdued);font-size:13px;line-height:1.55}.site-preview{min-height:360px;overflow:hidden;border:1px solid var(--theme--border-color);border-radius:7px;background:#101214;color:#f7f7f5}.preview-hero{display:grid;gap:12px;padding:58px clamp(24px,6vw,72px);background:linear-gradient(120deg,#15191d,#30383d)}.preview-hero span,.preview-category{margin:0;color:#e47b12;font-size:12px;letter-spacing:.08em}.preview-hero h4,.site-preview h4{margin:0;font-size:clamp(30px,4vw,56px);font-weight:500;line-height:1.1}.preview-hero p,.site-preview>p{max-width:650px;margin:0;color:#c9cccf;line-height:1.7}.preview-section{display:grid;gap:9px;padding:26px clamp(24px,6vw,72px);border-top:1px solid rgb(255 255 255/12%)}.preview-section small{color:#aeb3b7;text-transform:uppercase}.preview-section h5{margin:0;font-size:25px;font-weight:500}.preview-section h5 em{display:inline-block;margin-left:8px;border-radius:999px;background:#5b431d;color:#ffcf76;padding:3px 8px;font-size:11px;font-style:normal;vertical-align:middle}.preview-section p{margin:0;white-space:pre-wrap;color:#c9cccf;line-height:1.7}.article-preview,.product-preview{display:grid;gap:18px;padding:clamp(24px,6vw,70px);background:#f3f2ee;color:#24272a}.article-preview h4,.product-preview h4{color:#24272a}.article-preview>p,.product-preview>p{color:#666b70}.preview-summary{font-size:18px;line-height:1.6}.preview-body{white-space:pre-wrap;color:#42464a;line-height:1.85}.preview-columns{display:grid;grid-template-columns:1fr 1fr;gap:14px}.preview-columns section{border:1px solid rgb(36 39 42/15%);border-radius:6px;padding:15px}.preview-columns strong{display:block;margin-bottom:10px}.preview-columns ul{margin:0;padding-left:18px;color:#5b6065;line-height:1.8}.product-preview table{width:100%;border-collapse:collapse;background:#fff;color:#24272a}.product-preview th,.product-preview td{padding:10px;text-align:left;border-bottom:1px solid #e1e3e4;font-size:13px}.preview-empty{display:grid;min-height:260px;place-items:center;border:1px dashed var(--theme--border-color);border-radius:6px;color:var(--theme--foreground-subdued);text-align:center;padding:24px}@media(max-width:620px){.preview-backdrop{padding:10px}.preview-dialog{width:calc(100vw - 20px);max-height:calc(100vh - 20px);padding:15px}.editor-guide ol{display:grid;gap:5px}.preview-columns{grid-template-columns:1fr}.preview-hero h4,.site-preview h4{font-size:30px}}
-/* 面向非技术人员的简化导航与字段提示 */
-.guide-action{color:var(--theme--foreground-subdued)!important}
-.workspace-tabs{align-items:stretch;justify-content:space-between;flex-wrap:wrap}
-.tab-group{display:flex;align-items:center;gap:5px;min-height:48px}
-.tab-group-label{padding:0 8px;color:var(--theme--foreground-subdued);font-size:12px;white-space:nowrap}
-.advanced-tabs{display:grid;align-content:center;justify-items:end;gap:5px}
-.advanced-tabs.expanded{justify-items:stretch}
-.advanced-toggle{display:flex!important;align-items:center;gap:8px;color:var(--theme--primary)!important}
-.advanced-toggle span{font-size:16px;line-height:1}
-.advanced-tab-list{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
-.guide-heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.guide-heading>span{color:var(--theme--foreground-subdued);font-size:12px}
-.workflow-steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0;padding:0;list-style:none}
-.workflow-steps li{display:flex;align-items:center;gap:10px;border:1px solid var(--theme--border-color);border-radius:5px;background:var(--theme--background);padding:10px}
-.workflow-steps b{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;background:var(--theme--primary);color:var(--theme--primary-foreground);font-size:12px}
-.workflow-steps span{display:grid;gap:2px}.workflow-steps strong{font-size:13px}.workflow-steps small{color:var(--theme--foreground-subdued);font-size:11px;line-height:1.35}
-.guide-detail{display:grid;gap:6px;border-top:1px solid var(--theme--border-color);padding-top:10px;color:var(--theme--foreground-subdued);font-size:12px;line-height:1.6}
-.guide-detail p{margin:0}.guide-detail strong{color:var(--theme--foreground)}
-.field-help{display:block;color:var(--theme--foreground-subdued);font-size:11px;line-height:1.4}
-.advanced-fields{border:1px dashed var(--theme--border-color);border-radius:5px;padding:10px 12px}
-.advanced-fields summary{cursor:pointer;color:var(--theme--foreground-subdued);font-size:12px}
-.advanced-fields[open] summary{margin-bottom:12px;color:var(--theme--primary)}
-.section-advanced{margin-top:-4px}
-.editor-start{display:grid;gap:18px;border:1px solid var(--theme--border-color);border-radius:6px;background:var(--theme--background);padding:clamp(20px,3vw,34px)}
-.start-heading{display:grid;gap:7px;max-width:660px}.start-heading h3,.start-heading p{margin:0}.start-heading h3{font-size:clamp(24px,3vw,34px);font-weight:600}.start-heading>p:last-child,.start-tip{color:var(--theme--foreground-subdued);line-height:1.6}
-.start-task-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}.start-task{display:grid;min-height:174px;align-content:start;gap:12px;border:1px solid var(--theme--border-color);border-radius:6px;background:var(--theme--background);padding:16px;text-align:left;color:var(--theme--foreground);font:inherit;cursor:pointer;transition:border-color .18s ease,transform .18s ease,background .18s ease}.start-task:hover,.start-task:focus-visible{border-color:var(--theme--primary);background:var(--theme--background-accent);transform:translateY(-2px);outline:0}.start-task span{color:var(--theme--primary);font-size:12px;font-weight:700}.start-task strong{font-size:16px}.start-task small{color:var(--theme--foreground-subdued);font-size:12px;line-height:1.5}.start-tip{margin:0;font-size:13px}.start-tab{color:var(--theme--primary)!important}
-.page-editing-layout{grid-template-columns:minmax(200px,250px) minmax(380px,1fr);align-items:start}.live-preview-panel{position:sticky;top:14px;display:grid;gap:12px;border:1px solid var(--theme--border-color);border-radius:6px;background:var(--theme--background);padding:15px}.live-preview-heading{display:flex;align-items:start;justify-content:space-between;gap:10px}.live-preview-heading h3{margin:5px 0 0;font-size:17px}.live-dot{display:flex;align-items:center;gap:6px;color:var(--theme--success);font-size:11px;white-space:nowrap}.live-dot::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--theme--success)}.live-preview-canvas{max-height:600px;overflow:auto;border:1px solid var(--theme--border-color);border-radius:5px;background:#f6f5f0;color:#212428}.live-preview-nav{display:flex;align-items:center;justify-content:space-between;padding:11px 13px;border-bottom:1px solid #dadbd7;background:#fff;font-size:12px}.live-preview-nav small{color:#697077}.live-preview-hero{display:grid;gap:9px;padding:28px 20px;background:#1c2328;color:#fff}.live-preview-hero span,.live-preview-section small{color:#dc7b20;font-size:10px;font-weight:700;letter-spacing:0}.live-preview-hero h4{margin:0;font-size:28px;line-height:1.15}.live-preview-hero p,.live-preview-section p{margin:0;color:#cbd0d2;font-size:13px;line-height:1.65;white-space:pre-wrap}.live-preview-section{display:grid;gap:7px;padding:18px 20px;border-top:1px solid #dedfdc}.live-preview-section h5{margin:0;font-size:18px;line-height:1.3}.live-preview-section p{color:#4c5358}.live-preview-more{margin:0;padding:13px 20px;color:#687077;font-size:12px}.live-preview-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.live-preview-actions button{padding:9px 8px;border-radius:4px;font:inherit;font-size:12px;cursor:pointer}.live-preview-actions button:disabled{cursor:not-allowed;opacity:.55}
-@media(max-width:620px){.workspace-tabs{display:grid;gap:0}.tab-group{overflow-x:auto}.advanced-tabs{justify-items:stretch}.advanced-tab-list{justify-content:flex-start}.workflow-steps{grid-template-columns:1fr}.workflow-steps li{align-items:flex-start}}
-@media(max-width:1180px){.page-editing-layout{grid-template-columns:minmax(210px,270px) minmax(0,1fr)}.live-preview-panel{position:static;grid-column:2}}@media(max-width:1080px){.start-task-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}@media(max-width:900px){.page-editing-layout{grid-template-columns:1fr}.live-preview-panel{grid-column:auto}.live-preview-canvas{max-height:440px}}@media(max-width:680px){.start-task-grid{grid-template-columns:1fr}.start-task{min-height:0}.editor-start{padding:20px}}
-.live-preview-toggle{border-color:var(--theme--success)!important;color:var(--theme--success)!important}
-/* PowerPoint-like visual editing surface. The iframe remains the original Nuxt page; only its viewport and editor chrome change. */
-.visual-editor-toolbar{position:absolute;z-index:4;top:0;right:0;left:0;display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:10px;min-height:72px;box-sizing:border-box;border-bottom:1px solid var(--theme--border-color);background:var(--theme--background);padding:8px 10px}.visual-editor-brand,.visual-editor-tools,.visual-editor-actions{display:flex;align-items:center;gap:6px;min-width:0}.visual-editor-brand{gap:8px}.visual-editor-brand strong{display:block;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.visual-editor-icon{display:grid;place-items:center;width:28px;height:28px;border-radius:4px;background:var(--theme--primary);color:var(--theme--primary-foreground);font-weight:800}.visual-editor-tools{justify-content:center}.visual-editor-tools button,.visual-editor-actions button{display:inline-flex;align-items:center;justify-content:center;gap:4px;min-width:32px;height:32px;border:1px solid var(--theme--border-color);border-radius:4px;background:var(--theme--background);color:var(--theme--foreground);padding:0 7px;font:inherit;font-size:13px;cursor:pointer}.visual-editor-tools button span{font-size:10px;color:var(--theme--foreground-subdued)}.visual-editor-tools button.active,.visual-editor-actions .visual-edit-active{border-color:var(--theme--primary);background:var(--theme--primary);color:var(--theme--primary-foreground)}.visual-editor-tools button:disabled,.visual-editor-actions button:disabled{cursor:not-allowed;opacity:.45}.toolbar-divider{width:1px;height:24px;background:var(--theme--border-color);margin:0 3px}.zoom-control{display:flex;align-items:center;gap:5px;color:var(--theme--foreground-subdued);font-size:11px;white-space:nowrap}.zoom-control input{width:72px;accent-color:var(--theme--primary)}.zoom-control output{width:34px;text-align:right;color:var(--theme--foreground)}.visual-editor-actions{justify-content:flex-end}.visual-editor-actions>span{font-size:11px;white-space:nowrap}.visual-selected-label{max-width:105px;overflow:hidden;text-overflow:ellipsis;color:var(--theme--foreground-subdued)}.visual-save-button{border-color:var(--theme--primary)!important;background:var(--theme--primary)!important;color:var(--theme--primary-foreground)!important}.visual-canvas-viewport{position:absolute;inset:72px 0 0;overflow:auto;background:#e9ecef;padding:20px}.visual-canvas-viewport iframe{position:relative!important;top:auto!important;left:auto!important;display:block;width:calc(100% / var(--visual-zoom))!important;height:calc(100% / var(--visual-zoom))!important;min-height:900px;border:0;background:#fff;transform:scale(var(--visual-zoom))!important;transform-origin:top left!important}.live-website-preview{display:block!important}.live-website-preview>header{height:72px!important}.live-preview-error{top:72px!important}.visual-canvas-viewport iframe{pointer-events:auto}
-.visual-record-switcher{display:flex;align-items:center;gap:5px;max-width:215px;color:var(--theme--foreground-subdued);font-size:11px;white-space:nowrap}.visual-record-switcher select{min-width:0;max-width:170px;height:32px;border:1px solid var(--theme--border-color);border-radius:4px;background:var(--theme--background);color:var(--theme--foreground);padding:0 24px 0 8px;font:inherit;font-size:12px;overflow:hidden;text-overflow:ellipsis}
-@media(max-width:1100px){.visual-editor-toolbar{grid-template-columns:auto 1fr;align-items:start}.visual-editor-actions{grid-column:1/-1;justify-content:flex-start}.visual-editor-tools{justify-content:flex-start}.visual-canvas-viewport{inset:108px 0 0}}
-@media(max-width:720px){.visual-editor-toolbar{position:absolute;grid-template-columns:1fr;gap:6px}.visual-editor-tools,.visual-editor-actions{flex-wrap:wrap;justify-content:flex-start}.visual-canvas-viewport{inset:126px 0 0;padding:8px}}
-/* Reserve the fixed preview's width in the workbench itself. The side menu is
-   part of this grid, so viewport-only widths let the form run underneath the
-   preview on the right. */
-.editor-page.live-website-preview-active{
-  box-sizing:border-box;
-  width:auto;
-  max-width:none;
-  min-width:0;
-  margin-right:calc(46vw + 20px);
-}
-.editor-page.live-website-preview-active .workspace-grid,
-.editor-page.live-website-preview-active .model-layout,
-.editor-page.live-website-preview-active .media-workspace,
-.editor-page.live-website-preview-active .editor-form,
-.editor-page.live-website-preview-active .record-list-panel,
-.editor-page.live-website-preview-active .parameters-panel{
-  min-width:0;
-}
-.editor-page.live-website-preview-active .editor-form .field-grid{grid-template-columns:1fr}
-.editor-page.live-website-preview-active .workspace-grid{grid-template-columns:minmax(0,1fr)}
-.editor-page.live-website-preview-active .workspace-grid>.record-list-panel{display:none}
-.live-website-preview{position:fixed;z-index:80;top:64px;right:0;bottom:0;width:46vw;min-width:0;max-width:100%;overflow:hidden;border-left:1px solid var(--theme--border-color);background:#fff;box-shadow:-12px 0 32px rgb(0 0 0/12%)}.live-website-preview>header{position:absolute;z-index:2;top:0;right:0;left:0;display:flex;align-items:center;justify-content:space-between;gap:14px;height:58px;box-sizing:border-box;border-bottom:1px solid var(--theme--border-color);background:var(--theme--background);padding:8px 12px}.live-website-preview>header p{margin:0 0 3px}.live-website-preview>header strong{display:block;max-width:28vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.live-preview-controls{display:flex;align-items:center;gap:7px}.live-preview-controls span{color:var(--theme--foreground-subdued);font-size:11px;white-space:nowrap}.live-preview-controls span[data-state="connected"],.live-preview-controls span[data-state="syncing"]{color:var(--theme--success)}.live-preview-controls span[data-state="error"]{color:var(--theme--danger)}.live-preview-controls button{display:grid;place-items:center;width:30px;height:30px;border:1px solid var(--theme--border-color);border-radius:3px;background:var(--theme--background);color:var(--theme--foreground);padding:0;font-size:19px;line-height:1;cursor:pointer}.live-preview-error{position:absolute;z-index:3;top:58px;right:0;left:0;margin:0;background:var(--theme--danger);color:#fff;padding:9px 12px;font-size:12px}.live-website-preview iframe{position:absolute;top:58px;left:0;width:161.3%;height:calc((100% - 58px) * 1.613);border:0;background:#fff;transform:scale(.62);transform-origin:top left}@media(max-width:1180px){.editor-page.live-website-preview-active{width:calc(100% - 50vw - 20px);margin-right:calc(50vw + 20px)}.live-website-preview{width:50vw}.live-website-preview iframe{width:181.82%;height:calc((100% - 58px) * 1.8182);transform:scale(.55)}}@media(max-width:820px){.editor-page.live-website-preview-active{width:100%;margin-right:0}.live-website-preview{top:56px;width:min(92vw,720px)}.live-website-preview iframe{width:100%;height:calc(100% - 58px);transform:none}}
-/* The workbench is a block in Directus' content area. Keep its width automatic
-   so the right margin is subtracted from the actual available area, including
-   the shell's left navigation offset. */
-@media(min-width:821px){
-  .editor-page.live-website-preview-active{width:auto;margin-right:calc(46vw + 20px)}
-}
-@media(min-width:821px) and (max-width:1180px){
-  .editor-page.live-website-preview-active{width:auto;margin-right:calc(50vw + 20px)}
-}
-@media(max-width:820px){
-  .editor-page.live-website-preview-active{width:100%;margin-right:0}
-}
-/* Desktop live preview is a real third grid column. Keeping it in the
-   workbench flow prevents a fixed panel from covering the form. */
-@media(min-width:1280px){
-  .editor-page.live-website-preview-active{
-    grid-template-columns:220px minmax(0,1fr) clamp(460px,38vw,920px);
-    width:auto;
-    max-width:none;
-    margin-right:0;
-    overflow:visible;
-  }
-  .editor-page.live-website-preview-active>.toolbar,
-  .editor-page.live-website-preview-active>.editor-guide,
-  .editor-page.live-website-preview-active>.message{
-    grid-column:1/-1;
-  }
-  .editor-page.live-website-preview-active>.wp-admin-menu,
-  .editor-page.live-website-preview-active>section:not(.editor-guide),
-  .editor-page.live-website-preview-active>.empty{
-    grid-row:4;
-    min-width:0;
-  }
-  .editor-page.live-website-preview-active>.wp-admin-menu{
-    grid-column:1!important;
-  }
-  .editor-page.live-website-preview-active>section:not(.editor-guide),
-  .editor-page.live-website-preview-active>.empty{
-    grid-column:2;
-  }
-  .editor-page.live-website-preview-active>.live-website-preview{
-    position:sticky;
-    top:64px;
-    right:auto;
-    bottom:auto;
-    grid-column:3;
-    grid-row:4;
-    align-self:start;
-    width:auto;
-    min-width:0;
-    height:calc(100vh - 64px);
-  }
-}
-@media(min-width:821px) and (max-width:1279px){
-  .editor-page.live-website-preview-active{
-    grid-template-columns:220px minmax(0,1fr);
-    width:auto;
-    max-width:none;
-    margin-right:0;
-  }
-  .editor-page.live-website-preview-active>.live-website-preview{
-    position:static;
-    grid-column:2;
-    grid-row:5;
-    width:auto;
-    min-width:0;
-    height:680px;
-  }
-}
-/* Draft preview remains part of the editor flow so it cannot obscure the form. */
-.editor-page > .preview-panel {
-  grid-column: 2;
-  grid-row: 5;
-  position: relative;
-  display: grid;
-  min-width: 0;
-}
+<style scoped src="./src/module.css"></style>
 
-.preview-panel .preview-dialog {
-  display: grid;
-  gap: 16px;
-  width: 100%;
-  box-sizing: border-box;
-  max-height: none;
-  overflow: auto;
-}
-</style>
-<style>
-html.ruijun-workbench-active .live-website-preview .visual-canvas-viewport > iframe{height:var(--canvas-height)!important;min-height:0!important;position:absolute!important;top:20px!important;left:max(20px,calc((100% - var(--canvas-width) * var(--visual-zoom)) / 2))!important}
-</style>
+<style src="./src/module-global.css"></style>
 
-<style>
-/* Final canvas sizing overrides keep the zoom controlled by the toolbar. */
-.visual-canvas-viewport{position:absolute;inset:72px 0 0;overflow:auto;background:#e9ecef;padding:20px}
-.visual-canvas-viewport iframe{position:relative!important;top:auto!important;left:auto!important;width:calc(100% / var(--visual-zoom))!important;height:calc(100% / var(--visual-zoom))!important;min-height:900px;border:0;transform:scale(var(--visual-zoom))!important;transform-origin:top left!important}
-.visual-canvas-viewport iframe{width:var(--canvas-width)!important}
-.live-website-preview{--visual-toolbar-height:136px;--visual-property-panel-width:clamp(200px,34%,300px)}.live-website-preview.visual-property-panel-open .visual-canvas-viewport{right:var(--visual-property-panel-width)}.visual-property-panel{position:absolute;z-index:5;top:var(--visual-toolbar-height);right:0;bottom:0;width:var(--visual-property-panel-width);overflow:auto;box-sizing:border-box;border-left:1px solid var(--theme--border-color);background:var(--theme--background);padding:14px}.visual-property-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}.visual-property-heading strong{display:block;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.visual-property-heading button{width:28px;height:28px;border:1px solid var(--theme--border-color);border-radius:4px;background:var(--theme--background);cursor:pointer}.visual-property-source{margin:8px 0 14px;color:var(--theme--foreground-subdued);font-size:11px;overflow-wrap:anywhere}.visual-property-field{display:grid;gap:6px;margin-bottom:12px;color:var(--theme--foreground-subdued);font-size:12px}.visual-property-field textarea,.visual-property-field select,.visual-property-grid input,.visual-property-grid select{box-sizing:border-box;width:100%;border:1px solid var(--theme--border-color);border-radius:4px;background:var(--theme--background);color:var(--theme--foreground);padding:8px;font:inherit}.visual-property-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}.visual-property-grid label{display:grid;gap:5px;color:var(--theme--foreground-subdued);font-size:11px}.visual-list-order{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 12px;padding:8px;border:1px solid var(--theme--border-color);border-radius:4px;color:var(--theme--foreground-subdued);font-size:11px}.visual-list-order>div{display:flex;gap:4px}.visual-list-order button{border:1px solid var(--theme--border-color);border-radius:4px;background:var(--theme--background);color:var(--theme--foreground);padding:4px 7px;font:inherit;cursor:pointer}.visual-list-order button:disabled{cursor:not-allowed;opacity:.45}.visual-property-help{margin:8px 0;color:var(--theme--foreground-subdued);font-size:11px;line-height:1.5}
-.visual-canvas-focus>.toolbar,.visual-canvas-focus>.editor-guide,.visual-canvas-focus>.message,.visual-canvas-focus>.wp-admin-menu,.visual-canvas-focus>section:not(.live-website-preview),.visual-canvas-focus>.empty{display:none!important}.visual-canvas-focus>.live-website-preview{position:fixed!important;inset:64px 0 0!important;width:100%!important;height:calc(100vh - 64px)!important;z-index:120}.visual-canvas-focus .visual-canvas-viewport{inset:72px 0 0!important}
-.live-website-preview>header.visual-editor-toolbar{height:72px}
-@media(max-width:1100px){.visual-canvas-viewport{inset:108px 0 0}}
-@media(max-width:720px){.visual-canvas-viewport{inset:126px 0 0;padding:8px}}
-/* 工作台导航覆盖 Directus 项目导航区域；宿主 DOM 不被修改，其它页面不受影响。 */
-@media (min-width: 901px) {
-  html.ruijun-workbench-active .v-sidebar,
-  html.ruijun-workbench-active .private-view__sidebar,
-  html.ruijun-workbench-active aside[aria-label="主导航"],
-  html.ruijun-workbench-active aside[aria-label="Main navigation"] {
-    display: none !important;
-  }
-  html.ruijun-workbench-active .editor-page {
-    width: 100%;
-    max-width: none;
-    margin-left: 0;
-    grid-template-columns: 222px minmax(0, 1fr);
-  }
-  html.ruijun-workbench-active .editor-page:not(.live-website-preview-active) {
-    grid-template-columns: 238px minmax(0, 1fr);
-  }
-  html.ruijun-workbench-active .editor-page > .wp-admin-menu {
-    position: fixed;
-    z-index: 100;
-    top: 64px;
-    left: 56px;
-    width: 222px;
-    height: calc(100vh - 64px);
-    max-height: none;
-    overflow-y: auto;
-    box-sizing: border-box;
-  }
-  /* The fixed WordPress-style menu is removed from normal grid flow. Keep the
-     workbench header and guide in the second track so they cannot sit beneath it. */
-  html.ruijun-workbench-active .editor-page:not(.live-website-preview-active) > .toolbar,
-  html.ruijun-workbench-active .editor-page:not(.live-website-preview-active) > .editor-guide,
-  html.ruijun-workbench-active .editor-page:not(.live-website-preview-active) > .message,
-    html.ruijun-workbench-active .editor-page:not(.live-website-preview-active) > .retry-save-action {
-      grid-column: 2;
-      margin-left: 16px;
-    }
-    /* The content cards share the second track with the fixed menu. Match the
-       toolbar gap so a section cannot begin underneath the menu edge. */
-    html.ruijun-workbench-active .editor-page:not(.live-website-preview-active) > section:not(.editor-guide),
-    html.ruijun-workbench-active .editor-page:not(.live-website-preview-active) > .empty {
-      grid-column: 2;
-      margin-left: 16px;
-    }
-    html.ruijun-workbench-active .editor-page.live-website-preview-active {
-    grid-template-columns: 222px minmax(0, 1fr) clamp(460px, 38vw, 920px);
-    width: 100%;
-    margin-left: 0;
-    margin-right: 0;
-  }
-}
-@media(min-width:901px) and (max-width:1279px){
-  html.ruijun-workbench-active .editor-page.live-website-preview-active{grid-template-columns:222px minmax(0,1fr)}
-  html.ruijun-workbench-active .editor-page.live-website-preview-active>.wp-admin-menu{position:static!important;z-index:auto!important;grid-column:1!important;grid-row:4;width:auto;height:auto;min-height:0;overflow:visible}
-  html.ruijun-workbench-active .editor-page.live-website-preview-active>section:not(.editor-guide),html.ruijun-workbench-active .editor-page.live-website-preview-active>.empty{grid-column:2;grid-row:4}
-  /* The canvas viewport is absolutely positioned. Keep the preview itself as
-     its containing block, otherwise the iframe escapes this grid cell and
-     covers the workbench toolbar. */
-  html.ruijun-workbench-active .editor-page.live-website-preview-active>.live-website-preview{position:relative!important;top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;grid-column:2;grid-row:5;width:auto;min-width:0;height:680px}
-}
-.visual-editor-toolbar{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;align-items:center;gap:4px;min-height:var(--visual-toolbar-height);padding:6px 10px}
-.visual-editor-brand{grid-row:1;overflow:hidden}.visual-editor-tools{grid-row:2;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;white-space:nowrap}.visual-editor-actions{grid-row:3;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;white-space:nowrap}
-.visual-editor-actions>*,.visual-editor-tools>*{flex-shrink:0}
-.visual-editor-tools::-webkit-scrollbar,.visual-editor-actions::-webkit-scrollbar{height:3px}.visual-editor-tools::-webkit-scrollbar-thumb,.visual-editor-actions::-webkit-scrollbar-thumb{background:var(--theme--border-color)}
-.live-website-preview>header.visual-editor-toolbar{display:grid;grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto auto;min-height:var(--visual-toolbar-height);height:var(--visual-toolbar-height)!important}.live-preview-error{top:var(--visual-toolbar-height)!important}.visual-canvas-viewport{inset:var(--visual-toolbar-height) 0 0}.visual-canvas-focus .visual-canvas-viewport{inset:var(--visual-toolbar-height) 0 0!important}
-/* The scoped legacy iframe rule otherwise shrinks a desktop canvas to the
-   preview column. Preserve the chosen device viewport and let this surface scroll. */
-html.ruijun-workbench-active .live-website-preview .visual-canvas-viewport > iframe{width:var(--canvas-width)!important}
-/* At common desktop widths, a third column leaves insufficient space for a
-   page form and lets the canvas property panel intercept its save action.
-   Keep the editor in the first content row and place the preview after it.
-   Wide desktops retain the side-by-side authoring layout below. */
-@media(min-width:1280px) and (max-width:1599px){
-  html.ruijun-workbench-active .editor-page.live-website-preview-active{
-    grid-template-columns:176px minmax(0,1fr);
-    gap:12px;
-  }
-  html.ruijun-workbench-active .editor-page.live-website-preview-active .editor-form{grid-template-columns:minmax(0,1fr)}
-  html.ruijun-workbench-active .editor-page.live-website-preview-active .editor-form>*{min-width:0;max-width:100%;box-sizing:border-box}
-  html.ruijun-workbench-active .editor-page.live-website-preview-active>.live-website-preview{position:relative!important;top:auto!important;right:auto!important;bottom:auto!important;left:auto!important;grid-column:2;grid-row:5;width:auto;min-width:0;height:680px}
-  html.ruijun-workbench-active .editor-page.live-website-preview-active .model-layout{grid-template-columns:minmax(0,1fr)}
-  html.ruijun-workbench-active .editor-page.live-website-preview-active>.wp-admin-menu{width:176px}
-}
-@media(min-width:1600px){
-  html.ruijun-workbench-active .editor-page.live-website-preview-active{
-    grid-template-columns:222px minmax(400px,.85fr) minmax(640px,1.15fr);
-    gap:16px;
-  }
-}
-.live-preview-error{pointer-events:none}
-@media(max-width:720px){
-  html.ruijun-workbench-active .live-website-preview .visual-canvas-viewport > iframe{
-    width:100%!important;
-    height:calc(100% - 16px)!important;
-    min-height:0!important;
-    transform:none!important;
-  }
-}
-</style>

@@ -3,7 +3,6 @@ const DIRECT_ASSET_FIELDS = new Set([
   'cover_asset',
   'footer_logo_asset',
   'hero_asset',
-  'machine_asset_id',
   'image_asset_id',
   'icon_asset_id',
   'technical_image_asset_id',
@@ -11,6 +10,16 @@ const DIRECT_ASSET_FIELDS = new Set([
   'address_icon_asset',
   'phone_icon_asset',
   'email_icon_asset'
+]);
+
+// Scalar slots that persist a governed asset ID and must therefore survive the
+// preview without being rewritten into a path. Replacing them in place would
+// double-encode the proxy URL downstream and would also break the value that
+// gets saved back to Directus. Instead the ID is preserved and a sibling
+// transient path field is added, mirroring `hero_video_asset_id`.
+const PRESERVED_ID_ASSET_FIELDS = new Map([
+  ['machine_asset_id', 'machineImage'],
+  ['hero_video_asset_id', 'hero_video_asset_url']
 ]);
 
 const VIDEO_EXTENSIONS = /\.(?:mp4|webm|mov|m4v)(?:[?#].*)?$/i;
@@ -118,6 +127,15 @@ function materializeValue(value, resolver, context = {}) {
 
   const result = {};
   for (const [key, entry] of Object.entries(value)) {
+    const preservedPathField = PRESERVED_ID_ASSET_FIELDS.get(key);
+    if (preservedPathField) {
+      // Keep the persisted value untouched (including its original numeric or
+      // string type) so the authorizer and the eventual save both see an ID.
+      result[key] = entry;
+      const media = assetId(entry) ? resolvedMedia(resolver, assetId(entry)) : null;
+      if (media?.path) result[preservedPathField] = media.path;
+      continue;
+    }
     if (DIRECT_ASSET_FIELDS.has(key) && (typeof entry === 'string' || Number.isSafeInteger(entry))) {
       result[key] = materializeDirectAsset(entry, resolver);
       continue;
@@ -135,15 +153,6 @@ function materializeValue(value, resolver, context = {}) {
       continue;
     }
     result[key] = materializeValue(entry, resolver, { ...context, root: false });
-  }
-
-  // The homepage stores the video as an asset ID. Preserve that persisted ID
-  // for authorization, while adding a transient path that only exists in the
-  // signed draft-preview snapshot.
-  if (Object.hasOwn(value, 'hero_video_asset_id')) {
-    const id = assetId(value.hero_video_asset_id);
-    const media = id ? resolvedMedia(resolver, id) : null;
-    if (media?.path) result.hero_video_asset_url = media.path;
   }
 
   const alias = context.alias || 'none';

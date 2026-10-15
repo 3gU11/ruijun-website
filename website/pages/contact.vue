@@ -2,7 +2,8 @@
 import { resolvePageSection } from '~/shared/page-sections.mjs';
 const { data: pageResponse } = await useFetch('/api/public/v1/pages/contact', { default: () => ({ data: null as Record<string, any> | null }) });
 const { data: settingsResponse } = await useFetch('/api/public/v1/navigation', { default: () => ({ data: null as Record<string, any> | null }) });
-const pageContent = computed(() => pageResponse.value?.data || null);
+const { overlayRecord, visualEditMode: cmsVisualEditMode } = useCmsDraftPreview();
+const pageContent = computed(() => overlayRecord('pages', pageResponse.value?.data || null, (draft) => draft.slug === 'contact'));
 const heroContent = computed(() => resolvePageSection(pageContent.value, 'hero', { kicker: 'CONTACT RUIJUN', title: '获取选型建议', body: '从工件资料到设备设置，让我们为您匹配合适的中走丝线切割方案。' }));
 const detailsContent = computed(() => resolvePageSection(pageContent.value, 'details', { kicker: 'DIRECT CONTACT', title: '选型前可先发材料', body: '提交加工尺寸、材料、精度与产能要求，可缩短评估时间。' }));
 const contacts = computed(() => settingsResponse.value?.data?.contacts || {});
@@ -61,6 +62,7 @@ useSeoMeta({
         </div>
       </div>
     </section>
+    <CmsCustomSections :page="pageContent" page-slug="contact" :visual-edit-mode="cmsVisualEditMode" />
     <PsdFooter />
   </main>
 </template>

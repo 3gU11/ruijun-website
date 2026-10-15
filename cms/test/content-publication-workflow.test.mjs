@@ -195,3 +195,99 @@ test('unified review management may approve governed media assets', () => {
   });
   assert.equal(brandApproval.status, 'scheduled');
 });
+
+test('setting publication_state alone is rejected instead of silently dropped', () => {
+  // A caller that asks to publish by writing publication_state cannot succeed:
+  // the state follows the lifecycle. It used to return 200 with the value
+  // rewritten to 'unpublished', which reads as a successful publish.
+  assert.throws(() => applyContentPublicationUpdate({
+    collection: 'pages',
+    current: { status: 'draft', publication_state: 'unpublished', publication_log: [] },
+    input: { publication_state: 'published' },
+    actor: { role: 'content_editor', id: 'editor-1' }, now
+  }), (error) => error instanceof ContentPublicationError && error.code === 'PUBLICATION_STATE_DERIVED');
+
+  // The same guard applies to a publisher, so nobody gets a false success.
+  assert.throws(() => applyContentPublicationUpdate({
+    collection: 'pages',
+    current: { status: 'draft', publication_state: 'unpublished', publication_log: [] },
+    input: { publication_state: 'published' },
+    actor: { role: 'system_admin', id: 'admin-1' }, now
+  }), (error) => error instanceof ContentPublicationError && error.code === 'PUBLICATION_STATE_DERIVED');
+});
+
+test('a lifecycle transition may still carry a stale publication_state', () => {
+  // Forged or outdated values are neutralised rather than rejected, so the
+  // transition itself decides the resulting state.
+  const submitted = applyContentPublicationUpdate({
+    collection: 'pages',
+    current: { status: 'draft', publication_state: 'unpublished', publication_log: [] },
+    input: { status: 'review', publication_state: 'published' },
+    actor: { role: 'content_editor', id: 'editor-1' }, now
+  });
+  assert.equal(submitted.status, 'review');
+  assert.equal(submitted.publication_state, 'unpublished');
+});
+
+test('an administrator can submit a draft for review but still cannot skip to published', () => {
+  const submitted = applyContentPublicationUpdate({
+    collection: 'pages',
+    current: { status: 'draft', publication_state: 'unpublished', publication_log: [] },
+    input: { status: 'review' }, actor: { role: 'system_admin', id: 'admin-1' }, now
+  });
+  assert.equal(submitted.status, 'review');
+  assert.equal(submitted.publication_state, 'unpublished');
+  assert.equal(submitted.publication_log.at(-1).action, 'submitted_for_review');
+
+  // The publish gate is unchanged: only approved content may be published.
+  assert.throws(() => applyContentPublicationUpdate({
+    collection: 'pages',
+    current: { status: 'draft', publication_state: 'unpublished', publication_log: [] },
+    input: { status: 'published' }, actor: { role: 'system_admin', id: 'admin-1' }, now
+  }), (error) => error instanceof ContentPublicationError && error.code === 'INVALID_TRANSITION');
+});
+
+test('an administrator can reopen withdrawn content as a draft', () => {
+  // Taking a page down must not be a one-way door: without this the only route
+  // back to an editable state was a second account in the 内容编辑 role, which a
+  // single-administrator deployment does not have.
+  for (const status of ['unpublished', 'rejected']) {
+    const reopened = applyContentPublicationUpdate({
+      collection: 'pages',
+      current: { status, publication_state: 'unpublished', publication_log: [] },
+      input: { status: 'draft' }, actor: { role: 'system_admin', id: 'admin-1' }, now
+    });
+    assert.equal(reopened.status, 'draft');
+    assert.equal(reopened.publication_state, 'unpublished');
+    assert.equal(reopened.published_at, null);
+    assert.equal(reopened.publication_log.at(-1).action, 'reopened_as_draft');
+  }
+});
+
+test('reopening as a draft still cannot skip the publish gate', () => {
+  const current = { status: 'unpublished', publication_state: 'unpublished', publication_log: [] };
+
+  // Straight from withdrawn to live must stay forbidden for everyone.
+  assert.throws(() => applyContentPublicationUpdate({
+    collection: 'pages', current, input: { status: 'published' },
+    actor: { role: 'system_admin', id: 'admin-1' }, now
+  }), (error) => error instanceof ContentPublicationError && error.code === 'INVALID_TRANSITION');
+
+  // And a draft cannot jump to scheduled or published either — it has to pass
+  // through review, exactly as it did before this change.
+  for (const target of ['scheduled', 'published']) {
+    assert.throws(() => applyContentPublicationUpdate({
+      collection: 'pages',
+      current: { status: 'draft', publication_state: 'unpublished', publication_log: [] },
+      input: { status: target }, actor: { role: 'system_admin', id: 'admin-1' }, now
+    }), (error) => error instanceof ContentPublicationError && error.code === 'INVALID_TRANSITION');
+  }
+});
+
+test('reopening as a draft is still refused for roles that cannot publish', () => {
+  assert.throws(() => applyContentPublicationUpdate({
+    collection: 'pages',
+    current: { status: 'unpublished', publication_state: 'unpublished', publication_log: [] },
+    input: { status: 'draft' }, actor: { role: 'review_manager', id: 'reviewer-1' }, now
+  }), (error) => error instanceof ContentPublicationError && error.code === 'INVALID_TRANSITION');
+});
