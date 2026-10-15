@@ -1,6 +1,9 @@
 [CmdletBinding()]
 param(
-  [switch]$NoBrowser
+  [switch]$NoBrowser,
+  # Skip the post-boot self-check. Use it for a fast restart when the suite has
+  # already passed and you only need the services back up.
+  [switch]$NoSelfCheck
 )
 
 $ErrorActionPreference = 'Stop'
@@ -237,9 +240,29 @@ if (-not $minioReady) {
 
 # Directus loads compiled extensions from dist/. Rebuild only when source files
 # are newer, and reload the listener so a rerun cannot keep serving stale UI.
+#
+# The watch set must include every file the bundle is built FROM, not just the
+# extension's own src/. The workbench also imports two modules out of
+# website/shared/, and those end up compiled into dist/index.js. Watching only
+# src/ meant a change to the block registry (or the factory gallery helper) left
+# a stale workbench UI in place with no rebuild and no warning.
+$workbenchWatch = @(
+  $workbenchSourceRoot
+  (Join-Path $root 'website\shared\page-section-registry.mjs')
+  (Join-Path $root 'website\shared\about-factory-gallery.mjs')
+)
 $workbenchNeedsBuild = -not (Test-Path -LiteralPath $workbenchDist)
 if (-not $workbenchNeedsBuild) {
-  $latestWorkbenchSource = Get-ChildItem -LiteralPath $workbenchSourceRoot -Recurse -File |
+  $latestWorkbenchSource = $workbenchWatch |
+    Where-Object { Test-Path -LiteralPath $_ } |
+    ForEach-Object {
+      if (Test-Path -LiteralPath $_ -PathType Container) {
+        Get-ChildItem -LiteralPath $_ -Recurse -File
+      }
+      else {
+        Get-Item -LiteralPath $_
+      }
+    } |
     Sort-Object LastWriteTimeUtc -Descending | Select-Object -First 1
   $workbenchNeedsBuild = $latestWorkbenchSource -and ($latestWorkbenchSource.LastWriteTimeUtc -gt (Get-Item -LiteralPath $workbenchDist).LastWriteTimeUtc)
 }
@@ -304,6 +327,63 @@ $ready = @(
   $repairClientReady
 )
 
+function Start-AcceptanceSelfCheck {
+  # The only question that matters after a boot is whether the operator's work is
+  # actually visible: a page left in draft is served from a hard-coded static
+  # fallback that also answers 200, so "the ports are up" proves nothing about
+  # CMS content reaching the site.
+  #
+  # It runs inline, not in its own window. A detached window was tried first and
+  # is not dependable here: this host reaps children at session boundaries, so the
+  # window can die part-way through while the launcher has already reported
+  # success. Inline costs two seconds (--quick skips the browser-driven workbench
+  # suite) and the result is guaranteed to be seen.
+  param(
+    [string]$NodeExe,
+    [string]$Root,
+    [string]$LogPath
+  )
+
+  $script = Join-Path $Root 'cms\scripts\acceptance\run.mjs'
+  if (-not (Test-Path -LiteralPath $script)) {
+    Write-Warning "Self-check skipped: $script not found."
+    return
+  }
+
+  Write-Host ''
+  Write-Host '==============================================================' -ForegroundColor Cyan
+  Write-Host ' CMS / website integration self-check  (runtime, routes, content)' -ForegroundColor Cyan
+  Write-Host ' Asks the one question a port check cannot: is CMS content really' -ForegroundColor Cyan
+  Write-Host ' published and rendered on the website? Entirely read-only.' -ForegroundColor Cyan
+  Write-Host '==============================================================' -ForegroundColor Cyan
+
+  # The suite prints Chinese, so the pipeline has to decode node's UTF-8 output
+  # before it reaches Tee-Object; otherwise the log fills with mojibake.
+  [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+  $OutputEncoding = [System.Text.Encoding]::UTF8
+
+  & $NodeExe $script --quick 2>&1 | Tee-Object -FilePath $LogPath
+  $script:SelfCheckFailed = ($LASTEXITCODE -ne 0)
+
+  if ($script:SelfCheckFailed) {
+    Write-Host ''
+    Write-Host ' SELF-CHECK FAILED - see the FAIL lines above.' -ForegroundColor Red
+    Write-Host " Full log: $LogPath" -ForegroundColor Red
+  }
+  else {
+    Write-Host ''
+    Write-Host ' Self-check passed: CMS content is published and rendered.' -ForegroundColor Green
+  }
+}
+
+if (-not $NoSelfCheck -and -not ($ready -contains $false)) {
+  Start-AcceptanceSelfCheck -NodeExe $cmsNode -Root $root -LogPath (Join-Path $outputRoot 'self-check.log')
+}
+elseif (-not $NoSelfCheck) {
+  Write-Warning 'Self-check skipped: one or more services are not ready.'
+  Write-Host "Run it manually: node cms\\scripts\\acceptance\\run.mjs" -ForegroundColor Gray
+}
+
 if (-not $NoBrowser -and -not ($ready -contains $false)) {
   foreach ($url in @(
     'http://127.0.0.1:8055/admin',
@@ -322,3 +402,12 @@ elseif (-not $NoBrowser) {
 Write-Host "Launcher finished. Background service logs are in $outputRoot" -ForegroundColor Gray
 Write-Host "LAN CMS: http://$lanAddress`:8055/admin" -ForegroundColor Cyan
 Write-Host "LAN website: http://$lanAddress`:4175" -ForegroundColor Cyan
+
+# A failing self-check must not vanish when the launcher exits: the .bat pauses on
+# a non-zero exit code, so the operator reads the failures before dismissing it.
+if ($script:SelfCheckFailed) {
+  Write-Host ''
+  Write-Host 'Self-check reported failures. See ' -ForegroundColor Red -NoNewline
+  Write-Host (Join-Path $outputRoot 'self-check.log') -ForegroundColor Red
+  exit 1
+}
