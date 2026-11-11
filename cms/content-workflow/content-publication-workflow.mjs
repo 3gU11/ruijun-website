@@ -8,7 +8,10 @@ import { assessManufacturingEvidence, assessMilestone, assessQualification } fro
 
 const editorCollections = new Set([
   'pages', 'product_series', 'product_models', 'product_parameters', 'case_studies', 'articles',
-  'manufacturing_evidence', 'qualifications', 'milestones', 'service_locations'
+  'manufacturing_evidence', 'qualifications', 'milestones', 'service_locations',
+  // These two were writable by content editors while sitting outside the workflow
+  // list, so a plain PATCH could set status:'published' and skip review entirely.
+  'homepage_sections', 'repair_page_configs'
 ]);
 const editorCreateCollections = new Set([...editorCollections, 'media_assets']);
 const reviewManagerCollections = new Set([...editorCollections, 'media_assets']);
@@ -344,5 +347,8 @@ export function applyContentPublicationCreate({ collection, input, actor, now = 
 
 export const publicationWorkflowCollections = Object.freeze([
   'pages', 'product_series', 'product_models', 'product_parameters', 'case_studies', 'articles', 'manufacturing_evidence',
-  'qualifications', 'milestones', 'service_resources', 'service_locations', 'knowledge_items', 'external_service_entries', 'media_assets', 'site_settings'
+  'qualifications', 'milestones', 'service_resources', 'service_locations', 'knowledge_items', 'external_service_entries', 'media_assets', 'site_settings',
+  // Publicly readable homepage blocks and repair-page configuration: they carry
+  // status/publication_state and were previously published without review.
+  'homepage_sections', 'repair_page_configs'
 ]);

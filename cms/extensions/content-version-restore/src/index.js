@@ -133,6 +133,16 @@ export function registerContentVersionRestoreEndpoint(router, { database }) {
         }] });
       }
 
+      // Restoring always lands on `draft`. If the record is currently published,
+      // that silently removes it from the public site, so require an explicit
+      // acknowledgement instead of letting a mis-click take a page down.
+      if (String(current.status || '') === 'published' && req.body?.confirmUnpublishPublished !== true) {
+        return res.status(409).json({ errors: [{
+          message: '该内容当前处于已发布状态，恢复为草稿会让官网立即下线。确认请携带 confirmUnpublishPublished: true。',
+          extensions: { code: 'PUBLISHED_CONTENT_RESTORE', currentStatus: 'published' }
+        }] });
+      }
+
       const restored = buildRestoredDraft({ snapshot: version.snapshot, current, actorId: actor.id, versionId: version.id, restoreNote: note });
       await database(version.content_collection).where({ id: version.content_item_id }).update(await restorablePayload(database, version.content_collection, restored));
       await database('content_versions').where({ id: version.id }).update({ status: 'restored', restored_by: actor.id, restored_at: databaseDateTime(new Date()), restore_note: note.trim() });
