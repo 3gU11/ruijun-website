@@ -3,7 +3,7 @@ import { hasSectionPresentation, normalizeFieldPresentations, normalizeSectionPr
 // Server code is bundled by Nitro, so a cross-directory relative path would
 // resolve against the build output ('.nuxt/dev') instead of this file. The
 // package "imports" map keeps one specifier working for both Node tests and Nitro.
-import { getPageSectionDefinition, validatePageSectionInstance } from '#shared/page-section-registry.mjs';
+import { getPageSectionDefinition, validatePageSectionInstance } from '../../shared/page-section-registry.mjs';
 
 function isPublished(record, now) {
   if (record?.status !== 'published' || record?.publication_state !== 'published') return false;

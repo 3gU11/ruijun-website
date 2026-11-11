@@ -1,4 +1,4 @@
-import { publicMediaAssetPath } from '#shared/public-media-path.mjs';
+import { publicMediaAssetPath } from '../../shared/public-media-path.mjs';
 
 function isPublished(record, now) {
   if (record?.status !== 'published' || record?.publication_state !== 'published') return false;

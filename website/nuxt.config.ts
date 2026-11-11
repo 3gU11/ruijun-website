@@ -1,4 +1,9 @@
 import tailwindcss from '@tailwindcss/vite';
+import { cp } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+
+const sharedDir = fileURLToPath(new URL('./shared', import.meta.url));
+const serverSharedDir = fileURLToPath(new URL('./.nuxt/dist/server/shared', import.meta.url));
 
 export default defineNuxtConfig({
   ssr: true,
@@ -9,9 +14,27 @@ export default defineNuxtConfig({
   },
   devtools: { enabled: false },
   modules: ['motion-v/nuxt'],
+  // Nitro drops the package "imports" mapping (#shared/*) into a path relative to the
+  // build output, so rollup then cannot resolve ./shared/*. Provide absolute aliases for
+  // both Vite and Nitro, and copy shared into the server output dir as a fallback.
+  hooks: {
+    'nitro:build:before': async () => {
+      await cp(sharedDir, serverSharedDir, { recursive: true, force: true });
+    }
+  },
+  nitro: {
+    alias: {
+      '#shared': sharedDir
+    }
+  },
   css: ['~/assets/inspira.css', '~/assets/cms-presentation.css'],
   vite: {
     plugins: [tailwindcss()],
+    resolve: {
+      alias: {
+        '#shared': sharedDir
+      }
+    },
     // Local-run escape hatch: some sandboxed dev environments forbid Vite from
     // removing its dependency cache dir. Pointing cacheDir elsewhere avoids the
     // bulk-delete without changing production behaviour (unset by default).
