@@ -2,7 +2,7 @@ import { ForbiddenError, createError } from '@directus/errors';
 import { ContentPublicationError, applyContentPublicationCreate, applyContentPublicationUpdate, publicationWorkflowCollections } from '../../../content-workflow/content-publication-workflow.mjs';
 import { KnowledgeGovernanceError } from '../../../content-workflow/knowledge-governance.mjs';
 import { buildContentVersion, databaseDateTime } from '../../../content-workflow/content-versioning.mjs';
-import { MediaAssetGovernanceError, assertMediaAssetPlacement, assertMediaAssetRecord, assertPublishedMediaReferences, collectMediaAssetReferenceIds } from '../../../content-workflow/media-asset-governance.mjs';
+import { MediaAssetGovernanceError, assertMediaAssetPlacement, assertMediaAssetRecord, assertPublishedMediaReferences, collectMediaAssetReferenceIds, describeMediaAssetReferences, findMediaAssetReferences } from '../../../content-workflow/media-asset-governance.mjs';
 
 // Directus renders INVALID_PAYLOAD as "Invalid payload. <reason>". The operator
 // only needs the Chinese reason, so block reasons use a dedicated code whose
@@ -93,6 +93,21 @@ export function registerContentPublicationWorkflowHook({ filter }) {
       }
     });
   }
+
+  // Deleting through Directus' own API must be as safe as the canvas action:
+  // refuse while any content still points at the asset, and say where.
+  filter('media_assets.items.delete', async (keys, _meta, context) => {
+    const ids = (Array.isArray(keys) ? keys : [keys]).map((key) => String(key ?? '').trim()).filter(Boolean);
+    for (const id of ids) {
+      const references = await findMediaAssetReferences(context.database, id);
+      if (references.length) {
+        throw new PublicationBlockedError({
+          reason: `素材仍被 ${references.length} 处内容引用，不能删除：${describeMediaAssetReferences(references)}`
+        });
+      }
+    }
+    return keys;
+  });
 }
 
 export default registerContentPublicationWorkflowHook;

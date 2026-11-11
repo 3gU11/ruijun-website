@@ -329,3 +329,72 @@ export function assertPublishedMediaReferences(record, assetsById) {
 }
 
 export const publicMediaUploadRules = uploadRules;
+
+// --- Deletion guard -------------------------------------------------------
+// Deleting a media asset that a page/article still points at would leave a
+// broken image on the public site. The canvas delete action already scanned for
+// references; this mirrors it for Directus' own delete API so both entry points
+// behave the same.
+
+const referenceFieldPattern = /(^|_)(media_asset_id|poster_asset_id|cover_asset|asset|assets|icon_asset|hero_asset|hero_video_asset_id|machine_asset_id|machineImage|logo_asset|footer_logo_asset|address_icon_asset|phone_icon_asset|email_icon_asset|intro_asset|background_asset|video_asset|image_asset)$/;
+
+const referenceScanCollections = Object.freeze([
+  'articles', 'pages', 'homepage_sections', 'product_series', 'product_models', 'service_resources',
+  'knowledge_items', 'manufacturing_evidence', 'qualifications', 'milestones',
+  'repair_page_configs', 'site_settings', 'media_assets'
+]);
+
+function collectFieldReferences(value, assetId, path, out, depth = 0) {
+  if (depth > 6 || value == null) return;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed.startsWith('{') || trimmed.startsWith('[')) {
+      try { collectFieldReferences(JSON.parse(trimmed), assetId, path, out, depth + 1); } catch { /* plain text */ }
+    }
+    return;
+  }
+  if (Array.isArray(value)) {
+    value.forEach((entry, index) => collectFieldReferences(entry, assetId, `${path}[${index}]`, out, depth + 1));
+    return;
+  }
+  if (typeof value !== 'object') return;
+  for (const [key, entry] of Object.entries(value)) {
+    const childPath = path ? `${path}.${key}` : key;
+    if ((typeof entry === 'string' || typeof entry === 'number') && referenceFieldPattern.test(key) && String(entry) === assetId) {
+      out.push(childPath);
+      continue;
+    }
+    collectFieldReferences(entry, assetId, childPath, out, depth + 1);
+  }
+}
+
+export async function findMediaAssetReferences(database, assetId) {
+  const id = String(assetId ?? '').trim();
+  if (!id) return [];
+  const references = [];
+  for (const collection of referenceScanCollections) {
+    let rows;
+    try { rows = await database(collection).select('*'); } catch { continue; }
+    for (const row of Array.isArray(rows) ? rows : []) {
+      if (!row || typeof row !== 'object') continue;
+      if (collection === 'media_assets' && String(row.id) === id) continue;
+      const hits = [];
+      collectFieldReferences(row, id, '', hits);
+      if (!hits.length) continue;
+      references.push({
+        collection,
+        id: row.id,
+        title: String(row.title || row.name || row.slug || row.source_key || '').slice(0, 160),
+        fields: [...new Set(hits)].slice(0, 20)
+      });
+    }
+  }
+  return references;
+}
+
+export function describeMediaAssetReferences(references = []) {
+  return references.slice(0, 5).map((reference) => {
+    const title = reference.title ? `（${reference.title}）` : '';
+    return `${reference.collection}#${reference.id}${title} → ${reference.fields.join(', ')}`;
+  }).join('；');
+}
