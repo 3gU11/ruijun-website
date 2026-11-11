@@ -1,274 +1,274 @@
 <template>
-  <private-view class="content-workbench-view" title="内容编辑工作台">
+  <private-view class="content-workbench-view" title="鍐呭缂栬緫宸ヤ綔鍙?>
     <div class="editor-page" :class="{ 'live-website-preview-active': liveWebsitePreviewVisible && websitePreviewAvailable, 'visual-canvas-focus': visualCanvasFocus }" @input.capture="guardEditorInput" @focusin.capture="guardEditorFocus" @pointerdown.capture="captureEditorPointer" @wheel.capture="markEditorUserScroll" @touchmove.capture="markEditorUserScroll">
       <header class="toolbar">
         <div>
-          <p class="eyebrow">内容编辑工作台</p>
-          <h2>官网内容编辑</h2>
-          <p>按表单维护页面、产品、企业资料、服务支持和文章。保存只会更新草稿；审核与发布由对应负责人完成。</p>
+          <p class="eyebrow">鍐呭缂栬緫宸ヤ綔鍙?/p>
+          <h2>瀹樼綉鍐呭缂栬緫</h2>
+          <p>鎸夎〃鍗曠淮鎶ら〉闈€佷骇鍝併€佷紒涓氳祫鏂欍€佹湇鍔℃敮鎸佸拰鏂囩珷銆備繚瀛樺彧浼氭洿鏂拌崏绋匡紱瀹℃牳涓庡彂甯冪敱瀵瑰簲璐熻矗浜哄畬鎴愩€?/p>
         </div>
         <div class="toolbar-actions">
-          <button type="button" class="guide-action" @click="helpOpen = !helpOpen">{{ helpOpen ? '收起操作说明' : '查看操作说明' }}</button>
-          <button type="button" class="preview-action" :disabled="!previewAvailable" :title="previewAvailable ? '查看当前表单中的未保存修改' : '当前内容类型暂不支持画面预览'" @click="openPreview">预览当前草稿</button>
-          <button type="button" class="live-preview-toggle" :disabled="!websitePreviewAvailable" :title="websitePreviewAvailable ? '在工作台内打开官网实时预览' : '实时预览只对未公开的草稿内容开放：请先把该内容恢复为草稿，并在左侧选中一个页面区块'" @click="toggleLiveWebsitePreview">{{ websitePreviewAvailable && liveWebsitePreviewVisible ? '关闭实时预览' : '打开实时预览' }}</button>
-          <button type="button" class="website-preview-action" :disabled="!websitePreviewAvailable || websitePreviewOpening" :title="websitePreviewAvailable ? '保存草稿后，在真实官网版式中检查显示效果' : '请先选择一条未发布的草稿内容'" @click="openWebsitePreview">{{ websitePreviewOpening ? '正在打开官网预览...' : '在官网中预览草稿' }}</button>
-          <span v-if="hasUnsavedChanges" class="unsaved-indicator" role="status">有未保存修改</span>
-          <button type="button" :disabled="loading" @click="requestReload">重新加载</button>
+          <button type="button" class="guide-action" @click="helpOpen = !helpOpen">{{ helpOpen ? '鏀惰捣鎿嶄綔璇存槑' : '鏌ョ湅鎿嶄綔璇存槑' }}</button>
+          <button type="button" class="preview-action" :disabled="!previewAvailable" :title="previewAvailable ? '鏌ョ湅褰撳墠琛ㄥ崟涓殑鏈繚瀛樹慨鏀? : '褰撳墠鍐呭绫诲瀷鏆備笉鏀寔鐢婚潰棰勮'" @click="openPreview">棰勮褰撳墠鑽夌</button>
+          <button type="button" class="live-preview-toggle" :disabled="!websitePreviewAvailable" :title="websitePreviewAvailable ? '鍦ㄥ伐浣滃彴鍐呮墦寮€瀹樼綉瀹炴椂棰勮' : '瀹炴椂棰勮鍙鏈叕寮€鐨勮崏绋垮唴瀹瑰紑鏀撅細璇峰厛鎶婅鍐呭鎭㈠涓鸿崏绋匡紝骞跺湪宸︿晶閫変腑涓€涓〉闈㈠尯鍧?" @click="toggleLiveWebsitePreview">{{ websitePreviewAvailable && liveWebsitePreviewVisible ? '鍏抽棴瀹炴椂棰勮' : '鎵撳紑瀹炴椂棰勮' }}</button>
+          <button type="button" class="website-preview-action" :disabled="!websitePreviewAvailable || websitePreviewOpening" :title="websitePreviewAvailable ? '淇濆瓨鑽夌鍚庯紝鍦ㄧ湡瀹炲畼缃戠増寮忎腑妫€鏌ユ樉绀烘晥鏋? : '璇峰厛閫夋嫨涓€鏉℃湭鍙戝竷鐨勮崏绋垮唴瀹?" @click="openWebsitePreview">{{ websitePreviewOpening ? '姝ｅ湪鎵撳紑瀹樼綉棰勮...' : '鍦ㄥ畼缃戜腑棰勮鑽夌' }}</button>
+          <span v-if="hasUnsavedChanges" class="unsaved-indicator" role="status">鏈夋湭淇濆瓨淇敼</span>
+          <button type="button" :disabled="loading" @click="requestReload">閲嶆柊鍔犺浇</button>
         </div>
       </header>
 
-      <section class="editor-guide" aria-label="使用说明">
-        <div class="guide-heading"><strong>三步完成一次更新</strong><span>不需要懂代码，只需填写中文内容并检查预览。</span></div>
+      <section class="editor-guide" aria-label="浣跨敤璇存槑">
+        <div class="guide-heading"><strong>涓夋瀹屾垚涓€娆℃洿鏂?/strong><span>涓嶉渶瑕佹噦浠ｇ爜锛屽彧闇€濉啓涓枃鍐呭骞舵鏌ラ瑙堛€?/span></div>
         <ol class="workflow-steps">
-          <li><b>1</b><span><strong>编辑</strong><small>选择内容并填写文字、图片或参数</small></span></li>
-          <li><b>2</b><span><strong>预览</strong><small>先检查当前修改；保存后可在官网画面中复核</small></span></li>
-          <li><b>3</b><span><strong>送审</strong><small>提交后由审核和发布人员继续处理</small></span></li>
+          <li><b>1</b><span><strong>缂栬緫</strong><small>閫夋嫨鍐呭骞跺～鍐欐枃瀛椼€佸浘鐗囨垨鍙傛暟</small></span></li>
+          <li><b>2</b><span><strong>棰勮</strong><small>鍏堟鏌ュ綋鍓嶄慨鏀癸紱淇濆瓨鍚庡彲鍦ㄥ畼缃戠敾闈腑澶嶆牳</small></span></li>
+          <li><b>3</b><span><strong>閫佸</strong><small>鎻愪氦鍚庣敱瀹℃牳鍜屽彂甯冧汉鍛樼户缁鐞?/small></span></li>
         </ol>
         <div v-if="helpOpen" class="guide-detail">
-          <p><strong>字段怎么填？</strong>标题和正文直接填写访客要看到的中文；图片先在“媒体资产”登记；带锁、灰色或标注“高级”的字段通常不需要修改。</p>
-          <p><strong>状态怎么理解？</strong>“草稿”只保存在后台，“审核中”等待负责人检查，“待发布”已经批准但还没有出现在官网，“已发布”才会对外展示。</p>
-          <p><strong>怎样选择预览？</strong>“预览当前草稿”可立即检查未保存文字；保存草稿后使用“在官网中预览草稿”打开真实官网审核画面。两者都不会发布或改变审核状态。</p>
+          <p><strong>瀛楁鎬庝箞濉紵</strong>鏍囬鍜屾鏂囩洿鎺ュ～鍐欒瀹㈣鐪嬪埌鐨勪腑鏂囷紱鍥剧墖鍏堝湪鈥滃獟浣撹祫浜р€濈櫥璁帮紱甯﹂攣銆佺伆鑹叉垨鏍囨敞鈥滈珮绾р€濈殑瀛楁閫氬父涓嶉渶瑕佷慨鏀广€?/p>
+          <p><strong>鐘舵€佹€庝箞鐞嗚В锛?/strong>鈥滆崏绋库€濆彧淇濆瓨鍦ㄥ悗鍙帮紝鈥滃鏍镐腑鈥濈瓑寰呰礋璐ｄ汉妫€鏌ワ紝鈥滃緟鍙戝竷鈥濆凡缁忔壒鍑嗕絾杩樻病鏈夊嚭鐜板湪瀹樼綉锛屸€滃凡鍙戝竷鈥濇墠浼氬澶栧睍绀恒€?/p>
+          <p><strong>鎬庢牱閫夋嫨棰勮锛?/strong>鈥滈瑙堝綋鍓嶈崏绋库€濆彲绔嬪嵆妫€鏌ユ湭淇濆瓨鏂囧瓧锛涗繚瀛樿崏绋垮悗浣跨敤鈥滃湪瀹樼綉涓瑙堣崏绋库€濇墦寮€鐪熷疄瀹樼綉瀹℃牳鐢婚潰銆備袱鑰呴兘涓嶄細鍙戝竷鎴栨敼鍙樺鏍哥姸鎬併€?/p>
         </div>
-        <span>草稿不会出现在官网；带锁或灰色的字段是系统记录或审核字段，不能在这里直接修改。</span>
+        <span>鑽夌涓嶄細鍑虹幇鍦ㄥ畼缃戯紱甯﹂攣鎴栫伆鑹茬殑瀛楁鏄郴缁熻褰曟垨瀹℃牳瀛楁锛屼笉鑳藉湪杩欓噷鐩存帴淇敼銆?/span>
       </section>
 
       <p v-if="error" class="message error" role="alert">{{ error }}</p>
-      <button v-if="error && retrySaveAction" type="button" class="retry-save-action" @click="retrySave">重新保存</button>
+      <button v-if="error && retrySaveAction" type="button" class="retry-save-action" @click="retrySave">閲嶆柊淇濆瓨</button>
       <p v-else-if="message" class="message" role="status">{{ message }}</p>
 
-      <nav class="workspace-tabs wp-admin-menu" aria-label="内容管理菜单">
-        <div class="tab-group site-area-tabs" aria-label="官网栏目">
-          <span class="tab-group-label">官网栏目</span>
-          <button type="button" :class="{ active: siteArea === 'home' }" :aria-current="siteArea === 'home' ? 'page' : undefined" @click="selectSiteArea('home')">网站主页</button>
-          <button type="button" :class="{ active: siteArea === 'product' }" :aria-current="siteArea === 'product' ? 'page' : undefined" @click="selectSiteArea('product')">产品展示</button>
-          <button type="button" :class="{ active: siteArea === 'manufacturing' }" :aria-current="siteArea === 'manufacturing' ? 'page' : undefined" @click="selectSiteArea('manufacturing')">先进制造</button>
-          <button type="button" :class="{ active: siteArea === 'news' }" :aria-current="siteArea === 'news' ? 'page' : undefined" @click="selectSiteArea('news')">视频新闻</button>
-          <button type="button" :class="{ active: siteArea === 'about' }" :aria-current="siteArea === 'about' ? 'page' : undefined" @click="selectSiteArea('about')">关于瑞钧</button>
-          <button type="button" :class="{ active: siteArea === 'service' }" :aria-current="siteArea === 'service' ? 'page' : undefined" @click="selectSiteArea('service')">服务支持</button>
+      <nav class="workspace-tabs wp-admin-menu" aria-label="鍐呭绠＄悊鑿滃崟">
+        <div class="tab-group site-area-tabs" aria-label="瀹樼綉鏍忕洰">
+          <span class="tab-group-label">瀹樼綉鏍忕洰</span>
+          <button type="button" :class="{ active: siteArea === 'home' }" :aria-current="siteArea === 'home' ? 'page' : undefined" @click="selectSiteArea('home')">缃戠珯涓婚〉</button>
+          <button type="button" :class="{ active: siteArea === 'product' }" :aria-current="siteArea === 'product' ? 'page' : undefined" @click="selectSiteArea('product')">浜у搧灞曠ず</button>
+          <button type="button" :class="{ active: siteArea === 'manufacturing' }" :aria-current="siteArea === 'manufacturing' ? 'page' : undefined" @click="selectSiteArea('manufacturing')">鍏堣繘鍒堕€?/button>
+          <button type="button" :class="{ active: siteArea === 'news' }" :aria-current="siteArea === 'news' ? 'page' : undefined" @click="selectSiteArea('news')">瑙嗛鏂伴椈</button>
+          <button type="button" :class="{ active: siteArea === 'about' }" :aria-current="siteArea === 'about' ? 'page' : undefined" @click="selectSiteArea('about')">鍏充簬鐟為挧</button>
+          <button type="button" :class="{ active: siteArea === 'service' }" :aria-current="siteArea === 'service' ? 'page' : undefined" @click="selectSiteArea('service')">鏈嶅姟鏀寔</button>
         </div>
-        <div class="tab-group area-tools" aria-label="常用内容：当前官网栏目内容">
-          <span class="tab-group-label">{{ siteAreaLabel }}内容</span>
+        <div class="tab-group area-tools" aria-label="甯哥敤鍐呭锛氬綋鍓嶅畼缃戞爮鐩唴瀹?>
+          <span class="tab-group-label">{{ siteAreaLabel }}鍐呭</span>
           <button v-for="entry in siteAreaContentEntries" :key="entry.key" type="button" :class="{ active: isSiteAreaEntryActive(entry) }" @click="openSiteAreaEntry(entry)">{{ entry.label }}</button>
         </div>
-        <div v-if="workflowAccess" class="tab-group workflow-tabs" aria-label="内容流转">
-          <span class="tab-group-label">内容流转</span>
-          <button type="button" :class="{ active: activeTab === 'submit' }" :aria-current="activeTab === 'submit' ? 'page' : undefined" @click="selectTab('submit')">内容送审</button>
+        <div v-if="workflowAccess" class="tab-group workflow-tabs" aria-label="鍐呭娴佽浆">
+          <span class="tab-group-label">鍐呭娴佽浆</span>
+          <button type="button" :class="{ active: activeTab === 'submit' }" :aria-current="activeTab === 'submit' ? 'page' : undefined" @click="selectTab('submit')">鍐呭閫佸</button>
         </div>
-        <div v-if="technicalAccess" class="tab-group advanced-tabs" :class="{ expanded: showAdvanced }" aria-label="更多工具">
-          <button type="button" class="advanced-toggle" :aria-expanded="showAdvanced" @click="showAdvanced = !showAdvanced">{{ showAdvanced ? '收起高级设置' : '高级设置' }}<span aria-hidden="true">{{ showAdvanced ? '⌃' : '⌄' }}</span></button>
+        <div v-if="technicalAccess" class="tab-group advanced-tabs" :class="{ expanded: showAdvanced }" aria-label="鏇村宸ュ叿">
+          <button type="button" class="advanced-toggle" :aria-expanded="showAdvanced" @click="showAdvanced = !showAdvanced">{{ showAdvanced ? '鏀惰捣楂樼骇璁剧疆' : '楂樼骇璁剧疆' }}<span aria-hidden="true">{{ showAdvanced ? '鈱? : '鈱? }}</span></button>
           <div v-if="showAdvanced" class="advanced-tab-list">
-            <button type="button" :class="{ active: activeTab === 'media' }" :aria-current="activeTab === 'media' ? 'page' : undefined" @click="selectTab('media')">媒体资产</button>
-            <button type="button" :class="{ active: activeTab === 'knowledge' }" :aria-current="activeTab === 'knowledge' ? 'page' : undefined" @click="selectTab('knowledge')">常见问题知识</button>
-            <button type="button" :class="{ active: activeTab === 'models' }" :aria-current="activeTab === 'models' ? 'page' : undefined" @click="selectTab('models')">型号与参数</button>
-            <button type="button" :class="{ active: activeTab === 'review' }" :aria-current="activeTab === 'review' ? 'page' : undefined" @click="selectTab('review')">审核队列</button>
-            <a class="advanced-link" href="/admin/ruijun-content-publication-queue-workbench">发布中心</a>
-            <button type="button" :class="{ active: activeTab === 'settings' }" :aria-current="activeTab === 'settings' ? 'page' : undefined" @click="selectTab('settings')">全站设置</button>
+            <button type="button" :class="{ active: activeTab === 'media' }" :aria-current="activeTab === 'media' ? 'page' : undefined" @click="selectTab('media')">濯掍綋璧勪骇</button>
+            <button type="button" :class="{ active: activeTab === 'knowledge' }" :aria-current="activeTab === 'knowledge' ? 'page' : undefined" @click="selectTab('knowledge')">甯歌闂鐭ヨ瘑</button>
+            <button type="button" :class="{ active: activeTab === 'models' }" :aria-current="activeTab === 'models' ? 'page' : undefined" @click="selectTab('models')">鍨嬪彿涓庡弬鏁?/button>
+            <button type="button" :class="{ active: activeTab === 'review' }" :aria-current="activeTab === 'review' ? 'page' : undefined" @click="selectTab('review')">瀹℃牳闃熷垪</button>
+            <a class="advanced-link" href="/admin/ruijun-content-publication-queue-workbench">鍙戝竷涓績</a>
+            <button type="button" :class="{ active: activeTab === 'settings' }" :aria-current="activeTab === 'settings' ? 'page' : undefined" @click="selectTab('settings')">鍏ㄧ珯璁剧疆</button>
           </div>
         </div>
       </nav>
 
-      <section v-if="activeTab === 'repair' && !loading" class="workspace-grid repair-workspace" aria-label="售后页面配置编辑">
+      <section v-if="activeTab === 'repair' && !loading" class="workspace-grid repair-workspace" aria-label="鍞悗椤甸潰閰嶇疆缂栬緫">
         <aside class="record-list-panel">
-          <div class="panel-heading"><div><p class="eyebrow">售后页面配置</p><h3>页面草稿</h3></div><strong>{{ repairPages.length }}</strong></div>
+          <div class="panel-heading"><div><p class="eyebrow">鍞悗椤甸潰閰嶇疆</p><h3>椤甸潰鑽夌</h3></div><strong>{{ repairPages.length }}</strong></div>
           <button v-for="record in repairPages" :key="record.id" type="button" class="record-choice" :class="{ active: record.id === selectedRepairPageId }" @click="selectRepairPage(record.id)">
             <span>{{ record.title || record.page_key }}</span><small>{{ record.page_key }}</small><i :data-status="record.status">{{ statusLabel(record.status) }}</i>
           </button>
-          <p v-if="!repairPages.length" class="empty compact">暂无售后页面草稿。</p>
+          <p v-if="!repairPages.length" class="empty compact">鏆傛棤鍞悗椤甸潰鑽夌銆?/p>
         </aside>
         <form v-if="repairDraft" class="editor-form" @submit.prevent="saveRepairPage">
-          <div class="form-heading"><div><p class="eyebrow">售后页面配置</p><h3>{{ repairDraft.page_key }}</h3></div><span class="status" :data-status="repairDraft.status">{{ statusLabel(repairDraft.status) }}</span></div>
-          <p class="form-help">这里仅维护官网售后页面的展示内容；维修申请、保修核验和进度查询仍由 Repair 服务处理。</p>
+          <div class="form-heading"><div><p class="eyebrow">鍞悗椤甸潰閰嶇疆</p><h3>{{ repairDraft.page_key }}</h3></div><span class="status" :data-status="repairDraft.status">{{ statusLabel(repairDraft.status) }}</span></div>
+          <p class="form-help">杩欓噷浠呯淮鎶ゅ畼缃戝敭鍚庨〉闈㈢殑灞曠ず鍐呭锛涚淮淇敵璇枫€佷繚淇牳楠屽拰杩涘害鏌ヨ浠嶇敱 Repair 鏈嶅姟澶勭悊銆?/p>
           <div class="field-grid">
-            <label>页面键<input v-model.trim="repairDraft.page_key" disabled></label>
-            <label>语言<input v-model.trim="repairDraft.language" :disabled="!canEdit(repairDraft)" maxlength="20"></label>
-            <label class="full">标题<input v-model.trim="repairDraft.title" :disabled="!canEdit(repairDraft)" required maxlength="240"></label>
-            <label class="full">介绍<textarea v-model.trim="repairDraft.intro" :disabled="!canEdit(repairDraft)" rows="4" maxlength="4000"></textarea></label>
-            <label class="full">Hero 图片资源<input v-model.trim="repairDraft.hero_asset" :disabled="!canEdit(repairDraft)" placeholder="媒体资源 ID 或 URL"></label>
-            <label class="full">型号卡片 JSON<textarea v-model="repairDraft.model_cards_text" :disabled="!canEdit(repairDraft)" rows="5" placeholder="[{&quot;model&quot;:&quot;FR400XS&quot;,&quot;label&quot;:&quot;FR400XS&quot;}]"></textarea></label>
-            <label class="full">动作卡片 JSON（仅允许 01、02、09、10）<textarea v-model="repairDraft.action_cards_text" :disabled="!canEdit(repairDraft)" rows="6" placeholder="[{&quot;action&quot;:&quot;01&quot;,&quot;label&quot;:&quot;提交维修申请&quot;}]"></textarea></label>
-            <label class="full">流程步骤 JSON<textarea v-model="repairDraft.process_steps_text" :disabled="!canEdit(repairDraft)" rows="5"></textarea></label>
-            <label class="full">提示事项 JSON<textarea v-model="repairDraft.notices_text" :disabled="!canEdit(repairDraft)" rows="4"></textarea></label>
-            <label class="full">常见问题引用 JSON<textarea v-model="repairDraft.faq_refs_text" :disabled="!canEdit(repairDraft)" rows="4"></textarea></label>
+            <label>椤甸潰閿?input v-model.trim="repairDraft.page_key" disabled></label>
+            <label>璇█<input v-model.trim="repairDraft.language" :disabled="!canEdit(repairDraft)" maxlength="20"></label>
+            <label class="full">鏍囬<input v-model.trim="repairDraft.title" :disabled="!canEdit(repairDraft)" required maxlength="240"></label>
+            <label class="full">浠嬬粛<textarea v-model.trim="repairDraft.intro" :disabled="!canEdit(repairDraft)" rows="4" maxlength="4000"></textarea></label>
+            <label class="full">Hero 鍥剧墖璧勬簮<input v-model.trim="repairDraft.hero_asset" :disabled="!canEdit(repairDraft)" placeholder="濯掍綋璧勬簮 ID 鎴?URL"></label>
+            <label class="full">鍨嬪彿鍗＄墖 JSON<textarea v-model="repairDraft.model_cards_text" :disabled="!canEdit(repairDraft)" rows="5" placeholder="[{&quot;model&quot;:&quot;FR400XS&quot;,&quot;label&quot;:&quot;FR400XS&quot;}]"></textarea></label>
+            <label class="full">鍔ㄤ綔鍗＄墖 JSON锛堜粎鍏佽 01銆?2銆?9銆?0锛?textarea v-model="repairDraft.action_cards_text" :disabled="!canEdit(repairDraft)" rows="6" placeholder="[{&quot;action&quot;:&quot;01&quot;,&quot;label&quot;:&quot;鎻愪氦缁翠慨鐢宠&quot;}]"></textarea></label>
+            <label class="full">娴佺▼姝ラ JSON<textarea v-model="repairDraft.process_steps_text" :disabled="!canEdit(repairDraft)" rows="5"></textarea></label>
+            <label class="full">鎻愮ず浜嬮」 JSON<textarea v-model="repairDraft.notices_text" :disabled="!canEdit(repairDraft)" rows="4"></textarea></label>
+            <label class="full">甯歌闂寮曠敤 JSON<textarea v-model="repairDraft.faq_refs_text" :disabled="!canEdit(repairDraft)" rows="4"></textarea></label>
             <label class="full">SEO JSON<textarea v-model="repairDraft.seo_text" :disabled="!canEdit(repairDraft)" rows="4"></textarea></label>
           </div>
-          <div class="form-actions"><a class="repair-page-preview" :href="repairPreviewUrl(repairDraft)" target="_blank" rel="noreferrer">打开官网草稿预览</a><button class="primary-action" type="submit" :disabled="saving || !canEdit(repairDraft)">{{ saving ? '保存中...' : '保存售后页面草稿' }}</button></div>
+          <div class="form-actions"><a class="repair-page-preview" :href="repairPreviewUrl(repairDraft)" target="_blank" rel="noreferrer">鎵撳紑瀹樼綉鑽夌棰勮</a><button class="primary-action" type="submit" :disabled="saving || !canEdit(repairDraft)">{{ saving ? '淇濆瓨涓?..' : '淇濆瓨鍞悗椤甸潰鑽夌' }}</button></div>
         </form>
-        <div v-else class="empty">请选择一条售后页面草稿。</div>
+        <div v-else class="empty">璇烽€夋嫨涓€鏉″敭鍚庨〉闈㈣崏绋裤€?/div>
       </section>
 
-      <div v-if="loading" class="empty">正在加载可编辑内容...</div>
+      <div v-if="loading" class="empty">姝ｅ湪鍔犺浇鍙紪杈戝唴瀹?..</div>
 
       <section v-else-if="activeTab === 'home'" class="editor-start" aria-labelledby="editor-start-title">
         <div class="start-heading">
-          <p class="eyebrow">{{ siteAreaLabel }}内容</p>
-          <h3 id="editor-start-title">选择要修改的网站区块</h3>
-          <p>这里按官网实际显示区块分类。点击区块后，工作台会打开对应内容并定位到该位置，不再先进入通用“页面”列表。</p>
+          <p class="eyebrow">{{ siteAreaLabel }}鍐呭</p>
+          <h3 id="editor-start-title">閫夋嫨瑕佷慨鏀圭殑缃戠珯鍖哄潡</h3>
+          <p>杩欓噷鎸夊畼缃戝疄闄呮樉绀哄尯鍧楀垎绫汇€傜偣鍑诲尯鍧楀悗锛屽伐浣滃彴浼氭墦寮€瀵瑰簲鍐呭骞跺畾浣嶅埌璇ヤ綅缃紝涓嶅啀鍏堣繘鍏ラ€氱敤鈥滈〉闈⑩€濆垪琛ㄣ€?/p>
         </div>
         <div class="start-task-grid">
           <button v-for="(entry, index) in siteAreaContentEntries" :key="entry.key" type="button" class="start-task" @click="openSiteAreaEntry(entry)">
             <span>{{ String(index + 1).padStart(2, '0') }}</span><strong>{{ entry.label }}</strong><small>{{ siteAreaEntryDescription(entry) }}</small>
           </button>
         </div>
-        <p class="start-tip">需要管理图片、技术参数、审核或全站设置时，再打开“高级设置”。</p>
+        <p class="start-tip">闇€瑕佺鐞嗗浘鐗囥€佹妧鏈弬鏁般€佸鏍告垨鍏ㄧ珯璁剧疆鏃讹紝鍐嶆墦寮€鈥滈珮绾ц缃€濄€?/p>
       </section>
 
-      <section v-else-if="activeTab === 'media'" class="media-workspace" aria-label="媒体资产登记">
+      <section v-else-if="activeTab === 'media'" class="media-workspace" aria-label="濯掍綋璧勪骇鐧昏">
         <section class="editor-form media-upload-form">
           <div class="form-heading">
-          <div><p class="eyebrow">媒体素材</p><h3>上传媒体素材</h3></div>
-            <span class="status" data-status="published">上传即发布</span>
+          <div><p class="eyebrow">濯掍綋绱犳潗</p><h3>涓婁紶濯掍綋绱犳潗</h3></div>
+            <span class="status" data-status="published">涓婁紶鍗冲彂甯?/span>
           </div>
-          <p class="form-help">媒体素材已取消审核：上传成功即发布到官网素材库，可立即在画布和内容中使用。请先确认图片/视频的版权与授权范围。</p>
+          <p class="form-help">濯掍綋绱犳潗宸插彇娑堝鏍革細涓婁紶鎴愬姛鍗冲彂甯冨埌瀹樼綉绱犳潗搴擄紝鍙珛鍗冲湪鐢诲竷鍜屽唴瀹逛腑浣跨敤銆傝鍏堢‘璁ゅ浘鐗?瑙嗛鐨勭増鏉冧笌鎺堟潈鑼冨洿銆?/p>
           <form class="media-form-fields" @submit.prevent="createMediaCandidate">
             <div class="field-grid">
-          <label class="full">文件<input ref="mediaFileInput" type="file" accept="image/jpeg,image/png,image/webp,image/avif,video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov,.m4v,application/pdf" required @change="selectMediaFile"></label>
-              <p v-if="mediaDraft.file" class="form-help full">已选择：{{ mediaDraft.file.name }} · {{ readableFileSize(mediaDraft.file.size) }} · {{ mediaMetadataLabel }}</p>
-              <label>使用范围<select v-model="mediaDraft.usage_scope" required @change="syncMediaScopeContext"><option value="homepage">网站主页</option><option value="product">产品展示</option><option value="manufacturing">先进制造</option><option value="article">视频新闻</option><option value="brand">关于瑞钧</option><option value="service">服务支持</option></select></label>
-              <label>官网展示位置<select v-model="mediaDraft.placement_key" required @change="applyMediaPlacementContext(mediaDraft.placement_key, true)"><option v-for="option in compatibleMediaPlacements" :key="option.key" :value="option.key">{{ option.label }}</option></select></label>
+          <label class="full">鏂囦欢<input ref="mediaFileInput" type="file" accept="image/jpeg,image/png,image/webp,image/avif,video/mp4,video/webm,video/quicktime,.mp4,.webm,.mov,.m4v,application/pdf" required @change="selectMediaFile"></label>
+              <p v-if="mediaDraft.file" class="form-help full">宸查€夋嫨锛歿{ mediaDraft.file.name }} 路 {{ readableFileSize(mediaDraft.file.size) }} 路 {{ mediaMetadataLabel }}</p>
+              <label>浣跨敤鑼冨洿<select v-model="mediaDraft.usage_scope" required @change="syncMediaScopeContext"><option value="homepage">缃戠珯涓婚〉</option><option value="product">浜у搧灞曠ず</option><option value="manufacturing">鍏堣繘鍒堕€?/option><option value="article">瑙嗛鏂伴椈</option><option value="brand">鍏充簬鐟為挧</option><option value="service">鏈嶅姟鏀寔</option></select></label>
+              <label>瀹樼綉灞曠ず浣嶇疆<select v-model="mediaDraft.placement_key" required @change="applyMediaPlacementContext(mediaDraft.placement_key, true)"><option v-for="option in compatibleMediaPlacements" :key="option.key" :value="option.key">{{ option.label }}</option></select></label>
               <p class="field-help full">{{ selectedMediaPlacementHelp }}</p>
-              <label>所属页面<input v-model.trim="mediaDraft.page_key" maxlength="80" placeholder="例如：home、news、product"></label>
-              <label>所属段落<input v-model.trim="mediaDraft.section_key" maxlength="80" placeholder="例如：hero、video-sharing"></label>
-              <label>素材标题<input v-model.trim="mediaDraft.title" maxlength="160"></label>
-              <label>显示顺序<input v-model.number="mediaDraft.sort_order" type="number" min="0" max="9999"></label>
-              <label>版权状态<select v-model="mediaDraft.copyright_status" required><option value="owned">自有素材</option><option value="licensed">已获许可</option><option value="authorized">已授权公开</option><option value="pending_review">待确认</option></select></label>
-              <label class="toggle-field"><input v-model="mediaDraft.enabled" type="checkbox"><span>发布后允许此位置使用</span></label>
-              <label class="full">替代文本<input v-model.trim="mediaDraft.alt_text" maxlength="300" placeholder="简要说明画面或文件内容，便于检索与无障碍访问"></label>
-              <label class="full">素材说明<textarea v-model.trim="mediaDraft.description" rows="2" maxlength="2000"></textarea></label>
+              <label>鎵€灞為〉闈?input v-model.trim="mediaDraft.page_key" maxlength="80" placeholder="渚嬪锛歨ome銆乶ews銆乸roduct"></label>
+              <label>鎵€灞炴钀?input v-model.trim="mediaDraft.section_key" maxlength="80" placeholder="渚嬪锛歨ero銆乿ideo-sharing"></label>
+              <label>绱犳潗鏍囬<input v-model.trim="mediaDraft.title" maxlength="160"></label>
+              <label>鏄剧ず椤哄簭<input v-model.number="mediaDraft.sort_order" type="number" min="0" max="9999"></label>
+              <label>鐗堟潈鐘舵€?select v-model="mediaDraft.copyright_status" required><option value="owned">鑷湁绱犳潗</option><option value="licensed">宸茶幏璁稿彲</option><option value="authorized">宸叉巿鏉冨叕寮€</option><option value="pending_review">寰呯‘璁?/option></select></label>
+              <label class="toggle-field"><input v-model="mediaDraft.enabled" type="checkbox"><span>鍙戝竷鍚庡厑璁告浣嶇疆浣跨敤</span></label>
+              <label class="full">鏇夸唬鏂囨湰<input v-model.trim="mediaDraft.alt_text" maxlength="300" placeholder="绠€瑕佽鏄庣敾闈㈡垨鏂囦欢鍐呭锛屼究浜庢绱笌鏃犻殰纰嶈闂?></label>
+              <label class="full">绱犳潗璇存槑<textarea v-model.trim="mediaDraft.description" rows="2" maxlength="2000"></textarea></label>
               <template v-if="mediaDraft.media_type === 'video'">
-                <label>视频封面<span>（可选，建议填写；未填写时官网先显示视频首帧）</span><select v-model="mediaDraft.poster_asset_id"><option value="">暂不设置封面（之后可在素材清单补充）</option><option v-for="asset in videoPosterOptions" :key="asset.id" :value="String(asset.id)">{{ videoPosterAssetLabel(asset) }}</option></select></label>
-                <label class="toggle-field"><input v-model="mediaDraft.autoplay" type="checkbox"><span>自动播放</span></label>
-                <label class="toggle-field"><input v-model="mediaDraft.muted" type="checkbox"><span>默认静音</span></label>
-                <label class="toggle-field"><input v-model="mediaDraft.loop" type="checkbox"><span>循环播放</span></label>
-                <label class="full">字幕或文字稿<textarea v-model.trim="mediaDraft.transcript" rows="4" maxlength="30000" placeholder="视频分享可选；教学视频和首屏说明建议填写"></textarea></label>
+                <label>瑙嗛灏侀潰<span>锛堝彲閫夛紝寤鸿濉啓锛涙湭濉啓鏃跺畼缃戝厛鏄剧ず瑙嗛棣栧抚锛?/span><select v-model="mediaDraft.poster_asset_id"><option value="">鏆備笉璁剧疆灏侀潰锛堜箣鍚庡彲鍦ㄧ礌鏉愭竻鍗曡ˉ鍏咃級</option><option v-for="asset in videoPosterOptions" :key="asset.id" :value="String(asset.id)">{{ videoPosterAssetLabel(asset) }}</option></select></label>
+                <label class="toggle-field"><input v-model="mediaDraft.autoplay" type="checkbox"><span>鑷姩鎾斁</span></label>
+                <label class="toggle-field"><input v-model="mediaDraft.muted" type="checkbox"><span>榛樿闈欓煶</span></label>
+                <label class="toggle-field"><input v-model="mediaDraft.loop" type="checkbox"><span>寰幆鎾斁</span></label>
+                <label class="full">瀛楀箷鎴栨枃瀛楃<textarea v-model.trim="mediaDraft.transcript" rows="4" maxlength="30000" placeholder="瑙嗛鍒嗕韩鍙€夛紱鏁欏瑙嗛鍜岄灞忚鏄庡缓璁～鍐?></textarea></label>
               </template>
-              <label class="full">授权与来源说明<textarea v-model.trim="mediaDraft.authorization_note" rows="3" maxlength="2000" placeholder="填写拍摄来源、许可证、授权范围或待确认事项"></textarea></label>
+              <label class="full">鎺堟潈涓庢潵婧愯鏄?textarea v-model.trim="mediaDraft.authorization_note" rows="3" maxlength="2000" placeholder="濉啓鎷嶆憚鏉ユ簮銆佽鍙瘉銆佹巿鏉冭寖鍥存垨寰呯‘璁や簨椤?></textarea></label>
             </div>
-            <div class="form-actions"><span></span><button class="primary-action" type="submit" :disabled="saving || !mediaDraft.file">{{ saving ? '正在上传...' : '上传并发布素材' }}</button></div>
+            <div class="form-actions"><span></span><button class="primary-action" type="submit" :disabled="saving || !mediaDraft.file">{{ saving ? '姝ｅ湪涓婁紶...' : '涓婁紶骞跺彂甯冪礌鏉? }}</button></div>
           </form>
           <p v-if="activeTab === 'media' && error" class="form-help media-upload-error" role="alert">{{ error }}</p>
         </section>
 
         <section class="editor-form media-candidate-list" aria-labelledby="media-candidates-title">
-          <div class="section-heading"><div><p class="eyebrow">素材清单</p><h3 id="media-candidates-title">当前媒体记录</h3></div><strong>{{ mediaCandidates.length }}</strong></div>
-          <p v-if="!mediaCandidates.length" class="empty compact">暂未登记媒体资产。</p>
+          <div class="section-heading"><div><p class="eyebrow">绱犳潗娓呭崟</p><h3 id="media-candidates-title">褰撳墠濯掍綋璁板綍</h3></div><strong>{{ mediaCandidates.length }}</strong></div>
+          <p v-if="!mediaCandidates.length" class="empty compact">鏆傛湭鐧昏濯掍綋璧勪骇銆?/p>
           <article v-for="asset in mediaCandidates" :key="asset.id" class="media-candidate-row">
             <div class="media-preview" aria-hidden="true"><img v-if="isPreviewableMedia(asset) && mediaPreviewUrl(asset)" :src="mediaPreviewUrl(asset)" :alt="asset.alt_text || asset.original_file_name"><span v-else>{{ mediaPreviewLabel(asset) }}</span></div>
-            <div><strong>{{ asset.title || asset.original_file_name }}</strong><p>{{ asset.original_file_name }} · {{ usageScopeLabel(asset.usage_scope) }} · {{ asset.placement_key || '未指定展示位置' }} · {{ asset.mime_type }} · {{ readableFileSize(asset.byte_size) }}</p><small>{{ asset.width && asset.height ? `${asset.width} x ${asset.height} px · ${asset.aspect_ratio || '比例未记录'}` : asset.media_type === 'document' ? 'PDF 文档' : '尺寸未记录' }} · {{ asset.alt_text || '未填写替代文本' }}</small></div>
+            <div><strong>{{ asset.title || asset.original_file_name }}</strong><p>{{ asset.original_file_name }} 路 {{ usageScopeLabel(asset.usage_scope) }} 路 {{ asset.placement_key || '鏈寚瀹氬睍绀轰綅缃? }} 路 {{ asset.mime_type }} 路 {{ readableFileSize(asset.byte_size) }}</p><small>{{ asset.width && asset.height ? `${asset.width} x ${asset.height} px 路 ${asset.aspect_ratio || '姣斾緥鏈褰?}` : asset.media_type === 'document' ? 'PDF 鏂囨。' : '灏哄鏈褰? }} 路 {{ asset.alt_text || '鏈～鍐欐浛浠ｆ枃鏈? }}</small></div>
             <span class="status" :data-status="asset.status">{{ statusLabel(asset.status) }}</span>
-            <button type="button" class="text-action danger" @click="deleteMediaAsset(asset)">删除</button>
+            <button type="button" class="text-action danger" @click="deleteMediaAsset(asset)">鍒犻櫎</button>
             <div v-if="asset.media_type === 'video'" class="media-poster-editor">
-              <label>封面<select v-model="mediaPosterSelections[asset.id]"><option value="">未设置（官网显示视频首帧）</option><option v-for="poster in mediaPosterOptions(asset)" :key="poster.id" :value="String(poster.id)">{{ videoPosterAssetLabel(poster) }}</option></select></label>
-              <button type="button" :disabled="mediaPosterSavingId === String(asset.id)" @click="saveMediaPoster(asset)">{{ mediaPosterSavingId === String(asset.id) ? '保存中...' : '保存封面' }}</button>
+              <label>灏侀潰<select v-model="mediaPosterSelections[asset.id]"><option value="">鏈缃紙瀹樼綉鏄剧ず瑙嗛棣栧抚锛?/option><option v-for="poster in mediaPosterOptions(asset)" :key="poster.id" :value="String(poster.id)">{{ videoPosterAssetLabel(poster) }}</option></select></label>
+              <button type="button" :disabled="mediaPosterSavingId === String(asset.id)" @click="saveMediaPoster(asset)">{{ mediaPosterSavingId === String(asset.id) ? '淇濆瓨涓?..' : '淇濆瓨灏侀潰' }}</button>
               <small>{{ mediaPosterHint(asset) }}</small>
             </div>
           </article>
         </section>
       </section>
 
-      <section v-else-if="activeTab === 'knowledge'" class="workspace-grid" aria-label="常见问题知识草稿编辑">
+      <section v-else-if="activeTab === 'knowledge'" class="workspace-grid" aria-label="甯歌闂鐭ヨ瘑鑽夌缂栬緫">
         <aside class="record-list-panel knowledge-list">
-          <div class="panel-heading"><div><p class="eyebrow">常见问题知识</p><h3>知识草稿</h3></div><strong>{{ filteredKnowledge.length }}</strong></div>
-          <label class="list-search">检索问题<input v-model.trim="knowledgeSearch" type="search" placeholder="按标题或分类筛选"></label>
-          <button type="button" class="primary-action" :disabled="saving" @click="createKnowledgeRecord">新建官网知识草稿</button>
+          <div class="panel-heading"><div><p class="eyebrow">甯歌闂鐭ヨ瘑</p><h3>鐭ヨ瘑鑽夌</h3></div><strong>{{ filteredKnowledge.length }}</strong></div>
+          <label class="list-search">妫€绱㈤棶棰?input v-model.trim="knowledgeSearch" type="search" placeholder="鎸夋爣棰樻垨鍒嗙被绛涢€?></label>
+          <button type="button" class="primary-action" :disabled="saving" @click="createKnowledgeRecord">鏂板缓瀹樼綉鐭ヨ瘑鑽夌</button>
           <button v-for="record in filteredKnowledge" :key="record.id" type="button" class="record-choice" :class="{ active: record.id === selectedKnowledgeId }" @click="selectKnowledge(record.id)">
-            <span>{{ record.question_title || '未命名知识' }}</span><small>{{ record.category || '未分类' }} · {{ riskLabel(record.risk_level) }}</small><i :data-status="record.status">{{ statusLabel(record.status) }}</i>
+            <span>{{ record.question_title || '鏈懡鍚嶇煡璇? }}</span><small>{{ record.category || '鏈垎绫? }} 路 {{ riskLabel(record.risk_level) }}</small><i :data-status="record.status">{{ statusLabel(record.status) }}</i>
           </button>
-          <p v-if="!filteredKnowledge.length" class="empty compact">没有符合当前筛选条件的常见问题知识草稿。</p>
+          <p v-if="!filteredKnowledge.length" class="empty compact">娌℃湁绗﹀悎褰撳墠绛涢€夋潯浠剁殑甯歌闂鐭ヨ瘑鑽夌銆?/p>
         </aside>
 
         <form v-if="knowledgeDraft" class="editor-form" @submit.prevent="saveKnowledge">
-          <div class="form-heading"><div><p class="eyebrow">知识草稿</p><h3>{{ knowledgeDraft.question_title || '未命名知识' }}</h3></div><span class="status" :data-status="knowledgeDraft.status">{{ statusLabel(knowledgeDraft.status) }}</span></div>
-          <p v-if="!canEdit(knowledgeDraft)" class="read-only-note">该知识已进入审核、排期或发布状态。请通过内容版本流程恢复为草稿后再修改。</p>
-          <p v-else class="form-help">这里只保存内部草稿。技术审核人仍需在审核流程中确认风险边界；智能问答知识库同步与公开发布不在此页面执行。</p>
+          <div class="form-heading"><div><p class="eyebrow">鐭ヨ瘑鑽夌</p><h3>{{ knowledgeDraft.question_title || '鏈懡鍚嶇煡璇? }}</h3></div><span class="status" :data-status="knowledgeDraft.status">{{ statusLabel(knowledgeDraft.status) }}</span></div>
+          <p v-if="!canEdit(knowledgeDraft)" class="read-only-note">璇ョ煡璇嗗凡杩涘叆瀹℃牳銆佹帓鏈熸垨鍙戝竷鐘舵€併€傝閫氳繃鍐呭鐗堟湰娴佺▼鎭㈠涓鸿崏绋垮悗鍐嶄慨鏀广€?/p>
+          <p v-else class="form-help">杩欓噷鍙繚瀛樺唴閮ㄨ崏绋裤€傛妧鏈鏍镐汉浠嶉渶鍦ㄥ鏍告祦绋嬩腑纭椋庨櫓杈圭晫锛涙櫤鑳介棶绛旂煡璇嗗簱鍚屾涓庡叕寮€鍙戝竷涓嶅湪姝ら〉闈㈡墽琛屻€?/p>
           <div class="field-grid">
-            <label>资料编号（系统维护）<input :value="knowledgeDraft.source_key" disabled></label>
-            <label>来源文档<input :value="knowledgeDraft.source_document || '未填写'" disabled></label>
-            <label class="full">问题标题<input v-model.trim="knowledgeDraft.question_title" :disabled="!canEdit(knowledgeDraft)" required maxlength="240"></label>
-            <label>官网栏目<select v-model="knowledgeDraft.category" :disabled="!canEdit(knowledgeDraft)" required><option value="fault_analysis">常见故障分析</option><option value="knowledge_share">知识分享</option></select></label>
-            <label>风险等级<select v-model="knowledgeDraft.risk_level" :disabled="!canEdit(knowledgeDraft)" required><option value="high">高风险</option><option value="medium">中风险</option><option value="low">低风险</option></select></label>
-            <label>可见范围<select v-model="knowledgeDraft.visibility" :disabled="!canEdit(knowledgeDraft)" required><option value="support_internal">售后内部</option><option value="public">公开候选</option></select></label>
-            <label>使用渠道<select v-model="knowledgeDraft.channel" :disabled="!canEdit(knowledgeDraft)" required><option value="both">官网与维修端</option><option value="website">官网</option><option value="repair_portal">维修端</option></select></label>
-            <label>知识版本<input v-model.trim="knowledgeDraft.version" :disabled="!canEdit(knowledgeDraft)" required maxlength="80" placeholder="例如：v1.0"></label>
-            <label>展示日期<input v-model="knowledgeDraft.display_date" :disabled="!canEdit(knowledgeDraft)" type="date"></label>
-            <label>页面排序<input v-model.number="knowledgeDraft.sort_order" :disabled="!canEdit(knowledgeDraft)" type="number" min="0" step="1"></label>
-            <label>技术审核责任人<input v-model.trim="knowledgeDraft.technical_reviewer" :disabled="!canEdit(knowledgeDraft)" required maxlength="160" placeholder="姓名或岗位"></label>
-            <label>适用型号（每行一项）<textarea v-model="knowledgeDraft.applicableModelsText" :disabled="!canEdit(knowledgeDraft)" rows="4" maxlength="3000"></textarea></label>
-            <label>错误代码（每行一项）<textarea v-model="knowledgeDraft.errorCodesText" :disabled="!canEdit(knowledgeDraft)" rows="4" maxlength="3000"></textarea></label>
-            <label class="full">故障现象<textarea v-model="knowledgeDraft.symptoms" :disabled="!canEdit(knowledgeDraft)" rows="4" maxlength="6000" placeholder="描述用户可观察到的故障现象"></textarea></label>
-            <label class="full">排障步骤或原始知识内容<textarea v-model="knowledgeDraft.troubleshootingStepsText" :disabled="!canEdit(knowledgeDraft)" rows="10" maxlength="20000" required placeholder="每行一条排障步骤，或保留导入的原始知识内容"></textarea></label>
-            <label class="full">安全前置条件（高风险知识每行一项）<textarea v-model="knowledgeDraft.safetyPreconditionsText" :disabled="!canEdit(knowledgeDraft)" rows="4" maxlength="6000" placeholder="例如：断开设备主电源并确认放电完成"></textarea></label>
-            <label class="full">人工升级说明（高风险知识必填）<textarea v-model="knowledgeDraft.escalation_guidance" :disabled="!canEdit(knowledgeDraft)" rows="4" maxlength="6000" placeholder="说明何时停止自助排障并转人工售后"></textarea></label>
-            <label>知识库同步状态（系统维护）<input :value="knowledgeSyncStatusLabel(knowledgeDraft.dify_sync_status)" disabled></label>
+            <label>璧勬枡缂栧彿锛堢郴缁熺淮鎶わ級<input :value="knowledgeDraft.source_key" disabled></label>
+            <label>鏉ユ簮鏂囨。<input :value="knowledgeDraft.source_document || '鏈～鍐?" disabled></label>
+            <label class="full">闂鏍囬<input v-model.trim="knowledgeDraft.question_title" :disabled="!canEdit(knowledgeDraft)" required maxlength="240"></label>
+            <label>瀹樼綉鏍忕洰<select v-model="knowledgeDraft.category" :disabled="!canEdit(knowledgeDraft)" required><option value="fault_analysis">甯歌鏁呴殰鍒嗘瀽</option><option value="knowledge_share">鐭ヨ瘑鍒嗕韩</option></select></label>
+            <label>椋庨櫓绛夌骇<select v-model="knowledgeDraft.risk_level" :disabled="!canEdit(knowledgeDraft)" required><option value="high">楂橀闄?/option><option value="medium">涓闄?/option><option value="low">浣庨闄?/option></select></label>
+            <label>鍙鑼冨洿<select v-model="knowledgeDraft.visibility" :disabled="!canEdit(knowledgeDraft)" required><option value="support_internal">鍞悗鍐呴儴</option><option value="public">鍏紑鍊欓€?/option></select></label>
+            <label>浣跨敤娓犻亾<select v-model="knowledgeDraft.channel" :disabled="!canEdit(knowledgeDraft)" required><option value="both">瀹樼綉涓庣淮淇</option><option value="website">瀹樼綉</option><option value="repair_portal">缁翠慨绔?/option></select></label>
+            <label>鐭ヨ瘑鐗堟湰<input v-model.trim="knowledgeDraft.version" :disabled="!canEdit(knowledgeDraft)" required maxlength="80" placeholder="渚嬪锛歷1.0"></label>
+            <label>灞曠ず鏃ユ湡<input v-model="knowledgeDraft.display_date" :disabled="!canEdit(knowledgeDraft)" type="date"></label>
+            <label>椤甸潰鎺掑簭<input v-model.number="knowledgeDraft.sort_order" :disabled="!canEdit(knowledgeDraft)" type="number" min="0" step="1"></label>
+            <label>鎶€鏈鏍歌矗浠讳汉<input v-model.trim="knowledgeDraft.technical_reviewer" :disabled="!canEdit(knowledgeDraft)" required maxlength="160" placeholder="濮撳悕鎴栧矖浣?></label>
+            <label>閫傜敤鍨嬪彿锛堟瘡琛屼竴椤癸級<textarea v-model="knowledgeDraft.applicableModelsText" :disabled="!canEdit(knowledgeDraft)" rows="4" maxlength="3000"></textarea></label>
+            <label>閿欒浠ｇ爜锛堟瘡琛屼竴椤癸級<textarea v-model="knowledgeDraft.errorCodesText" :disabled="!canEdit(knowledgeDraft)" rows="4" maxlength="3000"></textarea></label>
+            <label class="full">鏁呴殰鐜拌薄<textarea v-model="knowledgeDraft.symptoms" :disabled="!canEdit(knowledgeDraft)" rows="4" maxlength="6000" placeholder="鎻忚堪鐢ㄦ埛鍙瀵熷埌鐨勬晠闅滅幇璞?></textarea></label>
+            <label class="full">鎺掗殰姝ラ鎴栧師濮嬬煡璇嗗唴瀹?textarea v-model="knowledgeDraft.troubleshootingStepsText" :disabled="!canEdit(knowledgeDraft)" rows="10" maxlength="20000" required placeholder="姣忚涓€鏉℃帓闅滄楠わ紝鎴栦繚鐣欏鍏ョ殑鍘熷鐭ヨ瘑鍐呭"></textarea></label>
+            <label class="full">瀹夊叏鍓嶇疆鏉′欢锛堥珮椋庨櫓鐭ヨ瘑姣忚涓€椤癸級<textarea v-model="knowledgeDraft.safetyPreconditionsText" :disabled="!canEdit(knowledgeDraft)" rows="4" maxlength="6000" placeholder="渚嬪锛氭柇寮€璁惧涓荤數婧愬苟纭鏀剧數瀹屾垚"></textarea></label>
+            <label class="full">浜哄伐鍗囩骇璇存槑锛堥珮椋庨櫓鐭ヨ瘑蹇呭～锛?textarea v-model="knowledgeDraft.escalation_guidance" :disabled="!canEdit(knowledgeDraft)" rows="4" maxlength="6000" placeholder="璇存槑浣曟椂鍋滄鑷姪鎺掗殰骞惰浆浜哄伐鍞悗"></textarea></label>
+            <label>鐭ヨ瘑搴撳悓姝ョ姸鎬侊紙绯荤粺缁存姢锛?input :value="knowledgeSyncStatusLabel(knowledgeDraft.dify_sync_status)" disabled></label>
           </div>
-          <section class="media-reference-editor" aria-label="常见问题知识受控媒体">
-            <div class="section-card-heading"><strong>受控知识媒体</strong><span>{{ knowledgeDraft.mediaReferences.length }}</span></div>
-            <div class="media-reference-add"><select v-model="knowledgeMediaSelection" :disabled="!canEdit(knowledgeDraft)"><option value="">选择知识库素材（含内部预览草稿）</option><option v-for="asset in editableMediaAssets('knowledge')" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select><button type="button" :disabled="!canEdit(knowledgeDraft) || !knowledgeMediaSelection" @click="addKnowledgeMediaReference">添加</button></div>
-            <p v-if="!editableMediaAssets('knowledge').length" class="form-help">暂无可用的知识库素材。请先在“媒体资产”中登记素材；媒体上传即发布，草稿仅用于后台内部预览。</p>
-            <div v-for="reference in knowledgeDraft.mediaReferences" :key="reference.media_asset_id" class="media-reference-row"><span>{{ mediaReferenceLabel(reference, 'knowledge') }}</span><button type="button" class="text-action danger" :disabled="!canEdit(knowledgeDraft)" @click="removeKnowledgeMediaReference(reference.media_asset_id)">移除</button></div>
+          <section class="media-reference-editor" aria-label="甯歌闂鐭ヨ瘑鍙楁帶濯掍綋">
+            <div class="section-card-heading"><strong>鍙楁帶鐭ヨ瘑濯掍綋</strong><span>{{ knowledgeDraft.mediaReferences.length }}</span></div>
+            <div class="media-reference-add"><select v-model="knowledgeMediaSelection" :disabled="!canEdit(knowledgeDraft)"><option value="">閫夋嫨鐭ヨ瘑搴撶礌鏉愶紙鍚唴閮ㄩ瑙堣崏绋匡級</option><option v-for="asset in editableMediaAssets('knowledge')" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select><button type="button" :disabled="!canEdit(knowledgeDraft) || !knowledgeMediaSelection" @click="addKnowledgeMediaReference">娣诲姞</button></div>
+            <p v-if="!editableMediaAssets('knowledge').length" class="form-help">鏆傛棤鍙敤鐨勭煡璇嗗簱绱犳潗銆傝鍏堝湪鈥滃獟浣撹祫浜р€濅腑鐧昏绱犳潗锛涘獟浣撲笂浼犲嵆鍙戝竷锛岃崏绋夸粎鐢ㄤ簬鍚庡彴鍐呴儴棰勮銆?/p>
+            <div v-for="reference in knowledgeDraft.mediaReferences" :key="reference.media_asset_id" class="media-reference-row"><span>{{ mediaReferenceLabel(reference, 'knowledge') }}</span><button type="button" class="text-action danger" :disabled="!canEdit(knowledgeDraft)" @click="removeKnowledgeMediaReference(reference.media_asset_id)">绉婚櫎</button></div>
           </section>
-          <div class="form-actions"><a :href="nativeItemPath('knowledge_items', knowledgeDraft.id)">打开高级设置管理媒体与其他字段</a><button class="primary-action" type="submit" :disabled="saving || !canEdit(knowledgeDraft)">{{ saving ? '保存中...' : '保存常见问题知识草稿' }}</button></div>
+          <div class="form-actions"><a :href="nativeItemPath('knowledge_items', knowledgeDraft.id)">鎵撳紑楂樼骇璁剧疆绠＄悊濯掍綋涓庡叾浠栧瓧娈?/a><button class="primary-action" type="submit" :disabled="saving || !canEdit(knowledgeDraft)">{{ saving ? '淇濆瓨涓?..' : '淇濆瓨甯歌闂鐭ヨ瘑鑽夌' }}</button></div>
         </form>
-        <div v-else class="empty">请选择一条常见问题知识草稿。</div>
+        <div v-else class="empty">璇烽€夋嫨涓€鏉″父瑙侀棶棰樼煡璇嗚崏绋裤€?/div>
       </section>
 
-      <section v-else-if="activeTab === 'submit'" class="workspace-grid review-workspace" aria-label="内容送审清单">
+      <section v-else-if="activeTab === 'submit'" class="workspace-grid review-workspace" aria-label="鍐呭閫佸娓呭崟">
         <aside class="record-list-panel review-list">
-          <div class="panel-heading"><div><p class="eyebrow">提交审核</p><h3>{{ submissionMode === 'submit' ? '可提交草稿' : '待恢复内容' }}</h3></div><strong>{{ filteredSubmissionQueue.length }}<template v-if="filteredSubmissionQueue.length !== submissionQueue.length"> / {{ submissionQueue.length }}</template></strong></div>
-          <div class="subtabs lifecycle-tabs"><button type="button" :class="{ active: submissionMode === 'submit' }" @click="setSubmissionMode('submit')">提交审核</button><button type="button" :class="{ active: submissionMode === 'restore' }" @click="setSubmissionMode('restore')">恢复草稿</button></div>
-          <p class="form-help">{{ submissionMode === 'submit' ? '只显示当前账号可以读取的草稿。' : '只显示退回修改或下线内容；恢复后才能继续编辑或重新提交审核。' }}</p>
+          <div class="panel-heading"><div><p class="eyebrow">鎻愪氦瀹℃牳</p><h3>{{ submissionMode === 'submit' ? '鍙彁浜よ崏绋? : '寰呮仮澶嶅唴瀹? }}</h3></div><strong>{{ filteredSubmissionQueue.length }}<template v-if="filteredSubmissionQueue.length !== submissionQueue.length"> / {{ submissionQueue.length }}</template></strong></div>
+          <div class="subtabs lifecycle-tabs"><button type="button" :class="{ active: submissionMode === 'submit' }" @click="setSubmissionMode('submit')">鎻愪氦瀹℃牳</button><button type="button" :class="{ active: submissionMode === 'restore' }" @click="setSubmissionMode('restore')">鎭㈠鑽夌</button></div>
+          <p class="form-help">{{ submissionMode === 'submit' ? '鍙樉绀哄綋鍓嶈处鍙峰彲浠ヨ鍙栫殑鑽夌銆? : '鍙樉绀洪€€鍥炰慨鏀规垨涓嬬嚎鍐呭锛涙仮澶嶅悗鎵嶈兘缁х画缂栬緫鎴栭噸鏂版彁浜ゅ鏍搞€? }}</p>
           <div v-if="submissionQueue.length > 1" class="queue-filters">
-            <label>搜索内容<input v-model.trim="submissionQuery" type="search" placeholder="输入名称或标识，例如 测试1" maxlength="80"></label>
-            <label>内容类型<select v-model="submissionCollectionFilter"><option value="">全部类型（{{ submissionQueue.length }}）</option><option v-for="option in submissionCollectionOptions" :key="option.value" :value="option.value">{{ option.label }}（{{ option.count }}）</option></select></label>
+            <label>鎼滅储鍐呭<input v-model.trim="submissionQuery" type="search" placeholder="杈撳叆鍚嶇О鎴栨爣璇嗭紝渚嬪 娴嬭瘯1" maxlength="80"></label>
+            <label>鍐呭绫诲瀷<select v-model="submissionCollectionFilter"><option value="">鍏ㄩ儴绫诲瀷锛坽{ submissionQueue.length }}锛?/option><option v-for="option in submissionCollectionOptions" :key="option.value" :value="option.value">{{ option.label }}锛坽{ option.count }}锛?/option></select></label>
           </div>
-          <button type="button" class="text-action refresh-queue" :disabled="submissionLoading" @click="loadSubmissionQueue">{{ submissionLoading ? '正在刷新...' : '刷新清单' }}</button>
+          <button type="button" class="text-action refresh-queue" :disabled="submissionLoading" @click="loadSubmissionQueue">{{ submissionLoading ? '姝ｅ湪鍒锋柊...' : '鍒锋柊娓呭崟' }}</button>
           <button v-for="record in filteredSubmissionQueue" :key="submissionRecordKey(record)" type="button" class="record-choice" :class="{ active: submissionRecordKey(record) === selectedSubmissionKey }" @click="selectSubmissionRecord(record)">
-            <span>{{ record.label }}</span><small>{{ record.collectionLabel }} · {{ record.secondary || statusLabel(record.status) }}</small><i :data-status="record.status">{{ statusLabel(record.status) }}</i>
+            <span>{{ record.label }}</span><small>{{ record.collectionLabel }} 路 {{ record.secondary || statusLabel(record.status) }}</small><i :data-status="record.status">{{ statusLabel(record.status) }}</i>
           </button>
-          <p v-if="submissionLoading" class="empty compact">正在读取各内容类型的{{ submissionMode === 'submit' ? '草稿' : '待恢复记录' }}...</p>
-          <p v-else-if="!submissionQueue.length" class="empty compact">当前账号没有{{ submissionMode === 'submit' ? '可提交审核的草稿' : '可恢复的内容' }}。</p>
-          <p v-else-if="!filteredSubmissionQueue.length" class="empty compact">没有符合筛选条件的{{ submissionMode === 'submit' ? '草稿' : '待恢复内容' }}。<button type="button" class="text-action" @click="clearSubmissionFilters">清除筛选</button></p>
+          <p v-if="submissionLoading" class="empty compact">姝ｅ湪璇诲彇鍚勫唴瀹圭被鍨嬬殑{{ submissionMode === 'submit' ? '鑽夌' : '寰呮仮澶嶈褰? }}...</p>
+          <p v-else-if="!submissionQueue.length" class="empty compact">褰撳墠璐﹀彿娌℃湁{{ submissionMode === 'submit' ? '鍙彁浜ゅ鏍哥殑鑽夌' : '鍙仮澶嶇殑鍐呭' }}銆?/p>
+          <p v-else-if="!filteredSubmissionQueue.length" class="empty compact">娌℃湁绗﹀悎绛涢€夋潯浠剁殑{{ submissionMode === 'submit' ? '鑽夌' : '寰呮仮澶嶅唴瀹? }}銆?button type="button" class="text-action" @click="clearSubmissionFilters">娓呴櫎绛涢€?/button></p>
         </aside>
 
         <section v-if="selectedSubmissionRecord" class="editor-form review-detail">
-          <div class="form-heading"><div><p class="eyebrow">{{ submissionMode === 'submit' ? '提交审核' : '恢复草稿' }}</p><h3>{{ selectedSubmissionRecord.label }}</h3></div><span class="status" :data-status="selectedSubmissionRecord.status">{{ statusLabel(selectedSubmissionRecord.status) }}</span></div>
+          <div class="form-heading"><div><p class="eyebrow">{{ submissionMode === 'submit' ? '鎻愪氦瀹℃牳' : '鎭㈠鑽夌' }}</p><h3>{{ selectedSubmissionRecord.label }}</h3></div><span class="status" :data-status="selectedSubmissionRecord.status">{{ statusLabel(selectedSubmissionRecord.status) }}</span></div>
           <div class="review-meta"><span>{{ selectedSubmissionRecord.collectionLabel }}</span><span v-if="selectedSubmissionRecord.secondary">{{ selectedSubmissionRecord.secondary }}</span></div>
           <ul v-if="selectedSubmissionRecord.collection === 'content_submissions'" class="batch-item-list"><li v-for="item in selectedSubmissionRecord.items" :key="`${item.collection}:${item.id}`">{{ item.label || item.id }}</li></ul>
-          <p v-if="selectedSubmissionRecord.review_note" class="review-note-display"><strong>{{ submissionMode === 'submit' ? '现有审核说明' : '最近审核说明' }}</strong><span>{{ selectedSubmissionRecord.review_note }}</span></p>
-          <p class="form-help">{{ submissionMode === 'submit' ? '提交后记录将冻结为“审核中”。审核人员将按内容类型、来源、受控媒体和发布前置条件进行复核。' : '恢复后记录变为非公开草稿，可再次编辑；恢复不代表通过审核，也不会自动发布。' }}</p>
-          <label class="review-note">{{ submissionMode === 'submit' ? '提交说明' : '恢复说明' }}<textarea v-model.trim="submissionNote" rows="6" maxlength="2000" :placeholder="submissionMode === 'submit' ? '说明本次修改范围、待审核主张或技术复核重点' : '说明恢复原因或后续补充计划' "></textarea></label>
-          <div class="form-actions"><a :href="nativeItemPath(selectedSubmissionRecord.collection, selectedSubmissionRecord.id)">打开高级设置（专业人员）</a><button type="button" class="primary-action" :disabled="submissionSaving" @click="submissionMode === 'submit' ? submitForReview() : restoreDraft()">{{ submissionSaving ? '正在提交...' : (submissionMode === 'submit' ? '提交审核' : '恢复为草稿') }}</button></div>
+          <p v-if="selectedSubmissionRecord.review_note" class="review-note-display"><strong>{{ submissionMode === 'submit' ? '鐜版湁瀹℃牳璇存槑' : '鏈€杩戝鏍歌鏄? }}</strong><span>{{ selectedSubmissionRecord.review_note }}</span></p>
+          <p class="form-help">{{ submissionMode === 'submit' ? '鎻愪氦鍚庤褰曞皢鍐荤粨涓衡€滃鏍镐腑鈥濄€傚鏍镐汉鍛樺皢鎸夊唴瀹圭被鍨嬨€佹潵婧愩€佸彈鎺у獟浣撳拰鍙戝竷鍓嶇疆鏉′欢杩涜澶嶆牳銆? : '鎭㈠鍚庤褰曞彉涓洪潪鍏紑鑽夌锛屽彲鍐嶆缂栬緫锛涙仮澶嶄笉浠ｈ〃閫氳繃瀹℃牳锛屼篃涓嶄細鑷姩鍙戝竷銆? }}</p>
+          <label class="review-note">{{ submissionMode === 'submit' ? '鎻愪氦璇存槑' : '鎭㈠璇存槑' }}<textarea v-model.trim="submissionNote" rows="6" maxlength="2000" :placeholder="submissionMode === 'submit' ? '璇存槑鏈淇敼鑼冨洿銆佸緟瀹℃牳涓诲紶鎴栨妧鏈鏍搁噸鐐? : '璇存槑鎭㈠鍘熷洜鎴栧悗缁ˉ鍏呰鍒? "></textarea></label>
+          <div class="form-actions"><a :href="nativeItemPath(selectedSubmissionRecord.collection, selectedSubmissionRecord.id)">鎵撳紑楂樼骇璁剧疆锛堜笓涓氫汉鍛橈級</a><button type="button" class="primary-action" :disabled="submissionSaving" @click="submissionMode === 'submit' ? submitForReview() : restoreDraft()">{{ submissionSaving ? '姝ｅ湪鎻愪氦...' : (submissionMode === 'submit' ? '鎻愪氦瀹℃牳' : '鎭㈠涓鸿崏绋?) }}</button></div>
         </section>
-        <div v-else class="empty">请从左侧选择一条{{ submissionMode === 'submit' ? '草稿' : '待恢复内容' }}。</div>
+        <div v-else class="empty">璇蜂粠宸︿晶閫夋嫨涓€鏉{ submissionMode === 'submit' ? '鑽夌' : '寰呮仮澶嶅唴瀹? }}銆?/div>
       </section>
 
-      <section v-else-if="activeTab === 'review'" class="workspace-grid review-workspace" aria-label="待审核内容队列">
+      <section v-else-if="activeTab === 'review'" class="workspace-grid review-workspace" aria-label="寰呭鏍稿唴瀹归槦鍒?>
         <aside class="record-list-panel review-list">
-          <div class="panel-heading"><div><p class="eyebrow">审核队列</p><h3>待审核内容</h3></div><strong>{{ reviewQueue.length }}</strong></div>
-          <p class="form-help">只显示当前账号有权限查看的“审核中”记录。</p>
-          <button type="button" class="text-action refresh-queue" :disabled="reviewLoading" @click="loadReviewQueue">{{ reviewLoading ? '正在刷新...' : '刷新队列' }}</button>
-          <p v-if="productReleaseHint" class="product-release-hint">产品内容已批准进入待发布。请前往 <a href="/admin/ruijun-product-release-workbench">产品统一发布</a> 生成公开快照。</p>
+          <div class="panel-heading"><div><p class="eyebrow">瀹℃牳闃熷垪</p><h3>寰呭鏍稿唴瀹?/h3></div><strong>{{ reviewQueue.length }}</strong></div>
+          <p class="form-help">鍙樉绀哄綋鍓嶈处鍙锋湁鏉冮檺鏌ョ湅鐨勨€滃鏍镐腑鈥濊褰曘€?/p>
+          <button type="button" class="text-action refresh-queue" :disabled="reviewLoading" @click="loadReviewQueue">{{ reviewLoading ? '姝ｅ湪鍒锋柊...' : '鍒锋柊闃熷垪' }}</button>
+          <p v-if="productReleaseHint" class="product-release-hint">浜у搧鍐呭宸叉壒鍑嗚繘鍏ュ緟鍙戝竷銆傝鍓嶅線 <a href="/admin/ruijun-product-release-workbench">浜у搧缁熶竴鍙戝竷</a> 鐢熸垚鍏紑蹇収銆?/p>
           <button v-for="record in reviewQueue" :key="reviewRecordKey(record)" type="button" class="record-choice" :class="{ active: reviewRecordKey(record) === selectedReviewKey }" @click="selectReviewRecord(record)">
-            <span>{{ record.label }}</span><small>{{ record.collectionLabel }} · {{ record.secondary || '待审核' }}</small><i data-status="review">审核中</i>
+            <span>{{ record.label }}</span><small>{{ record.collectionLabel }} 路 {{ record.secondary || '寰呭鏍? }}</small><i data-status="review">瀹℃牳涓?/i>
           </button>
-          <p v-if="reviewLoading" class="empty compact">正在读取各内容类型的待审核记录...</p>
-          <p v-else-if="!reviewQueue.length" class="empty compact">当前账号没有可处理的待审核内容。</p>
+          <p v-if="reviewLoading" class="empty compact">姝ｅ湪璇诲彇鍚勫唴瀹圭被鍨嬬殑寰呭鏍歌褰?..</p>
+          <p v-else-if="!reviewQueue.length" class="empty compact">褰撳墠璐﹀彿娌℃湁鍙鐞嗙殑寰呭鏍稿唴瀹广€?/p>
         </aside>
 
         <section v-if="selectedReviewRecord" class="editor-form review-detail">
-          <div class="form-heading"><div><p class="eyebrow">审核处理</p><h3>{{ selectedReviewRecord.label }}</h3></div><span class="status" data-status="review">审核中</span></div>
+          <div class="form-heading"><div><p class="eyebrow">瀹℃牳澶勭悊</p><h3>{{ selectedReviewRecord.label }}</h3></div><span class="status" data-status="review">瀹℃牳涓?/span></div>
           <div class="review-meta"><span>{{ selectedReviewRecord.collectionLabel }}</span><span v-if="selectedReviewRecord.secondary">{{ selectedReviewRecord.secondary }}</span></div>
           <ul v-if="selectedReviewRecord.collection === 'content_submissions'" class="batch-item-list"><li v-for="item in selectedReviewRecord.items" :key="`${item.collection}:${item.id}`">{{ item.label || item.id }}</li></ul>
-          <p v-if="selectedReviewRecord.review_note" class="review-note-display"><strong>提交说明</strong><span>{{ selectedReviewRecord.review_note }}</span></p>
-          <p class="form-help">确认后，服务端会根据当前账号角色与内容就绪度决定是否允许流转。该页面不会执行发布。</p>
-          <label class="review-note">审核说明<textarea v-model.trim="reviewNote" rows="6" maxlength="2000" placeholder="填写通过依据或退回修改要求"></textarea></label>
-          <div class="form-actions"><a :href="nativeItemPath(selectedReviewRecord.collection, selectedReviewRecord.id)">打开高级设置（专业人员）</a><div class="review-actions"><button type="button" class="secondary-action" :disabled="reviewSaving" @click="decideReview('rejected')">退回修改</button><button type="button" class="primary-action" :disabled="reviewSaving" @click="decideReview('scheduled')">{{ reviewSaving ? '正在提交...' : '批准进入待发布' }}</button></div></div>
+          <p v-if="selectedReviewRecord.review_note" class="review-note-display"><strong>鎻愪氦璇存槑</strong><span>{{ selectedReviewRecord.review_note }}</span></p>
+          <p class="form-help">纭鍚庯紝鏈嶅姟绔細鏍规嵁褰撳墠璐﹀彿瑙掕壊涓庡唴瀹瑰氨缁害鍐冲畾鏄惁鍏佽娴佽浆銆傝椤甸潰涓嶄細鎵ц鍙戝竷銆?/p>
+          <label class="review-note">瀹℃牳璇存槑<textarea v-model.trim="reviewNote" rows="6" maxlength="2000" placeholder="濉啓閫氳繃渚濇嵁鎴栭€€鍥炰慨鏀硅姹?></textarea></label>
+          <div class="form-actions"><a :href="nativeItemPath(selectedReviewRecord.collection, selectedReviewRecord.id)">鎵撳紑楂樼骇璁剧疆锛堜笓涓氫汉鍛橈級</a><div class="review-actions"><button type="button" class="secondary-action" :disabled="reviewSaving" @click="decideReview('rejected')">閫€鍥炰慨鏀?/button><button type="button" class="primary-action" :disabled="reviewSaving" @click="decideReview('scheduled')">{{ reviewSaving ? '姝ｅ湪鎻愪氦...' : '鎵瑰噯杩涘叆寰呭彂甯? }}</button></div></div>
         </section>
-        <div v-else class="empty">请从左侧选择一条待审核内容。</div>
+        <div v-else class="empty">璇蜂粠宸︿晶閫夋嫨涓€鏉″緟瀹℃牳鍐呭銆?/div>
       </section>
 
-      <section v-else-if="activeTab === 'pages'" class="workspace-grid page-editing-layout" aria-label="页面内容编辑">
+      <section v-else-if="activeTab === 'pages'" class="workspace-grid page-editing-layout" aria-label="椤甸潰鍐呭缂栬緫">
         <aside class="record-list-panel">
-          <div class="panel-heading"><div><p class="eyebrow">页面内容</p><h3>页面</h3></div><strong>{{ pages.length }}</strong></div>
+          <div class="panel-heading"><div><p class="eyebrow">椤甸潰鍐呭</p><h3>椤甸潰</h3></div><strong>{{ pages.length }}</strong></div>
           <button
             v-for="page in pages"
             :key="page.id"
@@ -280,245 +280,245 @@
             <span>{{ pageDisplayName(page) }}</span>
             <i :data-status="page.status">{{ statusLabel(page.status) }}</i>
           </button>
-          <p v-if="!pages.length" class="empty compact">当前账号没有可读取的页面记录。</p>
+          <p v-if="!pages.length" class="empty compact">褰撳墠璐﹀彿娌℃湁鍙鍙栫殑椤甸潰璁板綍銆?/p>
         </aside>
 
         <form v-if="pageDraft" class="editor-form" @submit.prevent="savePage">
           <div class="form-heading">
-            <div><p class="eyebrow">页面信息</p><h3>{{ pageDisplayName(pageDraft) }}</h3></div>
+            <div><p class="eyebrow">椤甸潰淇℃伅</p><h3>{{ pageDisplayName(pageDraft) }}</h3></div>
             <span class="status" :data-status="pageDraft.status">{{ statusLabel(pageDraft.status) }}</span>
           </div>
-          <p v-if="!canEdit(pageDraft)" class="read-only-note">此记录已归档，不能直接修改。</p>
+          <p v-if="!canEdit(pageDraft)" class="read-only-note">姝よ褰曞凡褰掓。锛屼笉鑳界洿鎺ヤ慨鏀广€?/p>
 
           <div class="field-grid">
-            <label class="full">页面标题<input v-model.trim="pageDraft.title" :disabled="!canEdit(pageDraft)" required maxlength="160"><small class="field-help">访客看到的页面主标题，建议简短、明确。</small></label>
+            <label class="full">椤甸潰鏍囬<input v-model.trim="pageDraft.title" :disabled="!canEdit(pageDraft)" required maxlength="160"><small class="field-help">璁垮鐪嬪埌鐨勯〉闈富鏍囬锛屽缓璁畝鐭€佹槑纭€?/small></label>
           </div>
 
           <details class="advanced-fields">
-            <summary>高级设置（一般无需修改）</summary>
+            <summary>楂樼骇璁剧疆锛堜竴鑸棤闇€淇敼锛?/summary>
             <div class="field-grid">
-              <label>页面地址标识<input v-model.trim="pageDraft.slug" :disabled="!canEdit(pageDraft)" required pattern="(?:[a-z]|[0-9])(?:[a-z]|[0-9]|-){0,79}" maxlength="80"><small class="field-help">用于生成网址，例如：about、product。</small></label>
-              <label>页面语言<select v-model="pageDraft.language" :disabled="!canEdit(pageDraft)"><option value="zh-CN">简体中文</option><option value="en">英文</option></select></label>
-              <label class="full">来源记录<input :value="pageDraft.source_document || '未填写'" disabled></label>
+              <label>椤甸潰鍦板潃鏍囪瘑<input v-model.trim="pageDraft.slug" :disabled="!canEdit(pageDraft)" required pattern="(?:[a-z]|[0-9])(?:[a-z]|[0-9]|-){0,79}" maxlength="80"><small class="field-help">鐢ㄤ簬鐢熸垚缃戝潃锛屼緥濡傦細about銆乸roduct銆?/small></label>
+              <label>椤甸潰璇█<select v-model="pageDraft.language" :disabled="!canEdit(pageDraft)"><option value="zh-CN">绠€浣撲腑鏂?/option><option value="en">鑻辨枃</option></select></label>
+              <label class="full">鏉ユ簮璁板綍<input :value="pageDraft.source_document || '鏈～鍐?" disabled></label>
             </div>
           </details>
 
           <section class="section-editor" aria-labelledby="section-copy-title">
-            <div v-if="pageDraft.slug === 'home' && homepageSections.length" class="section-heading-actions" aria-label="首页独立区块">
-              <button v-for="record in homepageSections" :key="record.id" type="button" @click="openHomepageSection(record)">编辑独立区块：{{ record.title || record.section_key }}</button>
+            <div v-if="pageDraft.slug === 'home' && homepageSections.length" class="section-heading-actions" aria-label="棣栭〉鐙珛鍖哄潡">
+              <button v-for="record in homepageSections" :key="record.id" type="button" @click="openHomepageSection(record)">缂栬緫鐙珛鍖哄潡锛歿{ record.title || record.section_key }}</button>
             </div>
-            <div class="section-heading"><div><p class="eyebrow">{{ activePageSectionKey ? '当前编辑区块' : '页面段落' }}</p><h4 id="section-copy-title">{{ activePageSectionLabel }}</h4></div><div class="section-heading-actions"><button v-if="pageDraft.slug === 'home'" type="button" :disabled="!canEdit(pageDraft)" @click="addHomeReasonSection">新增首页理由</button><button v-if="supportedPageSectionSlugs.has(pageDraft.slug)" type="button" :disabled="!canEdit(pageDraft)" @click="addRequiredPageSections">补齐本页全部栏目</button><button v-if="pageSectionTypeOptions.length" type="button" :disabled="!canEdit(pageDraft)" @click="openSectionLibrary">添加区块</button><button v-if="canPastePageSection" type="button" :disabled="!canEdit(pageDraft)" @click="pastePageSection">粘贴区块</button><p v-else-if="supportedPageSectionSlugs.has(pageDraft.slug)" class="form-help">此栏目暂未开放通用区块添加；可以使用“补齐本页全部栏目”管理模板定义的栏目。</p></div></div>
-            <nav v-if="sectionOutline.length > 1" class="section-outline" aria-label="本页区块大纲">
+            <div class="section-heading"><div><p class="eyebrow">{{ activePageSectionKey ? '褰撳墠缂栬緫鍖哄潡' : '椤甸潰娈佃惤' }}</p><h4 id="section-copy-title">{{ activePageSectionLabel }}</h4></div><div class="section-heading-actions"><button v-if="pageDraft.slug === 'home'" type="button" :disabled="!canEdit(pageDraft)" @click="addHomeReasonSection">鏂板棣栭〉鐞嗙敱</button><button v-if="supportedPageSectionSlugs.has(pageDraft.slug)" type="button" :disabled="!canEdit(pageDraft)" @click="addRequiredPageSections">琛ラ綈鏈〉鍏ㄩ儴鏍忕洰</button><button v-if="pageSectionTypeOptions.length" type="button" :disabled="!canEdit(pageDraft)" @click="openSectionLibrary">娣诲姞鍖哄潡</button><button v-if="canPastePageSection" type="button" :disabled="!canEdit(pageDraft)" @click="pastePageSection">绮樿创鍖哄潡</button><p v-else-if="supportedPageSectionSlugs.has(pageDraft.slug)" class="form-help">姝ゆ爮鐩殏鏈紑鏀鹃€氱敤鍖哄潡娣诲姞锛涘彲浠ヤ娇鐢ㄢ€滆ˉ榻愭湰椤靛叏閮ㄦ爮鐩€濈鐞嗘ā鏉垮畾涔夌殑鏍忕洰銆?/p></div></div>
+            <nav v-if="sectionOutline.length > 1" class="section-outline" aria-label="鏈〉鍖哄潡澶х翰">
               <details open>
-                <summary>本页区块大纲（{{ sectionOutline.length }}）</summary>
+                <summary>鏈〉鍖哄潡澶х翰锛坽{ sectionOutline.length }}锛?/summary>
                 <ol>
                   <li v-for="(entry, entryIndex) in sectionOutline" :key="entry.id">
                     <button type="button" :class="{ active: activePageSectionKey === entry.id }" @click="focusPageSection(entry.id)">
                       <span class="outline-index">{{ entryIndex + 1 }}</span>
                       <span class="outline-label">{{ entry.label }}</span>
                       <span class="outline-kind">{{ entry.kind }}</span>
-                      <span v-if="entry.hidden" class="review-badge">已隐藏</span>
+                      <span v-if="entry.hidden" class="review-badge">宸查殣钘?/span>
                     </button>
                   </li>
                 </ol>
               </details>
             </nav>
             <article v-for="(section, index) in visiblePageSections" :key="`${section.id}-${index}`" :data-section-key="section.id" class="section-card" :class="{ 'dragging-section': draggingPageSectionKey === section.id }" :draggable="canEdit(pageDraft) && !!section.type" @focusin="activePageSectionKey = section.id" @pointerdown="activePageSectionKey = section.id" @dragstart="handleSectionDragStart(section, $event)" @dragover.prevent @drop="handleSectionDrop(section)" @dragend="draggingPageSectionKey = ''">
-              <div class="section-card-heading"><strong>{{ pageSectionName(section, index) }}</strong><div><span v-if="section.requires_claim_review" class="review-badge">宣传主张待审核</span><span v-if="section.type && section.enabled === false" class="review-badge">已隐藏</span><button v-if="section.type" type="button" class="text-action" :disabled="!canEdit(pageDraft)" @click="toggleRegisteredPageSection(section)">{{ section.enabled === false ? '显示' : '隐藏' }}</button><button v-if="section.type" type="button" class="text-action" :disabled="!canEdit(pageDraft)" @click="duplicatePageSection(section)">复制</button><button v-if="section.type" type="button" class="text-action" :disabled="!canEdit(pageDraft)" @click="copyPageSectionForReuse(section)">复制到其他页</button><button type="button" class="text-action danger" :disabled="!canEdit(pageDraft) || pageDraft.sections.length < 2" @click="removePageSection(section)">删除</button></div></div>
+              <div class="section-card-heading"><strong>{{ pageSectionName(section, index) }}</strong><div><span v-if="section.requires_claim_review" class="review-badge">瀹ｄ紶涓诲紶寰呭鏍?/span><span v-if="section.type && section.enabled === false" class="review-badge">宸查殣钘?/span><button v-if="section.type" type="button" class="text-action" :disabled="!canEdit(pageDraft)" @click="toggleRegisteredPageSection(section)">{{ section.enabled === false ? '鏄剧ず' : '闅愯棌' }}</button><button v-if="section.type" type="button" class="text-action" :disabled="!canEdit(pageDraft)" @click="duplicatePageSection(section)">澶嶅埗</button><button v-if="section.type" type="button" class="text-action" :disabled="!canEdit(pageDraft)" @click="copyPageSectionForReuse(section)">澶嶅埗鍒板叾浠栭〉</button><button type="button" class="text-action danger" :disabled="!canEdit(pageDraft) || pageDraft.sections.length < 2" @click="removePageSection(section)">鍒犻櫎</button></div></div>
               <div class="field-grid section-fields">
                 <template v-if="section.type">
                   <div v-if="registeredPageSectionPresets(section).length" class="section-preset-row">
-                    <label>套用预设<select v-model="sectionPresetSelection[section.id]" :disabled="!canEdit(pageDraft)"><option value="">选择预设</option><option v-for="preset in registeredPageSectionPresets(section)" :key="preset.key" :value="preset.key">{{ preset.label }}</option></select></label>
-                    <button type="button" :disabled="!canEdit(pageDraft) || !sectionPresetSelection[section.id]" @click="applyRegisteredSectionPreset(section)">套用</button>
+                    <label>濂楃敤棰勮<select v-model="sectionPresetSelection[section.id]" :disabled="!canEdit(pageDraft)"><option value="">閫夋嫨棰勮</option><option v-for="preset in registeredPageSectionPresets(section)" :key="preset.key" :value="preset.key">{{ preset.label }}</option></select></label>
+                    <button type="button" :disabled="!canEdit(pageDraft) || !sectionPresetSelection[section.id]" @click="applyRegisteredSectionPreset(section)">濂楃敤</button>
                     <span class="form-help">{{ sectionPresetDescription(section) }}</span>
                   </div>
                   <template v-for="field in registeredPageSectionFields(section)" :key="field.key">
                     <label v-if="field.type === 'text' || field.type === 'textarea'" :class="{ full: field.type === 'textarea' }">{{ field.label }}<textarea v-if="field.type === 'textarea'" v-model="section[field.key]" :disabled="!canEdit(pageDraft)" :maxlength="field.maxLength" rows="4" @input="pushPageDraftToPreview"></textarea><input v-else v-model.trim="section[field.key]" :disabled="!canEdit(pageDraft)" :maxlength="field.maxLength" @input="pushPageDraftToPreview"></label>
                     <label v-else-if="field.type === 'select'">{{ field.label }}<select v-model="section[field.key]" :disabled="!canEdit(pageDraft)" @change="pushPageDraftToPreview"><option v-for="option in field.options" :key="option" :value="option">{{ sectionSelectOptionLabel(field, option) }}</option></select></label>
                     <label v-else-if="field.type === 'number'">{{ field.label }}<input v-model.number="section[field.key]" type="number" :min="field.min" :max="field.max" :disabled="!canEdit(pageDraft)" @input="pushPageDraftToPreview"></label>
-                    <section v-else-if="field.type === 'media'" class="media-reference-editor full-field" :aria-label="`${field.label}受控素材`">
+                    <section v-else-if="field.type === 'media'" class="media-reference-editor full-field" :aria-label="`${field.label}鍙楁帶绱犳潗`">
                       <div class="section-card-heading"><strong>{{ field.label }}</strong><span>{{ (section[field.key] || []).length }} / {{ field.maxItems }}</span></div>
-                      <div class="media-reference-add"><select v-model="pageMediaSelection" :disabled="!canEdit(pageDraft)"><option value="">选择{{ pageMediaScopeLabel() }}素材</option><option v-for="asset in pageMediaOptionsForSection(pageMediaScope(), section)" :key="asset.id" :value="String(asset.id)">{{ pageMediaOptionLabel(asset, pageMediaScope()) }}</option></select><button type="button" :disabled="!canEdit(pageDraft) || !pageMediaSelection" @click="addRegisteredSectionMedia(section, field)">添加素材</button></div>
-                      <p v-if="!pageMediaOptionsForSection(pageMediaScope(), section).length" class="form-help">暂无可用于此区块的{{ pageMediaScopeLabel() }}素材。请先在“更多工具 - 媒体资产”上传。</p>
-                      <div v-for="reference in section[field.key] || []" :key="reference.media_asset_id" class="media-reference-row"><span>{{ pageMediaLabel(reference) }}</span><label>展示位置<input v-model.trim="reference.role" :disabled="!canEdit(pageDraft)" maxlength="60" placeholder="例如：image、card-1"></label><button type="button" class="text-action danger" :disabled="!canEdit(pageDraft)" @click="removeRegisteredSectionMedia(section, field, reference.media_asset_id)">移除</button></div>
+                      <div class="media-reference-add"><select v-model="pageMediaSelection" :disabled="!canEdit(pageDraft)"><option value="">閫夋嫨{{ pageMediaScopeLabel() }}绱犳潗</option><option v-for="asset in pageMediaOptionsForSection(pageMediaScope(), section)" :key="asset.id" :value="String(asset.id)">{{ pageMediaOptionLabel(asset, pageMediaScope()) }}</option></select><button type="button" :disabled="!canEdit(pageDraft) || !pageMediaSelection" @click="addRegisteredSectionMedia(section, field)">娣诲姞绱犳潗</button></div>
+                      <p v-if="!pageMediaOptionsForSection(pageMediaScope(), section).length" class="form-help">鏆傛棤鍙敤浜庢鍖哄潡鐨剓{ pageMediaScopeLabel() }}绱犳潗銆傝鍏堝湪鈥滄洿澶氬伐鍏?- 濯掍綋璧勪骇鈥濅笂浼犮€?/p>
+                      <div v-for="reference in section[field.key] || []" :key="reference.media_asset_id" class="media-reference-row"><span>{{ pageMediaLabel(reference) }}</span><label>灞曠ず浣嶇疆<input v-model.trim="reference.role" :disabled="!canEdit(pageDraft)" maxlength="60" placeholder="渚嬪锛歩mage銆乧ard-1"></label><button type="button" class="text-action danger" :disabled="!canEdit(pageDraft)" @click="removeRegisteredSectionMedia(section, field, reference.media_asset_id)">绉婚櫎</button></div>
                     </section>
-                    <section v-else-if="field.type === 'list'" class="service-items-editor generic-items-editor full-field" :aria-label="`${field.label}列表`">
-                      <div class="section-card-heading"><strong>{{ field.label }}</strong><button type="button" :disabled="!canEdit(pageDraft)" @click="addRegisteredSectionItem(section, field)">新增一项</button></div>
+                    <section v-else-if="field.type === 'list'" class="service-items-editor generic-items-editor full-field" :aria-label="`${field.label}鍒楄〃`">
+                      <div class="section-card-heading"><strong>{{ field.label }}</strong><button type="button" :disabled="!canEdit(pageDraft)" @click="addRegisteredSectionItem(section, field)">鏂板涓€椤?/button></div>
                       <div v-for="(item, itemIndex) in section[field.key] || []" :key="`${section.id}-${field.key}-${itemIndex}`" class="service-item-card">
-                        <div class="section-card-heading"><strong>第 {{ itemIndex + 1 }} 项</strong><div><button type="button" class="text-action" :disabled="!canEdit(pageDraft) || itemIndex === 0" @click="moveRegisteredSectionItem(section, field, itemIndex, -1)">上移</button><button type="button" class="text-action" :disabled="!canEdit(pageDraft) || itemIndex === (section[field.key] || []).length - 1" @click="moveRegisteredSectionItem(section, field, itemIndex, 1)">下移</button><button type="button" class="text-action danger" :disabled="!canEdit(pageDraft)" @click="removeRegisteredSectionItem(section, field, itemIndex)">删除</button></div></div>
+                        <div class="section-card-heading"><strong>绗?{{ itemIndex + 1 }} 椤?/strong><div><button type="button" class="text-action" :disabled="!canEdit(pageDraft) || itemIndex === 0" @click="moveRegisteredSectionItem(section, field, itemIndex, -1)">涓婄Щ</button><button type="button" class="text-action" :disabled="!canEdit(pageDraft) || itemIndex === (section[field.key] || []).length - 1" @click="moveRegisteredSectionItem(section, field, itemIndex, 1)">涓嬬Щ</button><button type="button" class="text-action danger" :disabled="!canEdit(pageDraft)" @click="removeRegisteredSectionItem(section, field, itemIndex)">鍒犻櫎</button></div></div>
                         <label v-for="itemField in field.itemFields" :key="itemField.key" :class="{ full: itemField.type === 'textarea' }">{{ itemField.label }}<textarea v-if="itemField.type === 'textarea'" v-model="item[itemField.key]" :disabled="!canEdit(pageDraft)" :maxlength="itemField.maxLength" rows="3" @input="pushPageDraftToPreview"></textarea><input v-else v-model.trim="item[itemField.key]" :disabled="!canEdit(pageDraft)" :maxlength="itemField.maxLength" @input="pushPageDraftToPreview"></label>
                       </div>
                     </section>
                   </template>
-                  <p v-if="!registeredPageSectionFields(section).length" class="read-only-note full">此区块类型没有可编辑字段定义，无法保存。</p>
+                  <p v-if="!registeredPageSectionFields(section).length" class="read-only-note full">姝ゅ尯鍧楃被鍨嬫病鏈夊彲缂栬緫瀛楁瀹氫箟锛屾棤娉曚繚瀛樸€?/p>
                 </template>
                 <template v-else>
-              <label v-if="sectionTitleIsRendered(section)" class="full">{{ isHomeReasonSection(section) ? '首屏理由标题（画布显示）' : '段落标题' }}<input data-preview-field="title" :value="isHomeReasonSection(section) ? section.introTitle : section.title" :disabled="!canEdit(pageDraft)" maxlength="240" placeholder="例如：我们为什么值得信赖" @input="updateSectionHeading(section, $event.target.value)"><small class="field-help">这一段的醒目标题，会直接显示在官网页面上。</small></label>
-              <p v-else class="read-only-note full">此区块当前官网没有标题展示位，修改该字段不会出现在画布中。请管理已绑定的产品系列记录；如需展示标题，必须先在 Nuxt 模板中新增经确认的版式位置。</p>
-              <label v-if="sectionBodyIsRendered(section)" class="full">正文<textarea data-preview-field="body" v-model="section.body" :disabled="!canEdit(pageDraft)" rows="5" maxlength="4000" placeholder="填写访客需要了解的内容" @input="pushPageDraftToPreview"></textarea>
-                  <small class="field-help">支持换行，建议一段只表达一个重点。</small>
+              <label v-if="sectionTitleIsRendered(section)" class="full">{{ isHomeReasonSection(section) ? '棣栧睆鐞嗙敱鏍囬锛堢敾甯冩樉绀猴級' : '娈佃惤鏍囬' }}<input data-preview-field="title" :value="isHomeReasonSection(section) ? section.introTitle : section.title" :disabled="!canEdit(pageDraft)" maxlength="240" placeholder="渚嬪锛氭垜浠负浠€涔堝€煎緱淇¤禆" @input="updateSectionHeading(section, $event.target.value)"><small class="field-help">杩欎竴娈电殑閱掔洰鏍囬锛屼細鐩存帴鏄剧ず鍦ㄥ畼缃戦〉闈笂銆?/small></label>
+              <p v-else class="read-only-note full">姝ゅ尯鍧楀綋鍓嶅畼缃戞病鏈夋爣棰樺睍绀轰綅锛屼慨鏀硅瀛楁涓嶄細鍑虹幇鍦ㄧ敾甯冧腑銆傝绠＄悊宸茬粦瀹氱殑浜у搧绯诲垪璁板綍锛涘闇€灞曠ず鏍囬锛屽繀椤诲厛鍦?Nuxt 妯℃澘涓柊澧炵粡纭鐨勭増寮忎綅缃€?/p>
+              <label v-if="sectionBodyIsRendered(section)" class="full">姝ｆ枃<textarea data-preview-field="body" v-model="section.body" :disabled="!canEdit(pageDraft)" rows="5" maxlength="4000" placeholder="濉啓璁垮闇€瑕佷簡瑙ｇ殑鍐呭" @input="pushPageDraftToPreview"></textarea>
+                  <small class="field-help">鏀寔鎹㈣锛屽缓璁竴娈靛彧琛ㄨ揪涓€涓噸鐐广€?/small>
                 </label>
-              <p v-else class="read-only-note full">此区块当前官网没有正文展示位，修改该字段不会出现在画布中。请编辑标题或已绑定的理由内容；如需展示正文，必须先在 Nuxt 模板中新增经确认的版式位置。</p>
+              <p v-else class="read-only-note full">姝ゅ尯鍧楀綋鍓嶅畼缃戞病鏈夋鏂囧睍绀轰綅锛屼慨鏀硅瀛楁涓嶄細鍑虹幇鍦ㄧ敾甯冧腑銆傝缂栬緫鏍囬鎴栧凡缁戝畾鐨勭悊鐢卞唴瀹癸紱濡傞渶灞曠ず姝ｆ枃锛屽繀椤诲厛鍦?Nuxt 妯℃澘涓柊澧炵粡纭鐨勭増寮忎綅缃€?/p>
                 <template v-if="isHomeReasonSection(section)">
-                  <label>理由短标题<input v-model.trim="section.shortTitle" :disabled="!canEdit(pageDraft)" maxlength="120" placeholder="例如：先进智造" @input="pushPageDraftToPreview"></label>
-                  <label>首屏理由标题<input v-model.trim="section.introTitle" :disabled="!canEdit(pageDraft)" maxlength="240" placeholder="首页三大理由中的标题" @input="pushPageDraftToPreview"></label>
-                  <label class="full">首屏理由说明<textarea v-model="section.introDetail" :disabled="!canEdit(pageDraft)" rows="3" maxlength="1000" placeholder="首页三大理由右侧说明" @input="pushPageDraftToPreview"></textarea></label>
-                  <label>展示模式<select v-model="section.mode" :disabled="!canEdit(pageDraft)" @change="pushPageDraftToPreview"><option value="machine">设备展示</option><option value="photo">整幅图片</option></select></label>
-                  <p class="form-help full">图片和图标请在本段上方添加已发布素材，并将展示位置填写为 image、icon 或对应卡片角色。</p>
+                  <label>鐞嗙敱鐭爣棰?input v-model.trim="section.shortTitle" :disabled="!canEdit(pageDraft)" maxlength="120" placeholder="渚嬪锛氬厛杩涙櫤閫? @input="pushPageDraftToPreview"></label>
+                  <label>棣栧睆鐞嗙敱鏍囬<input v-model.trim="section.introTitle" :disabled="!canEdit(pageDraft)" maxlength="240" placeholder="棣栭〉涓夊ぇ鐞嗙敱涓殑鏍囬" @input="pushPageDraftToPreview"></label>
+                  <label class="full">棣栧睆鐞嗙敱璇存槑<textarea v-model="section.introDetail" :disabled="!canEdit(pageDraft)" rows="3" maxlength="1000" placeholder="棣栭〉涓夊ぇ鐞嗙敱鍙充晶璇存槑" @input="pushPageDraftToPreview"></textarea></label>
+                  <label>灞曠ず妯″紡<select v-model="section.mode" :disabled="!canEdit(pageDraft)" @change="pushPageDraftToPreview"><option value="machine">璁惧灞曠ず</option><option value="photo">鏁村箙鍥剧墖</option></select></label>
+                  <p class="form-help full">鍥剧墖鍜屽浘鏍囪鍦ㄦ湰娈典笂鏂规坊鍔犲凡鍙戝竷绱犳潗锛屽苟灏嗗睍绀轰綅缃～鍐欎负 image銆乮con 鎴栧搴斿崱鐗囪鑹层€?/p>
                 </template>
                 <template v-if="pageDraft.slug === 'manufacturing' && ['precision-machining', 'sheet-metal'].includes(section.id)">
-                  <label class="full">核心设备或区域补充说明<textarea v-model="section.detail" :disabled="!canEdit(pageDraft)" rows="3" maxlength="2000" placeholder="例如：核心设备与工艺说明"></textarea></label>
+                  <label class="full">鏍稿績璁惧鎴栧尯鍩熻ˉ鍏呰鏄?textarea v-model="section.detail" :disabled="!canEdit(pageDraft)" rows="3" maxlength="2000" placeholder="渚嬪锛氭牳蹇冭澶囦笌宸ヨ壓璇存槑"></textarea></label>
                 </template>
                 <template v-if="pageDraft.slug === 'product' && ['proof-efficiency', 'proof-years', 'proof-champion'].includes(section.id)">
-                  <label>展示数值<input v-model.number="section.value" :disabled="!canEdit(pageDraft)" type="number" step="any" placeholder="可留空，仅使用标题"></label>
-                  <label>数值单位<input v-model.trim="section.unit" :disabled="!canEdit(pageDraft)" maxlength="40" placeholder="例如：%、YEARS"></label>
-                  <p class="form-help full">填写数值后官网会按原版动画展示；留空则显示段落标题。</p>
+                  <label>灞曠ず鏁板€?input v-model.number="section.value" :disabled="!canEdit(pageDraft)" type="number" step="any" placeholder="鍙暀绌猴紝浠呬娇鐢ㄦ爣棰?></label>
+                  <label>鏁板€煎崟浣?input v-model.trim="section.unit" :disabled="!canEdit(pageDraft)" maxlength="40" placeholder="渚嬪锛?銆乊EARS"></label>
+                  <p class="form-help full">濉啓鏁板€煎悗瀹樼綉浼氭寜鍘熺増鍔ㄧ敾灞曠ず锛涚暀绌哄垯鏄剧ず娈佃惤鏍囬銆?/p>
                 </template>
                 <template v-if="pageDraft.slug === 'service' && section.id === 'hero'">
-                  <label>标题强调文字<input v-model.trim="section.description" :disabled="!canEdit(pageDraft)" maxlength="120" placeholder="例如：快人一步"></label>
-                  <label>按钮文字<input v-model.trim="section.label" :disabled="!canEdit(pageDraft)" maxlength="120" placeholder="例如：在线支持"></label>
+                  <label>鏍囬寮鸿皟鏂囧瓧<input v-model.trim="section.description" :disabled="!canEdit(pageDraft)" maxlength="120" placeholder="渚嬪锛氬揩浜轰竴姝?></label>
+                  <label>鎸夐挳鏂囧瓧<input v-model.trim="section.label" :disabled="!canEdit(pageDraft)" maxlength="120" placeholder="渚嬪锛氬湪绾挎敮鎸?></label>
                 </template>
                 <template v-if="pageDraft.slug === 'service' && section.id === 'support'">
-                  <label>搜索框提示<input v-model.trim="section.description" :disabled="!canEdit(pageDraft)" maxlength="300"></label>
-                  <label>搜索按钮文字<input v-model.trim="section.label" :disabled="!canEdit(pageDraft)" maxlength="120"></label>
-                  <label>人工支持提示<input v-model.trim="section.content.human_support_label" :disabled="!canEdit(pageDraft)" maxlength="120"></label>
-                  <label>在线服务标题<input v-model.trim="section.content.online_title" :disabled="!canEdit(pageDraft)" maxlength="160"></label>
-                  <label>在线服务说明<input v-model.trim="section.content.online_intro" :disabled="!canEdit(pageDraft)" maxlength="500"></label>
-                  <label>助手品牌文字<input v-model.trim="section.content.assistant_brand" :disabled="!canEdit(pageDraft)" maxlength="120"></label>
-                  <label>助手主标题<input v-model.trim="section.content.assistant_heading" :disabled="!canEdit(pageDraft)" maxlength="160"></label>
-                  <label class="full">助手说明<input v-model.trim="section.content.assistant_intro" :disabled="!canEdit(pageDraft)" maxlength="500"></label>
-                  <label>助手按钮文字<input v-model.trim="section.content.assistant_cta" :disabled="!canEdit(pageDraft)" maxlength="120"></label>
-                  <label>助手弹窗标题<input v-model.trim="section.content.assistant_title" :disabled="!canEdit(pageDraft)" maxlength="160"></label>
-                  <label>弹窗关闭文字<input v-model.trim="section.content.assistant_close" :disabled="!canEdit(pageDraft)" maxlength="120"></label>
-                  <label class="full">助手空状态文字<input v-model.trim="section.content.assistant_empty" :disabled="!canEdit(pageDraft)" maxlength="500"></label>
-                  <label>加载中提示<input v-model.trim="section.content.assistant_loading" :disabled="!canEdit(pageDraft)" maxlength="160"></label>
-                  <label>发送按钮文字<input v-model.trim="section.content.assistant_send" :disabled="!canEdit(pageDraft)" maxlength="80"></label>
-                  <label>有帮助按钮<input v-model.trim="section.content.feedback_yes" :disabled="!canEdit(pageDraft)" maxlength="80"></label>
-                  <label>需要协助按钮<input v-model.trim="section.content.feedback_no" :disabled="!canEdit(pageDraft)" maxlength="80"></label>
-                  <label>跳转确认标题<input v-model.trim="section.content.exit_title" :disabled="!canEdit(pageDraft)" maxlength="160"></label>
-                  <label class="full">跳转确认说明<input v-model.trim="section.content.exit_body" :disabled="!canEdit(pageDraft)" maxlength="500"></label>
-                  <label>取消按钮文字<input v-model.trim="section.content.exit_cancel" :disabled="!canEdit(pageDraft)" maxlength="80"></label>
-                  <label>继续按钮文字<input v-model.trim="section.content.exit_confirm" :disabled="!canEdit(pageDraft)" maxlength="80"></label>
-                  <label class="full">助手弹窗与交互文案 JSON<textarea v-model="section.content.assistant_copy_json" :disabled="!canEdit(pageDraft)" rows="5" maxlength="8000" placeholder="可选 JSON，例如 {&quot;assistant_title&quot;:&quot;服务助手&quot;,&quot;feedback_yes&quot;:&quot;有帮助&quot;}"></textarea></label>
+                  <label>鎼滅储妗嗘彁绀?input v-model.trim="section.description" :disabled="!canEdit(pageDraft)" maxlength="300"></label>
+                  <label>鎼滅储鎸夐挳鏂囧瓧<input v-model.trim="section.label" :disabled="!canEdit(pageDraft)" maxlength="120"></label>
+                  <label>浜哄伐鏀寔鎻愮ず<input v-model.trim="section.content.human_support_label" :disabled="!canEdit(pageDraft)" maxlength="120"></label>
+                  <label>鍦ㄧ嚎鏈嶅姟鏍囬<input v-model.trim="section.content.online_title" :disabled="!canEdit(pageDraft)" maxlength="160"></label>
+                  <label>鍦ㄧ嚎鏈嶅姟璇存槑<input v-model.trim="section.content.online_intro" :disabled="!canEdit(pageDraft)" maxlength="500"></label>
+                  <label>鍔╂墜鍝佺墝鏂囧瓧<input v-model.trim="section.content.assistant_brand" :disabled="!canEdit(pageDraft)" maxlength="120"></label>
+                  <label>鍔╂墜涓绘爣棰?input v-model.trim="section.content.assistant_heading" :disabled="!canEdit(pageDraft)" maxlength="160"></label>
+                  <label class="full">鍔╂墜璇存槑<input v-model.trim="section.content.assistant_intro" :disabled="!canEdit(pageDraft)" maxlength="500"></label>
+                  <label>鍔╂墜鎸夐挳鏂囧瓧<input v-model.trim="section.content.assistant_cta" :disabled="!canEdit(pageDraft)" maxlength="120"></label>
+                  <label>鍔╂墜寮圭獥鏍囬<input v-model.trim="section.content.assistant_title" :disabled="!canEdit(pageDraft)" maxlength="160"></label>
+                  <label>寮圭獥鍏抽棴鏂囧瓧<input v-model.trim="section.content.assistant_close" :disabled="!canEdit(pageDraft)" maxlength="120"></label>
+                  <label class="full">鍔╂墜绌虹姸鎬佹枃瀛?input v-model.trim="section.content.assistant_empty" :disabled="!canEdit(pageDraft)" maxlength="500"></label>
+                  <label>鍔犺浇涓彁绀?input v-model.trim="section.content.assistant_loading" :disabled="!canEdit(pageDraft)" maxlength="160"></label>
+                  <label>鍙戦€佹寜閽枃瀛?input v-model.trim="section.content.assistant_send" :disabled="!canEdit(pageDraft)" maxlength="80"></label>
+                  <label>鏈夊府鍔╂寜閽?input v-model.trim="section.content.feedback_yes" :disabled="!canEdit(pageDraft)" maxlength="80"></label>
+                  <label>闇€瑕佸崗鍔╂寜閽?input v-model.trim="section.content.feedback_no" :disabled="!canEdit(pageDraft)" maxlength="80"></label>
+                  <label>璺宠浆纭鏍囬<input v-model.trim="section.content.exit_title" :disabled="!canEdit(pageDraft)" maxlength="160"></label>
+                  <label class="full">璺宠浆纭璇存槑<input v-model.trim="section.content.exit_body" :disabled="!canEdit(pageDraft)" maxlength="500"></label>
+                  <label>鍙栨秷鎸夐挳鏂囧瓧<input v-model.trim="section.content.exit_cancel" :disabled="!canEdit(pageDraft)" maxlength="80"></label>
+                  <label>缁х画鎸夐挳鏂囧瓧<input v-model.trim="section.content.exit_confirm" :disabled="!canEdit(pageDraft)" maxlength="80"></label>
+                  <label class="full">鍔╂墜寮圭獥涓庝氦浜掓枃妗?JSON<textarea v-model="section.content.assistant_copy_json" :disabled="!canEdit(pageDraft)" rows="5" maxlength="8000" placeholder="鍙€?JSON锛屼緥濡?{&quot;assistant_title&quot;:&quot;鏈嶅姟鍔╂墜&quot;,&quot;feedback_yes&quot;:&quot;鏈夊府鍔?quot;}"></textarea></label>
                 </template>
                 <template v-if="pageDraft.slug === 'service' && section.id === 'office-directory'">
-                  <label>高德地图文字<input v-model.trim="section.content.map_amap_label" :disabled="!canEdit(pageDraft)" maxlength="120"></label>
-                  <label>百度地图文字<input v-model.trim="section.content.map_baidu_label" :disabled="!canEdit(pageDraft)" maxlength="120"></label>
-                  <label>系统地图文字<input v-model.trim="section.content.map_system_label" :disabled="!canEdit(pageDraft)" maxlength="120"></label>
-                  <label>导航弹窗标题<input v-model.trim="section.content.map_dialog_title" :disabled="!canEdit(pageDraft)" maxlength="120"></label>
-                  <label>导航目的地前缀<input v-model.trim="section.content.map_dialog_destination" :disabled="!canEdit(pageDraft)" maxlength="80"></label>
-                  <label>导航按钮无障碍文字<input v-model.trim="section.content.map_button_aria" :disabled="!canEdit(pageDraft)" maxlength="160"></label>
+                  <label>楂樺痉鍦板浘鏂囧瓧<input v-model.trim="section.content.map_amap_label" :disabled="!canEdit(pageDraft)" maxlength="120"></label>
+                  <label>鐧惧害鍦板浘鏂囧瓧<input v-model.trim="section.content.map_baidu_label" :disabled="!canEdit(pageDraft)" maxlength="120"></label>
+                  <label>绯荤粺鍦板浘鏂囧瓧<input v-model.trim="section.content.map_system_label" :disabled="!canEdit(pageDraft)" maxlength="120"></label>
+                  <label>瀵艰埅寮圭獥鏍囬<input v-model.trim="section.content.map_dialog_title" :disabled="!canEdit(pageDraft)" maxlength="120"></label>
+                  <label>瀵艰埅鐩殑鍦板墠缂€<input v-model.trim="section.content.map_dialog_destination" :disabled="!canEdit(pageDraft)" maxlength="80"></label>
+                  <label>瀵艰埅鎸夐挳鏃犻殰纰嶆枃瀛?input v-model.trim="section.content.map_button_aria" :disabled="!canEdit(pageDraft)" maxlength="160"></label>
                 </template>
                 <template v-if="pageDraft.slug !== 'service' || !['hero', 'support'].includes(section.id)">
-                  <label class="full">{{ sectionEmptyStateLabel(section) }}<input v-model.trim="section.description" :disabled="!canEdit(pageDraft)" maxlength="500" placeholder="可留空"></label>
-                  <p v-if="sectionEmptyStateIsHiddenByRecords(section)" class="read-only-note full">当前已有动态新闻记录，空状态说明不会出现在官网画布中。</p>
-                  <label>按钮文字<input v-model.trim="section.label" :disabled="!canEdit(pageDraft)" maxlength="24" placeholder="可留空"></label>
-                  <label>按钮链接<input v-model.trim="section.href" :disabled="!canEdit(pageDraft)" maxlength="1000" placeholder="例如：/contact"></label>
+                  <label class="full">{{ sectionEmptyStateLabel(section) }}<input v-model.trim="section.description" :disabled="!canEdit(pageDraft)" maxlength="500" placeholder="鍙暀绌?></label>
+                  <p v-if="sectionEmptyStateIsHiddenByRecords(section)" class="read-only-note full">褰撳墠宸叉湁鍔ㄦ€佹柊闂昏褰曪紝绌虹姸鎬佽鏄庝笉浼氬嚭鐜板湪瀹樼綉鐢诲竷涓€?/p>
+                  <label>鎸夐挳鏂囧瓧<input v-model.trim="section.label" :disabled="!canEdit(pageDraft)" maxlength="24" placeholder="鍙暀绌?></label>
+                  <label>鎸夐挳閾炬帴<input v-model.trim="section.href" :disabled="!canEdit(pageDraft)" maxlength="1000" placeholder="渚嬪锛?contact"></label>
                 </template>
                 </template>
               </div>
               <details class="advanced-fields section-presentation-editor" open>
-                <summary>版式、位置与文字样式</summary>
-                <p class="form-help">默认全部沿用官网原版。只有开启对应分组后，该组设置才会影响官网；不支持任意 CSS 或自由拖动。</p>
+                <summary>鐗堝紡銆佷綅缃笌鏂囧瓧鏍峰紡</summary>
+                <p class="form-help">榛樿鍏ㄩ儴娌跨敤瀹樼綉鍘熺増銆傚彧鏈夊紑鍚搴斿垎缁勫悗锛岃缁勮缃墠浼氬奖鍝嶅畼缃戯紱涓嶆敮鎸佷换鎰?CSS 鎴栬嚜鐢辨嫋鍔ㄣ€?/p>
                 <div class="presentation-enable-grid">
-                  <label class="toggle-field"><input v-model="section.layout.enabled" :disabled="!canEdit(pageDraft)" type="checkbox"><span>启用版式与位置</span></label>
-                  <label class="toggle-field"><input v-model="section.text_style.enabled" :disabled="!canEdit(pageDraft)" type="checkbox"><span>启用文字样式</span></label>
-                  <label class="toggle-field"><input v-model="section.media_presentation.enabled" :disabled="!canEdit(pageDraft)" type="checkbox"><span>启用图片裁切</span></label>
-                  <label class="toggle-field"><input v-model="section.responsive.enabled" :disabled="!canEdit(pageDraft)" type="checkbox"><span>启用响应式显示</span></label>
+                  <label class="toggle-field"><input v-model="section.layout.enabled" :disabled="!canEdit(pageDraft)" type="checkbox"><span>鍚敤鐗堝紡涓庝綅缃?/span></label>
+                  <label class="toggle-field"><input v-model="section.text_style.enabled" :disabled="!canEdit(pageDraft)" type="checkbox"><span>鍚敤鏂囧瓧鏍峰紡</span></label>
+                  <label class="toggle-field"><input v-model="section.media_presentation.enabled" :disabled="!canEdit(pageDraft)" type="checkbox"><span>鍚敤鍥剧墖瑁佸垏</span></label>
+                  <label class="toggle-field"><input v-model="section.responsive.enabled" :disabled="!canEdit(pageDraft)" type="checkbox"><span>鍚敤鍝嶅簲寮忔樉绀?/span></label>
                 </div>
                 <div class="field-grid">
-                  <label>版式模板<select v-model="section.layout.template" :disabled="!canEdit(pageDraft) || !section.layout.enabled"><option value="default">默认版式</option><option value="overlay-left">媒体上左侧文字</option><option value="overlay-center">媒体上居中文字</option><option value="overlay-right">媒体上右侧文字</option><option value="split-media-left">左图右文</option><option value="split-media-right">左文右图</option><option value="stack">上下堆叠</option><option value="grid">卡片网格</option><option value="gallery">图片画廊</option><option value="timeline">时间轴</option><option value="process">工艺流程</option></select></label>
-                  <label>水平对齐<select v-model="section.layout.align_x" :disabled="!canEdit(pageDraft)"><option value="left">左对齐</option><option value="center">居中</option><option value="right">右对齐</option></select></label>
-                  <label>垂直对齐<select v-model="section.layout.align_y" :disabled="!canEdit(pageDraft)"><option value="top">顶部</option><option value="center">居中</option><option value="bottom">底部</option></select></label>
-                  <label>内容宽度<select v-model="section.layout.width" :disabled="!canEdit(pageDraft)"><option value="narrow">窄</option><option value="normal">标准</option><option value="wide">宽</option><option value="full">全宽</option></select></label>
-                  <label>内容间距<select v-model="section.layout.gap" :disabled="!canEdit(pageDraft)"><option value="none">无</option><option value="small">小</option><option value="medium">中</option><option value="large">大</option></select></label>
-                  <label>阅读顺序<input v-model.number="section.layout.order" :disabled="!canEdit(pageDraft)" type="number" min="0" max="999"></label>
-                  <label>层级<input v-model.number="section.layout.z_index" :disabled="!canEdit(pageDraft)" type="number" min="0" max="9"></label>
-                  <label>桌面横向偏移（%）<input v-model.number="section.layout.desktop.offset_x" :disabled="!canEdit(pageDraft)" type="number" min="-30" max="30" step="1"></label>
-                  <label>桌面纵向偏移（%）<input v-model.number="section.layout.desktop.offset_y" :disabled="!canEdit(pageDraft)" type="number" min="-30" max="30" step="1"></label>
-                  <label>手机横向偏移（%）<input v-model.number="section.layout.mobile.offset_x" :disabled="!canEdit(pageDraft)" type="number" min="-30" max="30" step="1"></label>
-                  <label>手机纵向偏移（%）<input v-model.number="section.layout.mobile.offset_y" :disabled="!canEdit(pageDraft)" type="number" min="-30" max="30" step="1"></label>
+                  <label>鐗堝紡妯℃澘<select v-model="section.layout.template" :disabled="!canEdit(pageDraft) || !section.layout.enabled"><option value="default">榛樿鐗堝紡</option><option value="overlay-left">濯掍綋涓婂乏渚ф枃瀛?/option><option value="overlay-center">濯掍綋涓婂眳涓枃瀛?/option><option value="overlay-right">濯掍綋涓婂彸渚ф枃瀛?/option><option value="split-media-left">宸﹀浘鍙虫枃</option><option value="split-media-right">宸︽枃鍙冲浘</option><option value="stack">涓婁笅鍫嗗彔</option><option value="grid">鍗＄墖缃戞牸</option><option value="gallery">鍥剧墖鐢诲粖</option><option value="timeline">鏃堕棿杞?/option><option value="process">宸ヨ壓娴佺▼</option></select></label>
+                  <label>姘村钩瀵归綈<select v-model="section.layout.align_x" :disabled="!canEdit(pageDraft)"><option value="left">宸﹀榻?/option><option value="center">灞呬腑</option><option value="right">鍙冲榻?/option></select></label>
+                  <label>鍨傜洿瀵归綈<select v-model="section.layout.align_y" :disabled="!canEdit(pageDraft)"><option value="top">椤堕儴</option><option value="center">灞呬腑</option><option value="bottom">搴曢儴</option></select></label>
+                  <label>鍐呭瀹藉害<select v-model="section.layout.width" :disabled="!canEdit(pageDraft)"><option value="narrow">绐?/option><option value="normal">鏍囧噯</option><option value="wide">瀹?/option><option value="full">鍏ㄥ</option></select></label>
+                  <label>鍐呭闂磋窛<select v-model="section.layout.gap" :disabled="!canEdit(pageDraft)"><option value="none">鏃?/option><option value="small">灏?/option><option value="medium">涓?/option><option value="large">澶?/option></select></label>
+                  <label>闃呰椤哄簭<input v-model.number="section.layout.order" :disabled="!canEdit(pageDraft)" type="number" min="0" max="999"></label>
+                  <label>灞傜骇<input v-model.number="section.layout.z_index" :disabled="!canEdit(pageDraft)" type="number" min="0" max="9"></label>
+                  <label>妗岄潰妯悜鍋忕Щ锛?锛?input v-model.number="section.layout.desktop.offset_x" :disabled="!canEdit(pageDraft)" type="number" min="-30" max="30" step="1"></label>
+                  <label>妗岄潰绾靛悜鍋忕Щ锛?锛?input v-model.number="section.layout.desktop.offset_y" :disabled="!canEdit(pageDraft)" type="number" min="-30" max="30" step="1"></label>
+                  <label>鎵嬫満妯悜鍋忕Щ锛?锛?input v-model.number="section.layout.mobile.offset_x" :disabled="!canEdit(pageDraft)" type="number" min="-30" max="30" step="1"></label>
+                  <label>鎵嬫満绾靛悜鍋忕Щ锛?锛?input v-model.number="section.layout.mobile.offset_y" :disabled="!canEdit(pageDraft)" type="number" min="-30" max="30" step="1"></label>
                 </div>
                 <div class="field-grid">
-                  <label>文字样式<select v-model="section.text_style.preset" :disabled="!canEdit(pageDraft)"><option value="inherit">沿用页面</option><option value="hero">首屏主标题</option><option value="section-title">区块标题</option><option value="body">正文</option><option value="data">年份/数据</option><option value="card-title">卡片标题</option><option value="caption">图注</option><option value="button">按钮</option></select></label>
-                  <label>字重<select v-model.number="section.text_style.weight" :disabled="!canEdit(pageDraft)"><option :value="300">细</option><option :value="400">常规</option><option :value="500">中等</option><option :value="700">粗</option><option :value="800">特粗</option></select></label>
-                  <label>桌面字号（0 为沿用）<input v-model.number="section.text_style.size_desktop" :disabled="!canEdit(pageDraft)" type="number" min="0" max="120"></label>
-                  <label>手机字号（0 为沿用）<input v-model.number="section.text_style.size_mobile" :disabled="!canEdit(pageDraft)" type="number" min="0" max="72"></label>
-                  <label>行高<input v-model.number="section.text_style.line_height" :disabled="!canEdit(pageDraft)" type="number" min="1" max="2.2" step="0.05"></label>
-                  <label>文字最大宽度<select v-model="section.text_style.max_width" :disabled="!canEdit(pageDraft)"><option value="narrow">窄</option><option value="normal">标准</option><option value="wide">宽</option><option value="full">全宽</option></select></label>
-                  <label>文字颜色<input v-model.trim="section.text_style.color" :disabled="!canEdit(pageDraft)" pattern="#[0-9a-fA-F]{6}" placeholder="#FFFFFF"></label>
+                  <label>鏂囧瓧鏍峰紡<select v-model="section.text_style.preset" :disabled="!canEdit(pageDraft)"><option value="inherit">娌跨敤椤甸潰</option><option value="hero">棣栧睆涓绘爣棰?/option><option value="section-title">鍖哄潡鏍囬</option><option value="body">姝ｆ枃</option><option value="data">骞翠唤/鏁版嵁</option><option value="card-title">鍗＄墖鏍囬</option><option value="caption">鍥炬敞</option><option value="button">鎸夐挳</option></select></label>
+                  <label>瀛楅噸<select v-model.number="section.text_style.weight" :disabled="!canEdit(pageDraft)"><option :value="300">缁?/option><option :value="400">甯歌</option><option :value="500">涓瓑</option><option :value="700">绮?/option><option :value="800">鐗圭矖</option></select></label>
+                  <label>妗岄潰瀛楀彿锛? 涓烘部鐢級<input v-model.number="section.text_style.size_desktop" :disabled="!canEdit(pageDraft)" type="number" min="0" max="120"></label>
+                  <label>鎵嬫満瀛楀彿锛? 涓烘部鐢級<input v-model.number="section.text_style.size_mobile" :disabled="!canEdit(pageDraft)" type="number" min="0" max="72"></label>
+                  <label>琛岄珮<input v-model.number="section.text_style.line_height" :disabled="!canEdit(pageDraft)" type="number" min="1" max="2.2" step="0.05"></label>
+                  <label>鏂囧瓧鏈€澶у搴?select v-model="section.text_style.max_width" :disabled="!canEdit(pageDraft)"><option value="narrow">绐?/option><option value="normal">鏍囧噯</option><option value="wide">瀹?/option><option value="full">鍏ㄥ</option></select></label>
+                  <label>鏂囧瓧棰滆壊<input v-model.trim="section.text_style.color" :disabled="!canEdit(pageDraft)" pattern="#[0-9a-fA-F]{6}" placeholder="#FFFFFF"></label>
                 </div>
                 <div class="field-grid">
-                  <label>图片适配<select v-model="section.media_presentation.fit" :disabled="!canEdit(pageDraft)"><option value="cover">铺满并裁切</option><option value="contain">完整显示</option></select></label>
-                  <label>图片横向焦点（%）<input v-model.number="section.media_presentation.focal_x" :disabled="!canEdit(pageDraft)" type="number" min="0" max="100"></label>
-                  <label>图片纵向焦点（%）<input v-model.number="section.media_presentation.focal_y" :disabled="!canEdit(pageDraft)" type="number" min="0" max="100"></label>
-                  <label>媒体遮罩<select v-model="section.media_presentation.overlay" :disabled="!canEdit(pageDraft)"><option value="none">无</option><option value="dark-15">深色 15%</option><option value="dark-30">深色 30%</option><option value="dark-50">深色 50%</option><option value="light-15">浅色 15%</option></select></label>
-                  <label class="toggle-field"><input v-model="section.responsive.desktop_visible" :disabled="!canEdit(pageDraft)" type="checkbox"><span>桌面显示</span></label>
-                  <label class="toggle-field"><input v-model="section.responsive.tablet_visible" :disabled="!canEdit(pageDraft)" type="checkbox"><span>平板显示</span></label>
-                  <label class="toggle-field"><input v-model="section.responsive.mobile_visible" :disabled="!canEdit(pageDraft)" type="checkbox"><span>手机显示</span></label>
-                  <label>手机版式<select v-model="section.responsive.mobile_template" :disabled="!canEdit(pageDraft)"><option value="inherit">沿用桌面</option><option value="stack">上下堆叠</option><option value="grid">卡片网格</option><option value="gallery">图片画廊</option><option value="timeline">时间轴</option><option value="process">工艺流程</option></select></label>
+                  <label>鍥剧墖閫傞厤<select v-model="section.media_presentation.fit" :disabled="!canEdit(pageDraft)"><option value="cover">閾烘弧骞惰鍒?/option><option value="contain">瀹屾暣鏄剧ず</option></select></label>
+                  <label>鍥剧墖妯悜鐒︾偣锛?锛?input v-model.number="section.media_presentation.focal_x" :disabled="!canEdit(pageDraft)" type="number" min="0" max="100"></label>
+                  <label>鍥剧墖绾靛悜鐒︾偣锛?锛?input v-model.number="section.media_presentation.focal_y" :disabled="!canEdit(pageDraft)" type="number" min="0" max="100"></label>
+                  <label>濯掍綋閬僵<select v-model="section.media_presentation.overlay" :disabled="!canEdit(pageDraft)"><option value="none">鏃?/option><option value="dark-15">娣辫壊 15%</option><option value="dark-30">娣辫壊 30%</option><option value="dark-50">娣辫壊 50%</option><option value="light-15">娴呰壊 15%</option></select></label>
+                  <label class="toggle-field"><input v-model="section.responsive.desktop_visible" :disabled="!canEdit(pageDraft)" type="checkbox"><span>妗岄潰鏄剧ず</span></label>
+                  <label class="toggle-field"><input v-model="section.responsive.tablet_visible" :disabled="!canEdit(pageDraft)" type="checkbox"><span>骞虫澘鏄剧ず</span></label>
+                  <label class="toggle-field"><input v-model="section.responsive.mobile_visible" :disabled="!canEdit(pageDraft)" type="checkbox"><span>鎵嬫満鏄剧ず</span></label>
+                  <label>鎵嬫満鐗堝紡<select v-model="section.responsive.mobile_template" :disabled="!canEdit(pageDraft)"><option value="inherit">娌跨敤妗岄潰</option><option value="stack">涓婁笅鍫嗗彔</option><option value="grid">鍗＄墖缃戞牸</option><option value="gallery">鍥剧墖鐢诲粖</option><option value="timeline">鏃堕棿杞?/option><option value="process">宸ヨ壓娴佺▼</option></select></label>
                 </div>
               </details>
-              <section v-if="isHomeHeroSection(section)" class="home-hero-video-editor" aria-label="首页首屏视频">
-                <div class="section-card-heading"><strong>首页首屏视频</strong><span>{{ section.hero_video_asset_id ? '已选择' : '沿用官网原视频' }}</span></div>
-                <label>视频素材<select :value="section.hero_video_asset_id || ''" :disabled="!canEdit(pageDraft)" @change="setHomeHeroVideo(section, $event.target.value)"><option value="">沿用官网原首屏视频</option><option v-for="asset in homeHeroVideoOptionsForSection(section)" :key="asset.id" :value="String(asset.id)">{{ pageMediaOptionLabel(asset, 'homepage') }}</option></select></label>
-                <p class="form-help">仅显示登记为“首页首屏视频”的素材。未发布视频只在已登录后台的实时预览中显示，发布后才会替换公开官网。</p>
+              <section v-if="isHomeHeroSection(section)" class="home-hero-video-editor" aria-label="棣栭〉棣栧睆瑙嗛">
+                <div class="section-card-heading"><strong>棣栭〉棣栧睆瑙嗛</strong><span>{{ section.hero_video_asset_id ? '宸查€夋嫨' : '娌跨敤瀹樼綉鍘熻棰? }}</span></div>
+                <label>瑙嗛绱犳潗<select :value="section.hero_video_asset_id || ''" :disabled="!canEdit(pageDraft)" @change="setHomeHeroVideo(section, $event.target.value)"><option value="">娌跨敤瀹樼綉鍘熼灞忚棰?/option><option v-for="asset in homeHeroVideoOptionsForSection(section)" :key="asset.id" :value="String(asset.id)">{{ pageMediaOptionLabel(asset, 'homepage') }}</option></select></label>
+                <p class="form-help">浠呮樉绀虹櫥璁颁负鈥滈椤甸灞忚棰戔€濈殑绱犳潗銆傛湭鍙戝竷瑙嗛鍙湪宸茬櫥褰曞悗鍙扮殑瀹炴椂棰勮涓樉绀猴紝鍙戝竷鍚庢墠浼氭浛鎹㈠叕寮€瀹樼綉銆?/p>
               </section>
-              <section v-if="isNewsHeroSection(section)" class="home-hero-video-editor" aria-label="视频新闻首屏视频">
-                <div class="section-card-heading"><strong>视频新闻首屏视频</strong><span>{{ newsHeroVideoAssetId(section) ? '已选择' : '沿用官网原视频' }}</span></div>
-                <label>视频素材<select :value="newsHeroVideoAssetId(section)" :disabled="!canEdit(pageDraft)" @change="setNewsHeroVideo(section, $event.target.value)"><option value="">沿用官网原首屏视频</option><option v-for="asset in newsHeroVideoOptionsForSection(section)" :key="asset.id" :value="String(asset.id)">{{ pageMediaOptionLabel(asset, 'article') }}</option></select></label>
-                <p class="form-help">仅显示登记为“视频新闻首屏”的视频。未发布视频只在已登录后台的实时预览中显示，发布后才会替换公开官网。</p>
+              <section v-if="isNewsHeroSection(section)" class="home-hero-video-editor" aria-label="瑙嗛鏂伴椈棣栧睆瑙嗛">
+                <div class="section-card-heading"><strong>瑙嗛鏂伴椈棣栧睆瑙嗛</strong><span>{{ newsHeroVideoAssetId(section) ? '宸查€夋嫨' : '娌跨敤瀹樼綉鍘熻棰? }}</span></div>
+                <label>瑙嗛绱犳潗<select :value="newsHeroVideoAssetId(section)" :disabled="!canEdit(pageDraft)" @change="setNewsHeroVideo(section, $event.target.value)"><option value="">娌跨敤瀹樼綉鍘熼灞忚棰?/option><option v-for="asset in newsHeroVideoOptionsForSection(section)" :key="asset.id" :value="String(asset.id)">{{ pageMediaOptionLabel(asset, 'article') }}</option></select></label>
+                <p class="form-help">浠呮樉绀虹櫥璁颁负鈥滆棰戞柊闂婚灞忊€濈殑瑙嗛銆傛湭鍙戝竷瑙嗛鍙湪宸茬櫥褰曞悗鍙扮殑瀹炴椂棰勮涓樉绀猴紝鍙戝竷鍚庢墠浼氭浛鎹㈠叕寮€瀹樼綉銆?/p>
               </section>
-              <section v-if="!section.type" class="media-reference-editor" :aria-label="`${section.title || '页面段落'}图片`">
-                <div class="section-card-heading"><strong>图片与背景</strong><span>{{ section.media.length }}</span></div>
-                <div class="media-reference-add"><select v-model="pageMediaSelection" :disabled="!canEdit(pageDraft)"><option value="">选择{{ pageMediaScopeLabel() }}素材</option><option v-for="asset in pageMediaOptionsForSection(pageMediaScope(), section)" :key="asset.id" :value="String(asset.id)">{{ pageMediaOptionLabel(asset, pageMediaScope()) }}</option></select><button type="button" :disabled="!canEdit(pageDraft) || !pageMediaSelection" @click="addPageMedia(section)">添加素材</button></div>
-                <p v-if="!pageMediaOptionsForSection(pageMediaScope(), section).length" class="form-help">暂无可用于此区块的{{ pageMediaScopeLabel() }}素材。请先在“更多工具 - 媒体资产”上传；草稿素材必须填写当前页面和段落，且只供当前内部预览使用。</p>
-                <p v-if="isHomeHeroSection(section)" class="form-help">首屏视频的两张静态图也在这里绑定：「视频海报」展示位置填 <strong>poster</strong>，「结束静帧」填 <strong>end-frame</strong>。未绑定时画布上只能查看、不能替换。</p>
-                <div v-for="reference in section.media" :key="reference.media_asset_id" class="media-reference-row"><span>{{ pageMediaLabel(reference) }}</span><label v-if="section.id === 'hero' && pageDraft.slug === 'about'">图片用途<select v-model="reference.role" :disabled="!canEdit(pageDraft)"><option value="backdrop">首屏共享背景</option><option value="background">首屏背景图层</option><option value="foreground">首屏机器前景</option></select></label><label v-else>展示位置<input v-model.trim="reference.role" :disabled="!canEdit(pageDraft)" maxlength="60" :placeholder="isHomeHeroSection(section) ? '例如：poster、end-frame' : '例如：background、card-1、video、icon-1'"></label><button type="button" class="text-action danger" :disabled="!canEdit(pageDraft)" @click="removePageMedia(section, reference.media_asset_id)">移除</button></div>
+              <section v-if="!section.type" class="media-reference-editor" :aria-label="`${section.title || '椤甸潰娈佃惤'}鍥剧墖`">
+                <div class="section-card-heading"><strong>鍥剧墖涓庤儗鏅?/strong><span>{{ section.media.length }}</span></div>
+                <div class="media-reference-add"><select v-model="pageMediaSelection" :disabled="!canEdit(pageDraft)"><option value="">閫夋嫨{{ pageMediaScopeLabel() }}绱犳潗</option><option v-for="asset in pageMediaOptionsForSection(pageMediaScope(), section)" :key="asset.id" :value="String(asset.id)">{{ pageMediaOptionLabel(asset, pageMediaScope()) }}</option></select><button type="button" :disabled="!canEdit(pageDraft) || !pageMediaSelection" @click="addPageMedia(section)">娣诲姞绱犳潗</button></div>
+                <p v-if="!pageMediaOptionsForSection(pageMediaScope(), section).length" class="form-help">鏆傛棤鍙敤浜庢鍖哄潡鐨剓{ pageMediaScopeLabel() }}绱犳潗銆傝鍏堝湪鈥滄洿澶氬伐鍏?- 濯掍綋璧勪骇鈥濅笂浼狅紱鑽夌绱犳潗蹇呴』濉啓褰撳墠椤甸潰鍜屾钀斤紝涓斿彧渚涘綋鍓嶅唴閮ㄩ瑙堜娇鐢ㄣ€?/p>
+                <p v-if="isHomeHeroSection(section)" class="form-help">棣栧睆瑙嗛鐨勪袱寮犻潤鎬佸浘涔熷湪杩欓噷缁戝畾锛氥€岃棰戞捣鎶ャ€嶅睍绀轰綅缃～ <strong>poster</strong>锛屻€岀粨鏉熼潤甯с€嶅～ <strong>end-frame</strong>銆傛湭缁戝畾鏃剁敾甯冧笂鍙兘鏌ョ湅銆佷笉鑳芥浛鎹€?/p>
+                <div v-for="reference in section.media" :key="reference.media_asset_id" class="media-reference-row"><span>{{ pageMediaLabel(reference) }}</span><label v-if="section.id === 'hero' && pageDraft.slug === 'about'">鍥剧墖鐢ㄩ€?select v-model="reference.role" :disabled="!canEdit(pageDraft)"><option value="backdrop">棣栧睆鍏变韩鑳屾櫙</option><option value="background">棣栧睆鑳屾櫙鍥惧眰</option><option value="foreground">棣栧睆鏈哄櫒鍓嶆櫙</option></select></label><label v-else>灞曠ず浣嶇疆<input v-model.trim="reference.role" :disabled="!canEdit(pageDraft)" maxlength="60" :placeholder="isHomeHeroSection(section) ? '渚嬪锛歱oster銆乪nd-frame' : '渚嬪锛歜ackground銆乧ard-1銆乿ideo銆乮con-1'"></label><button type="button" class="text-action danger" :disabled="!canEdit(pageDraft)" @click="removePageMedia(section, reference.media_asset_id)">绉婚櫎</button></div>
               </section>
               <section v-if="!section.type && pageDraft.slug === 'service' && ['hero', 'support-models', 'support-actions', 'office-directory'].includes(section.id)" class="service-items-editor">
-                <div class="section-card-heading"><strong>{{ section.id === 'hero' ? '首屏说明文字' : section.id === 'support-models' ? '设备型号卡片' : section.id === 'support-actions' ? '服务入口卡片' : '区域与直属办事处' }}</strong><button type="button" :disabled="!canEdit(pageDraft)" @click="addServiceItem(section, section.id === 'support-models' ? 'model' : section.id === 'support-actions' ? 'action' : section.id === 'office-directory' ? 'office' : 'copy')">新增</button></div>
+                <div class="section-card-heading"><strong>{{ section.id === 'hero' ? '棣栧睆璇存槑鏂囧瓧' : section.id === 'support-models' ? '璁惧鍨嬪彿鍗＄墖' : section.id === 'support-actions' ? '鏈嶅姟鍏ュ彛鍗＄墖' : '鍖哄煙涓庣洿灞炲姙浜嬪' }}</strong><button type="button" :disabled="!canEdit(pageDraft)" @click="addServiceItem(section, section.id === 'support-models' ? 'model' : section.id === 'support-actions' ? 'action' : section.id === 'office-directory' ? 'office' : 'copy')">鏂板</button></div>
                 <div v-for="(item, itemIndex) in section.items || []" :key="`${section.id}-${itemIndex}`" class="service-item-card">
-                  <template v-if="section.id === 'hero'"><label>说明文字<input v-model.trim="item.label" :disabled="!canEdit(pageDraft)" maxlength="160"></label></template>
-                  <template v-else-if="section.id === 'support-models'"><label>型号名称<input v-model.trim="item.label" :disabled="!canEdit(pageDraft)" maxlength="120"></label><label>图片位置<input v-model.trim="item.media_role" :disabled="!canEdit(pageDraft)" maxlength="60" placeholder="例如：model-1"></label></template>
-                  <template v-else-if="section.id === 'support-actions'"><label>编号<input v-model.trim="item.number" :disabled="!canEdit(pageDraft)" maxlength="8" placeholder="01 至 10"></label><label>按钮文字<input v-model.trim="item.title" :disabled="!canEdit(pageDraft)" maxlength="120"></label><label class="full">按钮下方说明<input v-model.trim="item.description" :disabled="!canEdit(pageDraft)" maxlength="300"></label><label>点击后咨询内容<input v-model.trim="item.body" :disabled="!canEdit(pageDraft)" maxlength="240"></label><label>图案位置<input v-model.trim="item.media_role" :disabled="!canEdit(pageDraft)" maxlength="60" placeholder="例如：action-1"></label></template>
-                  <template v-else><label>区域名称<input v-model.trim="item.title" :disabled="!canEdit(pageDraft)" maxlength="120"></label><label>区域图片位置<input v-model.trim="item.media_role" :disabled="!canEdit(pageDraft)" maxlength="60" placeholder="例如：office-1"></label><label>地图图片位置<input v-model.trim="item.map_media_role" :disabled="!canEdit(pageDraft)" maxlength="60" placeholder="例如：office-map-1"></label><div v-for="(office, officeIndex) in item.offices || []" :key="officeIndex" class="office-inline-fields"><label>门店地址<input v-model.trim="office.address" :disabled="!canEdit(pageDraft)" maxlength="500"></label><label>负责人<input v-model.trim="office.manager" :disabled="!canEdit(pageDraft)" maxlength="120"></label><label>联系电话<input v-model.trim="office.phone" :disabled="!canEdit(pageDraft)" maxlength="80"></label><button type="button" class="text-action danger" :disabled="!canEdit(pageDraft)" @click="removeOffice(section, itemIndex, officeIndex)">删除门店</button></div><button type="button" :disabled="!canEdit(pageDraft)" @click="addOffice(section, itemIndex)">新增门店</button></template>
-                  <button type="button" class="text-action danger" :disabled="!canEdit(pageDraft)" @click="removeServiceItem(section, itemIndex)">删除</button>
+                  <template v-if="section.id === 'hero'"><label>璇存槑鏂囧瓧<input v-model.trim="item.label" :disabled="!canEdit(pageDraft)" maxlength="160"></label></template>
+                  <template v-else-if="section.id === 'support-models'"><label>鍨嬪彿鍚嶇О<input v-model.trim="item.label" :disabled="!canEdit(pageDraft)" maxlength="120"></label><label>鍥剧墖浣嶇疆<input v-model.trim="item.media_role" :disabled="!canEdit(pageDraft)" maxlength="60" placeholder="渚嬪锛歮odel-1"></label></template>
+                  <template v-else-if="section.id === 'support-actions'"><label>缂栧彿<input v-model.trim="item.number" :disabled="!canEdit(pageDraft)" maxlength="8" placeholder="01 鑷?10"></label><label>鎸夐挳鏂囧瓧<input v-model.trim="item.title" :disabled="!canEdit(pageDraft)" maxlength="120"></label><label class="full">鎸夐挳涓嬫柟璇存槑<input v-model.trim="item.description" :disabled="!canEdit(pageDraft)" maxlength="300"></label><label>鐐瑰嚮鍚庡挩璇㈠唴瀹?input v-model.trim="item.body" :disabled="!canEdit(pageDraft)" maxlength="240"></label><label>鍥炬浣嶇疆<input v-model.trim="item.media_role" :disabled="!canEdit(pageDraft)" maxlength="60" placeholder="渚嬪锛歛ction-1"></label></template>
+                  <template v-else><label>鍖哄煙鍚嶇О<input v-model.trim="item.title" :disabled="!canEdit(pageDraft)" maxlength="120"></label><label>鍖哄煙鍥剧墖浣嶇疆<input v-model.trim="item.media_role" :disabled="!canEdit(pageDraft)" maxlength="60" placeholder="渚嬪锛歰ffice-1"></label><label>鍦板浘鍥剧墖浣嶇疆<input v-model.trim="item.map_media_role" :disabled="!canEdit(pageDraft)" maxlength="60" placeholder="渚嬪锛歰ffice-map-1"></label><div v-for="(office, officeIndex) in item.offices || []" :key="officeIndex" class="office-inline-fields"><label>闂ㄥ簵鍦板潃<input v-model.trim="office.address" :disabled="!canEdit(pageDraft)" maxlength="500"></label><label>璐熻矗浜?input v-model.trim="office.manager" :disabled="!canEdit(pageDraft)" maxlength="120"></label><label>鑱旂郴鐢佃瘽<input v-model.trim="office.phone" :disabled="!canEdit(pageDraft)" maxlength="80"></label><button type="button" class="text-action danger" :disabled="!canEdit(pageDraft)" @click="removeOffice(section, itemIndex, officeIndex)">鍒犻櫎闂ㄥ簵</button></div><button type="button" :disabled="!canEdit(pageDraft)" @click="addOffice(section, itemIndex)">鏂板闂ㄥ簵</button></template>
+                  <button type="button" class="text-action danger" :disabled="!canEdit(pageDraft)" @click="removeServiceItem(section, itemIndex)">鍒犻櫎</button>
                 </div>
               </section>
               <section v-else-if="!section.type" class="service-items-editor generic-items-editor">
-                <div class="section-card-heading"><strong>{{ pageDraft.slug === 'manufacturing' && section.id === 'process' ? '制造工艺节点' : '重复内容（卡片、节点或列表）' }}</strong><button type="button" :disabled="!canEdit(pageDraft)" @click="addGenericSectionItem(section)">{{ pageDraft.slug === 'manufacturing' && section.id === 'process' ? '新增工艺节点' : '新增一项' }}</button></div>
-                <p class="form-help">{{ pageDraft.slug === 'manufacturing' && section.id === 'process' ? '每项都对应工艺画布中的一个固定位置。可维护标题、说明、连接说明和顺序；素材仍须在上方通过受控媒体流程添加。' : '可用于三大理由、首页横移图文、工艺节点、参数说明和画廊项目。首页的“marquee”段落就是横移图文；项目图片请在上方添加素材，并填写相同的“展示位置”。' }}</p>
+                <div class="section-card-heading"><strong>{{ pageDraft.slug === 'manufacturing' && section.id === 'process' ? '鍒堕€犲伐鑹鸿妭鐐? : '閲嶅鍐呭锛堝崱鐗囥€佽妭鐐规垨鍒楄〃锛? }}</strong><button type="button" :disabled="!canEdit(pageDraft)" @click="addGenericSectionItem(section)">{{ pageDraft.slug === 'manufacturing' && section.id === 'process' ? '鏂板宸ヨ壓鑺傜偣' : '鏂板涓€椤? }}</button></div>
+                <p class="form-help">{{ pageDraft.slug === 'manufacturing' && section.id === 'process' ? '姣忛」閮藉搴斿伐鑹虹敾甯冧腑鐨勪竴涓浐瀹氫綅缃€傚彲缁存姢鏍囬銆佽鏄庛€佽繛鎺ヨ鏄庡拰椤哄簭锛涚礌鏉愪粛椤诲湪涓婃柟閫氳繃鍙楁帶濯掍綋娴佺▼娣诲姞銆? : '鍙敤浜庝笁澶х悊鐢便€侀椤垫í绉诲浘鏂囥€佸伐鑹鸿妭鐐广€佸弬鏁拌鏄庡拰鐢诲粖椤圭洰銆傞椤电殑鈥渕arquee鈥濇钀藉氨鏄í绉诲浘鏂囷紱椤圭洰鍥剧墖璇峰湪涓婃柟娣诲姞绱犳潗锛屽苟濉啓鐩稿悓鐨勨€滃睍绀轰綅缃€濄€? }}</p>
                 <div v-for="(item, itemIndex) in section.items || []" :key="`${section.id}-generic-${itemIndex}`" class="service-item-card">
-                  <div class="section-card-heading"><strong>第 {{ itemIndex + 1 }} 项</strong><div><button type="button" class="text-action" :disabled="!canEdit(pageDraft) || itemIndex === 0" @click="moveGenericSectionItem(section, itemIndex, -1)">上移</button><button type="button" class="text-action" :disabled="!canEdit(pageDraft) || itemIndex === section.items.length - 1" @click="moveGenericSectionItem(section, itemIndex, 1)">下移</button></div></div>
-                  <label>短标题<input v-model.trim="item.label" :disabled="!canEdit(pageDraft)" maxlength="120"></label>
-                  <label>标题<input v-model.trim="item.title" :disabled="!canEdit(pageDraft)" maxlength="240"></label>
-                  <label class="full">正文<textarea v-model="item.body" :disabled="!canEdit(pageDraft)" rows="3" maxlength="4000"></textarea></label>
-                  <label class="full">补充说明<input v-model.trim="item.description" :disabled="!canEdit(pageDraft)" maxlength="500"></label>
-                  <label v-if="pageDraft.slug === 'manufacturing' && section.id === 'process'">连接说明<input v-model.trim="item.connection_label" :disabled="!canEdit(pageDraft)" maxlength="160" placeholder="工艺节点之间的说明文字"></label>
-                  <label>媒体展示位置<input v-model.trim="item.media_role" :disabled="!canEdit(pageDraft)" maxlength="60" placeholder="例如：card-1、node-2"></label>
-                  <label>图片替代文字<input v-model.trim="item.alt" :disabled="!canEdit(pageDraft)" maxlength="240" placeholder="说明图片中可见的内容"></label>
-                  <label v-if="pageDraft.slug === 'manufacturing' && section.id === 'process'">工艺画布位置<select v-model="item.anchor" :disabled="!canEdit(pageDraft)"><option value="auto">按顺序自动</option><option value="top-left">左上</option><option value="top-center">上中</option><option value="top-right">右上</option><option value="bottom-left">左下</option><option value="bottom-center">下中</option><option value="bottom-right">右下</option></select></label>
-                  <label>链接<input v-model.trim="item.href" :disabled="!canEdit(pageDraft)" maxlength="1000" placeholder="例如：/product"></label>
+                  <div class="section-card-heading"><strong>绗?{{ itemIndex + 1 }} 椤?/strong><div><button type="button" class="text-action" :disabled="!canEdit(pageDraft) || itemIndex === 0" @click="moveGenericSectionItem(section, itemIndex, -1)">涓婄Щ</button><button type="button" class="text-action" :disabled="!canEdit(pageDraft) || itemIndex === section.items.length - 1" @click="moveGenericSectionItem(section, itemIndex, 1)">涓嬬Щ</button></div></div>
+                  <label>鐭爣棰?input v-model.trim="item.label" :disabled="!canEdit(pageDraft)" maxlength="120"></label>
+                  <label>鏍囬<input v-model.trim="item.title" :disabled="!canEdit(pageDraft)" maxlength="240"></label>
+                  <label class="full">姝ｆ枃<textarea v-model="item.body" :disabled="!canEdit(pageDraft)" rows="3" maxlength="4000"></textarea></label>
+                  <label class="full">琛ュ厖璇存槑<input v-model.trim="item.description" :disabled="!canEdit(pageDraft)" maxlength="500"></label>
+                  <label v-if="pageDraft.slug === 'manufacturing' && section.id === 'process'">杩炴帴璇存槑<input v-model.trim="item.connection_label" :disabled="!canEdit(pageDraft)" maxlength="160" placeholder="宸ヨ壓鑺傜偣涔嬮棿鐨勮鏄庢枃瀛?></label>
+                  <label>濯掍綋灞曠ず浣嶇疆<input v-model.trim="item.media_role" :disabled="!canEdit(pageDraft)" maxlength="60" placeholder="渚嬪锛歝ard-1銆乶ode-2"></label>
+                  <label>鍥剧墖鏇夸唬鏂囧瓧<input v-model.trim="item.alt" :disabled="!canEdit(pageDraft)" maxlength="240" placeholder="璇存槑鍥剧墖涓彲瑙佺殑鍐呭"></label>
+                  <label v-if="pageDraft.slug === 'manufacturing' && section.id === 'process'">宸ヨ壓鐢诲竷浣嶇疆<select v-model="item.anchor" :disabled="!canEdit(pageDraft)"><option value="auto">鎸夐『搴忚嚜鍔?/option><option value="top-left">宸︿笂</option><option value="top-center">涓婁腑</option><option value="top-right">鍙充笂</option><option value="bottom-left">宸︿笅</option><option value="bottom-center">涓嬩腑</option><option value="bottom-right">鍙充笅</option></select></label>
+                  <label>閾炬帴<input v-model.trim="item.href" :disabled="!canEdit(pageDraft)" maxlength="1000" placeholder="渚嬪锛?product"></label>
                   <details class="advanced-fields item-presentation-editor">
-                    <summary>本项位置与文字样式</summary>
-                    <div class="presentation-enable-grid"><label class="toggle-field"><input v-model="item.layout.enabled" :disabled="!canEdit(pageDraft)" type="checkbox"><span>位置</span></label><label class="toggle-field"><input v-model="item.text_style.enabled" :disabled="!canEdit(pageDraft)" type="checkbox"><span>文字</span></label><label class="toggle-field"><input v-model="item.media_presentation.enabled" :disabled="!canEdit(pageDraft)" type="checkbox"><span>图片</span></label><label class="toggle-field"><input v-model="item.responsive.enabled" :disabled="!canEdit(pageDraft)" type="checkbox"><span>响应式</span></label></div>
-                    <div class="field-grid"><label>水平对齐<select v-model="item.layout.align_x" :disabled="!canEdit(pageDraft) || !item.layout.enabled"><option value="left">左</option><option value="center">中</option><option value="right">右</option></select></label><label>桌面横向偏移（%）<input v-model.number="item.layout.desktop.offset_x" :disabled="!canEdit(pageDraft) || !item.layout.enabled" type="number" min="-30" max="30"></label><label>桌面纵向偏移（%）<input v-model.number="item.layout.desktop.offset_y" :disabled="!canEdit(pageDraft) || !item.layout.enabled" type="number" min="-30" max="30"></label><label>手机横向偏移（%）<input v-model.number="item.layout.mobile.offset_x" :disabled="!canEdit(pageDraft) || !item.layout.enabled" type="number" min="-30" max="30"></label><label>手机纵向偏移（%）<input v-model.number="item.layout.mobile.offset_y" :disabled="!canEdit(pageDraft) || !item.layout.enabled" type="number" min="-30" max="30"></label><label>字重<select v-model.number="item.text_style.weight" :disabled="!canEdit(pageDraft) || !item.text_style.enabled"><option :value="300">细</option><option :value="400">常规</option><option :value="500">中等</option><option :value="700">粗</option><option :value="800">特粗</option></select></label><label>桌面字号<input v-model.number="item.text_style.size_desktop" :disabled="!canEdit(pageDraft) || !item.text_style.enabled" type="number" min="0" max="120"></label><label>手机字号<input v-model.number="item.text_style.size_mobile" :disabled="!canEdit(pageDraft) || !item.text_style.enabled" type="number" min="0" max="72"></label><label>文字颜色<input v-model.trim="item.text_style.color" :disabled="!canEdit(pageDraft) || !item.text_style.enabled" pattern="#[0-9a-fA-F]{6}" placeholder="#FFFFFF"></label><label>图片适配<select v-model="item.media_presentation.fit" :disabled="!canEdit(pageDraft) || !item.media_presentation.enabled"><option value="cover">铺满裁切</option><option value="contain">完整显示</option></select></label><label>横向焦点<input v-model.number="item.media_presentation.focal_x" :disabled="!canEdit(pageDraft) || !item.media_presentation.enabled" type="number" min="0" max="100"></label><label>纵向焦点<input v-model.number="item.media_presentation.focal_y" :disabled="!canEdit(pageDraft) || !item.media_presentation.enabled" type="number" min="0" max="100"></label><label class="toggle-field"><input v-model="item.responsive.desktop_visible" :disabled="!canEdit(pageDraft) || !item.responsive.enabled" type="checkbox"><span>桌面显示</span></label><label class="toggle-field"><input v-model="item.responsive.mobile_visible" :disabled="!canEdit(pageDraft) || !item.responsive.enabled" type="checkbox"><span>手机显示</span></label></div>
+                    <summary>鏈」浣嶇疆涓庢枃瀛楁牱寮?/summary>
+                    <div class="presentation-enable-grid"><label class="toggle-field"><input v-model="item.layout.enabled" :disabled="!canEdit(pageDraft)" type="checkbox"><span>浣嶇疆</span></label><label class="toggle-field"><input v-model="item.text_style.enabled" :disabled="!canEdit(pageDraft)" type="checkbox"><span>鏂囧瓧</span></label><label class="toggle-field"><input v-model="item.media_presentation.enabled" :disabled="!canEdit(pageDraft)" type="checkbox"><span>鍥剧墖</span></label><label class="toggle-field"><input v-model="item.responsive.enabled" :disabled="!canEdit(pageDraft)" type="checkbox"><span>鍝嶅簲寮?/span></label></div>
+                    <div class="field-grid"><label>姘村钩瀵归綈<select v-model="item.layout.align_x" :disabled="!canEdit(pageDraft) || !item.layout.enabled"><option value="left">宸?/option><option value="center">涓?/option><option value="right">鍙?/option></select></label><label>妗岄潰妯悜鍋忕Щ锛?锛?input v-model.number="item.layout.desktop.offset_x" :disabled="!canEdit(pageDraft) || !item.layout.enabled" type="number" min="-30" max="30"></label><label>妗岄潰绾靛悜鍋忕Щ锛?锛?input v-model.number="item.layout.desktop.offset_y" :disabled="!canEdit(pageDraft) || !item.layout.enabled" type="number" min="-30" max="30"></label><label>鎵嬫満妯悜鍋忕Щ锛?锛?input v-model.number="item.layout.mobile.offset_x" :disabled="!canEdit(pageDraft) || !item.layout.enabled" type="number" min="-30" max="30"></label><label>鎵嬫満绾靛悜鍋忕Щ锛?锛?input v-model.number="item.layout.mobile.offset_y" :disabled="!canEdit(pageDraft) || !item.layout.enabled" type="number" min="-30" max="30"></label><label>瀛楅噸<select v-model.number="item.text_style.weight" :disabled="!canEdit(pageDraft) || !item.text_style.enabled"><option :value="300">缁?/option><option :value="400">甯歌</option><option :value="500">涓瓑</option><option :value="700">绮?/option><option :value="800">鐗圭矖</option></select></label><label>妗岄潰瀛楀彿<input v-model.number="item.text_style.size_desktop" :disabled="!canEdit(pageDraft) || !item.text_style.enabled" type="number" min="0" max="120"></label><label>鎵嬫満瀛楀彿<input v-model.number="item.text_style.size_mobile" :disabled="!canEdit(pageDraft) || !item.text_style.enabled" type="number" min="0" max="72"></label><label>鏂囧瓧棰滆壊<input v-model.trim="item.text_style.color" :disabled="!canEdit(pageDraft) || !item.text_style.enabled" pattern="#[0-9a-fA-F]{6}" placeholder="#FFFFFF"></label><label>鍥剧墖閫傞厤<select v-model="item.media_presentation.fit" :disabled="!canEdit(pageDraft) || !item.media_presentation.enabled"><option value="cover">閾烘弧瑁佸垏</option><option value="contain">瀹屾暣鏄剧ず</option></select></label><label>妯悜鐒︾偣<input v-model.number="item.media_presentation.focal_x" :disabled="!canEdit(pageDraft) || !item.media_presentation.enabled" type="number" min="0" max="100"></label><label>绾靛悜鐒︾偣<input v-model.number="item.media_presentation.focal_y" :disabled="!canEdit(pageDraft) || !item.media_presentation.enabled" type="number" min="0" max="100"></label><label class="toggle-field"><input v-model="item.responsive.desktop_visible" :disabled="!canEdit(pageDraft) || !item.responsive.enabled" type="checkbox"><span>妗岄潰鏄剧ず</span></label><label class="toggle-field"><input v-model="item.responsive.mobile_visible" :disabled="!canEdit(pageDraft) || !item.responsive.enabled" type="checkbox"><span>鎵嬫満鏄剧ず</span></label></div>
                   </details>
-                  <button type="button" class="text-action danger" :disabled="!canEdit(pageDraft)" @click="removeGenericSectionItem(section, itemIndex)">删除此项</button>
+                  <button type="button" class="text-action danger" :disabled="!canEdit(pageDraft)" @click="removeGenericSectionItem(section, itemIndex)">鍒犻櫎姝ら」</button>
                 </div>
               </section>
               <section v-if="(pageDraft.slug === 'product' && section.id === 'pagination') || (pageDraft.slug === 'news' && ['dynamic-news', 'video-sharing'].includes(section.id)) || (pageDraft.slug === 'manufacturing' && section.id === 'core-equipment')" class="pagination-editor">
-                <div class="section-card-heading"><strong>分页与展示数量</strong></div>
-                <div class="field-grid"><label>每页数量<input v-model.number="section.pagination.page_size" :disabled="!canEdit(pageDraft)" type="number" min="1" max="6"></label><label>排序方式<select v-model="section.pagination.sort" :disabled="!canEdit(pageDraft)"><option value="manual">手动顺序</option><option v-if="pageDraft.slug === 'news'" value="published_at_desc">发布日期倒序</option><option value="sort_order_asc">排序数字升序</option></select></label><label>上一页文字<input v-model.trim="section.pagination.previous_label" :disabled="!canEdit(pageDraft)" maxlength="120"></label><label>下一页文字<input v-model.trim="section.pagination.next_label" :disabled="!canEdit(pageDraft)" maxlength="120"></label><label class="full">空状态文字<input v-model.trim="section.pagination.empty_label" :disabled="!canEdit(pageDraft)" maxlength="120"></label></div>
-                <p v-if="pageDraft.slug === 'news'" class="form-help">新闻和视频分享按发布日期倒序，每页最多 6 条。</p>
-                <p v-else-if="pageDraft.slug === 'manufacturing'" class="form-help">素材库存不限制；桌面PSD画布仍只显示4个入口，其余素材可在大图浏览中继续切换。</p>
+                <div class="section-card-heading"><strong>鍒嗛〉涓庡睍绀烘暟閲?/strong></div>
+                <div class="field-grid"><label>姣忛〉鏁伴噺<input v-model.number="section.pagination.page_size" :disabled="!canEdit(pageDraft)" type="number" min="1" max="6"></label><label>鎺掑簭鏂瑰紡<select v-model="section.pagination.sort" :disabled="!canEdit(pageDraft)"><option value="manual">鎵嬪姩椤哄簭</option><option v-if="pageDraft.slug === 'news'" value="published_at_desc">鍙戝竷鏃ユ湡鍊掑簭</option><option value="sort_order_asc">鎺掑簭鏁板瓧鍗囧簭</option></select></label><label>涓婁竴椤垫枃瀛?input v-model.trim="section.pagination.previous_label" :disabled="!canEdit(pageDraft)" maxlength="120"></label><label>涓嬩竴椤垫枃瀛?input v-model.trim="section.pagination.next_label" :disabled="!canEdit(pageDraft)" maxlength="120"></label><label class="full">绌虹姸鎬佹枃瀛?input v-model.trim="section.pagination.empty_label" :disabled="!canEdit(pageDraft)" maxlength="120"></label></div>
+                <p v-if="pageDraft.slug === 'news'" class="form-help">鏂伴椈鍜岃棰戝垎浜寜鍙戝竷鏃ユ湡鍊掑簭锛屾瘡椤垫渶澶?6 鏉°€?/p>
+                <p v-else-if="pageDraft.slug === 'manufacturing'" class="form-help">绱犳潗搴撳瓨涓嶉檺鍒讹紱妗岄潰PSD鐢诲竷浠嶅彧鏄剧ず4涓叆鍙ｏ紝鍏朵綑绱犳潗鍙湪澶у浘娴忚涓户缁垏鎹€?/p>
               </section>
               <details class="advanced-fields section-advanced">
-                <summary>段落高级设置（一般无需修改）</summary>
+                <summary>娈佃惤楂樼骇璁剧疆锛堜竴鑸棤闇€淇敼锛?/summary>
                 <div class="field-grid">
-                  <label>段落内部标识<input v-model.trim="section.id" :disabled="!canEdit(pageDraft)" required pattern="(?:[a-z]|[0-9])(?:[a-z]|[0-9]|-){0,79}" maxlength="80"></label>
-                  <label>顶部小标题<input v-model.trim="section.kicker" :disabled="!canEdit(pageDraft)" maxlength="120" placeholder="可留空"></label>
+                  <label>娈佃惤鍐呴儴鏍囪瘑<input v-model.trim="section.id" :disabled="!canEdit(pageDraft)" required pattern="(?:[a-z]|[0-9])(?:[a-z]|[0-9]|-){0,79}" maxlength="80"></label>
+                  <label>椤堕儴灏忔爣棰?input v-model.trim="section.kicker" :disabled="!canEdit(pageDraft)" maxlength="120" placeholder="鍙暀绌?></label>
                 </div>
               </details>
             </article>
@@ -527,8 +527,8 @@
               <div v-if="sectionLibraryOpen" class="section-library-overlay" @click.self="sectionLibraryOpen = false">
                 <section class="section-library" role="dialog" aria-modal="true" aria-labelledby="section-library-title">
                   <header>
-                    <div><p class="eyebrow">区块库</p><h3 id="section-library-title">添加区块</h3></div>
-                    <button type="button" aria-label="关闭区块库" @click="sectionLibraryOpen = false">×</button>
+                    <div><p class="eyebrow">鍖哄潡搴?/p><h3 id="section-library-title">娣诲姞鍖哄潡</h3></div>
+                    <button type="button" aria-label="鍏抽棴鍖哄潡搴? @click="sectionLibraryOpen = false">脳</button>
                   </header>
                   <div v-for="group in sectionLibraryGroups" :key="group.category" class="section-library-group">
                     <h4>{{ group.category }}</h4>
@@ -537,438 +537,438 @@
                       <span>{{ definition.description }}</span>
                     </button>
                   </div>
-                  <p v-if="!sectionLibraryGroups.length" class="form-help">当前页面暂未注册可添加的区块类型。</p>
+                  <p v-if="!sectionLibraryGroups.length" class="form-help">褰撳墠椤甸潰鏆傛湭娉ㄥ唽鍙坊鍔犵殑鍖哄潡绫诲瀷銆?/p>
                 </section>
               </div>
             </Teleport>
           </section>
 
           <section class="seo-editor" aria-labelledby="seo-title">
-            <div><p class="eyebrow">搜索优化</p><h4 id="seo-title">搜索与分享信息</h4></div>
+            <div><p class="eyebrow">鎼滅储浼樺寲</p><h4 id="seo-title">鎼滅储涓庡垎浜俊鎭?/h4></div>
             <div class="field-grid">
-              <label>搜索标题<input v-model.trim="pageDraft.seo.title" :disabled="!canEdit(pageDraft)" maxlength="160" placeholder="可留空，默认使用页面标题"></label>
-              <label>关键词<input v-model.trim="pageDraft.seo.keywords" :disabled="!canEdit(pageDraft)" maxlength="500" placeholder="以逗号分隔"></label>
-              <label class="full">搜索描述<textarea v-model="pageDraft.seo.description" :disabled="!canEdit(pageDraft)" rows="3" maxlength="500"></textarea></label>
+              <label>鎼滅储鏍囬<input v-model.trim="pageDraft.seo.title" :disabled="!canEdit(pageDraft)" maxlength="160" placeholder="鍙暀绌猴紝榛樿浣跨敤椤甸潰鏍囬"></label>
+              <label>鍏抽敭璇?input v-model.trim="pageDraft.seo.keywords" :disabled="!canEdit(pageDraft)" maxlength="500" placeholder="浠ラ€楀彿鍒嗛殧"></label>
+              <label class="full">鎼滅储鎻忚堪<textarea v-model="pageDraft.seo.description" :disabled="!canEdit(pageDraft)" rows="3" maxlength="500"></textarea></label>
             </div>
           </section>
 
-          <div class="form-actions"><a :href="nativeItemPath('pages', pageDraft.id)">打开高级设置查看完整字段</a><button class="primary-action" type="submit" :disabled="saving || !canEdit(pageDraft)">{{ saving ? '保存中...' : '保存页面草稿' }}</button></div>
+          <div class="form-actions"><a :href="nativeItemPath('pages', pageDraft.id)">鎵撳紑楂樼骇璁剧疆鏌ョ湅瀹屾暣瀛楁</a><button class="primary-action" type="submit" :disabled="saving || !canEdit(pageDraft)">{{ saving ? '淇濆瓨涓?..' : '淇濆瓨椤甸潰鑽夌' }}</button></div>
         </form>
-        <div v-else class="empty">请选择一条页面记录。</div>
+        <div v-else class="empty">璇烽€夋嫨涓€鏉￠〉闈㈣褰曘€?/div>
       </section>
 
-      <section v-else-if="activeTab === 'series'" class="workspace-grid" aria-label="产品系列编辑">
+      <section v-else-if="activeTab === 'series'" class="workspace-grid" aria-label="浜у搧绯诲垪缂栬緫">
         <aside class="record-list-panel">
-          <div class="panel-heading"><div><p class="eyebrow">产品系列</p><h3>产品系列</h3></div><strong>{{ series.length }}</strong></div>
+          <div class="panel-heading"><div><p class="eyebrow">浜у搧绯诲垪</p><h3>浜у搧绯诲垪</h3></div><strong>{{ series.length }}</strong></div>
           <button v-for="record in series" :key="record.id" type="button" class="record-choice" :class="{ active: record.id === selectedSeriesId }" @click="selectSeries(record.id)"><span>{{ record.name || record.series_code }}</span><small>{{ record.series_code }}</small><i :data-status="record.status">{{ statusLabel(record.status) }}</i></button>
-          <p v-if="!series.length" class="empty compact">当前账号没有可读取的产品系列。</p>
+          <p v-if="!series.length" class="empty compact">褰撳墠璐﹀彿娌℃湁鍙鍙栫殑浜у搧绯诲垪銆?/p>
         </aside>
 
         <form v-if="seriesDraft" class="editor-form" @submit.prevent="saveSeries">
-          <div class="form-heading"><div><p class="eyebrow">系列信息</p><h3>{{ seriesDraft.name || '未命名系列' }}</h3></div><span class="status" :data-status="seriesDraft.status">{{ statusLabel(seriesDraft.status) }}</span></div>
-          <p v-if="!canEdit(seriesDraft)" class="read-only-note">该系列目前不可直接编辑。</p>
+          <div class="form-heading"><div><p class="eyebrow">绯诲垪淇℃伅</p><h3>{{ seriesDraft.name || '鏈懡鍚嶇郴鍒? }}</h3></div><span class="status" :data-status="seriesDraft.status">{{ statusLabel(seriesDraft.status) }}</span></div>
+          <p v-if="!canEdit(seriesDraft)" class="read-only-note">璇ョ郴鍒楃洰鍓嶄笉鍙洿鎺ョ紪杈戙€?/p>
           <div class="field-grid">
-            <label>系列名称<input v-model.trim="seriesDraft.name" :disabled="!canEdit(seriesDraft)" required maxlength="160"></label>
-            <label>系列编码<input v-model.trim="seriesDraft.series_code" :disabled="!canEdit(seriesDraft)" required maxlength="80"></label>
-            <label>访问标识<input v-model.trim="seriesDraft.slug" :disabled="!canEdit(seriesDraft)" required pattern="(?:[a-z]|[0-9])(?:[a-z]|[0-9]|-){0,79}" maxlength="80"></label>
-            <label>排序<input v-model.number="seriesDraft.sort_order" :disabled="!canEdit(seriesDraft)" type="number" min="0" step="1"></label>
-            <label>受控系列封面<select v-model="seriesDraft.cover_asset" :disabled="!canEdit(seriesDraft)"><option value="">尚未选择</option><option v-if="seriesDraft.cover_asset && !isReviewedMediaAsset(seriesDraft.cover_asset, 'product')" :value="seriesDraft.cover_asset">当前引用 {{ seriesDraft.cover_asset }}（尚未通过选择器核验）</option><option v-for="asset in editableMediaAssetsForPlacement('product', 'product.series.cover', 'image')" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select></label>
-            <p v-if="!editableMediaAssetsForPlacement('product', 'product.series.cover', 'image').length" class="form-help full">暂无可用的系列封面素材。请先登记用途为 product.series.cover 的媒体；尺寸图不会作为系列封面候选。</p>
-            <label class="full">定位说明<textarea v-model="seriesDraft.positioning" :disabled="!canEdit(seriesDraft)" rows="3" maxlength="2000"></textarea></label>
-            <label>应用场景（每行一项）<textarea v-model="seriesDraft.scenariosText" :disabled="!canEdit(seriesDraft)" rows="5" maxlength="3000" placeholder="例如：精密零件加工"></textarea></label>
-            <label>核心能力（每行一项）<textarea v-model="seriesDraft.capabilitiesText" :disabled="!canEdit(seriesDraft)" rows="5" maxlength="3000" placeholder="例如：自动穿丝"></textarea></label>
+            <label>绯诲垪鍚嶇О<input v-model.trim="seriesDraft.name" :disabled="!canEdit(seriesDraft)" required maxlength="160"></label>
+            <label>绯诲垪缂栫爜<input v-model.trim="seriesDraft.series_code" :disabled="!canEdit(seriesDraft)" required maxlength="80"></label>
+            <label>璁块棶鏍囪瘑<input v-model.trim="seriesDraft.slug" :disabled="!canEdit(seriesDraft)" required pattern="(?:[a-z]|[0-9])(?:[a-z]|[0-9]|-){0,79}" maxlength="80"></label>
+            <label>鎺掑簭<input v-model.number="seriesDraft.sort_order" :disabled="!canEdit(seriesDraft)" type="number" min="0" step="1"></label>
+            <label>鍙楁帶绯诲垪灏侀潰<select v-model="seriesDraft.cover_asset" :disabled="!canEdit(seriesDraft)"><option value="">灏氭湭閫夋嫨</option><option v-if="seriesDraft.cover_asset && !isReviewedMediaAsset(seriesDraft.cover_asset, 'product')" :value="seriesDraft.cover_asset">褰撳墠寮曠敤 {{ seriesDraft.cover_asset }}锛堝皻鏈€氳繃閫夋嫨鍣ㄦ牳楠岋級</option><option v-for="asset in editableMediaAssetsForPlacement('product', 'product.series.cover', 'image')" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select></label>
+            <p v-if="!editableMediaAssetsForPlacement('product', 'product.series.cover', 'image').length" class="form-help full">鏆傛棤鍙敤鐨勭郴鍒楀皝闈㈢礌鏉愩€傝鍏堢櫥璁扮敤閫斾负 product.series.cover 鐨勫獟浣擄紱灏哄鍥句笉浼氫綔涓虹郴鍒楀皝闈㈠€欓€夈€?/p>
+            <label class="full">瀹氫綅璇存槑<textarea v-model="seriesDraft.positioning" :disabled="!canEdit(seriesDraft)" rows="3" maxlength="2000"></textarea></label>
+            <label>搴旂敤鍦烘櫙锛堟瘡琛屼竴椤癸級<textarea v-model="seriesDraft.scenariosText" :disabled="!canEdit(seriesDraft)" rows="5" maxlength="3000" placeholder="渚嬪锛氱簿瀵嗛浂浠跺姞宸?></textarea></label>
+            <label>鏍稿績鑳藉姏锛堟瘡琛屼竴椤癸級<textarea v-model="seriesDraft.capabilitiesText" :disabled="!canEdit(seriesDraft)" rows="5" maxlength="3000" placeholder="渚嬪锛氳嚜鍔ㄧ┛涓?></textarea></label>
           </div>
           <section v-if="seriesSupportsDetail" class="section-editor" aria-labelledby="series-detail-title">
-            <div class="section-heading"><div><p class="eyebrow">详情首屏</p><h4 id="series-detail-title">系列详情（方案型系列）</h4><p>灵动切割工作站这类“方案型”系列没有独立型号记录，详情首屏使用这里的介绍与设备组成；型号型系列请到“产品型号、参数与尺寸图”维护。</p></div><button type="button" :disabled="!canEdit(seriesDraft)" @click="initializeSeriesDetail">从官网原版初始化</button></div>
-            <p v-if="seriesDetailIsEmpty" class="form-help">当前还没有写入详情。点击“从官网原版初始化”把官网现有的介绍与设备组成变成可编辑内容，再按需修改并保存。</p>
+            <div class="section-heading"><div><p class="eyebrow">璇︽儏棣栧睆</p><h4 id="series-detail-title">绯诲垪璇︽儏锛堟柟妗堝瀷绯诲垪锛?/h4><p>鐏靛姩鍒囧壊宸ヤ綔绔欒繖绫烩€滄柟妗堝瀷鈥濈郴鍒楁病鏈夌嫭绔嬪瀷鍙疯褰曪紝璇︽儏棣栧睆浣跨敤杩欓噷鐨勪粙缁嶄笌璁惧缁勬垚锛涘瀷鍙峰瀷绯诲垪璇峰埌鈥滀骇鍝佸瀷鍙枫€佸弬鏁颁笌灏哄鍥锯€濈淮鎶ゃ€?/p></div><button type="button" :disabled="!canEdit(seriesDraft)" @click="initializeSeriesDetail">浠庡畼缃戝師鐗堝垵濮嬪寲</button></div>
+            <p v-if="seriesDetailIsEmpty" class="form-help">褰撳墠杩樻病鏈夊啓鍏ヨ鎯呫€傜偣鍑烩€滀粠瀹樼綉鍘熺増鍒濆鍖栤€濇妸瀹樼綉鐜版湁鐨勪粙缁嶄笌璁惧缁勬垚鍙樻垚鍙紪杈戝唴瀹癸紝鍐嶆寜闇€淇敼骞朵繚瀛樸€?/p>
             <div class="field-grid">
-              <label>介绍标题<input v-model.trim="seriesDraft.detail.intro.title" :disabled="!canEdit(seriesDraft)" maxlength="160" placeholder="例如：灵动切割工作站"></label>
-              <label>介绍副标题<input v-model.trim="seriesDraft.detail.intro.subtitle" :disabled="!canEdit(seriesDraft)" maxlength="160" placeholder="例如：无人化加工解决方案"></label>
-              <label class="full">适应场景<input v-model.trim="seriesDraft.detail.intro.scene" :disabled="!canEdit(seriesDraft)" maxlength="240"></label>
-              <label class="full">介绍正文<textarea v-model.trim="seriesDraft.detail.intro.body" :disabled="!canEdit(seriesDraft)" rows="4" maxlength="4000"></textarea></label>
-              <label>设备主图<select v-model="seriesDraft.detail.machine_asset_id" :disabled="!canEdit(seriesDraft)"><option value="">沿用官网原图</option><option v-if="seriesDraft.detail.machine_asset_id && !isReviewedMediaAsset(seriesDraft.detail.machine_asset_id, 'product')" :value="seriesDraft.detail.machine_asset_id">当前引用 {{ seriesDraft.detail.machine_asset_id }}（尚未通过选择器核验）</option><option v-for="asset in productFeatureMediaAssets()" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select></label>
+              <label>浠嬬粛鏍囬<input v-model.trim="seriesDraft.detail.intro.title" :disabled="!canEdit(seriesDraft)" maxlength="160" placeholder="渚嬪锛氱伒鍔ㄥ垏鍓插伐浣滅珯"></label>
+              <label>浠嬬粛鍓爣棰?input v-model.trim="seriesDraft.detail.intro.subtitle" :disabled="!canEdit(seriesDraft)" maxlength="160" placeholder="渚嬪锛氭棤浜哄寲鍔犲伐瑙ｅ喅鏂规"></label>
+              <label class="full">閫傚簲鍦烘櫙<input v-model.trim="seriesDraft.detail.intro.scene" :disabled="!canEdit(seriesDraft)" maxlength="240"></label>
+              <label class="full">浠嬬粛姝ｆ枃<textarea v-model.trim="seriesDraft.detail.intro.body" :disabled="!canEdit(seriesDraft)" rows="4" maxlength="4000"></textarea></label>
+              <label>璁惧涓诲浘<select v-model="seriesDraft.detail.machine_asset_id" :disabled="!canEdit(seriesDraft)"><option value="">娌跨敤瀹樼綉鍘熷浘</option><option v-if="seriesDraft.detail.machine_asset_id && !isReviewedMediaAsset(seriesDraft.detail.machine_asset_id, 'product')" :value="seriesDraft.detail.machine_asset_id">褰撳墠寮曠敤 {{ seriesDraft.detail.machine_asset_id }}锛堝皻鏈€氳繃閫夋嫨鍣ㄦ牳楠岋級</option><option v-for="asset in productFeatureMediaAssets()" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select></label>
             </div>
-            <p v-if="!productFeatureMediaAssets().length" class="form-help">暂无可用的产品素材。请先在“高级设置 → 媒体资产”上传图片，使用范围选“产品展示”，展示位置选“产品系列封面”或“产品图或尺寸图”。</p>
-            <div class="section-heading"><div><p class="eyebrow">设备组成</p><h4>核心能力明细</h4><p>每项可以配置标题、说明和备注；画布上可以直接改文字。</p></div><button type="button" :disabled="!canEdit(seriesDraft)" @click="addSeriesDetailFeature">新增一项</button></div>
+            <p v-if="!productFeatureMediaAssets().length" class="form-help">鏆傛棤鍙敤鐨勪骇鍝佺礌鏉愩€傝鍏堝湪鈥滈珮绾ц缃?鈫?濯掍綋璧勪骇鈥濅笂浼犲浘鐗囷紝浣跨敤鑼冨洿閫夆€滀骇鍝佸睍绀衡€濓紝灞曠ず浣嶇疆閫夆€滀骇鍝佺郴鍒楀皝闈⑩€濇垨鈥滀骇鍝佸浘鎴栧昂瀵稿浘鈥濄€?/p>
+            <div class="section-heading"><div><p class="eyebrow">璁惧缁勬垚</p><h4>鏍稿績鑳藉姏鏄庣粏</h4><p>姣忛」鍙互閰嶇疆鏍囬銆佽鏄庡拰澶囨敞锛涚敾甯冧笂鍙互鐩存帴鏀规枃瀛椼€?/p></div><button type="button" :disabled="!canEdit(seriesDraft)" @click="addSeriesDetailFeature">鏂板涓€椤?/button></div>
             <article v-for="(feature, index) in seriesDraft.detail.features" :key="`series-feature-${index}`" class="section-card">
-              <div class="section-card-heading"><strong>第 {{ index + 1 }} 项</strong><div><button type="button" class="text-action" :disabled="!canEdit(seriesDraft) || index === 0" @click="moveSeriesDetailFeature(index, -1)">上移</button><button type="button" class="text-action" :disabled="!canEdit(seriesDraft) || index === seriesDraft.detail.features.length - 1" @click="moveSeriesDetailFeature(index, 1)">下移</button><button type="button" class="text-action danger" :disabled="!canEdit(seriesDraft)" @click="removeSeriesDetailFeature(index)">删除</button></div></div>
-              <div class="field-grid"><label>标题<input v-model.trim="feature.label" :disabled="!canEdit(seriesDraft)" maxlength="120"></label><label>备注<input v-model.trim="feature.note" :disabled="!canEdit(seriesDraft)" maxlength="300" placeholder="例如：多种方式可供选择"></label><label>图片<select v-model="feature.media_asset_id" :disabled="!canEdit(seriesDraft)"><option value="">不使用图片</option><option v-for="asset in productFeatureMediaAssets()" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select></label><label class="full">说明<textarea v-model.trim="feature.detail" :disabled="!canEdit(seriesDraft)" rows="2" maxlength="1000"></textarea></label></div>
+              <div class="section-card-heading"><strong>绗?{{ index + 1 }} 椤?/strong><div><button type="button" class="text-action" :disabled="!canEdit(seriesDraft) || index === 0" @click="moveSeriesDetailFeature(index, -1)">涓婄Щ</button><button type="button" class="text-action" :disabled="!canEdit(seriesDraft) || index === seriesDraft.detail.features.length - 1" @click="moveSeriesDetailFeature(index, 1)">涓嬬Щ</button><button type="button" class="text-action danger" :disabled="!canEdit(seriesDraft)" @click="removeSeriesDetailFeature(index)">鍒犻櫎</button></div></div>
+              <div class="field-grid"><label>鏍囬<input v-model.trim="feature.label" :disabled="!canEdit(seriesDraft)" maxlength="120"></label><label>澶囨敞<input v-model.trim="feature.note" :disabled="!canEdit(seriesDraft)" maxlength="300" placeholder="渚嬪锛氬绉嶆柟寮忓彲渚涢€夋嫨"></label><label>鍥剧墖<select v-model="feature.media_asset_id" :disabled="!canEdit(seriesDraft)"><option value="">涓嶄娇鐢ㄥ浘鐗?/option><option v-for="asset in productFeatureMediaAssets()" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select></label><label class="full">璇存槑<textarea v-model.trim="feature.detail" :disabled="!canEdit(seriesDraft)" rows="2" maxlength="1000"></textarea></label></div>
             </article>
           </section>
-          <div class="form-actions"><a :href="nativeItemPath('product_series', seriesDraft.id)">打开高级设置查看媒体与来源</a><button class="primary-action" type="submit" :disabled="saving || !canEdit(seriesDraft)">{{ saving ? '保存中...' : '保存产品系列' }}</button></div>
+          <div class="form-actions"><a :href="nativeItemPath('product_series', seriesDraft.id)">鎵撳紑楂樼骇璁剧疆鏌ョ湅濯掍綋涓庢潵婧?/a><button class="primary-action" type="submit" :disabled="saving || !canEdit(seriesDraft)">{{ saving ? '淇濆瓨涓?..' : '淇濆瓨浜у搧绯诲垪' }}</button></div>
         </form>
-        <div v-else class="empty">请选择一个产品系列。</div>
+        <div v-else class="empty">璇烽€夋嫨涓€涓骇鍝佺郴鍒椼€?/div>
       </section>
 
-      <section v-else-if="activeTab === 'company'" class="workspace-grid" aria-label="企业资料编辑">
+      <section v-else-if="activeTab === 'company'" class="workspace-grid" aria-label="浼佷笟璧勬枡缂栬緫">
         <aside class="record-list-panel">
-          <div class="panel-heading"><div><p class="eyebrow">企业资料</p><h3>企业资料</h3></div><strong>{{ companyRecords(companyMode).length }}</strong></div>
-          <div class="subtabs" aria-label="企业资料类型">
-            <button type="button" :class="{ active: companyMode === 'milestones' }" @click="selectCompanyMode('milestones')">发展历程</button>
-            <button type="button" :class="{ active: companyMode === 'qualifications' }" @click="selectCompanyMode('qualifications')">资质证书</button>
-            <button type="button" :class="{ active: companyMode === 'manufacturing_evidence' }" @click="selectCompanyMode('manufacturing_evidence')">制造证据</button>
+          <div class="panel-heading"><div><p class="eyebrow">浼佷笟璧勬枡</p><h3>浼佷笟璧勬枡</h3></div><strong>{{ companyRecords(companyMode).length }}</strong></div>
+          <div class="subtabs" aria-label="浼佷笟璧勬枡绫诲瀷">
+            <button type="button" :class="{ active: companyMode === 'milestones' }" @click="selectCompanyMode('milestones')">鍙戝睍鍘嗙▼</button>
+            <button type="button" :class="{ active: companyMode === 'qualifications' }" @click="selectCompanyMode('qualifications')">璧勮川璇佷功</button>
+            <button type="button" :class="{ active: companyMode === 'manufacturing_evidence' }" @click="selectCompanyMode('manufacturing_evidence')">鍒堕€犺瘉鎹?/button>
           </div>
-          <button v-for="record in companyRecords(companyMode)" :key="record.id" type="button" class="record-choice" :class="{ active: record.id === selectedCompanyId }" @click="selectCompanyRecord(record.id)"><span>{{ companyLabel(record) }}</span><small>系统归档资料</small><i :data-status="record.status">{{ statusLabel(record.status) }}</i></button>
-          <p v-if="!companyRecords(companyMode).length" class="empty compact">当前账号没有可读取的企业资料。</p>
+          <button v-for="record in companyRecords(companyMode)" :key="record.id" type="button" class="record-choice" :class="{ active: record.id === selectedCompanyId }" @click="selectCompanyRecord(record.id)"><span>{{ companyLabel(record) }}</span><small>绯荤粺褰掓。璧勬枡</small><i :data-status="record.status">{{ statusLabel(record.status) }}</i></button>
+          <p v-if="!companyRecords(companyMode).length" class="empty compact">褰撳墠璐﹀彿娌℃湁鍙鍙栫殑浼佷笟璧勬枡銆?/p>
         </aside>
 
         <form v-if="companyDraft" class="editor-form" @submit.prevent="saveCompanyRecord">
           <div class="form-heading"><div><p class="eyebrow">{{ companyHeading() }}</p><h3>{{ companyLabel(companyDraft) }}</h3></div><span class="status" :data-status="companyDraft.status">{{ statusLabel(companyDraft.status) }}</span></div>
-          <p v-if="!canEdit(companyDraft)" class="read-only-note">该记录目前不可直接编辑。</p>
-          <p v-else class="form-help">资料编号由系统维护，无需修改。证书图片和制造图片只能选择已发布的受控媒体资产。</p>
+          <p v-if="!canEdit(companyDraft)" class="read-only-note">璇ヨ褰曠洰鍓嶄笉鍙洿鎺ョ紪杈戙€?/p>
+          <p v-else class="form-help">璧勬枡缂栧彿鐢辩郴缁熺淮鎶わ紝鏃犻渶淇敼銆傝瘉涔﹀浘鐗囧拰鍒堕€犲浘鐗囧彧鑳介€夋嫨宸插彂甯冪殑鍙楁帶濯掍綋璧勪骇銆?/p>
 
           <div v-if="companyMode === 'milestones'" class="field-grid">
-            <label>资料编号（系统维护）<input :value="companyDraft.source_key" disabled></label>
-            <label>年份<input v-model.number="companyDraft.year" :disabled="!canEdit(companyDraft)" required type="number" min="1900" max="2100" step="1"></label>
-            <label class="full">历史事件<textarea v-model="companyDraft.event" :disabled="!canEdit(companyDraft)" rows="3" maxlength="2000" required></textarea></label>
-            <label class="full">佐证说明<textarea v-model="companyDraft.evidence" :disabled="!canEdit(companyDraft)" rows="4" maxlength="4000" required></textarea></label>
-            <label>排序<input v-model.number="companyDraft.sort_order" :disabled="!canEdit(companyDraft)" type="number" min="0" step="1"></label>
-            <section class="media-reference-editor full-field" aria-label="时间轴受控媒体">
-              <div class="section-card-heading"><strong>时间轴配图（可选）</strong><span>{{ companyDraft.mediaReferences.length }}</span></div>
-              <div class="media-reference-add"><select v-model="companyMediaSelection" :disabled="!canEdit(companyDraft)"><option value="">选择品牌/企业素材（含内部预览草稿）</option><option v-for="asset in editableMediaAssets('brand')" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select><button type="button" :disabled="!canEdit(companyDraft) || !companyMediaSelection" @click="addCompanyMediaReference">添加</button></div>
-              <p v-if="!editableMediaAssets('brand').length" class="form-help">暂无可用的品牌/企业素材。可先在“更多工具 - 媒体资产”登记时间轴配图；草稿只用于后台内部预览。</p>
-              <div v-for="reference in companyDraft.mediaReferences" :key="reference.media_asset_id" class="media-reference-row"><span>{{ mediaReferenceLabel(reference, 'brand') }}</span><button type="button" class="text-action danger" :disabled="!canEdit(companyDraft)" @click="removeCompanyMediaReference(reference.media_asset_id)">移除</button></div>
-              <label class="full">时间轴导航图标<select v-model="companyDraft.icon_asset" :disabled="!canEdit(companyDraft)"><option value="">沿用官网原版图标</option><option v-if="companyDraft.icon_asset && !isReviewedMediaAsset(companyDraft.icon_asset, 'brand')" :value="companyDraft.icon_asset">当前引用 {{ companyDraft.icon_asset }}（尚未通过选择器核验）</option><option v-for="asset in editableMediaAssetsForPlacement('brand', 'about.timeline.icon', 'image')" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select></label>
-              <small class="field-help">图标只能选择已发布的品牌/企业图片；建议 PNG/WebP，96×96 至 256×256 px。留空时使用官网原版图标。</small>
+            <label>璧勬枡缂栧彿锛堢郴缁熺淮鎶わ級<input :value="companyDraft.source_key" disabled></label>
+            <label>骞翠唤<input v-model.number="companyDraft.year" :disabled="!canEdit(companyDraft)" required type="number" min="1900" max="2100" step="1"></label>
+            <label class="full">鍘嗗彶浜嬩欢<textarea v-model="companyDraft.event" :disabled="!canEdit(companyDraft)" rows="3" maxlength="2000" required></textarea></label>
+            <label class="full">浣愯瘉璇存槑<textarea v-model="companyDraft.evidence" :disabled="!canEdit(companyDraft)" rows="4" maxlength="4000" required></textarea></label>
+            <label>鎺掑簭<input v-model.number="companyDraft.sort_order" :disabled="!canEdit(companyDraft)" type="number" min="0" step="1"></label>
+            <section class="media-reference-editor full-field" aria-label="鏃堕棿杞村彈鎺у獟浣?>
+              <div class="section-card-heading"><strong>鏃堕棿杞撮厤鍥撅紙鍙€夛級</strong><span>{{ companyDraft.mediaReferences.length }}</span></div>
+              <div class="media-reference-add"><select v-model="companyMediaSelection" :disabled="!canEdit(companyDraft)"><option value="">閫夋嫨鍝佺墝/浼佷笟绱犳潗锛堝惈鍐呴儴棰勮鑽夌锛?/option><option v-for="asset in editableMediaAssets('brand')" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select><button type="button" :disabled="!canEdit(companyDraft) || !companyMediaSelection" @click="addCompanyMediaReference">娣诲姞</button></div>
+              <p v-if="!editableMediaAssets('brand').length" class="form-help">鏆傛棤鍙敤鐨勫搧鐗?浼佷笟绱犳潗銆傚彲鍏堝湪鈥滄洿澶氬伐鍏?- 濯掍綋璧勪骇鈥濈櫥璁版椂闂磋酱閰嶅浘锛涜崏绋垮彧鐢ㄤ簬鍚庡彴鍐呴儴棰勮銆?/p>
+              <div v-for="reference in companyDraft.mediaReferences" :key="reference.media_asset_id" class="media-reference-row"><span>{{ mediaReferenceLabel(reference, 'brand') }}</span><button type="button" class="text-action danger" :disabled="!canEdit(companyDraft)" @click="removeCompanyMediaReference(reference.media_asset_id)">绉婚櫎</button></div>
+              <label class="full">鏃堕棿杞村鑸浘鏍?select v-model="companyDraft.icon_asset" :disabled="!canEdit(companyDraft)"><option value="">娌跨敤瀹樼綉鍘熺増鍥炬爣</option><option v-if="companyDraft.icon_asset && !isReviewedMediaAsset(companyDraft.icon_asset, 'brand')" :value="companyDraft.icon_asset">褰撳墠寮曠敤 {{ companyDraft.icon_asset }}锛堝皻鏈€氳繃閫夋嫨鍣ㄦ牳楠岋級</option><option v-for="asset in editableMediaAssetsForPlacement('brand', 'about.timeline.icon', 'image')" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select></label>
+              <small class="field-help">鍥炬爣鍙兘閫夋嫨宸插彂甯冪殑鍝佺墝/浼佷笟鍥剧墖锛涘缓璁?PNG/WebP锛?6脳96 鑷?256脳256 px銆傜暀绌烘椂浣跨敤瀹樼綉鍘熺増鍥炬爣銆?/small>
             </section>
           </div>
 
           <div v-else-if="companyMode === 'qualifications'" class="field-grid">
-            <label>资料编号（系统维护）<input :value="companyDraft.source_key" disabled></label>
-            <label>资料类型<select v-model="companyDraft.type" :disabled="!canEdit(companyDraft)"><option value="certificate">认证证书</option><option value="honor">荣誉证书</option><option value="patent">专利证书</option></select></label>
-            <label class="full">名称<input v-model.trim="companyDraft.name" :disabled="!canEdit(companyDraft)" maxlength="240" required></label>
-            <label>证书编号<input v-model.trim="companyDraft.certificate_number" :disabled="!canEdit(companyDraft)" maxlength="160"></label>
-            <label>颁发机构<input v-model.trim="companyDraft.issuer" :disabled="!canEdit(companyDraft)" maxlength="240"></label>
-            <label>有效期<input v-model="companyDraft.valid_until" :disabled="!canEdit(companyDraft)" type="date"></label>
-            <label>授权状态<select v-model="companyDraft.authorization_status" :disabled="!canEdit(companyDraft)"><option value="review_required">待核验</option><option value="owned">自有</option><option value="licensed">已授权</option><option value="authorized">已许可公开</option></select></label>
-            <label>排序<input v-model.number="companyDraft.sort_order" :disabled="!canEdit(companyDraft)" type="number" min="0" step="1"></label>
-            <section class="media-reference-editor full-field" aria-label="资质证书受控媒体">
-              <div class="section-card-heading"><strong>受控证书媒体</strong><span>{{ companyDraft.mediaReferences.length }}</span></div>
-              <div class="media-reference-add"><select v-model="companyMediaSelection" :disabled="!canEdit(companyDraft)"><option value="">选择已上传资质素材</option><option v-for="asset in qualificationMediaAssets()" :key="asset.id" :value="String(asset.id)">{{ qualificationMediaAssetLabel(asset) }}</option></select><button type="button" :disabled="!canEdit(companyDraft) || !companyMediaSelection" @click="addCompanyMediaReference">添加</button></div>
-              <p v-if="!qualificationMediaAssets().length" class="form-help">暂无可用的资质素材。请先在“媒体资产”中登记。</p>
-              <div v-for="reference in companyDraft.mediaReferences" :key="reference.media_asset_id" class="media-reference-row"><span>{{ mediaReferenceLabel(reference, 'qualification') }}</span><button type="button" class="text-action danger" :disabled="!canEdit(companyDraft)" @click="removeCompanyMediaReference(reference.media_asset_id)">移除</button></div>
+            <label>璧勬枡缂栧彿锛堢郴缁熺淮鎶わ級<input :value="companyDraft.source_key" disabled></label>
+            <label>璧勬枡绫诲瀷<select v-model="companyDraft.type" :disabled="!canEdit(companyDraft)"><option value="certificate">璁よ瘉璇佷功</option><option value="honor">鑽ｈ獕璇佷功</option><option value="patent">涓撳埄璇佷功</option></select></label>
+            <label class="full">鍚嶇О<input v-model.trim="companyDraft.name" :disabled="!canEdit(companyDraft)" maxlength="240" required></label>
+            <label>璇佷功缂栧彿<input v-model.trim="companyDraft.certificate_number" :disabled="!canEdit(companyDraft)" maxlength="160"></label>
+            <label>棰佸彂鏈烘瀯<input v-model.trim="companyDraft.issuer" :disabled="!canEdit(companyDraft)" maxlength="240"></label>
+            <label>鏈夋晥鏈?input v-model="companyDraft.valid_until" :disabled="!canEdit(companyDraft)" type="date"></label>
+            <label>鎺堟潈鐘舵€?select v-model="companyDraft.authorization_status" :disabled="!canEdit(companyDraft)"><option value="review_required">寰呮牳楠?/option><option value="owned">鑷湁</option><option value="licensed">宸叉巿鏉?/option><option value="authorized">宸茶鍙叕寮€</option></select></label>
+            <label>鎺掑簭<input v-model.number="companyDraft.sort_order" :disabled="!canEdit(companyDraft)" type="number" min="0" step="1"></label>
+            <section class="media-reference-editor full-field" aria-label="璧勮川璇佷功鍙楁帶濯掍綋">
+              <div class="section-card-heading"><strong>鍙楁帶璇佷功濯掍綋</strong><span>{{ companyDraft.mediaReferences.length }}</span></div>
+              <div class="media-reference-add"><select v-model="companyMediaSelection" :disabled="!canEdit(companyDraft)"><option value="">閫夋嫨宸蹭笂浼犺祫璐ㄧ礌鏉?/option><option v-for="asset in qualificationMediaAssets()" :key="asset.id" :value="String(asset.id)">{{ qualificationMediaAssetLabel(asset) }}</option></select><button type="button" :disabled="!canEdit(companyDraft) || !companyMediaSelection" @click="addCompanyMediaReference">娣诲姞</button></div>
+              <p v-if="!qualificationMediaAssets().length" class="form-help">鏆傛棤鍙敤鐨勮祫璐ㄧ礌鏉愩€傝鍏堝湪鈥滃獟浣撹祫浜р€濅腑鐧昏銆?/p>
+              <div v-for="reference in companyDraft.mediaReferences" :key="reference.media_asset_id" class="media-reference-row"><span>{{ mediaReferenceLabel(reference, 'qualification') }}</span><button type="button" class="text-action danger" :disabled="!canEdit(companyDraft)" @click="removeCompanyMediaReference(reference.media_asset_id)">绉婚櫎</button></div>
             </section>
           </div>
 
           <div v-else class="field-grid">
-            <label>资料编号（系统维护）<input :value="companyDraft.source_key" disabled></label>
-            <label>制造环节<input v-model.trim="companyDraft.process" :disabled="!canEdit(companyDraft)" maxlength="160" required></label>
-            <label class="full">制造说明<textarea v-model="companyDraft.description" :disabled="!canEdit(companyDraft)" rows="4" maxlength="4000" required></textarea></label>
-            <label class="full">检验依据<textarea v-model="companyDraft.inspection_evidence" :disabled="!canEdit(companyDraft)" rows="4" maxlength="4000" placeholder="请填写可追溯的检验依据"></textarea></label>
-            <label>排序<input v-model.number="companyDraft.sort_order" :disabled="!canEdit(companyDraft)" type="number" min="0" step="1"></label>
-            <section class="media-reference-editor full-field" aria-label="制造证据受控媒体">
-              <div class="section-card-heading"><strong>受控制造媒体</strong><span>{{ companyDraft.mediaReferences.length }}</span></div>
-              <div class="media-reference-add"><select v-model="companyMediaSelection" :disabled="!canEdit(companyDraft)"><option value="">选择已发布制造素材（含内部预览草稿）</option><option v-for="asset in editableMediaAssets('manufacturing')" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select><button type="button" :disabled="!canEdit(companyDraft) || !companyMediaSelection" @click="addCompanyMediaReference">添加</button></div>
-              <p v-if="!editableMediaAssets('manufacturing').length" class="form-help">暂无可用的制造素材。请先在“媒体资产”中登记素材；草稿只用于后台内部预览。</p>
-              <div v-for="reference in companyDraft.mediaReferences" :key="reference.media_asset_id" class="media-reference-row"><span>{{ mediaReferenceLabel(reference, 'manufacturing') }}</span><button type="button" class="text-action danger" :disabled="!canEdit(companyDraft)" @click="removeCompanyMediaReference(reference.media_asset_id)">移除</button></div>
+            <label>璧勬枡缂栧彿锛堢郴缁熺淮鎶わ級<input :value="companyDraft.source_key" disabled></label>
+            <label>鍒堕€犵幆鑺?input v-model.trim="companyDraft.process" :disabled="!canEdit(companyDraft)" maxlength="160" required></label>
+            <label class="full">鍒堕€犺鏄?textarea v-model="companyDraft.description" :disabled="!canEdit(companyDraft)" rows="4" maxlength="4000" required></textarea></label>
+            <label class="full">妫€楠屼緷鎹?textarea v-model="companyDraft.inspection_evidence" :disabled="!canEdit(companyDraft)" rows="4" maxlength="4000" placeholder="璇峰～鍐欏彲杩芥函鐨勬楠屼緷鎹?></textarea></label>
+            <label>鎺掑簭<input v-model.number="companyDraft.sort_order" :disabled="!canEdit(companyDraft)" type="number" min="0" step="1"></label>
+            <section class="media-reference-editor full-field" aria-label="鍒堕€犺瘉鎹彈鎺у獟浣?>
+              <div class="section-card-heading"><strong>鍙楁帶鍒堕€犲獟浣?/strong><span>{{ companyDraft.mediaReferences.length }}</span></div>
+              <div class="media-reference-add"><select v-model="companyMediaSelection" :disabled="!canEdit(companyDraft)"><option value="">閫夋嫨宸插彂甯冨埗閫犵礌鏉愶紙鍚唴閮ㄩ瑙堣崏绋匡級</option><option v-for="asset in editableMediaAssets('manufacturing')" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select><button type="button" :disabled="!canEdit(companyDraft) || !companyMediaSelection" @click="addCompanyMediaReference">娣诲姞</button></div>
+              <p v-if="!editableMediaAssets('manufacturing').length" class="form-help">鏆傛棤鍙敤鐨勫埗閫犵礌鏉愩€傝鍏堝湪鈥滃獟浣撹祫浜р€濅腑鐧昏绱犳潗锛涜崏绋垮彧鐢ㄤ簬鍚庡彴鍐呴儴棰勮銆?/p>
+              <div v-for="reference in companyDraft.mediaReferences" :key="reference.media_asset_id" class="media-reference-row"><span>{{ mediaReferenceLabel(reference, 'manufacturing') }}</span><button type="button" class="text-action danger" :disabled="!canEdit(companyDraft)" @click="removeCompanyMediaReference(reference.media_asset_id)">绉婚櫎</button></div>
             </section>
           </div>
-          <div class="form-actions"><a :href="nativeItemPath(companyMode, companyDraft.id)">打开高级设置关联受控媒体与来源</a><button class="primary-action" type="submit" :disabled="saving || !canEdit(companyDraft)">{{ saving ? '保存中...' : '保存企业资料' }}</button></div>
+          <div class="form-actions"><a :href="nativeItemPath(companyMode, companyDraft.id)">鎵撳紑楂樼骇璁剧疆鍏宠仈鍙楁帶濯掍綋涓庢潵婧?/a><button class="primary-action" type="submit" :disabled="saving || !canEdit(companyDraft)">{{ saving ? '淇濆瓨涓?..' : '淇濆瓨浼佷笟璧勬枡' }}</button></div>
         </form>
-        <div v-else class="empty">请选择一条企业资料记录。</div>
+        <div v-else class="empty">璇烽€夋嫨涓€鏉′紒涓氳祫鏂欒褰曘€?/div>
       </section>
 
-      <section v-else-if="activeTab === 'service'" class="workspace-grid" aria-label="服务支持内容编辑">
+      <section v-else-if="activeTab === 'service'" class="workspace-grid" aria-label="鏈嶅姟鏀寔鍐呭缂栬緫">
         <aside class="record-list-panel">
-          <div class="panel-heading"><div><p class="eyebrow">服务支持</p><h3>服务支持</h3></div><strong>{{ serviceRecords(serviceMode).length }}</strong></div>
-          <div class="subtabs" aria-label="服务内容类型">
-            <button type="button" :class="{ active: serviceMode === 'service_resources' }" @click="selectServiceMode('service_resources')">服务资料</button>
-            <button type="button" :class="{ active: serviceMode === 'service_locations' }" @click="selectServiceMode('service_locations')">服务网点</button>
-            <button type="button" :class="{ active: serviceMode === 'external_service_entries' }" @click="selectServiceMode('external_service_entries')">售后入口</button>
+          <div class="panel-heading"><div><p class="eyebrow">鏈嶅姟鏀寔</p><h3>鏈嶅姟鏀寔</h3></div><strong>{{ serviceRecords(serviceMode).length }}</strong></div>
+          <div class="subtabs" aria-label="鏈嶅姟鍐呭绫诲瀷">
+            <button type="button" :class="{ active: serviceMode === 'service_resources' }" @click="selectServiceMode('service_resources')">鏈嶅姟璧勬枡</button>
+            <button type="button" :class="{ active: serviceMode === 'service_locations' }" @click="selectServiceMode('service_locations')">鏈嶅姟缃戠偣</button>
+            <button type="button" :class="{ active: serviceMode === 'external_service_entries' }" @click="selectServiceMode('external_service_entries')">鍞悗鍏ュ彛</button>
           </div>
-          <button v-if="serviceMode === 'service_resources'" type="button" class="primary-action" :disabled="saving" @click="createServiceResource">新建服务资料草稿</button>
+          <button v-if="serviceMode === 'service_resources'" type="button" class="primary-action" :disabled="saving" @click="createServiceResource">鏂板缓鏈嶅姟璧勬枡鑽夌</button>
           <button v-for="record in serviceRecords(serviceMode)" :key="record.id" type="button" class="record-choice" :class="{ active: record.id === selectedServiceId }" @click="selectServiceRecord(record.id)"><span>{{ serviceLabel(record) }}</span><small>{{ serviceSecondary(record) }}</small><i :data-status="record.status">{{ statusLabel(record.status) }}</i></button>
-          <p v-if="!serviceRecords(serviceMode).length" class="empty compact">当前账号没有可读取的服务支持内容。</p>
+          <p v-if="!serviceRecords(serviceMode).length" class="empty compact">褰撳墠璐﹀彿娌℃湁鍙鍙栫殑鏈嶅姟鏀寔鍐呭銆?/p>
         </aside>
 
         <form v-if="serviceDraft" class="editor-form" @submit.prevent="saveServiceRecord">
           <div class="form-heading"><div><p class="eyebrow">{{ serviceHeading() }}</p><h3>{{ serviceLabel(serviceDraft) }}</h3></div><span class="status" :data-status="serviceDraft.status">{{ statusLabel(serviceDraft.status) }}</span></div>
-          <p v-if="!canEdit(serviceDraft)" class="read-only-note">该记录目前不可直接编辑。</p>
+          <p v-if="!canEdit(serviceDraft)" class="read-only-note">璇ヨ褰曠洰鍓嶄笉鍙洿鎺ョ紪杈戙€?/p>
 
           <div v-if="serviceMode === 'service_resources'" class="field-grid">
-            <label>资料编号（系统维护）<input :value="serviceDraft.source_key" disabled></label>
-            <label>资料栏目<select v-model="serviceDraft.type" :disabled="!canEdit(serviceDraft)" required><option value="video">视频教学</option><option value="product_manual">产品技术手册</option><option value="machine_manual">机床说明书</option><option value="software">系统软件</option></select></label>
-            <label class="full">标题<input v-model.trim="serviceDraft.title" :disabled="!canEdit(serviceDraft)" maxlength="240" required></label>
-            <label class="full">摘要<textarea v-model="serviceDraft.summary" :disabled="!canEdit(serviceDraft)" rows="3" maxlength="1000"></textarea></label>
-            <label class="full">正文说明<textarea v-model="serviceDraft.body" :disabled="!canEdit(serviceDraft)" rows="6" maxlength="20000"></textarea></label>
-            <label>适用型号（每行一项）<textarea v-model="serviceDraft.applicableModelsText" :disabled="!canEdit(serviceDraft)" rows="4" maxlength="2000" placeholder="例如：FR400XS"></textarea></label>
-            <label>语言<input v-model.trim="serviceDraft.language" :disabled="!canEdit(serviceDraft)" maxlength="40" placeholder="zh-CN"></label>
-            <label>资料版本<input v-model.trim="serviceDraft.version" :disabled="!canEdit(serviceDraft)" maxlength="120" placeholder="例如：v1.0"></label>
-            <label>{{ serviceDraft.type === 'video' ? '受控教学视频' : '受控下载文件' }}<select v-model="serviceDraft.asset" :disabled="!canEdit(serviceDraft)"><option value="">尚未选择</option><option v-if="serviceDraft.asset && !isServiceResourceMediaAsset(serviceDraft.asset, serviceDraft.type)" :value="serviceDraft.asset">当前引用 {{ serviceDraft.asset }}（尚未通过选择器核验）</option><option v-for="asset in serviceResourceMediaAssets(serviceDraft.type)" :key="asset.id" :value="String(asset.id)">{{ serviceResourceMediaAssetLabel(asset, serviceDraft.type) }}</option></select></label>
-            <label>视频封面（仅视频需要）<select v-model="serviceDraft.cover_asset" :disabled="!canEdit(serviceDraft)"><option value="">尚未选择</option><option v-if="serviceDraft.cover_asset && !isServiceTutorialPosterAsset(serviceDraft.cover_asset)" :value="serviceDraft.cover_asset">当前引用 {{ serviceDraft.cover_asset }}（尚未通过选择器核验）</option><option v-for="asset in serviceTutorialPosterAssets()" :key="asset.id" :value="String(asset.id)">{{ serviceTutorialPosterAssetLabel(asset) }}</option></select></label>
-            <label>展示日期<input v-model="serviceDraft.display_date" :disabled="!canEdit(serviceDraft)" type="date"></label>
-            <label>页面排序<input v-model.number="serviceDraft.sort_order" :disabled="!canEdit(serviceDraft)" type="number" min="0" step="1"></label>
-            <p v-if="!reviewedMediaAssets('service').length" class="form-help full">暂无已发布的服务资料素材。请先在“媒体资产”中上传、登记、审核并发布。</p>
-            <label class="full">资料更新时间<input v-model.trim="serviceDraft.updated_at" :disabled="!canEdit(serviceDraft)" maxlength="80" placeholder="例如：2026-08-04T09:30:00Z"></label>
+            <label>璧勬枡缂栧彿锛堢郴缁熺淮鎶わ級<input :value="serviceDraft.source_key" disabled></label>
+            <label>璧勬枡鏍忕洰<select v-model="serviceDraft.type" :disabled="!canEdit(serviceDraft)" required><option value="video">瑙嗛鏁欏</option><option value="product_manual">浜у搧鎶€鏈墜鍐?/option><option value="machine_manual">鏈哄簥璇存槑涔?/option><option value="software">绯荤粺杞欢</option></select></label>
+            <label class="full">鏍囬<input v-model.trim="serviceDraft.title" :disabled="!canEdit(serviceDraft)" maxlength="240" required></label>
+            <label class="full">鎽樿<textarea v-model="serviceDraft.summary" :disabled="!canEdit(serviceDraft)" rows="3" maxlength="1000"></textarea></label>
+            <label class="full">姝ｆ枃璇存槑<textarea v-model="serviceDraft.body" :disabled="!canEdit(serviceDraft)" rows="6" maxlength="20000"></textarea></label>
+            <label>閫傜敤鍨嬪彿锛堟瘡琛屼竴椤癸級<textarea v-model="serviceDraft.applicableModelsText" :disabled="!canEdit(serviceDraft)" rows="4" maxlength="2000" placeholder="渚嬪锛欶R400XS"></textarea></label>
+            <label>璇█<input v-model.trim="serviceDraft.language" :disabled="!canEdit(serviceDraft)" maxlength="40" placeholder="zh-CN"></label>
+            <label>璧勬枡鐗堟湰<input v-model.trim="serviceDraft.version" :disabled="!canEdit(serviceDraft)" maxlength="120" placeholder="渚嬪锛歷1.0"></label>
+            <label>{{ serviceDraft.type === 'video' ? '鍙楁帶鏁欏瑙嗛' : '鍙楁帶涓嬭浇鏂囦欢' }}<select v-model="serviceDraft.asset" :disabled="!canEdit(serviceDraft)"><option value="">灏氭湭閫夋嫨</option><option v-if="serviceDraft.asset && !isServiceResourceMediaAsset(serviceDraft.asset, serviceDraft.type)" :value="serviceDraft.asset">褰撳墠寮曠敤 {{ serviceDraft.asset }}锛堝皻鏈€氳繃閫夋嫨鍣ㄦ牳楠岋級</option><option v-for="asset in serviceResourceMediaAssets(serviceDraft.type)" :key="asset.id" :value="String(asset.id)">{{ serviceResourceMediaAssetLabel(asset, serviceDraft.type) }}</option></select></label>
+            <label>瑙嗛灏侀潰锛堜粎瑙嗛闇€瑕侊級<select v-model="serviceDraft.cover_asset" :disabled="!canEdit(serviceDraft)"><option value="">灏氭湭閫夋嫨</option><option v-if="serviceDraft.cover_asset && !isServiceTutorialPosterAsset(serviceDraft.cover_asset)" :value="serviceDraft.cover_asset">褰撳墠寮曠敤 {{ serviceDraft.cover_asset }}锛堝皻鏈€氳繃閫夋嫨鍣ㄦ牳楠岋級</option><option v-for="asset in serviceTutorialPosterAssets()" :key="asset.id" :value="String(asset.id)">{{ serviceTutorialPosterAssetLabel(asset) }}</option></select></label>
+            <label>灞曠ず鏃ユ湡<input v-model="serviceDraft.display_date" :disabled="!canEdit(serviceDraft)" type="date"></label>
+            <label>椤甸潰鎺掑簭<input v-model.number="serviceDraft.sort_order" :disabled="!canEdit(serviceDraft)" type="number" min="0" step="1"></label>
+            <p v-if="!reviewedMediaAssets('service').length" class="form-help full">鏆傛棤宸插彂甯冪殑鏈嶅姟璧勬枡绱犳潗銆傝鍏堝湪鈥滃獟浣撹祫浜р€濅腑涓婁紶銆佺櫥璁般€佸鏍稿苟鍙戝竷銆?/p>
+            <label class="full">璧勬枡鏇存柊鏃堕棿<input v-model.trim="serviceDraft.updated_at" :disabled="!canEdit(serviceDraft)" maxlength="80" placeholder="渚嬪锛?026-08-04T09:30:00Z"></label>
           </div>
 
           <div v-else-if="serviceMode === 'service_locations'" class="field-grid">
-            <label>资料编号（系统维护）<input :value="serviceDraft.source_key" disabled></label>
-            <label>省份或区域<input v-model.trim="serviceDraft.region" :disabled="!canEdit(serviceDraft)" maxlength="120" required></label>
-            <label>城市<input v-model.trim="serviceDraft.city" :disabled="!canEdit(serviceDraft)" maxlength="120" required></label>
-            <label>服务状态<select v-model="serviceDraft.business_status" :disabled="!canEdit(serviceDraft)"><option value="review_required">待核验</option><option value="active">正常服务</option><option value="inactive">暂停服务</option></select></label>
-            <label class="full">服务范围<textarea v-model="serviceDraft.service_scope" :disabled="!canEdit(serviceDraft)" rows="3" maxlength="4000" required></textarea></label>
-            <label>企业联系人<input v-model.trim="serviceDraft.contact.name" :disabled="!canEdit(serviceDraft)" maxlength="120"></label>
-            <label>服务电话<input v-model.trim="serviceDraft.contact.phone" :disabled="!canEdit(serviceDraft)" maxlength="80"></label>
-            <label>服务邮箱<input v-model.trim="serviceDraft.contact.email" :disabled="!canEdit(serviceDraft)" maxlength="160"></label>
-            <label>有效期<input v-model="serviceDraft.valid_until" :disabled="!canEdit(serviceDraft)" type="date"></label>
-            <label class="full">服务地址<textarea v-model="serviceDraft.contact.address" :disabled="!canEdit(serviceDraft)" rows="3" maxlength="500"></textarea></label>
+            <label>璧勬枡缂栧彿锛堢郴缁熺淮鎶わ級<input :value="serviceDraft.source_key" disabled></label>
+            <label>鐪佷唤鎴栧尯鍩?input v-model.trim="serviceDraft.region" :disabled="!canEdit(serviceDraft)" maxlength="120" required></label>
+            <label>鍩庡競<input v-model.trim="serviceDraft.city" :disabled="!canEdit(serviceDraft)" maxlength="120" required></label>
+            <label>鏈嶅姟鐘舵€?select v-model="serviceDraft.business_status" :disabled="!canEdit(serviceDraft)"><option value="review_required">寰呮牳楠?/option><option value="active">姝ｅ父鏈嶅姟</option><option value="inactive">鏆傚仠鏈嶅姟</option></select></label>
+            <label class="full">鏈嶅姟鑼冨洿<textarea v-model="serviceDraft.service_scope" :disabled="!canEdit(serviceDraft)" rows="3" maxlength="4000" required></textarea></label>
+            <label>浼佷笟鑱旂郴浜?input v-model.trim="serviceDraft.contact.name" :disabled="!canEdit(serviceDraft)" maxlength="120"></label>
+            <label>鏈嶅姟鐢佃瘽<input v-model.trim="serviceDraft.contact.phone" :disabled="!canEdit(serviceDraft)" maxlength="80"></label>
+            <label>鏈嶅姟閭<input v-model.trim="serviceDraft.contact.email" :disabled="!canEdit(serviceDraft)" maxlength="160"></label>
+            <label>鏈夋晥鏈?input v-model="serviceDraft.valid_until" :disabled="!canEdit(serviceDraft)" type="date"></label>
+            <label class="full">鏈嶅姟鍦板潃<textarea v-model="serviceDraft.contact.address" :disabled="!canEdit(serviceDraft)" rows="3" maxlength="500"></textarea></label>
           </div>
 
           <div v-else class="field-grid">
-            <label>入口类型<input :value="serviceDraft.entry_type" disabled></label>
-            <label>打开方式<select v-model="serviceDraft.open_mode" :disabled="!canEdit(serviceDraft)"><option value="new_tab">新窗口</option><option value="same_tab">当前窗口</option></select></label>
-            <label class="full">售后系统地址<input v-model.trim="serviceDraft.url" :disabled="!canEdit(serviceDraft)" type="url" maxlength="1000" required placeholder="https://service.example.com/repair/new"></label>
-            <label>健康状态<select v-model="serviceDraft.health_status" :disabled="!canEdit(serviceDraft)"><option value="pending">待确认</option><option value="available">可用</option><option value="unavailable">不可用</option></select></label>
-            <label>人工兜底电话<input v-model.trim="serviceDraft.fallback_phone" :disabled="!canEdit(serviceDraft)" maxlength="80"></label>
-            <label class="toggle-field"><input v-model="serviceDraft.enabled" :disabled="!canEdit(serviceDraft)" type="checkbox"><span>启用官网入口</span></label>
-            <p class="form-help full">只有在正式域名、健康状态、人工兜底及发布审核均完成后，才允许将入口发布到官网。</p>
+            <label>鍏ュ彛绫诲瀷<input :value="serviceDraft.entry_type" disabled></label>
+            <label>鎵撳紑鏂瑰紡<select v-model="serviceDraft.open_mode" :disabled="!canEdit(serviceDraft)"><option value="new_tab">鏂扮獥鍙?/option><option value="same_tab">褰撳墠绐楀彛</option></select></label>
+            <label class="full">鍞悗绯荤粺鍦板潃<input v-model.trim="serviceDraft.url" :disabled="!canEdit(serviceDraft)" type="url" maxlength="1000" required placeholder="https://service.example.com/repair/new"></label>
+            <label>鍋ュ悍鐘舵€?select v-model="serviceDraft.health_status" :disabled="!canEdit(serviceDraft)"><option value="pending">寰呯‘璁?/option><option value="available">鍙敤</option><option value="unavailable">涓嶅彲鐢?/option></select></label>
+            <label>浜哄伐鍏滃簳鐢佃瘽<input v-model.trim="serviceDraft.fallback_phone" :disabled="!canEdit(serviceDraft)" maxlength="80"></label>
+            <label class="toggle-field"><input v-model="serviceDraft.enabled" :disabled="!canEdit(serviceDraft)" type="checkbox"><span>鍚敤瀹樼綉鍏ュ彛</span></label>
+            <p class="form-help full">鍙湁鍦ㄦ寮忓煙鍚嶃€佸仴搴风姸鎬併€佷汉宸ュ厹搴曞強鍙戝竷瀹℃牳鍧囧畬鎴愬悗锛屾墠鍏佽灏嗗叆鍙ｅ彂甯冨埌瀹樼綉銆?/p>
           </div>
-          <div class="form-actions"><a :href="nativeItemPath(serviceMode, serviceDraft.id)">打开高级设置查看来源与审核记录</a><button class="primary-action" type="submit" :disabled="saving || !canEdit(serviceDraft)">{{ saving ? '保存中...' : '保存服务内容' }}</button></div>
+          <div class="form-actions"><a :href="nativeItemPath(serviceMode, serviceDraft.id)">鎵撳紑楂樼骇璁剧疆鏌ョ湅鏉ユ簮涓庡鏍歌褰?/a><button class="primary-action" type="submit" :disabled="saving || !canEdit(serviceDraft)">{{ saving ? '淇濆瓨涓?..' : '淇濆瓨鏈嶅姟鍐呭' }}</button></div>
         </form>
-        <div v-else class="empty">请选择一条服务支持记录。</div>
+        <div v-else class="empty">璇烽€夋嫨涓€鏉℃湇鍔℃敮鎸佽褰曘€?/div>
       </section>
 
-      <section v-else-if="activeTab === 'editorial'" :class="showVideoShareWorkspace ? 'video-share-tab' : 'workspace-grid'" aria-label="文章与案例编辑">
+      <section v-else-if="activeTab === 'editorial'" :class="showVideoShareWorkspace ? 'video-share-tab' : 'workspace-grid'" aria-label="鏂囩珷涓庢渚嬬紪杈?>
         <VideoShareWorkspace v-if="showVideoShareWorkspace" ref="videoShareWorkspace" @changed="handleVideoShareChanged" @notify="handleVideoShareNotify" />
         <template v-else>
         <aside class="record-list-panel">
-          <div class="panel-heading"><div><p class="eyebrow">文章与案例</p><h3>文章与案例</h3></div><strong>{{ editorialRecords(editorialMode).length }}</strong></div>
-          <div class="subtabs" aria-label="文章与案例类型">
-            <button type="button" :class="{ active: editorialMode === 'articles' }" @click="selectEditorialMode('articles')">新闻与文章</button>
-            <button type="button" :class="{ active: editorialMode === 'case_studies' }" @click="selectEditorialMode('case_studies')">客户案例</button>
+          <div class="panel-heading"><div><p class="eyebrow">鏂囩珷涓庢渚?/p><h3>鏂囩珷涓庢渚?/h3></div><strong>{{ editorialRecords(editorialMode).length }}</strong></div>
+          <div class="subtabs" aria-label="鏂囩珷涓庢渚嬬被鍨?>
+            <button type="button" :class="{ active: editorialMode === 'articles' }" @click="selectEditorialMode('articles')">鏂伴椈涓庢枃绔?/button>
+            <button type="button" :class="{ active: editorialMode === 'case_studies' }" @click="selectEditorialMode('case_studies')">瀹㈡埛妗堜緥</button>
           </div>
-          <button type="button" class="primary-action" :disabled="saving" @click="createEditorialRecord()">新建草稿</button>
+          <button type="button" class="primary-action" :disabled="saving" @click="createEditorialRecord()">鏂板缓鑽夌</button>
           <button v-for="record in editorialRecords(editorialMode)" :key="record.id" type="button" class="record-choice" :class="{ active: record.id === selectedEditorialId }" @click="selectEditorialRecord(record.id)"><span>{{ editorialLabel(record) }}</span><small>{{ editorialSecondary(record) }}</small><i :data-status="record.status">{{ statusLabel(record.status) }}</i></button>
-          <p v-if="!editorialRecords(editorialMode).length" class="empty compact">暂时没有此类内容草稿，可使用“新建草稿”开始维护。</p>
+          <p v-if="!editorialRecords(editorialMode).length" class="empty compact">鏆傛椂娌℃湁姝ょ被鍐呭鑽夌锛屽彲浣跨敤鈥滄柊寤鸿崏绋库€濆紑濮嬬淮鎶ゃ€?/p>
         </aside>
 
         <form v-if="editorialDraft" class="editor-form" @submit.prevent="saveEditorialRecord">
           <div class="form-heading"><div><p class="eyebrow">{{ editorialHeading() }}</p><h3>{{ editorialLabel(editorialDraft) }}</h3></div><span class="status" :data-status="editorialDraft.status">{{ statusLabel(editorialDraft.status) }}</span></div>
-          <p v-if="!canEdit(editorialDraft)" class="read-only-note">该记录目前不可直接编辑。请先通过既有内容审核流程恢复为草稿或退回修改状态。</p>
-          <p v-else class="form-help">所有保存均为内容草稿。封面媒体、来源和客户授权须在发布前完成受控审核，工作台不提供发布操作。</p>
+          <p v-if="!canEdit(editorialDraft)" class="read-only-note">璇ヨ褰曠洰鍓嶄笉鍙洿鎺ョ紪杈戙€傝鍏堥€氳繃鏃㈡湁鍐呭瀹℃牳娴佺▼鎭㈠涓鸿崏绋挎垨閫€鍥炰慨鏀圭姸鎬併€?/p>
+          <p v-else class="form-help">鎵€鏈変繚瀛樺潎涓哄唴瀹硅崏绋裤€傚皝闈㈠獟浣撱€佹潵婧愬拰瀹㈡埛鎺堟潈椤诲湪鍙戝竷鍓嶅畬鎴愬彈鎺у鏍革紝宸ヤ綔鍙颁笉鎻愪緵鍙戝竷鎿嶄綔銆?/p>
 
           <div v-if="editorialMode === 'articles'" class="word-import-row">
             <label class="word-import-button" :class="{ disabled: !canEdit(editorialDraft) || importingWord }">
-              {{ importingWord ? '正在导入...' : '导入 Word 文档' }}
+              {{ importingWord ? '姝ｅ湪瀵煎叆...' : '瀵煎叆 Word 鏂囨。' }}
               <input type="file" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" :disabled="!canEdit(editorialDraft) || importingWord" @change="importWordDocument">
             </label>
-            <small>支持 .docx；保留标题层级、段落、加粗/斜体、列表、引用、表格和图片。导入后请检查内容，再点“保存内容草稿”。</small>
+            <small>鏀寔 .docx锛涗繚鐣欐爣棰樺眰绾с€佹钀姐€佸姞绮?鏂滀綋銆佸垪琛ㄣ€佸紩鐢ㄣ€佽〃鏍煎拰鍥剧墖銆傚鍏ュ悗璇锋鏌ュ唴瀹癸紝鍐嶇偣鈥滀繚瀛樺唴瀹硅崏绋库€濄€?/small>
           </div>
 
           <div v-if="editorialMode === 'articles'" class="field-grid">
-            <label>文章标识<input v-model.trim="editorialDraft.slug" :disabled="!canEdit(editorialDraft)" required pattern="(?:[a-z]|[0-9])(?:[a-z]|[0-9]|-){0,79}" maxlength="80"></label>
-            <label>内容类型<select v-model="editorialDraft.category" :disabled="!canEdit(editorialDraft)" required><option value="news">动态新闻</option></select></label>
-            <label>官网显示日期<input v-model="editorialDraft.display_date" :disabled="!canEdit(editorialDraft)" type="date" required></label>
-              <label>同日排序<input v-model.number="editorialDraft.sort_order" :disabled="!canEdit(editorialDraft)" type="number" min="0" step="1" placeholder="留空表示按系统默认顺序"><small class="field-help">数值小的排在同日内容前面；留空不会改变默认顺序。</small></label>
-            <label class="full">标题<input v-model.trim="editorialDraft.title" :disabled="!canEdit(editorialDraft)" required maxlength="240"></label>
-            <label class="full">图文正文<textarea v-model="editorialDraft.body" :disabled="!canEdit(editorialDraft)" rows="10" maxlength="30000" placeholder="填写段落；可使用基础 HTML（p、h2-h4、strong、em、ul、ol、blockquote、table、a、受管图片路径），发布时会自动过滤危险标签。"></textarea><small class="field-help">动态新闻使用文章和图片；视频分享请在“视频分享内容”里单独维护。也可以直接导入 Word 文档生成标题、正文和图片。</small></label>
-            <label class="full">正文图片配置（受控媒体 JSON）<textarea v-model="editorialDraft.body_media_text" :disabled="!canEdit(editorialDraft)" rows="3" placeholder='[{"media_asset_id":"123","caption":"图片说明"}]'></textarea><small class="field-help">仅填写已登记的文章图片素材；保存后正文图片可在新闻详情画布中选中并按“新闻正文图片”用途替换。</small></label>
-            <label v-if="editorialDraft.category === 'video'" class="full">字幕或文字稿<textarea v-model="editorialDraft.transcript" :disabled="!canEdit(editorialDraft)" rows="8" maxlength="30000" placeholder="可选：填写字幕或文字稿，便于检索和无障碍阅读。"></textarea></label>
-            <section class="media-reference-editor full" aria-label="文章受控媒体">
-              <div class="section-card-heading"><strong>动态新闻封面图</strong><span>{{ editorialDraft.mediaReferences.length }}</span></div>
-              <div class="media-reference-add"><select v-model="editorialMediaSelection" :disabled="!canEdit(editorialDraft)"><option value="">选择动态新闻封面图</option><option v-for="asset in eligibleEditorialMediaAssets('news')" :key="asset.id" :value="String(asset.id)">{{ editorialMediaAssetLabel(asset) }}</option></select><button type="button" :disabled="!canEdit(editorialDraft) || !editorialMediaSelection" @click="addEditorialMediaReference">添加</button></div>
-              <p class="field-help">动态新闻封面只接受“文章与资讯 / 动态新闻封面 / news / dynamic-news”的图片；不能填写外部视频地址。</p>
-              <p v-if="!reviewedMediaAssets('article').length" class="form-help">暂无已发布的文章素材。请先在“媒体资产”完成上传、版权确认、规格检查和发布。</p>
-              <div v-for="reference in editorialDraft.mediaReferences" :key="reference.media_asset_id" class="media-reference-row"><span>{{ mediaReferenceLabel(reference, 'article') }}</span><button type="button" class="text-action danger" :disabled="!canEdit(editorialDraft)" @click="removeEditorialMediaReference(reference.media_asset_id)">移除</button></div>
+            <label>鏂囩珷鏍囪瘑<input v-model.trim="editorialDraft.slug" :disabled="!canEdit(editorialDraft)" required pattern="(?:[a-z]|[0-9])(?:[a-z]|[0-9]|-){0,79}" maxlength="80"></label>
+            <label>鍐呭绫诲瀷<select v-model="editorialDraft.category" :disabled="!canEdit(editorialDraft)" required><option value="news">鍔ㄦ€佹柊闂?/option></select></label>
+            <label>瀹樼綉鏄剧ず鏃ユ湡<input v-model="editorialDraft.display_date" :disabled="!canEdit(editorialDraft)" type="date" required></label>
+              <label>鍚屾棩鎺掑簭<input v-model.number="editorialDraft.sort_order" :disabled="!canEdit(editorialDraft)" type="number" min="0" step="1" placeholder="鐣欑┖琛ㄧず鎸夌郴缁熼粯璁ら『搴?><small class="field-help">鏁板€煎皬鐨勬帓鍦ㄥ悓鏃ュ唴瀹瑰墠闈紱鐣欑┖涓嶄細鏀瑰彉榛樿椤哄簭銆?/small></label>
+            <label class="full">鏍囬<input v-model.trim="editorialDraft.title" :disabled="!canEdit(editorialDraft)" required maxlength="240"></label>
+            <label class="full">鍥炬枃姝ｆ枃<textarea v-model="editorialDraft.body" :disabled="!canEdit(editorialDraft)" rows="10" maxlength="30000" placeholder="濉啓娈佃惤锛涘彲浣跨敤鍩虹 HTML锛坧銆乭2-h4銆乻trong銆乪m銆乽l銆乷l銆乥lockquote銆乼able銆乤銆佸彈绠″浘鐗囪矾寰勶級锛屽彂甯冩椂浼氳嚜鍔ㄨ繃婊ゅ嵄闄╂爣绛俱€?></textarea><small class="field-help">鍔ㄦ€佹柊闂讳娇鐢ㄦ枃绔犲拰鍥剧墖锛涜棰戝垎浜鍦ㄢ€滆棰戝垎浜唴瀹光€濋噷鍗曠嫭缁存姢銆備篃鍙互鐩存帴瀵煎叆 Word 鏂囨。鐢熸垚鏍囬銆佹鏂囧拰鍥剧墖銆?/small></label>
+            <label class="full">姝ｆ枃鍥剧墖閰嶇疆锛堝彈鎺у獟浣?JSON锛?textarea v-model="editorialDraft.body_media_text" :disabled="!canEdit(editorialDraft)" rows="3" placeholder='[{"media_asset_id":"123","caption":"鍥剧墖璇存槑"}]'></textarea><small class="field-help">浠呭～鍐欏凡鐧昏鐨勬枃绔犲浘鐗囩礌鏉愶紱淇濆瓨鍚庢鏂囧浘鐗囧彲鍦ㄦ柊闂昏鎯呯敾甯冧腑閫変腑骞舵寜鈥滄柊闂绘鏂囧浘鐗団€濈敤閫旀浛鎹€?/small></label>
+            <label v-if="editorialDraft.category === 'video'" class="full">瀛楀箷鎴栨枃瀛楃<textarea v-model="editorialDraft.transcript" :disabled="!canEdit(editorialDraft)" rows="8" maxlength="30000" placeholder="鍙€夛細濉啓瀛楀箷鎴栨枃瀛楃锛屼究浜庢绱㈠拰鏃犻殰纰嶉槄璇汇€?></textarea></label>
+            <section class="media-reference-editor full" aria-label="鏂囩珷鍙楁帶濯掍綋">
+              <div class="section-card-heading"><strong>鍔ㄦ€佹柊闂诲皝闈㈠浘</strong><span>{{ editorialDraft.mediaReferences.length }}</span></div>
+              <div class="media-reference-add"><select v-model="editorialMediaSelection" :disabled="!canEdit(editorialDraft)"><option value="">閫夋嫨鍔ㄦ€佹柊闂诲皝闈㈠浘</option><option v-for="asset in eligibleEditorialMediaAssets('news')" :key="asset.id" :value="String(asset.id)">{{ editorialMediaAssetLabel(asset) }}</option></select><button type="button" :disabled="!canEdit(editorialDraft) || !editorialMediaSelection" @click="addEditorialMediaReference">娣诲姞</button></div>
+              <p class="field-help">鍔ㄦ€佹柊闂诲皝闈㈠彧鎺ュ彈鈥滄枃绔犱笌璧勮 / 鍔ㄦ€佹柊闂诲皝闈?/ news / dynamic-news鈥濈殑鍥剧墖锛涗笉鑳藉～鍐欏閮ㄨ棰戝湴鍧€銆?/p>
+              <p v-if="!reviewedMediaAssets('article').length" class="form-help">鏆傛棤宸插彂甯冪殑鏂囩珷绱犳潗銆傝鍏堝湪鈥滃獟浣撹祫浜р€濆畬鎴愪笂浼犮€佺増鏉冪‘璁ゃ€佽鏍兼鏌ュ拰鍙戝竷銆?/p>
+              <div v-for="reference in editorialDraft.mediaReferences" :key="reference.media_asset_id" class="media-reference-row"><span>{{ mediaReferenceLabel(reference, 'article') }}</span><button type="button" class="text-action danger" :disabled="!canEdit(editorialDraft)" @click="removeEditorialMediaReference(reference.media_asset_id)">绉婚櫎</button></div>
             </section>
-            <label>受控封面素材<select v-model="editorialDraft.cover_asset" :disabled="!canEdit(editorialDraft)"><option value="">尚未选择</option><option v-if="editorialDraft.cover_asset && !isEditorialCoverAssetAllowed(editorialDraft.cover_asset, 'news')" :value="editorialDraft.cover_asset">当前引用 {{ editorialDraft.cover_asset }}（尚未通过图片选择器核验）</option><option v-for="asset in eligibleEditorialCoverAssets('news')" :key="asset.id" :value="String(asset.id)">{{ editorialMediaAssetLabel(asset) }}</option></select></label>
-            <p v-if="!reviewedMediaAssets('article').length" class="form-help full">暂无已发布的文章封面素材。请先在原生媒体流程完成上传、版权确认与发布。</p>
-            <label>来源文档<input v-model.trim="editorialDraft.source_document" :disabled="!canEdit(editorialDraft)" maxlength="1000" placeholder="文件名或内部来源路径"></label>
-            <label>来源地址<input v-model.trim="editorialDraft.source_url" :disabled="!canEdit(editorialDraft)" type="url" maxlength="1000" placeholder="https://..."></label>
+            <label>鍙楁帶灏侀潰绱犳潗<select v-model="editorialDraft.cover_asset" :disabled="!canEdit(editorialDraft)"><option value="">灏氭湭閫夋嫨</option><option v-if="editorialDraft.cover_asset && !isEditorialCoverAssetAllowed(editorialDraft.cover_asset, 'news')" :value="editorialDraft.cover_asset">褰撳墠寮曠敤 {{ editorialDraft.cover_asset }}锛堝皻鏈€氳繃鍥剧墖閫夋嫨鍣ㄦ牳楠岋級</option><option v-for="asset in eligibleEditorialCoverAssets('news')" :key="asset.id" :value="String(asset.id)">{{ editorialMediaAssetLabel(asset) }}</option></select></label>
+            <p v-if="!reviewedMediaAssets('article').length" class="form-help full">鏆傛棤宸插彂甯冪殑鏂囩珷灏侀潰绱犳潗銆傝鍏堝湪鍘熺敓濯掍綋娴佺▼瀹屾垚涓婁紶銆佺増鏉冪‘璁や笌鍙戝竷銆?/p>
+            <label>鏉ユ簮鏂囨。<input v-model.trim="editorialDraft.source_document" :disabled="!canEdit(editorialDraft)" maxlength="1000" placeholder="鏂囦欢鍚嶆垨鍐呴儴鏉ユ簮璺緞"></label>
+            <label>鏉ユ簮鍦板潃<input v-model.trim="editorialDraft.source_url" :disabled="!canEdit(editorialDraft)" type="url" maxlength="1000" placeholder="https://..."></label>
           </div>
 
           <div v-else class="field-grid">
-            <label>案例标识<input v-model.trim="editorialDraft.slug" :disabled="!canEdit(editorialDraft)" required pattern="(?:[a-z]|[0-9])(?:[a-z]|[0-9]|-){0,79}" maxlength="80"></label>
-            <label>行业<input v-model.trim="editorialDraft.industry" :disabled="!canEdit(editorialDraft)" maxlength="160"></label>
-            <label>材料<input v-model.trim="editorialDraft.material" :disabled="!canEdit(editorialDraft)" maxlength="160"></label>
-            <label>厚度<input v-model.trim="editorialDraft.thickness" :disabled="!canEdit(editorialDraft)" maxlength="120" placeholder="例如：80 mm"></label>
-            <label>关联型号编码<input v-model.trim="editorialDraft.model_code" :disabled="!canEdit(editorialDraft)" maxlength="80" placeholder="例如：FR400XS"></label>
-            <label>客户授权状态<select v-model="editorialDraft.authorization_status" :disabled="!canEdit(editorialDraft)"><option value="review_required">待审核</option><option value="owned">自有</option><option value="licensed">已获许可</option><option value="authorized">已获公开授权</option></select></label>
-            <label class="full">工艺过程<textarea v-model="editorialDraft.process" :disabled="!canEdit(editorialDraft)" rows="6" maxlength="12000"></textarea></label>
-            <label class="full">结果说明<textarea v-model="editorialDraft.result" :disabled="!canEdit(editorialDraft)" rows="5" maxlength="8000"></textarea></label>
-            <label>来源文档<input v-model.trim="editorialDraft.source_document" :disabled="!canEdit(editorialDraft)" maxlength="1000" placeholder="文件名或内部来源路径"></label>
-            <label>来源地址<input v-model.trim="editorialDraft.source_url" :disabled="!canEdit(editorialDraft)" type="url" maxlength="1000" placeholder="https://..."></label>
+            <label>妗堜緥鏍囪瘑<input v-model.trim="editorialDraft.slug" :disabled="!canEdit(editorialDraft)" required pattern="(?:[a-z]|[0-9])(?:[a-z]|[0-9]|-){0,79}" maxlength="80"></label>
+            <label>琛屼笟<input v-model.trim="editorialDraft.industry" :disabled="!canEdit(editorialDraft)" maxlength="160"></label>
+            <label>鏉愭枡<input v-model.trim="editorialDraft.material" :disabled="!canEdit(editorialDraft)" maxlength="160"></label>
+            <label>鍘氬害<input v-model.trim="editorialDraft.thickness" :disabled="!canEdit(editorialDraft)" maxlength="120" placeholder="渚嬪锛?0 mm"></label>
+            <label>鍏宠仈鍨嬪彿缂栫爜<input v-model.trim="editorialDraft.model_code" :disabled="!canEdit(editorialDraft)" maxlength="80" placeholder="渚嬪锛欶R400XS"></label>
+            <label>瀹㈡埛鎺堟潈鐘舵€?select v-model="editorialDraft.authorization_status" :disabled="!canEdit(editorialDraft)"><option value="review_required">寰呭鏍?/option><option value="owned">鑷湁</option><option value="licensed">宸茶幏璁稿彲</option><option value="authorized">宸茶幏鍏紑鎺堟潈</option></select></label>
+            <label class="full">宸ヨ壓杩囩▼<textarea v-model="editorialDraft.process" :disabled="!canEdit(editorialDraft)" rows="6" maxlength="12000"></textarea></label>
+            <label class="full">缁撴灉璇存槑<textarea v-model="editorialDraft.result" :disabled="!canEdit(editorialDraft)" rows="5" maxlength="8000"></textarea></label>
+            <label>鏉ユ簮鏂囨。<input v-model.trim="editorialDraft.source_document" :disabled="!canEdit(editorialDraft)" maxlength="1000" placeholder="鏂囦欢鍚嶆垨鍐呴儴鏉ユ簮璺緞"></label>
+            <label>鏉ユ簮鍦板潃<input v-model.trim="editorialDraft.source_url" :disabled="!canEdit(editorialDraft)" type="url" maxlength="1000" placeholder="https://..."></label>
           </div>
 
           <section v-if="editorialMode === 'articles'" class="seo-editor" aria-labelledby="article-seo-title">
-            <div><p class="eyebrow">搜索优化</p><h4 id="article-seo-title">搜索与分享信息</h4></div>
+            <div><p class="eyebrow">鎼滅储浼樺寲</p><h4 id="article-seo-title">鎼滅储涓庡垎浜俊鎭?/h4></div>
             <div class="field-grid">
-              <label>搜索标题<input v-model.trim="editorialDraft.seo.title" :disabled="!canEdit(editorialDraft)" maxlength="160"></label>
-              <label>关键词<input v-model.trim="editorialDraft.seo.keywords" :disabled="!canEdit(editorialDraft)" maxlength="500" placeholder="以逗号分隔"></label>
-              <label class="full">搜索描述<textarea v-model="editorialDraft.seo.description" :disabled="!canEdit(editorialDraft)" rows="3" maxlength="500"></textarea></label>
+              <label>鎼滅储鏍囬<input v-model.trim="editorialDraft.seo.title" :disabled="!canEdit(editorialDraft)" maxlength="160"></label>
+              <label>鍏抽敭璇?input v-model.trim="editorialDraft.seo.keywords" :disabled="!canEdit(editorialDraft)" maxlength="500" placeholder="浠ラ€楀彿鍒嗛殧"></label>
+              <label class="full">鎼滅储鎻忚堪<textarea v-model="editorialDraft.seo.description" :disabled="!canEdit(editorialDraft)" rows="3" maxlength="500"></textarea></label>
             </div>
           </section>
 
-          <div class="form-actions"><a :href="nativeItemPath(editorialMode, editorialDraft.id)">打开高级设置关联受控媒体与查看审核记录</a><button v-if="canDeleteEditorialDraft(editorialDraft)" type="button" class="text-action danger" :disabled="saving" @click="deleteEditorialDraft">删除当前草稿</button><button class="primary-action" type="submit" :disabled="saving || !canEdit(editorialDraft)">{{ saving ? '保存中...' : '保存内容草稿' }}</button></div>
+          <div class="form-actions"><a :href="nativeItemPath(editorialMode, editorialDraft.id)">鎵撳紑楂樼骇璁剧疆鍏宠仈鍙楁帶濯掍綋涓庢煡鐪嬪鏍歌褰?/a><button v-if="canDeleteEditorialDraft(editorialDraft)" type="button" class="text-action danger" :disabled="saving" @click="deleteEditorialDraft">鍒犻櫎褰撳墠鑽夌</button><button class="primary-action" type="submit" :disabled="saving || !canEdit(editorialDraft)">{{ saving ? '淇濆瓨涓?..' : '淇濆瓨鍐呭鑽夌' }}</button></div>
         </form>
-        <div v-else class="empty">请选择或新建一条{{ editorialMode === 'articles' ? '文章' : '客户案例' }}草稿。</div>
+        <div v-else class="empty">璇烽€夋嫨鎴栨柊寤轰竴鏉{ editorialMode === 'articles' ? '鏂囩珷' : '瀹㈡埛妗堜緥' }}鑽夌銆?/div>
         </template>
       </section>
 
-      <section v-else-if="activeTab === 'settings'" class="settings-workspace" aria-label="全站设置编辑">
+      <section v-else-if="activeTab === 'settings'" class="settings-workspace" aria-label="鍏ㄧ珯璁剧疆缂栬緫">
         <form v-if="settingsDraft" class="editor-form" @submit.prevent="saveSettings">
           <div class="form-heading">
-            <div><p class="eyebrow">全站设置</p><h3>全站导航与联系方式</h3></div>
+            <div><p class="eyebrow">鍏ㄧ珯璁剧疆</p><h3>鍏ㄧ珯瀵艰埅涓庤仈绯绘柟寮?/h3></div>
             <span class="status" :data-status="settingsDraft.status">{{ statusLabel(settingsDraft.status) }}</span>
           </div>
-          <p v-if="!canEdit(settingsDraft)" class="read-only-note">该设置目前不可直接编辑。请先通过既有内容审核流程恢复为草稿或退回修改状态。</p>
-          <p v-else class="form-help">保存仅更新草稿中的显示配置。设置标识与业务审核标记由既有流程维护，不能在此页面改写或绕过。</p>
+          <p v-if="!canEdit(settingsDraft)" class="read-only-note">璇ヨ缃洰鍓嶄笉鍙洿鎺ョ紪杈戙€傝鍏堥€氳繃鏃㈡湁鍐呭瀹℃牳娴佺▼鎭㈠涓鸿崏绋挎垨閫€鍥炰慨鏀圭姸鎬併€?/p>
+          <p v-else class="form-help">淇濆瓨浠呮洿鏂拌崏绋夸腑鐨勬樉绀洪厤缃€傝缃爣璇嗕笌涓氬姟瀹℃牳鏍囪鐢辨棦鏈夋祦绋嬬淮鎶わ紝涓嶈兘鍦ㄦ椤甸潰鏀瑰啓鎴栫粫杩囥€?/p>
 
           <div class="field-grid">
-            <label>设置标识<input :value="settingsDraft.setting_key" disabled></label>
-            <label>来源记录<input :value="settingsDraft.source_document || '未填写'" disabled></label>
+            <label>璁剧疆鏍囪瘑<input :value="settingsDraft.setting_key" disabled></label>
+            <label>鏉ユ簮璁板綍<input :value="settingsDraft.source_document || '鏈～鍐?" disabled></label>
           </div>
 
           <section class="section-editor" aria-labelledby="site-navigation-title">
-            <div class="section-heading"><div><p class="eyebrow">主导航</p><h4 id="site-navigation-title">主导航</h4><p>支持站内路径或已确认的 HTTPS 地址。</p></div><button type="button" :disabled="!canEdit(settingsDraft)" @click="addSettingLink('navigation')">新增导航项</button></div>
+            <div class="section-heading"><div><p class="eyebrow">涓诲鑸?/p><h4 id="site-navigation-title">涓诲鑸?/h4><p>鏀寔绔欏唴璺緞鎴栧凡纭鐨?HTTPS 鍦板潃銆?/p></div><button type="button" :disabled="!canEdit(settingsDraft)" @click="addSettingLink('navigation')">鏂板瀵艰埅椤?/button></div>
             <article v-for="(item, index) in settingsDraft.navigation" :key="`navigation-${index}`" class="section-card">
-              <div class="section-card-heading"><strong>导航项 {{ index + 1 }}</strong><button type="button" class="text-action danger" :disabled="!canEdit(settingsDraft) || settingsDraft.navigation.length < 1" @click="removeSettingLink('navigation', index)">删除</button></div>
-              <div class="field-grid"><label>显示名称<input v-model.trim="item.label" :disabled="!canEdit(settingsDraft)" required maxlength="80"></label><label>链接地址<input v-model.trim="item.href" :disabled="!canEdit(settingsDraft)" required maxlength="1000" placeholder="/product 或 https://..."></label></div>
+              <div class="section-card-heading"><strong>瀵艰埅椤?{{ index + 1 }}</strong><button type="button" class="text-action danger" :disabled="!canEdit(settingsDraft) || settingsDraft.navigation.length < 1" @click="removeSettingLink('navigation', index)">鍒犻櫎</button></div>
+              <div class="field-grid"><label>鏄剧ず鍚嶇О<input v-model.trim="item.label" :disabled="!canEdit(settingsDraft)" required maxlength="80"></label><label>閾炬帴鍦板潃<input v-model.trim="item.href" :disabled="!canEdit(settingsDraft)" required maxlength="1000" placeholder="/product 鎴?https://..."></label></div>
             </article>
-            <p v-if="!settingsDraft.navigation.length" class="form-help">尚未配置主导航。发布检查会阻止空导航进入官网。</p>
+            <p v-if="!settingsDraft.navigation.length" class="form-help">灏氭湭閰嶇疆涓诲鑸€傚彂甯冩鏌ヤ細闃绘绌哄鑸繘鍏ュ畼缃戙€?/p>
           </section>
 
           <section class="section-editor" aria-labelledby="site-footer-title">
-            <div class="section-heading"><div><p class="eyebrow">页脚设置</p><h4 id="site-footer-title">页脚链接</h4><p>企业主体、备案、隐私主体等业务信息必须继续走审核流程。</p></div><button type="button" :disabled="!canEdit(settingsDraft)" @click="addSettingLink('footer')">新增页脚链接</button></div>
-            <p class="read-only-note">当前业务审核标记：{{ settingsDraft.footer.requires_business_review ? '待业务确认' : '已由审核流程确认' }}。该标记仅供查看，不能由内容编辑直接更改。</p>
+            <div class="section-heading"><div><p class="eyebrow">椤佃剼璁剧疆</p><h4 id="site-footer-title">椤佃剼閾炬帴</h4><p>浼佷笟涓讳綋銆佸妗堛€侀殣绉佷富浣撶瓑涓氬姟淇℃伅蹇呴』缁х画璧板鏍告祦绋嬨€?/p></div><button type="button" :disabled="!canEdit(settingsDraft)" @click="addSettingLink('footer')">鏂板椤佃剼閾炬帴</button></div>
+            <p class="read-only-note">褰撳墠涓氬姟瀹℃牳鏍囪锛歿{ settingsDraft.footer.requires_business_review ? '寰呬笟鍔＄‘璁? : '宸茬敱瀹℃牳娴佺▼纭' }}銆傝鏍囪浠呬緵鏌ョ湅锛屼笉鑳界敱鍐呭缂栬緫鐩存帴鏇存敼銆?/p>
             <article v-for="(item, index) in settingsDraft.footer.primary_links" :key="`footer-${index}`" class="section-card">
-              <div class="section-card-heading"><strong>页脚链接 {{ index + 1 }}</strong><button type="button" class="text-action danger" :disabled="!canEdit(settingsDraft) || settingsDraft.footer.primary_links.length < 1" @click="removeSettingLink('footer', index)">删除</button></div>
-              <div class="field-grid"><label>显示名称<input v-model.trim="item.label" :disabled="!canEdit(settingsDraft)" required maxlength="80"></label><label>链接地址<input v-model.trim="item.href" :disabled="!canEdit(settingsDraft)" required maxlength="1000" placeholder="/about 或 https://..."></label></div>
+              <div class="section-card-heading"><strong>椤佃剼閾炬帴 {{ index + 1 }}</strong><button type="button" class="text-action danger" :disabled="!canEdit(settingsDraft) || settingsDraft.footer.primary_links.length < 1" @click="removeSettingLink('footer', index)">鍒犻櫎</button></div>
+              <div class="field-grid"><label>鏄剧ず鍚嶇О<input v-model.trim="item.label" :disabled="!canEdit(settingsDraft)" required maxlength="80"></label><label>閾炬帴鍦板潃<input v-model.trim="item.href" :disabled="!canEdit(settingsDraft)" required maxlength="1000" placeholder="/about 鎴?https://..."></label></div>
             </article>
-            <p v-if="!settingsDraft.footer.primary_links.length" class="form-help">尚未配置页脚链接。发布检查会阻止空页脚进入官网。</p>
-            <div class="section-card-heading"><strong>页脚栏目</strong><button type="button" :disabled="!canEdit(settingsDraft)" @click="addFooterColumn">新增栏目</button></div>
+            <p v-if="!settingsDraft.footer.primary_links.length" class="form-help">灏氭湭閰嶇疆椤佃剼閾炬帴銆傚彂甯冩鏌ヤ細闃绘绌洪〉鑴氳繘鍏ュ畼缃戙€?/p>
+            <div class="section-card-heading"><strong>椤佃剼鏍忕洰</strong><button type="button" :disabled="!canEdit(settingsDraft)" @click="addFooterColumn">鏂板鏍忕洰</button></div>
             <article v-for="(column, columnIndex) in settingsDraft.footer.columns" :key="`footer-column-${columnIndex}`" class="section-card">
-              <div class="section-card-heading"><strong>栏目 {{ columnIndex + 1 }}</strong><button type="button" class="text-action danger" :disabled="!canEdit(settingsDraft)" @click="removeFooterColumn(columnIndex)">删除栏目</button></div>
-              <div class="field-grid"><label>栏目标题<input v-model.trim="column.title" :disabled="!canEdit(settingsDraft)" required maxlength="80"></label><label>栏目排序<input v-model.number="column.sort_order" :disabled="!canEdit(settingsDraft)" type="number" min="0" max="99"></label></div>
-              <div v-for="(link, linkIndex) in column.links" :key="`footer-column-link-${columnIndex}-${linkIndex}`" class="field-grid nested-fields"><label>显示名称<input v-model.trim="link.label" :disabled="!canEdit(settingsDraft)" required maxlength="80"></label><label>链接地址<input v-model.trim="link.href" :disabled="!canEdit(settingsDraft)" required maxlength="1000" placeholder="/about 或 https://..."></label><button type="button" class="text-action danger" :disabled="!canEdit(settingsDraft)" @click="removeFooterColumnLink(columnIndex, linkIndex)">删除链接</button></div>
-              <button type="button" :disabled="!canEdit(settingsDraft)" @click="addFooterColumnLink(columnIndex)">新增栏目链接</button>
+              <div class="section-card-heading"><strong>鏍忕洰 {{ columnIndex + 1 }}</strong><button type="button" class="text-action danger" :disabled="!canEdit(settingsDraft)" @click="removeFooterColumn(columnIndex)">鍒犻櫎鏍忕洰</button></div>
+              <div class="field-grid"><label>鏍忕洰鏍囬<input v-model.trim="column.title" :disabled="!canEdit(settingsDraft)" required maxlength="80"></label><label>鏍忕洰鎺掑簭<input v-model.number="column.sort_order" :disabled="!canEdit(settingsDraft)" type="number" min="0" max="99"></label></div>
+              <div v-for="(link, linkIndex) in column.links" :key="`footer-column-link-${columnIndex}-${linkIndex}`" class="field-grid nested-fields"><label>鏄剧ず鍚嶇О<input v-model.trim="link.label" :disabled="!canEdit(settingsDraft)" required maxlength="80"></label><label>閾炬帴鍦板潃<input v-model.trim="link.href" :disabled="!canEdit(settingsDraft)" required maxlength="1000" placeholder="/about 鎴?https://..."></label><button type="button" class="text-action danger" :disabled="!canEdit(settingsDraft)" @click="removeFooterColumnLink(columnIndex, linkIndex)">鍒犻櫎閾炬帴</button></div>
+              <button type="button" :disabled="!canEdit(settingsDraft)" @click="addFooterColumnLink(columnIndex)">鏂板鏍忕洰閾炬帴</button>
             </article>
             <details class="advanced-fields footer-text-style-editor">
-              <summary>页尾文字样式（默认关闭）</summary>
-              <p class="form-help">每项默认沿用官网原版。只有单独启用后才会调整该项文字，不会改变页尾坐标、尺寸或动画。</p>
+              <summary>椤靛熬鏂囧瓧鏍峰紡锛堥粯璁ゅ叧闂級</summary>
+              <p class="form-help">姣忛」榛樿娌跨敤瀹樼綉鍘熺増銆傚彧鏈夊崟鐙惎鐢ㄥ悗鎵嶄細璋冩暣璇ラ」鏂囧瓧锛屼笉浼氭敼鍙橀〉灏惧潗鏍囥€佸昂瀵告垨鍔ㄧ敾銆?/p>
               <article v-for="definition in footerTextStyleDefinitions" :key="definition.id" class="section-card compact-style-card">
-                <div class="section-card-heading"><strong>{{ definition.label }}</strong><label class="toggle-field"><input v-model="settingsDraft.footer.text_styles[definition.id].enabled" :disabled="!canEdit(settingsDraft)" type="checkbox"><span>启用</span></label></div>
+                <div class="section-card-heading"><strong>{{ definition.label }}</strong><label class="toggle-field"><input v-model="settingsDraft.footer.text_styles[definition.id].enabled" :disabled="!canEdit(settingsDraft)" type="checkbox"><span>鍚敤</span></label></div>
                 <div class="field-grid">
-                  <label>字重<select v-model.number="settingsDraft.footer.text_styles[definition.id].weight" :disabled="!canEdit(settingsDraft) || !settingsDraft.footer.text_styles[definition.id].enabled"><option :value="300">细</option><option :value="400">常规</option><option :value="500">中等</option><option :value="700">粗</option><option :value="800">特粗</option></select></label>
-                  <label>桌面字号（px）<input v-model.number="settingsDraft.footer.text_styles[definition.id].size_desktop" :disabled="!canEdit(settingsDraft) || !settingsDraft.footer.text_styles[definition.id].enabled" type="number" min="12" max="72"></label>
-                  <label>手机字号（px）<input v-model.number="settingsDraft.footer.text_styles[definition.id].size_mobile" :disabled="!canEdit(settingsDraft) || !settingsDraft.footer.text_styles[definition.id].enabled" type="number" min="12" max="40"></label>
-                  <label>行高<input v-model.number="settingsDraft.footer.text_styles[definition.id].line_height" :disabled="!canEdit(settingsDraft) || !settingsDraft.footer.text_styles[definition.id].enabled" type="number" min="1" max="2.2" step="0.05"></label>
-                  <label>文字颜色<input v-model.trim="settingsDraft.footer.text_styles[definition.id].color" :disabled="!canEdit(settingsDraft) || !settingsDraft.footer.text_styles[definition.id].enabled" pattern="#[0-9a-fA-F]{6}" placeholder="#BCBCBC"></label>
+                  <label>瀛楅噸<select v-model.number="settingsDraft.footer.text_styles[definition.id].weight" :disabled="!canEdit(settingsDraft) || !settingsDraft.footer.text_styles[definition.id].enabled"><option :value="300">缁?/option><option :value="400">甯歌</option><option :value="500">涓瓑</option><option :value="700">绮?/option><option :value="800">鐗圭矖</option></select></label>
+                  <label>妗岄潰瀛楀彿锛坧x锛?input v-model.number="settingsDraft.footer.text_styles[definition.id].size_desktop" :disabled="!canEdit(settingsDraft) || !settingsDraft.footer.text_styles[definition.id].enabled" type="number" min="12" max="72"></label>
+                  <label>鎵嬫満瀛楀彿锛坧x锛?input v-model.number="settingsDraft.footer.text_styles[definition.id].size_mobile" :disabled="!canEdit(settingsDraft) || !settingsDraft.footer.text_styles[definition.id].enabled" type="number" min="12" max="40"></label>
+                  <label>琛岄珮<input v-model.number="settingsDraft.footer.text_styles[definition.id].line_height" :disabled="!canEdit(settingsDraft) || !settingsDraft.footer.text_styles[definition.id].enabled" type="number" min="1" max="2.2" step="0.05"></label>
+                  <label>鏂囧瓧棰滆壊<input v-model.trim="settingsDraft.footer.text_styles[definition.id].color" :disabled="!canEdit(settingsDraft) || !settingsDraft.footer.text_styles[definition.id].enabled" pattern="#[0-9a-fA-F]{6}" placeholder="#BCBCBC"></label>
                 </div>
               </article>
             </details>
           </section>
 
           <section class="section-editor" aria-labelledby="site-brand-title">
-            <div><p class="eyebrow">品牌与联系方式</p><h4 id="site-brand-title">品牌与页面联系入口</h4></div>
+            <div><p class="eyebrow">鍝佺墝涓庤仈绯绘柟寮?/p><h4 id="site-brand-title">鍝佺墝涓庨〉闈㈣仈绯诲叆鍙?/h4></div>
             <div class="field-grid">
-              <label>品牌显示名称<input v-model.trim="settingsDraft.brand.display_name" :disabled="!canEdit(settingsDraft)" required maxlength="160"></label>
-              <label>受控品牌标志素材<select v-model="settingsDraft.brand.logo_asset" :disabled="!canEdit(settingsDraft)" required><option value="">选择已发布品牌素材</option><option v-if="settingsDraft.brand.logo_asset && !isReviewedMediaAsset(settingsDraft.brand.logo_asset, 'brand')" :value="settingsDraft.brand.logo_asset">当前引用 {{ settingsDraft.brand.logo_asset }}（尚未通过选择器核验）</option><option v-for="asset in reviewedMediaAssets('brand')" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select></label>
-              <label>页脚品牌图<select v-model="settingsDraft.brand.footer_logo_asset" :disabled="!canEdit(settingsDraft)"><option value="">沿用顶部品牌标志</option><option v-for="asset in reviewedMediaAssets('brand')" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select></label>
-              <label>页脚地址图标<select v-model="settingsDraft.footer.address_icon_asset" :disabled="!canEdit(settingsDraft)"><option value="">沿用官网原图</option><option v-for="asset in reviewedMediaAssets('brand')" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select></label>
-              <label>页脚电话图标<select v-model="settingsDraft.footer.phone_icon_asset" :disabled="!canEdit(settingsDraft)"><option value="">沿用官网原图</option><option v-for="asset in reviewedMediaAssets('brand')" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select></label>
-              <label>页脚邮箱图标<select v-model="settingsDraft.footer.email_icon_asset" :disabled="!canEdit(settingsDraft)"><option value="">沿用官网原图</option><option v-for="asset in reviewedMediaAssets('brand')" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select></label>
-              <p v-if="!reviewedMediaAssets('brand').length" class="form-help full">暂无已发布的品牌标志素材。请先在“媒体资产”中完成登记、品牌审核和发布。</p>
-              <label>服务电话<input v-model.trim="settingsDraft.contacts.service_phone" :disabled="!canEdit(settingsDraft)" required maxlength="80"></label>
-              <label>国内业务电话<input v-model.trim="settingsDraft.contacts.domestic_phone" :disabled="!canEdit(settingsDraft)" maxlength="80"></label>
-              <label>海外业务电话<input v-model.trim="settingsDraft.contacts.export_phone" :disabled="!canEdit(settingsDraft)" maxlength="80"></label>
-              <label>国内业务邮箱<input v-model.trim="settingsDraft.contacts.domestic_email" :disabled="!canEdit(settingsDraft)" type="email" maxlength="160"></label>
-              <label>海外业务邮箱<input v-model.trim="settingsDraft.contacts.export_email" :disabled="!canEdit(settingsDraft)" type="email" maxlength="160"></label>
-              <label>语言切换按钮文字<input v-model.trim="settingsDraft.contacts.language_label" :disabled="!canEdit(settingsDraft)" maxlength="24" placeholder="EN"></label>
-              <label>顶部按钮文案<input v-model.trim="settingsDraft.contacts.header_cta.label" :disabled="!canEdit(settingsDraft)" required maxlength="80"></label>
-              <label class="full">顶部按钮链接<input v-model.trim="settingsDraft.contacts.header_cta.href" :disabled="!canEdit(settingsDraft)" required maxlength="1000" placeholder="/service 或 https://..."></label>
-              <label class="full">联系地址（每行一项）<textarea v-model="settingsDraft.contacts.addressesText" :disabled="!canEdit(settingsDraft)" rows="3" maxlength="1000" placeholder="中国浙江省...\n海外办事处..."></textarea></label>
-              <label>采购区按钮文案<input v-model.trim="settingsDraft.footer.purchase_label" :disabled="!canEdit(settingsDraft)" maxlength="80"></label>
-              <label>采购区标题<input v-model.trim="settingsDraft.footer.purchase_title" :disabled="!canEdit(settingsDraft)" maxlength="160"></label>
-              <label class="full">采购区说明<textarea v-model="settingsDraft.footer.purchase_subtitle" :disabled="!canEdit(settingsDraft)" rows="2" maxlength="400"></textarea></label>
-              <label>采购联系电话<input v-model.trim="settingsDraft.footer.purchase_phone" :disabled="!canEdit(settingsDraft)" maxlength="80"></label>
-              <label class="full">版权文字<input v-model.trim="settingsDraft.footer.copyright" :disabled="!canEdit(settingsDraft)" maxlength="240"></label>
-              <label class="full">可用语言（每行一项）<textarea v-model="settingsDraft.languagesText" :disabled="!canEdit(settingsDraft)" rows="3" maxlength="400" placeholder="zh-CN"></textarea></label>
+              <label>鍝佺墝鏄剧ず鍚嶇О<input v-model.trim="settingsDraft.brand.display_name" :disabled="!canEdit(settingsDraft)" required maxlength="160"></label>
+              <label>鍙楁帶鍝佺墝鏍囧織绱犳潗<select v-model="settingsDraft.brand.logo_asset" :disabled="!canEdit(settingsDraft)" required><option value="">閫夋嫨宸插彂甯冨搧鐗岀礌鏉?/option><option v-if="settingsDraft.brand.logo_asset && !isReviewedMediaAsset(settingsDraft.brand.logo_asset, 'brand')" :value="settingsDraft.brand.logo_asset">褰撳墠寮曠敤 {{ settingsDraft.brand.logo_asset }}锛堝皻鏈€氳繃閫夋嫨鍣ㄦ牳楠岋級</option><option v-for="asset in reviewedMediaAssets('brand')" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select></label>
+              <label>椤佃剼鍝佺墝鍥?select v-model="settingsDraft.brand.footer_logo_asset" :disabled="!canEdit(settingsDraft)"><option value="">娌跨敤椤堕儴鍝佺墝鏍囧織</option><option v-for="asset in reviewedMediaAssets('brand')" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select></label>
+              <label>椤佃剼鍦板潃鍥炬爣<select v-model="settingsDraft.footer.address_icon_asset" :disabled="!canEdit(settingsDraft)"><option value="">娌跨敤瀹樼綉鍘熷浘</option><option v-for="asset in reviewedMediaAssets('brand')" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select></label>
+              <label>椤佃剼鐢佃瘽鍥炬爣<select v-model="settingsDraft.footer.phone_icon_asset" :disabled="!canEdit(settingsDraft)"><option value="">娌跨敤瀹樼綉鍘熷浘</option><option v-for="asset in reviewedMediaAssets('brand')" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select></label>
+              <label>椤佃剼閭鍥炬爣<select v-model="settingsDraft.footer.email_icon_asset" :disabled="!canEdit(settingsDraft)"><option value="">娌跨敤瀹樼綉鍘熷浘</option><option v-for="asset in reviewedMediaAssets('brand')" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select></label>
+              <p v-if="!reviewedMediaAssets('brand').length" class="form-help full">鏆傛棤宸插彂甯冪殑鍝佺墝鏍囧織绱犳潗銆傝鍏堝湪鈥滃獟浣撹祫浜р€濅腑瀹屾垚鐧昏銆佸搧鐗屽鏍稿拰鍙戝竷銆?/p>
+              <label>鏈嶅姟鐢佃瘽<input v-model.trim="settingsDraft.contacts.service_phone" :disabled="!canEdit(settingsDraft)" required maxlength="80"></label>
+              <label>鍥藉唴涓氬姟鐢佃瘽<input v-model.trim="settingsDraft.contacts.domestic_phone" :disabled="!canEdit(settingsDraft)" maxlength="80"></label>
+              <label>娴峰涓氬姟鐢佃瘽<input v-model.trim="settingsDraft.contacts.export_phone" :disabled="!canEdit(settingsDraft)" maxlength="80"></label>
+              <label>鍥藉唴涓氬姟閭<input v-model.trim="settingsDraft.contacts.domestic_email" :disabled="!canEdit(settingsDraft)" type="email" maxlength="160"></label>
+              <label>娴峰涓氬姟閭<input v-model.trim="settingsDraft.contacts.export_email" :disabled="!canEdit(settingsDraft)" type="email" maxlength="160"></label>
+              <label>璇█鍒囨崲鎸夐挳鏂囧瓧<input v-model.trim="settingsDraft.contacts.language_label" :disabled="!canEdit(settingsDraft)" maxlength="24" placeholder="EN"></label>
+              <label>椤堕儴鎸夐挳鏂囨<input v-model.trim="settingsDraft.contacts.header_cta.label" :disabled="!canEdit(settingsDraft)" required maxlength="80"></label>
+              <label class="full">椤堕儴鎸夐挳閾炬帴<input v-model.trim="settingsDraft.contacts.header_cta.href" :disabled="!canEdit(settingsDraft)" required maxlength="1000" placeholder="/service 鎴?https://..."></label>
+              <label class="full">鑱旂郴鍦板潃锛堟瘡琛屼竴椤癸級<textarea v-model="settingsDraft.contacts.addressesText" :disabled="!canEdit(settingsDraft)" rows="3" maxlength="1000" placeholder="涓浗娴欐睙鐪?..\n娴峰鍔炰簨澶?.."></textarea></label>
+              <label>閲囪喘鍖烘寜閽枃妗?input v-model.trim="settingsDraft.footer.purchase_label" :disabled="!canEdit(settingsDraft)" maxlength="80"></label>
+              <label>閲囪喘鍖烘爣棰?input v-model.trim="settingsDraft.footer.purchase_title" :disabled="!canEdit(settingsDraft)" maxlength="160"></label>
+              <label class="full">閲囪喘鍖鸿鏄?textarea v-model="settingsDraft.footer.purchase_subtitle" :disabled="!canEdit(settingsDraft)" rows="2" maxlength="400"></textarea></label>
+              <label>閲囪喘鑱旂郴鐢佃瘽<input v-model.trim="settingsDraft.footer.purchase_phone" :disabled="!canEdit(settingsDraft)" maxlength="80"></label>
+              <label class="full">鐗堟潈鏂囧瓧<input v-model.trim="settingsDraft.footer.copyright" :disabled="!canEdit(settingsDraft)" maxlength="240"></label>
+              <label class="full">鍙敤璇█锛堟瘡琛屼竴椤癸級<textarea v-model="settingsDraft.languagesText" :disabled="!canEdit(settingsDraft)" rows="3" maxlength="400" placeholder="zh-CN"></textarea></label>
             </div>
           </section>
 
-          <div class="form-actions"><a :href="nativeItemPath('site_settings', settingsDraft.id)">打开高级设置查看分析配置、来源与审核记录</a><button class="primary-action" type="submit" :disabled="saving || !canEdit(settingsDraft)">{{ saving ? '保存中...' : '保存全站设置草稿' }}</button></div>
+          <div class="form-actions"><a :href="nativeItemPath('site_settings', settingsDraft.id)">鎵撳紑楂樼骇璁剧疆鏌ョ湅鍒嗘瀽閰嶇疆銆佹潵婧愪笌瀹℃牳璁板綍</a><button class="primary-action" type="submit" :disabled="saving || !canEdit(settingsDraft)">{{ saving ? '淇濆瓨涓?..' : '淇濆瓨鍏ㄧ珯璁剧疆鑽夌' }}</button></div>
         </form>
-        <div v-else class="empty">当前账号没有可读取的全站设置记录。</div>
+        <div v-else class="empty">褰撳墠璐﹀彿娌℃湁鍙鍙栫殑鍏ㄧ珯璁剧疆璁板綍銆?/div>
       </section>
 
-      <section v-else class="model-workspace" aria-label="产品型号与参数编辑">
+      <section v-else class="model-workspace" aria-label="浜у搧鍨嬪彿涓庡弬鏁扮紪杈?>
         <div class="model-layout">
           <aside class="record-list-panel">
-            <div class="panel-heading"><div><p class="eyebrow">产品型号</p><h3>产品型号</h3></div><strong>{{ models.length }}</strong></div>
+            <div class="panel-heading"><div><p class="eyebrow">浜у搧鍨嬪彿</p><h3>浜у搧鍨嬪彿</h3></div><strong>{{ models.length }}</strong></div>
             <button v-for="record in models" :key="record.id" type="button" class="record-choice" :class="{ active: record.id === selectedModelId }" @click="selectModel(record.id)"><span>{{ record.name || record.model_code }}</span><small>{{ record.model_code }} / {{ record.series_code }}</small><i :data-status="record.status">{{ statusLabel(record.status) }}</i></button>
-            <p v-if="!models.length" class="empty compact">当前账号没有可读取的产品型号。</p>
+            <p v-if="!models.length" class="empty compact">褰撳墠璐﹀彿娌℃湁鍙鍙栫殑浜у搧鍨嬪彿銆?/p>
           </aside>
 
           <form v-if="modelDraft" class="editor-form" @submit.prevent="saveModel">
-            <div class="form-heading"><div><p class="eyebrow">型号信息</p><h3>{{ modelDraft.name || '未命名型号' }}</h3></div><span class="status" :data-status="modelDraft.status">{{ statusLabel(modelDraft.status) }}</span></div>
-            <p v-if="!canEdit(modelDraft)" class="read-only-note">该型号目前不可直接编辑。</p>
-            <p class="form-help">详情默认沿用官网原版（模板里的介绍、设备组成与示意图）。点击“从官网原版初始化详情”把它们写入本型号，之后才能在表单和画布上修改；已填写的字段不会被覆盖。</p>
-            <div class="form-actions"><span></span><button type="button" :disabled="!canEdit(modelDraft)" @click="initializeModelDetail">从官网原版初始化详情</button></div>
+            <div class="form-heading"><div><p class="eyebrow">鍨嬪彿淇℃伅</p><h3>{{ modelDraft.name || '鏈懡鍚嶅瀷鍙? }}</h3></div><span class="status" :data-status="modelDraft.status">{{ statusLabel(modelDraft.status) }}</span></div>
+            <p v-if="!canEdit(modelDraft)" class="read-only-note">璇ュ瀷鍙风洰鍓嶄笉鍙洿鎺ョ紪杈戙€?/p>
+            <p class="form-help">璇︽儏榛樿娌跨敤瀹樼綉鍘熺増锛堟ā鏉块噷鐨勪粙缁嶃€佽澶囩粍鎴愪笌绀烘剰鍥撅級銆傜偣鍑烩€滀粠瀹樼綉鍘熺増鍒濆鍖栬鎯呪€濇妸瀹冧滑鍐欏叆鏈瀷鍙凤紝涔嬪悗鎵嶈兘鍦ㄨ〃鍗曞拰鐢诲竷涓婁慨鏀癸紱宸插～鍐欑殑瀛楁涓嶄細琚鐩栥€?/p>
+            <div class="form-actions"><span></span><button type="button" :disabled="!canEdit(modelDraft)" @click="initializeModelDetail">浠庡畼缃戝師鐗堝垵濮嬪寲璇︽儏</button></div>
             <div class="field-grid">
-              <label>型号名称<input v-model.trim="modelDraft.name" :disabled="!canEdit(modelDraft)" required maxlength="160"></label>
-              <label>型号编码<input v-model.trim="modelDraft.model_code" :disabled="!canEdit(modelDraft)" required maxlength="80"></label>
-              <label>所属系列编码<input v-model.trim="modelDraft.series_code" :disabled="!canEdit(modelDraft)" required maxlength="80"></label>
-              <label>访问标识<input v-model.trim="modelDraft.slug" :disabled="!canEdit(modelDraft)" pattern="(?:[a-z]|[0-9])(?:[a-z]|[0-9]|-){0,79}" maxlength="80"></label>
+              <label>鍨嬪彿鍚嶇О<input v-model.trim="modelDraft.name" :disabled="!canEdit(modelDraft)" required maxlength="160"></label>
+              <label>鍨嬪彿缂栫爜<input v-model.trim="modelDraft.model_code" :disabled="!canEdit(modelDraft)" required maxlength="80"></label>
+              <label>鎵€灞炵郴鍒楃紪鐮?input v-model.trim="modelDraft.series_code" :disabled="!canEdit(modelDraft)" required maxlength="80"></label>
+              <label>璁块棶鏍囪瘑<input v-model.trim="modelDraft.slug" :disabled="!canEdit(modelDraft)" pattern="(?:[a-z]|[0-9])(?:[a-z]|[0-9]|-){0,79}" maxlength="80"></label>
             </div>
             <section class="section-editor" aria-labelledby="model-labels-title">
-              <div class="section-heading"><div><p class="eyebrow">页面文字</p><h4 id="model-labels-title">参数与尺寸图标题</h4></div></div>
+              <div class="section-heading"><div><p class="eyebrow">椤甸潰鏂囧瓧</p><h4 id="model-labels-title">鍙傛暟涓庡昂瀵稿浘鏍囬</h4></div></div>
               <div class="field-grid">
-                <label>技术参数文字<input v-model.trim="modelDraft.configuration.labels.technical" :disabled="!canEdit(modelDraft)" maxlength="80" placeholder="技术参数"></label>
-                <label>工程视图文字<input v-model.trim="modelDraft.configuration.labels.drawing" :disabled="!canEdit(modelDraft)" maxlength="80" placeholder="机型工程视图"></label>
-                <label class="full">技术参数侧边图<select v-model="modelDraft.configuration.labels.technical_image_asset_id" :disabled="!canEdit(modelDraft)"><option value="">沿用官网原图</option><option v-for="asset in productDrawingMediaAssets()" :key="asset.id" :value="String(asset.id)">{{ modelDrawingMediaAssetLabel(asset) }}</option></select></label>
+                <label>鎶€鏈弬鏁版枃瀛?input v-model.trim="modelDraft.configuration.labels.technical" :disabled="!canEdit(modelDraft)" maxlength="80" placeholder="鎶€鏈弬鏁?></label>
+                <label>宸ョ▼瑙嗗浘鏂囧瓧<input v-model.trim="modelDraft.configuration.labels.drawing" :disabled="!canEdit(modelDraft)" maxlength="80" placeholder="鏈哄瀷宸ョ▼瑙嗗浘"></label>
+                <label class="full">鎶€鏈弬鏁颁晶杈瑰浘<select v-model="modelDraft.configuration.labels.technical_image_asset_id" :disabled="!canEdit(modelDraft)"><option value="">娌跨敤瀹樼綉鍘熷浘</option><option v-for="asset in productDrawingMediaAssets()" :key="asset.id" :value="String(asset.id)">{{ modelDrawingMediaAssetLabel(asset) }}</option></select></label>
               </div>
             </section>
             <section v-if="modelSupportsWorkstationIntro" class="section-editor" aria-labelledby="model-intro-title">
-              <div class="section-heading"><div><p class="eyebrow">详情首屏</p><h4 id="model-intro-title">工作站介绍与设备主图</h4><p>仅覆盖对应系列有介绍的区域，未填写时官网沿用原 PSD 文案与图片。</p></div></div>
+              <div class="section-heading"><div><p class="eyebrow">璇︽儏棣栧睆</p><h4 id="model-intro-title">宸ヤ綔绔欎粙缁嶄笌璁惧涓诲浘</h4><p>浠呰鐩栧搴旂郴鍒楁湁浠嬬粛鐨勫尯鍩燂紝鏈～鍐欐椂瀹樼綉娌跨敤鍘?PSD 鏂囨涓庡浘鐗囥€?/p></div></div>
               <div class="field-grid">
-                <label>介绍标题<input v-model.trim="modelDraft.configuration.intro.title" :disabled="!canEdit(modelDraft)" maxlength="160" placeholder="例如：灵动切割工作站"></label>
-                <label>介绍副标题<input v-model.trim="modelDraft.configuration.intro.subtitle" :disabled="!canEdit(modelDraft)" maxlength="160" placeholder="例如：无人化加工解决方案"></label>
-                <label>适应场景<input v-model.trim="modelDraft.configuration.intro.scene" :disabled="!canEdit(modelDraft)" maxlength="240"></label>
-                <label>设备主图<select v-model="modelDraft.configuration.machine_asset_id" :disabled="!canEdit(modelDraft)"><option value="">沿用官网原图</option><option v-for="asset in reviewedMediaAssets('product')" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select></label>
-                <label class="full">介绍正文<textarea v-model="modelDraft.configuration.intro.body" :disabled="!canEdit(modelDraft)" rows="4" maxlength="4000"></textarea></label>
+                <label>浠嬬粛鏍囬<input v-model.trim="modelDraft.configuration.intro.title" :disabled="!canEdit(modelDraft)" maxlength="160" placeholder="渚嬪锛氱伒鍔ㄥ垏鍓插伐浣滅珯"></label>
+                <label>浠嬬粛鍓爣棰?input v-model.trim="modelDraft.configuration.intro.subtitle" :disabled="!canEdit(modelDraft)" maxlength="160" placeholder="渚嬪锛氭棤浜哄寲鍔犲伐瑙ｅ喅鏂规"></label>
+                <label>閫傚簲鍦烘櫙<input v-model.trim="modelDraft.configuration.intro.scene" :disabled="!canEdit(modelDraft)" maxlength="240"></label>
+                <label>璁惧涓诲浘<select v-model="modelDraft.configuration.machine_asset_id" :disabled="!canEdit(modelDraft)"><option value="">娌跨敤瀹樼綉鍘熷浘</option><option v-for="asset in reviewedMediaAssets('product')" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select></label>
+                <label class="full">浠嬬粛姝ｆ枃<textarea v-model="modelDraft.configuration.intro.body" :disabled="!canEdit(modelDraft)" rows="4" maxlength="4000"></textarea></label>
               </div>
             </section>
-            <p v-else class="read-only-note">当前型号在官网使用“型号导航与核心能力”模板，没有工作站介绍展示位。</p>
+            <p v-else class="read-only-note">褰撳墠鍨嬪彿鍦ㄥ畼缃戜娇鐢ㄢ€滃瀷鍙峰鑸笌鏍稿績鑳藉姏鈥濇ā鏉匡紝娌℃湁宸ヤ綔绔欎粙缁嶅睍绀轰綅銆?/p>
             <section class="section-editor" aria-labelledby="model-features-title">
-              <div class="section-heading"><div><p class="eyebrow">产品特点</p><h4 id="model-features-title">特性项目</h4><p>每项可以配置标题、说明和已审核图片；官网原有卡片布局不变。</p></div><button type="button" :disabled="!canEdit(modelDraft)" @click="addModelFeature">新增特点</button></div>
+              <div class="section-heading"><div><p class="eyebrow">浜у搧鐗圭偣</p><h4 id="model-features-title">鐗规€ч」鐩?/h4><p>姣忛」鍙互閰嶇疆鏍囬銆佽鏄庡拰宸插鏍稿浘鐗囷紱瀹樼綉鍘熸湁鍗＄墖甯冨眬涓嶅彉銆?/p></div><button type="button" :disabled="!canEdit(modelDraft)" @click="addModelFeature">鏂板鐗圭偣</button></div>
               <article v-for="(feature, index) in modelDraft.configuration.features" :key="`feature-${index}`" class="section-card">
-                <div class="section-card-heading"><strong>特点 {{ index + 1 }}</strong><button type="button" class="text-action danger" :disabled="!canEdit(modelDraft)" @click="removeModelFeature(index)">删除</button></div>
-                <div class="field-grid"><label>标题<input v-model.trim="feature.label" :disabled="!canEdit(modelDraft)" required maxlength="120"></label><label>图片<select v-model="feature.media_asset_id" :disabled="!canEdit(modelDraft)"><option value="">不使用图片</option><option v-for="asset in productFeatureMediaAssets()" :key="asset.id" :value="String(asset.id)">{{ modelDrawingMediaAssetLabel(asset) }}</option></select></label><label class="full">详细说明<textarea v-model="feature.detail" :disabled="!canEdit(modelDraft)" rows="2" maxlength="1000"></textarea></label><label class="full">补充备注<input v-model.trim="feature.note" :disabled="!canEdit(modelDraft)" maxlength="300"></label></div>
+                <div class="section-card-heading"><strong>鐗圭偣 {{ index + 1 }}</strong><button type="button" class="text-action danger" :disabled="!canEdit(modelDraft)" @click="removeModelFeature(index)">鍒犻櫎</button></div>
+                <div class="field-grid"><label>鏍囬<input v-model.trim="feature.label" :disabled="!canEdit(modelDraft)" required maxlength="120"></label><label>鍥剧墖<select v-model="feature.media_asset_id" :disabled="!canEdit(modelDraft)"><option value="">涓嶄娇鐢ㄥ浘鐗?/option><option v-for="asset in productFeatureMediaAssets()" :key="asset.id" :value="String(asset.id)">{{ modelDrawingMediaAssetLabel(asset) }}</option></select></label><label class="full">璇︾粏璇存槑<textarea v-model="feature.detail" :disabled="!canEdit(modelDraft)" rows="2" maxlength="1000"></textarea></label><label class="full">琛ュ厖澶囨敞<input v-model.trim="feature.note" :disabled="!canEdit(modelDraft)" maxlength="300"></label></div>
               </article>
             </section>
             <section class="section-editor" aria-labelledby="model-drawings-title">
-              <div class="section-heading"><div><p class="eyebrow">尺寸与工程图</p><h4 id="model-drawings-title">尺寸图</h4></div><button type="button" :disabled="!canEdit(modelDraft)" @click="addModelDrawing">新增尺寸图</button></div>
+              <div class="section-heading"><div><p class="eyebrow">灏哄涓庡伐绋嬪浘</p><h4 id="model-drawings-title">灏哄鍥?/h4></div><button type="button" :disabled="!canEdit(modelDraft)" @click="addModelDrawing">鏂板灏哄鍥?/button></div>
               <article v-for="(drawing, index) in modelDraft.configuration.drawings" :key="`drawing-${index}`" class="section-card">
-                <div class="section-card-heading"><strong>尺寸图 {{ index + 1 }}</strong><button type="button" class="text-action danger" :disabled="!canEdit(modelDraft)" @click="removeModelDrawing(index)">删除</button></div>
-                <div class="field-grid"><label>标题<input v-model.trim="drawing.title" :disabled="!canEdit(modelDraft)" maxlength="120"></label><label>图片<select v-model="drawing.media_asset_id" :disabled="!canEdit(modelDraft)" required><option value="">选择产品图片（已发布或仅内部预览草稿）</option><option v-for="asset in productDrawingMediaAssets()" :key="asset.id" :value="String(asset.id)">{{ modelDrawingMediaAssetLabel(asset) }}</option></select></label><label class="full">图片说明<input v-model.trim="drawing.caption" :disabled="!canEdit(modelDraft)" maxlength="500"></label></div>
+                <div class="section-card-heading"><strong>灏哄鍥?{{ index + 1 }}</strong><button type="button" class="text-action danger" :disabled="!canEdit(modelDraft)" @click="removeModelDrawing(index)">鍒犻櫎</button></div>
+                <div class="field-grid"><label>鏍囬<input v-model.trim="drawing.title" :disabled="!canEdit(modelDraft)" maxlength="120"></label><label>鍥剧墖<select v-model="drawing.media_asset_id" :disabled="!canEdit(modelDraft)" required><option value="">閫夋嫨浜у搧鍥剧墖锛堝凡鍙戝竷鎴栦粎鍐呴儴棰勮鑽夌锛?/option><option v-for="asset in productDrawingMediaAssets()" :key="asset.id" :value="String(asset.id)">{{ modelDrawingMediaAssetLabel(asset) }}</option></select></label><label class="full">鍥剧墖璇存槑<input v-model.trim="drawing.caption" :disabled="!canEdit(modelDraft)" maxlength="500"></label></div>
               </article>
             </section>
             <section class="section-editor" aria-labelledby="model-resources-title">
-              <div class="section-heading"><div><p class="eyebrow">下载资料</p><h4 id="model-resources-title">产品资料链接</h4></div><button type="button" :disabled="!canEdit(modelDraft)" @click="addModelResource">新增资料</button></div>
+              <div class="section-heading"><div><p class="eyebrow">涓嬭浇璧勬枡</p><h4 id="model-resources-title">浜у搧璧勬枡閾炬帴</h4></div><button type="button" :disabled="!canEdit(modelDraft)" @click="addModelResource">鏂板璧勬枡</button></div>
               <article v-for="(resource, index) in modelDraft.resources" :key="`resource-${index}`" class="section-card">
-                <div class="section-card-heading"><strong>资料 {{ index + 1 }}</strong><button type="button" class="text-action danger" :disabled="!canEdit(modelDraft)" @click="removeModelResource(index)">删除</button></div>
-                <div class="field-grid"><label>标题<input v-model.trim="resource.title" :disabled="!canEdit(modelDraft)" required maxlength="160"></label><label>类型<input v-model.trim="resource.type" :disabled="!canEdit(modelDraft)" maxlength="80" placeholder="说明书、尺寸图"></label><label class="full">产品附件<select v-model="resource.media_asset_id" :disabled="!canEdit(modelDraft)"><option value="">不使用已上传附件</option><option v-for="asset in productResourceMediaAssets()" :key="asset.id" :value="String(asset.id)">{{ modelResourceMediaAssetLabel(asset) }}</option></select></label><label class="full">站内文件或 HTTPS 地址（不选附件时填写）<input v-model.trim="resource.url" :disabled="!canEdit(modelDraft)" maxlength="1000" placeholder="/assets/... 或 https://..."></label></div>
+                <div class="section-card-heading"><strong>璧勬枡 {{ index + 1 }}</strong><button type="button" class="text-action danger" :disabled="!canEdit(modelDraft)" @click="removeModelResource(index)">鍒犻櫎</button></div>
+                <div class="field-grid"><label>鏍囬<input v-model.trim="resource.title" :disabled="!canEdit(modelDraft)" required maxlength="160"></label><label>绫诲瀷<input v-model.trim="resource.type" :disabled="!canEdit(modelDraft)" maxlength="80" placeholder="璇存槑涔︺€佸昂瀵稿浘"></label><label class="full">浜у搧闄勪欢<select v-model="resource.media_asset_id" :disabled="!canEdit(modelDraft)"><option value="">涓嶄娇鐢ㄥ凡涓婁紶闄勪欢</option><option v-for="asset in productResourceMediaAssets()" :key="asset.id" :value="String(asset.id)">{{ modelResourceMediaAssetLabel(asset) }}</option></select></label><label class="full">绔欏唴鏂囦欢鎴?HTTPS 鍦板潃锛堜笉閫夐檮浠舵椂濉啓锛?input v-model.trim="resource.url" :disabled="!canEdit(modelDraft)" maxlength="1000" placeholder="/assets/... 鎴?https://..."></label></div>
               </article>
             </section>
-            <section class="media-reference-editor" aria-label="型号受控媒体">
-              <div class="section-card-heading"><strong>受控型号媒体</strong><span>{{ modelDraft.mediaReferences.length }}</span></div>
-              <div class="media-reference-add"><select v-model="modelMediaSelection" :disabled="!canEdit(modelDraft)"><option value="">选择已发布产品素材</option><option v-for="asset in reviewedMediaAssets('product')" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select><button type="button" :disabled="!canEdit(modelDraft) || !modelMediaSelection" @click="addModelMediaReference">添加</button></div>
-              <p v-if="!reviewedMediaAssets('product').length" class="form-help">暂无已发布的产品素材。请先在“媒体资产”中完成登记、审核和发布。</p>
-              <div v-for="reference in modelDraft.mediaReferences" :key="reference.media_asset_id" class="media-reference-row"><span>{{ mediaReferenceLabel(reference, 'product') }}</span><button type="button" class="text-action danger" :disabled="!canEdit(modelDraft)" @click="removeModelMediaReference(reference.media_asset_id)">移除</button></div>
+            <section class="media-reference-editor" aria-label="鍨嬪彿鍙楁帶濯掍綋">
+              <div class="section-card-heading"><strong>鍙楁帶鍨嬪彿濯掍綋</strong><span>{{ modelDraft.mediaReferences.length }}</span></div>
+              <div class="media-reference-add"><select v-model="modelMediaSelection" :disabled="!canEdit(modelDraft)"><option value="">閫夋嫨宸插彂甯冧骇鍝佺礌鏉?/option><option v-for="asset in reviewedMediaAssets('product')" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select><button type="button" :disabled="!canEdit(modelDraft) || !modelMediaSelection" @click="addModelMediaReference">娣诲姞</button></div>
+              <p v-if="!reviewedMediaAssets('product').length" class="form-help">鏆傛棤宸插彂甯冪殑浜у搧绱犳潗銆傝鍏堝湪鈥滃獟浣撹祫浜р€濅腑瀹屾垚鐧昏銆佸鏍稿拰鍙戝竷銆?/p>
+              <div v-for="reference in modelDraft.mediaReferences" :key="reference.media_asset_id" class="media-reference-row"><span>{{ mediaReferenceLabel(reference, 'product') }}</span><button type="button" class="text-action danger" :disabled="!canEdit(modelDraft)" @click="removeModelMediaReference(reference.media_asset_id)">绉婚櫎</button></div>
             </section>
-            <div class="form-actions"><a :href="nativeItemPath('product_models', modelDraft.id)">打开高级设置查看配置与素材</a><button class="primary-action" type="submit" :disabled="saving || !canEdit(modelDraft)">{{ saving ? '保存中...' : '保存型号信息' }}</button></div>
+            <div class="form-actions"><a :href="nativeItemPath('product_models', modelDraft.id)">鎵撳紑楂樼骇璁剧疆鏌ョ湅閰嶇疆涓庣礌鏉?/a><button class="primary-action" type="submit" :disabled="saving || !canEdit(modelDraft)">{{ saving ? '淇濆瓨涓?..' : '淇濆瓨鍨嬪彿淇℃伅' }}</button></div>
           </form>
-          <div v-else class="empty">请选择一个产品型号。</div>
+          <div v-else class="empty">璇烽€夋嫨涓€涓骇鍝佸瀷鍙枫€?/div>
         </div>
 
         <section v-if="modelDraft" class="parameters-panel" aria-labelledby="parameters-title">
-          <div class="section-heading"><div><p class="eyebrow">技术参数</p><h3 id="parameters-title">独立技术参数</h3><p>参数独立保存，便于审核、对比和统一发布。</p></div><strong>{{ parameters.length }}</strong></div>
-          <p v-if="parametersLoading" class="message">正在加载参数...</p>
+          <div class="section-heading"><div><p class="eyebrow">鎶€鏈弬鏁?/p><h3 id="parameters-title">鐙珛鎶€鏈弬鏁?/h3><p>鍙傛暟鐙珛淇濆瓨锛屼究浜庡鏍搞€佸姣斿拰缁熶竴鍙戝竷銆?/p></div><strong>{{ parameters.length }}</strong></div>
+          <p v-if="parametersLoading" class="message">姝ｅ湪鍔犺浇鍙傛暟...</p>
           <div v-else class="table-wrap">
             <table>
-              <thead><tr><th>字段名称</th><th>数值</th><th>单位</th><th>测试条件</th><th>排序</th><th></th></tr></thead>
+              <thead><tr><th>瀛楁鍚嶇О</th><th>鏁板€?/th><th>鍗曚綅</th><th>娴嬭瘯鏉′欢</th><th>鎺掑簭</th><th></th></tr></thead>
               <tbody>
                 <tr v-for="parameter in parameters" :key="parameter.id">
                   <td><input v-model.trim="parameter.field_name" :disabled="!canEdit(parameter)" maxlength="160" required @input="markParameterDirty(parameter)"></td>
@@ -976,172 +976,172 @@
                   <td><input v-model.trim="parameter.unit" :disabled="!canEdit(parameter)" maxlength="80" @input="markParameterDirty(parameter)"></td>
                   <td><input v-model.trim="parameter.test_conditions" :disabled="!canEdit(parameter)" maxlength="1000" @input="markParameterDirty(parameter)"></td>
                   <td><input v-model.number="parameter.sort_order" :disabled="!canEdit(parameter)" type="number" min="0" step="1" @input="markParameterDirty(parameter)"></td>
-                  <td><button type="button" class="text-action" :disabled="saving || !canEdit(parameter)" @click="saveParameter(parameter)">保存</button></td>
+                  <td><button type="button" class="text-action" :disabled="saving || !canEdit(parameter)" @click="saveParameter(parameter)">淇濆瓨</button></td>
                 </tr>
-                <tr v-if="!parameters.length"><td colspan="6" class="table-empty">当前型号暂无独立参数。</td></tr>
+                <tr v-if="!parameters.length"><td colspan="6" class="table-empty">褰撳墠鍨嬪彿鏆傛棤鐙珛鍙傛暟銆?/td></tr>
               </tbody>
             </table>
           </div>
           <form v-if="canEdit(modelDraft)" class="new-parameter" @submit.prevent="createParameter">
-            <h4>新增技术参数</h4>
-            <div class="field-grid parameter-fields"><label>字段名称<input v-model.trim="newParameter.field_name" required maxlength="160"></label><label>数值<input v-model.trim="newParameter.value" required maxlength="500"></label><label>单位<input v-model.trim="newParameter.unit" maxlength="80"></label></div>
-            <div class="form-actions"><span></span><button class="primary-action" type="submit" :disabled="saving">新增参数</button></div>
+            <h4>鏂板鎶€鏈弬鏁?/h4>
+            <div class="field-grid parameter-fields"><label>瀛楁鍚嶇О<input v-model.trim="newParameter.field_name" required maxlength="160"></label><label>鏁板€?input v-model.trim="newParameter.value" required maxlength="500"></label><label>鍗曚綅<input v-model.trim="newParameter.unit" maxlength="80"></label></div>
+            <div class="form-actions"><span></span><button class="primary-action" type="submit" :disabled="saving">鏂板鍙傛暟</button></div>
           </form>
         </section>
       </section>
 
-      <aside v-if="liveWebsitePreviewVisible && websitePreviewAvailable" class="live-website-preview" :class="{ 'visual-property-panel-open': selectedVisualElement }" aria-label="官网实时预览">
-        <header class="visual-editor-toolbar" aria-label="画布编辑工具栏">
-          <div class="visual-editor-brand"><span class="visual-editor-icon" aria-hidden="true">R</span><div><p class="eyebrow">官网画布编辑</p><strong>{{ previewTitle }}</strong></div></div>
-          <div class="visual-editor-tools" role="toolbar" aria-label="编辑工具">
-            <button type="button" :class="{ active: visualTool === 'select' }" :disabled="!visualCanvasEditable" title="选择元素" @click="visualTool = 'select'; visualEditMode = true; postLivePreviewUpdate()">↖<span>选择</span></button>
-            <button type="button" :class="{ active: visualTool === 'text' }" :disabled="!visualCanvasEditable" title="选择文字元素" @click="visualTool = 'text'; visualEditMode = true; postLivePreviewUpdate()">T<span>文字</span></button>
-            <button type="button" :class="{ active: visualTool === 'media' }" :disabled="!visualCanvasEditable" title="选择图片或视频" @click="visualTool = 'media'; visualEditMode = true; postLivePreviewUpdate()">▧<span>媒体</span></button>
+      <aside v-if="liveWebsitePreviewVisible && websitePreviewAvailable" class="live-website-preview" :class="{ 'visual-property-panel-open': selectedVisualElement }" aria-label="瀹樼綉瀹炴椂棰勮">
+        <header class="visual-editor-toolbar" aria-label="鐢诲竷缂栬緫宸ュ叿鏍?>
+          <div class="visual-editor-brand"><span class="visual-editor-icon" aria-hidden="true">R</span><div><p class="eyebrow">瀹樼綉鐢诲竷缂栬緫</p><strong>{{ previewTitle }}</strong></div></div>
+          <div class="visual-editor-tools" role="toolbar" aria-label="缂栬緫宸ュ叿">
+            <button type="button" :class="{ active: visualTool === 'select' }" :disabled="!visualCanvasEditable" title="閫夋嫨鍏冪礌" @click="visualTool = 'select'; visualEditMode = true; postLivePreviewUpdate()">鈫?span>閫夋嫨</span></button>
+            <button type="button" :class="{ active: visualTool === 'text' }" :disabled="!visualCanvasEditable" title="閫夋嫨鏂囧瓧鍏冪礌" @click="visualTool = 'text'; visualEditMode = true; postLivePreviewUpdate()">T<span>鏂囧瓧</span></button>
+            <button type="button" :class="{ active: visualTool === 'media' }" :disabled="!visualCanvasEditable" title="閫夋嫨鍥剧墖鎴栬棰? @click="visualTool = 'media'; visualEditMode = true; postLivePreviewUpdate()">鈻?span>濯掍綋</span></button>
             <i class="toolbar-divider" aria-hidden="true"></i>
-            <button type="button" :class="{ active: visualDevice === 'desktop' }" title="桌面画布" @click="setVisualDevice('desktop')">▣<span>桌面</span></button>
-            <button type="button" :class="{ active: visualDevice === 'tablet' }" title="平板画布" @click="setVisualDevice('tablet')">▤<span>平板</span></button>
-            <button type="button" :class="{ active: visualDevice === 'mobile' }" title="手机画布" @click="setVisualDevice('mobile')">▥<span>手机</span></button>
+            <button type="button" :class="{ active: visualDevice === 'desktop' }" title="妗岄潰鐢诲竷" @click="setVisualDevice('desktop')">鈻?span>妗岄潰</span></button>
+            <button type="button" :class="{ active: visualDevice === 'tablet' }" title="骞虫澘鐢诲竷" @click="setVisualDevice('tablet')">鈻?span>骞虫澘</span></button>
+            <button type="button" :class="{ active: visualDevice === 'mobile' }" title="鎵嬫満鐢诲竷" @click="setVisualDevice('mobile')">鈻?span>鎵嬫満</span></button>
             <i class="toolbar-divider" aria-hidden="true"></i>
-            <button type="button" title="撤销" :disabled="!visualCanvasEditable || !canUndo" @click="undoVisualChange">↶<span>撤销</span></button>
-            <button type="button" title="重做" :disabled="!visualCanvasEditable || !canRedo" @click="redoVisualChange">↷<span>重做</span></button>
+            <button type="button" title="鎾ら攢" :disabled="!visualCanvasEditable || !canUndo" @click="undoVisualChange">鈫?span>鎾ら攢</span></button>
+            <button type="button" title="閲嶅仛" :disabled="!visualCanvasEditable || !canRedo" @click="redoVisualChange">鈫?span>閲嶅仛</span></button>
             <i class="toolbar-divider" aria-hidden="true"></i>
-            <button type="button" :disabled="!visualCanvasEditable" title="水平居中" @click="alignVisualElement('center')">↔<span>居中</span></button>
-            <button type="button" @click="fitVisualCanvas(true)">适应窗口</button>
-            <label class="zoom-control" title="画布缩放">缩放 <input v-model.number="visualZoom" type="range" min="0.05" max="1" step="0.01"><output>{{ Math.round(visualZoom * 100) }}%</output></label>
+            <button type="button" :disabled="!visualCanvasEditable" title="姘村钩灞呬腑" @click="alignVisualElement('center')">鈫?span>灞呬腑</span></button>
+            <button type="button" @click="fitVisualCanvas(true)">閫傚簲绐楀彛</button>
+            <label class="zoom-control" title="鐢诲竷缂╂斁">缂╂斁 <input v-model.number="visualZoom" type="range" min="0.05" max="1" step="0.01"><output>{{ Math.round(visualZoom * 100) }}%</output></label>
           </div>
           <div class="visual-editor-actions">
-            <label v-if="websitePreviewTarget?.collection === 'articles'" class="visual-record-switcher">新闻画布
-              <select :value="articlePreviewSurface" aria-label="新闻画布" @change="switchArticlePreviewSurface($event.target.value)">
-                <option value="detail">详情画布</option>
-                <option value="list">列表卡片画布</option>
+            <label v-if="websitePreviewTarget?.collection === 'articles'" class="visual-record-switcher">鏂伴椈鐢诲竷
+              <select :value="articlePreviewSurface" aria-label="鏂伴椈鐢诲竷" @change="switchArticlePreviewSurface($event.target.value)">
+                <option value="detail">璇︽儏鐢诲竷</option>
+                <option value="list">鍒楄〃鍗＄墖鐢诲竷</option>
               </select>
             </label>
             <template v-if="livePreviewRootSlug === 'news' || (websitePreviewTarget?.collection === 'pages' && websitePreviewTarget?.record?.slug === 'news')">
-              <button type="button" :disabled="!visualCanvasEditable" @click="createEditorialFromCanvas('video')">新增视频分享</button>
-              <button type="button" :disabled="!visualCanvasEditable" @click="createEditorialFromCanvas('news')">新建动态新闻</button>
+              <button type="button" :disabled="!visualCanvasEditable" @click="createEditorialFromCanvas('video')">鏂板瑙嗛鍒嗕韩</button>
+              <button type="button" :disabled="!visualCanvasEditable" @click="createEditorialFromCanvas('news')">鏂板缓鍔ㄦ€佹柊闂?/button>
             </template>
-            <label v-if="visualRecordChoices.length > 1" class="visual-record-switcher">条目
-              <select :value="String(websitePreviewTarget?.record?.id || '')" aria-label="切换预览条目" @change="handleVisualPreviewRecordChange($event)">
+            <label v-if="visualRecordChoices.length > 1" class="visual-record-switcher">鏉＄洰
+              <select :value="String(websitePreviewTarget?.record?.id || '')" aria-label="鍒囨崲棰勮鏉＄洰" @change="handleVisualPreviewRecordChange($event)">
                 <option v-for="choice in visualRecordChoices" :key="choice.id" :value="choice.id">{{ choice.label }}</option>
               </select>
             </label>
-            <span class="visual-selected-label" :title="selectedVisualElement?.label || '未选择元素'">{{ selectedVisualElement?.label || '未选择元素' }}</span>
-            <span v-if="unsavedDraftCount" class="visual-unsaved-count" title="当前页面还有这些条目没保存：逐个点「保存当前条目」，或等整页批量保存上线">{{ `本页未保存 ${unsavedDraftCount} 项` }}</span>
+            <span class="visual-selected-label" :title="selectedVisualElement?.label || '鏈€夋嫨鍏冪礌'">{{ selectedVisualElement?.label || '鏈€夋嫨鍏冪礌' }}</span>
+            <span v-if="unsavedDraftCount" class="visual-unsaved-count" title="褰撳墠椤甸潰杩樻湁杩欎簺鏉＄洰娌′繚瀛橈細閫愪釜鐐广€屼繚瀛樺綋鍓嶆潯鐩€嶏紝鎴栫瓑鏁撮〉鎵归噺淇濆瓨涓婄嚎">{{ `鏈〉鏈繚瀛?${unsavedDraftCount} 椤筦 }}</span>
             <span :data-state="livePreviewStatus">{{ livePreviewStatusLabel }}</span>
-            <button type="button" class="visual-mode-button" :class="{ 'visual-edit-active': visualEditMode }" :disabled="!visualCanvasEditable" :title="visualCanvasEditable ? (visualEditMode ? '关闭 PC 画布编辑' : '开启 PC 画布编辑') : '当前窗口仅支持只读预览'" @click="toggleVisualEditMode">{{ visualCanvasEditable ? (visualEditMode ? '编辑中' : '编辑模式') : '只读预览' }}</button>
+            <button type="button" class="visual-mode-button" :class="{ 'visual-edit-active': visualEditMode }" :disabled="!visualCanvasEditable" :title="visualCanvasEditable ? (visualEditMode ? '鍏抽棴 PC 鐢诲竷缂栬緫' : '寮€鍚?PC 鐢诲竷缂栬緫') : '褰撳墠绐楀彛浠呮敮鎸佸彧璇婚瑙?" @click="toggleVisualEditMode">{{ visualCanvasEditable ? (visualEditMode ? '缂栬緫涓? : '缂栬緫妯″紡') : '鍙棰勮' }}</button>
             <button type="button" class="visual-save-button" :disabled="saving || batchSaving || (!hasUnsavedChanges && !unsavedDraftCount && selectedVisualRecord?.collection !== 'articles')" :title="toolbarSaveTitle" @click="handleToolbarSave">{{ toolbarSaveLabel }}</button>
-            <button v-if="selectedVisualRecord?.collection === 'articles'" type="button" class="secondary-action" @click="deleteSelectedVisualArticle">删除当前条目</button>
-            <button type="button" :disabled="!hasUnsavedChanges" title="取消未保存修改" @click="discardVisualChanges">取消</button>
-            <button type="button" title="切换画布专注模式" @click="visualCanvasFocus = !visualCanvasFocus">{{ visualCanvasFocus ? '退出画布' : '专注画布' }}</button>
-            <button type="button" title="重新连接实时预览" aria-label="重新连接实时预览" @click="reconnectLiveWebsitePreview">↻</button>
-            <button type="button" title="关闭实时预览" aria-label="关闭实时预览" @click="liveWebsitePreviewVisible = false">×</button>
+            <button v-if="selectedVisualRecord?.collection === 'articles'" type="button" class="secondary-action" @click="deleteSelectedVisualArticle">鍒犻櫎褰撳墠鏉＄洰</button>
+            <button type="button" :disabled="!hasUnsavedChanges" title="鍙栨秷鏈繚瀛樹慨鏀? @click="discardVisualChanges">鍙栨秷</button>
+            <button type="button" title="鍒囨崲鐢诲竷涓撴敞妯″紡" @click="visualCanvasFocus = !visualCanvasFocus">{{ visualCanvasFocus ? '閫€鍑虹敾甯? : '涓撴敞鐢诲竷' }}</button>
+            <button type="button" title="閲嶆柊杩炴帴瀹炴椂棰勮" aria-label="閲嶆柊杩炴帴瀹炴椂棰勮" @click="reconnectLiveWebsitePreview">鈫?/button>
+            <button type="button" title="鍏抽棴瀹炴椂棰勮" aria-label="鍏抽棴瀹炴椂棰勮" @click="liveWebsitePreviewVisible = false">脳</button>
           </div>
         </header>
         <p v-if="livePreviewError" class="live-preview-error">{{ livePreviewError }}</p>
         <div ref="canvasViewport" class="visual-canvas-viewport" :style="{ '--visual-zoom': visualZoom, '--canvas-width': visualCanvasWidth, '--canvas-height': visualCanvasHeight }">
-          <iframe ref="livePreviewFrame" name="ruijun-live-website-preview" title="官网实时预览" @load="handleLivePreviewFrameLoad"></iframe>
+          <iframe ref="livePreviewFrame" name="ruijun-live-website-preview" title="瀹樼綉瀹炴椂棰勮" @load="handleLivePreviewFrameLoad"></iframe>
         </div>
-        <aside v-if="selectedVisualElement" class="visual-property-panel" aria-label="选中元素属性">
-          <div class="visual-property-heading"><div><p class="eyebrow">选中元素</p><strong>{{ selectedVisualElement.label }}</strong></div><button type="button" title="关闭属性面板" aria-label="关闭属性面板" @click="selectedVisualElement = null">×</button></div>
+        <aside v-if="selectedVisualElement" class="visual-property-panel" aria-label="閫変腑鍏冪礌灞炴€?>
+          <div class="visual-property-heading"><div><p class="eyebrow">閫変腑鍏冪礌</p><strong>{{ selectedVisualElement.label }}</strong></div><button type="button" title="鍏抽棴灞炴€ч潰鏉? aria-label="鍏抽棴灞炴€ч潰鏉? @click="selectedVisualElement = null">脳</button></div>
           <p class="visual-property-source">{{ visualSelectionSource(selectedVisualElement) }}</p>
           <details v-if="selectedVisualRecord?.collection === 'articles' && editorialDraft" class="visual-article-meta" open @focusin="ensureArticleDraftActive">
-            <summary>文章信息（审核必填）</summary>
-            <label>SEO 标题<input v-model.trim="editorialDraft.seo.title" maxlength="160"></label>
-            <label>SEO 描述<textarea v-model.trim="editorialDraft.seo.description" rows="2" maxlength="300"></textarea></label>
-            <label>来源地址<input v-model.trim="editorialDraft.source_url" maxlength="500" placeholder="https://..."></label>
-            <label>来源文件<input v-model.trim="editorialDraft.source_document" maxlength="500" placeholder="文件名或来源说明"></label>
-            <p class="visual-property-help">这些字段与画布修改一起写入文章草稿，保存请用顶部「保存草稿」。</p>
+            <summary>鏂囩珷淇℃伅锛堝鏍稿繀濉級</summary>
+            <label>SEO 鏍囬<input v-model.trim="editorialDraft.seo.title" maxlength="160"></label>
+            <label>SEO 鎻忚堪<textarea v-model.trim="editorialDraft.seo.description" rows="2" maxlength="300"></textarea></label>
+            <label>鏉ユ簮鍦板潃<input v-model.trim="editorialDraft.source_url" maxlength="500" placeholder="https://..."></label>
+            <label>鏉ユ簮鏂囦欢<input v-model.trim="editorialDraft.source_document" maxlength="500" placeholder="鏂囦欢鍚嶆垨鏉ユ簮璇存槑"></label>
+            <p class="visual-property-help">杩欎簺瀛楁涓庣敾甯冧慨鏀逛竴璧峰啓鍏ユ枃绔犺崏绋匡紝淇濆瓨璇风敤椤堕儴銆屼繚瀛樿崏绋裤€嶃€?/p>
           </details>
-          <p v-if="selectedVisualElement.readonly" class="visual-property-help">{{ selectedVisualElement.readonlyReason || '此元素当前没有可写入的媒体记录。' }}</p>
+          <p v-if="selectedVisualElement.readonly" class="visual-property-help">{{ selectedVisualElement.readonlyReason || '姝ゅ厓绱犲綋鍓嶆病鏈夊彲鍐欏叆鐨勫獟浣撹褰曘€? }}</p>
           <template v-else>
-            <label v-if="selectedVisualFieldOptions.length" class="visual-property-field">内容类型<select :value="selectedVisualFieldValue" @change="commitVisualField($event.target.value)"><option v-for="option in selectedVisualFieldOptions" :key="option.value" :value="option.value">{{ option.label }}</option></select></label>
-            <label v-else-if="selectedVisualElement.fieldPath && (selectedVisualElement.elementType === 'text' || selectedVisualElement.elementType === 'button')" class="visual-property-field">文字内容<textarea :value="selectedVisualFieldValue" rows="4" :maxlength="selectedVisualFieldMaxLength" @input="commitVisualField($event.target.value)"></textarea></label>
-            <label v-if="selectedVisualElement.elementType === 'button' && selectedVisualElement.linkFieldPath" class="visual-property-field">按钮链接<input aria-label="按钮链接" :value="selectedVisualLinkValue" maxlength="1000" placeholder="例如：/contact 或 #reasons" @input="commitVisualLink($event.target.value)"></label>
-            <label v-if="selectedVisualIsMedia && visualMediaReplacementOptions.length" class="visual-property-field">媒体替换<select :value="visualMediaSelection" @change="replaceVisualMedia($event.target.value)"><option value="">{{ selectedVisualCanRestoreDefault ? (selectedVisualElement.elementType === 'video' ? '沿用官网原视频' : '沿用官网原图') : '选择系统中的媒体' }}</option><optgroup v-if="visualMediaAssets.length" label="当前展示位可用"><option v-for="asset in visualMediaAssets" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></optgroup><optgroup v-if="visualMediaFallbackOptions.length" label="系统中的其他媒体"><option v-for="asset in visualMediaFallbackOptions" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></optgroup><optgroup v-if="visualStagingMediaAssets.length" label="未发布素材（仅内部预览）"><option v-for="asset in visualStagingMediaAssets" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></optgroup></select></label>
-            <p v-if="selectedVisualIsMedia && visualStagingMediaAssets.length" class="visual-property-help">未发布素材只在已登录后台的实时预览中显示；媒体上传即发布，正常不会出现这一组。</p>
-            <p v-else-if="selectedVisualIsMedia && !visualMediaReplacementOptions.length" class="visual-property-help">待媒体：当前系统里没有同类型的已发布媒体。可以在下方上传，或先到“媒体资产”上传。</p>
+            <label v-if="selectedVisualFieldOptions.length" class="visual-property-field">鍐呭绫诲瀷<select :value="selectedVisualFieldValue" @change="commitVisualField($event.target.value)"><option v-for="option in selectedVisualFieldOptions" :key="option.value" :value="option.value">{{ option.label }}</option></select></label>
+            <label v-else-if="selectedVisualElement.fieldPath && (selectedVisualElement.elementType === 'text' || selectedVisualElement.elementType === 'button')" class="visual-property-field">鏂囧瓧鍐呭<textarea :value="selectedVisualFieldValue" rows="4" :maxlength="selectedVisualFieldMaxLength" @input="commitVisualField($event.target.value)"></textarea></label>
+            <label v-if="selectedVisualElement.elementType === 'button' && selectedVisualElement.linkFieldPath" class="visual-property-field">鎸夐挳閾炬帴<input aria-label="鎸夐挳閾炬帴" :value="selectedVisualLinkValue" maxlength="1000" placeholder="渚嬪锛?contact 鎴?#reasons" @input="commitVisualLink($event.target.value)"></label>
+            <label v-if="selectedVisualIsMedia && visualMediaReplacementOptions.length" class="visual-property-field">濯掍綋鏇挎崲<select :value="visualMediaSelection" @change="replaceVisualMedia($event.target.value)"><option value="">{{ selectedVisualCanRestoreDefault ? (selectedVisualElement.elementType === 'video' ? '娌跨敤瀹樼綉鍘熻棰? : '娌跨敤瀹樼綉鍘熷浘') : '閫夋嫨绯荤粺涓殑濯掍綋' }}</option><optgroup v-if="visualMediaAssets.length" label="褰撳墠灞曠ず浣嶅彲鐢?><option v-for="asset in visualMediaAssets" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></optgroup><optgroup v-if="visualMediaFallbackOptions.length" label="绯荤粺涓殑鍏朵粬濯掍綋"><option v-for="asset in visualMediaFallbackOptions" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></optgroup><optgroup v-if="visualStagingMediaAssets.length" label="鏈彂甯冪礌鏉愶紙浠呭唴閮ㄩ瑙堬級"><option v-for="asset in visualStagingMediaAssets" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></optgroup></select></label>
+            <p v-if="selectedVisualIsMedia && visualStagingMediaAssets.length" class="visual-property-help">鏈彂甯冪礌鏉愬彧鍦ㄥ凡鐧诲綍鍚庡彴鐨勫疄鏃堕瑙堜腑鏄剧ず锛涘獟浣撲笂浼犲嵆鍙戝竷锛屾甯镐笉浼氬嚭鐜拌繖涓€缁勩€?/p>
+            <p v-else-if="selectedVisualIsMedia && !visualMediaReplacementOptions.length" class="visual-property-help">寰呭獟浣擄細褰撳墠绯荤粺閲屾病鏈夊悓绫诲瀷鐨勫凡鍙戝竷濯掍綋銆傚彲浠ュ湪涓嬫柟涓婁紶锛屾垨鍏堝埌鈥滃獟浣撹祫浜р€濅笂浼犮€?/p>
             <div v-if="selectedVisualIsMedia" class="visual-media-tools">
-              <label class="visual-upload">上传并替换<input type="file" accept="image/jpeg,image/png,image/webp,image/avif,video/mp4,video/webm" :disabled="visualUploading || !visualCanvasEditable" @change="uploadVisualMedia"></label>
+              <label class="visual-upload">涓婁紶骞舵浛鎹?input type="file" accept="image/jpeg,image/png,image/webp,image/avif,video/mp4,video/webm" :disabled="visualUploading || !visualCanvasEditable" @change="uploadVisualMedia"></label>
               <template v-if="selectedVisualMediaAsset">
-                <label>卡片标题（素材标题）<input v-model.trim="visualMediaDraft.title" maxlength="160"></label>
-                <p class="visual-property-help">修改标题后点“保存素材信息”，官网卡片标题会同步更新。</p>
-                <label>替代文本<input v-model.trim="visualMediaDraft.alt_text" maxlength="300"></label>
-                <label v-if="selectedVisualMediaAsset.media_type === 'video'">字幕或文字稿<textarea v-model.trim="visualMediaDraft.transcript" rows="2" maxlength="20000"></textarea></label>
-                <label v-if="selectedVisualMediaAsset.media_type === 'video'">封面<select v-model="visualMediaDraft.poster_asset_id"><option value="">未设置（官网显示视频首帧）</option><option v-for="poster in mediaPosterOptions(selectedVisualMediaAsset)" :key="poster.id" :value="String(poster.id)">{{ videoPosterAssetLabel(poster) }}</option></select></label>
-                <label>版权状态<select v-model="visualMediaDraft.copyright_status"><option value="owned">自有素材</option><option value="licensed">已获许可</option><option value="authorized">已授权公开</option><option value="pending_review">待确认</option></select></label>
-                <button type="button" :disabled="visualMediaSaving" @click="saveVisualMediaAttributes">{{ visualMediaSaving ? '保存中...' : '保存素材信息' }}</button>
+                <label>鍗＄墖鏍囬锛堢礌鏉愭爣棰橈級<input v-model.trim="visualMediaDraft.title" maxlength="160"></label>
+                <p class="visual-property-help">淇敼鏍囬鍚庣偣鈥滀繚瀛樼礌鏉愪俊鎭€濓紝瀹樼綉鍗＄墖鏍囬浼氬悓姝ユ洿鏂般€?/p>
+                <label>鏇夸唬鏂囨湰<input v-model.trim="visualMediaDraft.alt_text" maxlength="300"></label>
+                <label v-if="selectedVisualMediaAsset.media_type === 'video'">瀛楀箷鎴栨枃瀛楃<textarea v-model.trim="visualMediaDraft.transcript" rows="2" maxlength="20000"></textarea></label>
+                <label v-if="selectedVisualMediaAsset.media_type === 'video'">灏侀潰<select v-model="visualMediaDraft.poster_asset_id"><option value="">鏈缃紙瀹樼綉鏄剧ず瑙嗛棣栧抚锛?/option><option v-for="poster in mediaPosterOptions(selectedVisualMediaAsset)" :key="poster.id" :value="String(poster.id)">{{ videoPosterAssetLabel(poster) }}</option></select></label>
+                <label>鐗堟潈鐘舵€?select v-model="visualMediaDraft.copyright_status"><option value="owned">鑷湁绱犳潗</option><option value="licensed">宸茶幏璁稿彲</option><option value="authorized">宸叉巿鏉冨叕寮€</option><option value="pending_review">寰呯‘璁?/option></select></label>
+                <button type="button" :disabled="visualMediaSaving" @click="saveVisualMediaAttributes">{{ visualMediaSaving ? '淇濆瓨涓?..' : '淇濆瓨绱犳潗淇℃伅' }}</button>
               </template>
-              <button v-if="selectedVisualElement.mediaAssetId && !selectedVisualIsArticleBodyImage" type="button" class="visual-card-delete" :disabled="visualMediaSaving" @click="deleteSelectedVideoShareCard">删除这张视频分享卡片</button>
-              <button v-if="selectedVisualIsArticleBodyImage" type="button" class="visual-card-delete" :disabled="visualMediaSaving || saving" @click="deleteSelectedArticleBodyImage">删除这篇正文图片</button>
+              <button v-if="selectedVisualElement.mediaAssetId && !selectedVisualIsArticleBodyImage" type="button" class="visual-card-delete" :disabled="visualMediaSaving" @click="deleteSelectedVideoShareCard">鍒犻櫎杩欏紶瑙嗛鍒嗕韩鍗＄墖</button>
+              <button v-if="selectedVisualIsArticleBodyImage" type="button" class="visual-card-delete" :disabled="visualMediaSaving || saving" @click="deleteSelectedArticleBodyImage">鍒犻櫎杩欑瘒姝ｆ枃鍥剧墖</button>
             </div>
-            <button v-if="selectedVisualRecord?.collection === 'articles' || selectedVisualElement?.collection === 'articles'" type="button" class="visual-card-delete" :disabled="saving" @click="deleteSelectedVisualArticle">删除这篇动态新闻</button>
-            <div v-if="selectedVisualListReorder" class="visual-list-order"><span>当前第 {{ selectedVisualListReorder.index + 1 }} 项，共 {{ selectedVisualListReorder.length }} 项</span><div><button type="button" @click="addSelectedVisualListItem">新增</button><button type="button" @click="duplicateSelectedVisualListItem">复制</button><button type="button" :disabled="selectedVisualListReorder.length <= 1" @click="removeSelectedVisualListItem">删除</button><button type="button" :disabled="selectedVisualListReorder.index === 0" @click="moveSelectedVisualListItem(-1)">上移</button><button type="button" :disabled="selectedVisualListReorder.index === selectedVisualListReorder.length - 1" @click="moveSelectedVisualListItem(1)">下移</button></div></div>
-            <div class="visual-property-grid"><label>水平偏移<input v-model.number="visualPosition.x" type="number" min="-30" max="30" step="0.1" @change="commitVisualPosition"></label><label>垂直偏移<input v-model.number="visualPosition.y" type="number" min="-30" max="30" step="0.1" @change="commitVisualPosition"></label></div>
-            <div class="visual-property-grid"><label>字号<input v-model.number="visualTextStyle.fontSize" type="number" min="10" max="120" step="1" @change="commitVisualTextStyle"></label><label>字重<select v-model="visualTextStyle.fontWeight" @change="commitVisualTextStyle"><option value="400">正常</option><option value="500">中等</option><option value="600">半粗</option><option value="700">粗体</option></select></label></div>
-            <div class="visual-property-grid"><label>行高<input v-model.number="visualTextStyle.lineHeight" type="number" min="1" max="2.2" step="0.05" @change="commitVisualTextStyle"></label><label>文字颜色<input v-model="visualTextStyle.textColor" type="color" @change="commitVisualTextStyle"></label></div>
-            <p class="visual-property-help">只保存受控字段，不会修改 Nuxt 模板或写入任意 CSS。</p>
+            <button v-if="selectedVisualRecord?.collection === 'articles' || selectedVisualElement?.collection === 'articles'" type="button" class="visual-card-delete" :disabled="saving" @click="deleteSelectedVisualArticle">鍒犻櫎杩欑瘒鍔ㄦ€佹柊闂?/button>
+            <div v-if="selectedVisualListReorder" class="visual-list-order"><span>褰撳墠绗?{{ selectedVisualListReorder.index + 1 }} 椤癸紝鍏?{{ selectedVisualListReorder.length }} 椤?/span><div><button type="button" @click="addSelectedVisualListItem">鏂板</button><button type="button" @click="duplicateSelectedVisualListItem">澶嶅埗</button><button type="button" :disabled="selectedVisualListReorder.length <= 1" @click="removeSelectedVisualListItem">鍒犻櫎</button><button type="button" :disabled="selectedVisualListReorder.index === 0" @click="moveSelectedVisualListItem(-1)">涓婄Щ</button><button type="button" :disabled="selectedVisualListReorder.index === selectedVisualListReorder.length - 1" @click="moveSelectedVisualListItem(1)">涓嬬Щ</button></div></div>
+            <div class="visual-property-grid"><label>姘村钩鍋忕Щ<input v-model.number="visualPosition.x" type="number" min="-30" max="30" step="0.1" @change="commitVisualPosition"></label><label>鍨傜洿鍋忕Щ<input v-model.number="visualPosition.y" type="number" min="-30" max="30" step="0.1" @change="commitVisualPosition"></label></div>
+            <div class="visual-property-grid"><label>瀛楀彿<input v-model.number="visualTextStyle.fontSize" type="number" min="10" max="120" step="1" @change="commitVisualTextStyle"></label><label>瀛楅噸<select v-model="visualTextStyle.fontWeight" @change="commitVisualTextStyle"><option value="400">姝ｅ父</option><option value="500">涓瓑</option><option value="600">鍗婄矖</option><option value="700">绮椾綋</option></select></label></div>
+            <div class="visual-property-grid"><label>琛岄珮<input v-model.number="visualTextStyle.lineHeight" type="number" min="1" max="2.2" step="0.05" @change="commitVisualTextStyle"></label><label>鏂囧瓧棰滆壊<input v-model="visualTextStyle.textColor" type="color" @change="commitVisualTextStyle"></label></div>
+            <p class="visual-property-help">鍙繚瀛樺彈鎺у瓧娈碉紝涓嶄細淇敼 Nuxt 妯℃澘鎴栧啓鍏ヤ换鎰?CSS銆?/p>
           </template>
           <!-- Save right where the edit happens: the operator had to travel back to the
                toolbar every time, which made a one-field change feel expensive. -->
           <div class="visual-property-save">
-            <button type="button" class="primary-action" title="只保存当前选中的这一条记录" :disabled="saving || (!hasUnsavedChanges && selectedVisualRecord?.collection !== 'articles')" @click="openSaveNameDialog">{{ saving ? '保存中...' : '保存当前条目' }}</button>
-            <button type="button" class="secondary-action" :disabled="!hasUnsavedChanges" @click="discardVisualChanges">取消修改</button>
-            <span class="visual-property-save-state" :class="{ pending: hasUnsavedChanges }">{{ hasUnsavedChanges ? '有未保存修改' : '已保存' }}</span>
+            <button type="button" class="primary-action" title="鍙繚瀛樺綋鍓嶉€変腑鐨勮繖涓€鏉¤褰? :disabled="saving || (!hasUnsavedChanges && selectedVisualRecord?.collection !== 'articles')" @click="openSaveNameDialog">{{ saving ? '淇濆瓨涓?..' : '淇濆瓨褰撳墠鏉＄洰' }}</button>
+            <button type="button" class="secondary-action" :disabled="!hasUnsavedChanges" @click="discardVisualChanges">鍙栨秷淇敼</button>
+            <span class="visual-property-save-state" :class="{ pending: hasUnsavedChanges }">{{ hasUnsavedChanges ? '鏈夋湭淇濆瓨淇敼' : '宸蹭繚瀛? }}</span>
           </div>
         </aside>
       </aside>
 
       <div v-if="seriesCreateOpen" class="cms-create-backdrop" @click.self="closeSeriesCreateDialog">
-        <section class="cms-create-dialog" role="dialog" aria-modal="true" aria-label="新增系列卡片">
-          <p class="eyebrow">新增系列卡片</p>
-          <label>系列名称<input v-model.trim="seriesCreateDraft.name" maxlength="120" placeholder="例如：FR (pro)"></label>
-          <label>系列编码<input v-model.trim="seriesCreateDraft.code" maxlength="80" placeholder="例如：ft-pro（小写字母、数字、连字符）" @input="seriesCodeTouched = true"></label>
-          <p class="form-help">系列编码用于关联机型、参数和详情。输入英文名称时会自动建议（如 FT (Pro) → ft-pro），可手动修改；中文名称请手动填写英文编码。</p>
-          <label>定位文案<input v-model.trim="seriesCreateDraft.positioning" maxlength="120" placeholder="卡片左上角的一句话定位"></label>
-          <label>卡片封面<select v-model="seriesCreateDraft.coverAssetId"><option value="">稍后在选择器里补充</option><option v-for="asset in seriesCreateCoverOptions" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select></label>
-          <p class="form-help">确认后会立即创建一张草稿卡片（仅画布可见），随后可继续补充机型与详情。</p>
+        <section class="cms-create-dialog" role="dialog" aria-modal="true" aria-label="鏂板绯诲垪鍗＄墖">
+          <p class="eyebrow">鏂板绯诲垪鍗＄墖</p>
+          <label>绯诲垪鍚嶇О<input v-model.trim="seriesCreateDraft.name" maxlength="120" placeholder="渚嬪锛欶R (pro)"></label>
+          <label>绯诲垪缂栫爜<input v-model.trim="seriesCreateDraft.code" maxlength="80" placeholder="渚嬪锛歠t-pro锛堝皬鍐欏瓧姣嶃€佹暟瀛椼€佽繛瀛楃锛? @input="seriesCodeTouched = true"></label>
+          <p class="form-help">绯诲垪缂栫爜鐢ㄤ簬鍏宠仈鏈哄瀷銆佸弬鏁板拰璇︽儏銆傝緭鍏ヨ嫳鏂囧悕绉版椂浼氳嚜鍔ㄥ缓璁紙濡?FT (Pro) 鈫?ft-pro锛夛紝鍙墜鍔ㄤ慨鏀癸紱涓枃鍚嶇О璇锋墜鍔ㄥ～鍐欒嫳鏂囩紪鐮併€?/p>
+          <label>瀹氫綅鏂囨<input v-model.trim="seriesCreateDraft.positioning" maxlength="120" placeholder="鍗＄墖宸︿笂瑙掔殑涓€鍙ヨ瘽瀹氫綅"></label>
+          <label>鍗＄墖灏侀潰<select v-model="seriesCreateDraft.coverAssetId"><option value="">绋嶅悗鍦ㄩ€夋嫨鍣ㄩ噷琛ュ厖</option><option v-for="asset in seriesCreateCoverOptions" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select></label>
+          <p class="form-help">纭鍚庝細绔嬪嵆鍒涘缓涓€寮犺崏绋垮崱鐗囷紙浠呯敾甯冨彲瑙侊級锛岄殢鍚庡彲缁х画琛ュ厖鏈哄瀷涓庤鎯呫€?/p>
           <p v-if="seriesCreateError" class="save-name-error">{{ seriesCreateError }}</p>
-          <div class="form-actions"><span></span><div class="review-actions"><button type="button" class="secondary-action" :disabled="seriesCreateSaving" @click="closeSeriesCreateDialog">取消</button><button type="button" class="primary-action" :disabled="seriesCreateSaving || !seriesCreateDraft.name.trim()" @click="confirmSeriesCreate">{{ seriesCreateSaving ? '正在创建...' : '确认创建' }}</button></div></div>
+          <div class="form-actions"><span></span><div class="review-actions"><button type="button" class="secondary-action" :disabled="seriesCreateSaving" @click="closeSeriesCreateDialog">鍙栨秷</button><button type="button" class="primary-action" :disabled="seriesCreateSaving || !seriesCreateDraft.name.trim()" @click="confirmSeriesCreate">{{ seriesCreateSaving ? '姝ｅ湪鍒涘缓...' : '纭鍒涘缓' }}</button></div></div>
         </section>
       </div>
       <div v-if="createArticleOpen" class="cms-create-backdrop" @click.self="closeCreateArticle">
-        <section class="cms-create-dialog" role="dialog" aria-modal="true" :aria-label="createArticleCategory === 'video' ? '新增视频分享' : '新增动态新闻'">
-          <p class="eyebrow">{{ createArticleCategory === 'video' ? '新增视频分享' : '新增动态新闻' }}</p>
-          <label>标题<input v-model.trim="createArticleTitle" maxlength="240" placeholder="请输入标题"></label>
-          <label>媒体<select v-model="createArticleMediaId"><option value="">稍后在详情画布补充</option><option v-for="asset in createArticleMediaOptions" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select></label>
-          <p class="form-help">{{ createArticleCategory === 'video' ? '可直接选择系统里已有的视频；也可以稍后上传或替换。' : '可选择已有图片作为封面；也可以稍后补充。' }}</p>
-          <div class="form-actions"><span></span><div class="review-actions"><button type="button" class="secondary-action" @click="closeCreateArticle">取消</button><button type="button" class="primary-action" :disabled="createArticleSaving || !createArticleTitle.trim()" @click="confirmCreateArticle">{{ createArticleSaving ? '正在创建...' : '创建' }}</button></div></div>
+        <section class="cms-create-dialog" role="dialog" aria-modal="true" :aria-label="createArticleCategory === 'video' ? '鏂板瑙嗛鍒嗕韩' : '鏂板鍔ㄦ€佹柊闂?">
+          <p class="eyebrow">{{ createArticleCategory === 'video' ? '鏂板瑙嗛鍒嗕韩' : '鏂板鍔ㄦ€佹柊闂? }}</p>
+          <label>鏍囬<input v-model.trim="createArticleTitle" maxlength="240" placeholder="璇疯緭鍏ユ爣棰?></label>
+          <label>濯掍綋<select v-model="createArticleMediaId"><option value="">绋嶅悗鍦ㄨ鎯呯敾甯冭ˉ鍏?/option><option v-for="asset in createArticleMediaOptions" :key="asset.id" :value="String(asset.id)">{{ mediaAssetLabel(asset) }}</option></select></label>
+          <p class="form-help">{{ createArticleCategory === 'video' ? '鍙洿鎺ラ€夋嫨绯荤粺閲屽凡鏈夌殑瑙嗛锛涗篃鍙互绋嶅悗涓婁紶鎴栨浛鎹€? : '鍙€夋嫨宸叉湁鍥剧墖浣滀负灏侀潰锛涗篃鍙互绋嶅悗琛ュ厖銆? }}</p>
+          <div class="form-actions"><span></span><div class="review-actions"><button type="button" class="secondary-action" @click="closeCreateArticle">鍙栨秷</button><button type="button" class="primary-action" :disabled="createArticleSaving || !createArticleTitle.trim()" @click="confirmCreateArticle">{{ createArticleSaving ? '姝ｅ湪鍒涘缓...' : '鍒涘缓' }}</button></div></div>
         </section>
       </div>
 
       <section v-if="previewOpen" class="preview-panel" role="region" aria-labelledby="draft-preview-title">
         <section class="preview-dialog" aria-labelledby="draft-preview-title">
           <header class="preview-dialog-heading">
-            <div><p class="eyebrow">草稿预览</p><h3 id="draft-preview-title">{{ previewTitle }}</h3></div>
-            <button type="button" class="preview-close" aria-label="关闭预览" @click="closePreview">关闭</button>
+            <div><p class="eyebrow">鑽夌棰勮</p><h3 id="draft-preview-title">{{ previewTitle }}</h3></div>
+            <button type="button" class="preview-close" aria-label="鍏抽棴棰勮" @click="closePreview">鍏抽棴</button>
           </header>
-          <p class="preview-notice">这是当前表单内容的本地预览，不会发布到官网；带“待审核”标记的内容仍不能公开。</p>
+          <p class="preview-notice">杩欐槸褰撳墠琛ㄥ崟鍐呭鐨勬湰鍦伴瑙堬紝涓嶄細鍙戝竷鍒板畼缃戯紱甯︹€滃緟瀹℃牳鈥濇爣璁扮殑鍐呭浠嶄笉鑳藉叕寮€銆?/p>
 
           <article v-if="previewKind === 'page'" class="site-preview page-preview">
-            <div class="preview-hero"><span>页面预览</span><h4>{{ pageDraft.title || '未命名页面' }}</h4><p>{{ pageDraft.seo.description || '尚未填写页面描述' }}</p></div>
+            <div class="preview-hero"><span>椤甸潰棰勮</span><h4>{{ pageDraft.title || '鏈懡鍚嶉〉闈? }}</h4><p>{{ pageDraft.seo.description || '灏氭湭濉啓椤甸潰鎻忚堪' }}</p></div>
             <section v-for="(section, index) in pageDraft.sections" :key="`${section.id}-${index}`" class="preview-section">
-              <small>{{ section.kicker || `第 ${index + 1} 段` }}</small><h5>{{ section.title || '未命名段落' }} <em v-if="section.requires_claim_review">待审核</em></h5><p>{{ section.body || '尚未填写正文' }}</p>
+              <small>{{ section.kicker || `绗?${index + 1} 娈礰 }}</small><h5>{{ section.title || '鏈懡鍚嶆钀? }} <em v-if="section.requires_claim_review">寰呭鏍?/em></h5><p>{{ section.body || '灏氭湭濉啓姝ｆ枃' }}</p>
             </section>
           </article>
 
           <article v-else-if="previewKind === 'article'" class="site-preview article-preview">
-            <p class="preview-category">{{ editorialDraft.category || '未分类' }}</p><h4>{{ editorialDraft.title || '未命名文章' }}</h4><div class="preview-body">{{ editorialDraft.body || '尚未填写正文' }}</div>
+            <p class="preview-category">{{ editorialDraft.category || '鏈垎绫? }}</p><h4>{{ editorialDraft.title || '鏈懡鍚嶆枃绔? }}</h4><div class="preview-body">{{ editorialDraft.body || '灏氭湭濉啓姝ｆ枃' }}</div>
           </article>
 
           <article v-else-if="previewKind === 'series'" class="site-preview product-preview">
-            <p class="preview-category">产品系列</p><h4>{{ seriesDraft.name || '未命名系列' }}</h4><p>{{ seriesDraft.positioning || '尚未填写系列定位' }}</p><div class="preview-columns"><section><strong>应用场景</strong><ul><li v-for="item in fromTextList(seriesDraft.scenariosText)" :key="item">{{ item }}</li><li v-if="!fromTextList(seriesDraft.scenariosText).length">尚未填写</li></ul></section><section><strong>核心能力</strong><ul><li v-for="item in fromTextList(seriesDraft.capabilitiesText)" :key="item">{{ item }}</li><li v-if="!fromTextList(seriesDraft.capabilitiesText).length">尚未填写</li></ul></section></div>
+            <p class="preview-category">浜у搧绯诲垪</p><h4>{{ seriesDraft.name || '鏈懡鍚嶇郴鍒? }}</h4><p>{{ seriesDraft.positioning || '灏氭湭濉啓绯诲垪瀹氫綅' }}</p><div class="preview-columns"><section><strong>搴旂敤鍦烘櫙</strong><ul><li v-for="item in fromTextList(seriesDraft.scenariosText)" :key="item">{{ item }}</li><li v-if="!fromTextList(seriesDraft.scenariosText).length">灏氭湭濉啓</li></ul></section><section><strong>鏍稿績鑳藉姏</strong><ul><li v-for="item in fromTextList(seriesDraft.capabilitiesText)" :key="item">{{ item }}</li><li v-if="!fromTextList(seriesDraft.capabilitiesText).length">灏氭湭濉啓</li></ul></section></div>
           </article>
 
           <article v-else-if="previewKind === 'model'" class="site-preview product-preview">
-            <p class="preview-category">{{ modelDraft.series_code || '产品型号' }}</p><h4>{{ modelDraft.name || '未命名型号' }}</h4><p>型号编码：{{ modelDraft.model_code || '未填写' }}</p><table><thead><tr><th>参数</th><th>数值</th><th>单位</th></tr></thead><tbody><tr v-for="parameter in parameters" :key="parameter.id"><td>{{ parameter.field_name }}</td><td>{{ parameter.value }}</td><td>{{ parameter.unit || '-' }}</td></tr><tr v-if="!parameters.length"><td colspan="3">尚未填写技术参数</td></tr></tbody></table>
+            <p class="preview-category">{{ modelDraft.series_code || '浜у搧鍨嬪彿' }}</p><h4>{{ modelDraft.name || '鏈懡鍚嶅瀷鍙? }}</h4><p>鍨嬪彿缂栫爜锛歿{ modelDraft.model_code || '鏈～鍐? }}</p><table><thead><tr><th>鍙傛暟</th><th>鏁板€?/th><th>鍗曚綅</th></tr></thead><tbody><tr v-for="parameter in parameters" :key="parameter.id"><td>{{ parameter.field_name }}</td><td>{{ parameter.value }}</td><td>{{ parameter.unit || '-' }}</td></tr><tr v-if="!parameters.length"><td colspan="3">灏氭湭濉啓鎶€鏈弬鏁?/td></tr></tbody></table>
           </article>
 
-          <div v-else class="preview-empty">当前内容类型暂不支持画面预览。请先保存草稿，再由对应页面的预览入口检查最终展示。</div>
+          <div v-else class="preview-empty">褰撳墠鍐呭绫诲瀷鏆備笉鏀寔鐢婚潰棰勮銆傝鍏堜繚瀛樿崏绋匡紝鍐嶇敱瀵瑰簲椤甸潰鐨勯瑙堝叆鍙ｆ鏌ユ渶缁堝睍绀恒€?/div>
         </section>
       </section>
     </div>
@@ -1149,15 +1149,15 @@
     <Teleport to="body">
       <div v-if="saveNameDialogOpen" class="save-name-backdrop" @click.self="closeSaveNameDialog">
         <form class="save-name-dialog" @submit.prevent="confirmSaveNameDialog">
-          <p class="eyebrow">{{ saveNameMode === 'batch' ? '保存并送审' : '保存草稿' }}</p>
-          <h3>{{ saveNameMode === 'batch' ? '给这次送审起个名字' : '给这次保存起个名字' }}</h3>
-          <p class="form-help">{{ saveNameMode === 'batch' ? '本次保存的所有条目会合并成一条送审记录，审核和发布都按这一批处理。' : '默认名称已填好，可以直接保存，也可以修改后再保存。' }}</p>
+          <p class="eyebrow">{{ saveNameMode === 'batch' ? '淇濆瓨骞堕€佸' : '淇濆瓨鑽夌' }}</p>
+          <h3>{{ saveNameMode === 'batch' ? '缁欒繖娆￠€佸璧蜂釜鍚嶅瓧' : '缁欒繖娆′繚瀛樿捣涓悕瀛? }}</h3>
+          <p class="form-help">{{ saveNameMode === 'batch' ? '鏈淇濆瓨鐨勬墍鏈夋潯鐩細鍚堝苟鎴愪竴鏉￠€佸璁板綍锛屽鏍稿拰鍙戝竷閮芥寜杩欎竴鎵瑰鐞嗐€? : '榛樿鍚嶇О宸插～濂斤紝鍙互鐩存帴淇濆瓨锛屼篃鍙互淇敼鍚庡啀淇濆瓨銆? }}</p>
           <ul v-if="saveNameMode === 'batch' && batchMemberLabels.length" class="batch-member-list"><li v-for="label in batchMemberLabels" :key="label">{{ label }}</li></ul>
-          <label>{{ saveNameMode === 'batch' ? '送审名称' : '保存名称' }}<input v-model.trim="saveNameDraft" maxlength="160" autofocus></label>
+          <label>{{ saveNameMode === 'batch' ? '閫佸鍚嶇О' : '淇濆瓨鍚嶇О' }}<input v-model.trim="saveNameDraft" maxlength="160" autofocus></label>
           <p v-if="saveNameError" class="save-name-error">{{ saveNameError }}</p>
           <div class="form-actions">
-            <button type="button" class="secondary-action" :disabled="saving" @click="closeSaveNameDialog">取消</button>
-            <button type="submit" class="primary-action" :disabled="saving">{{ saving ? '保存中...' : '保存' }}</button>
+            <button type="button" class="secondary-action" :disabled="saving" @click="closeSaveNameDialog">鍙栨秷</button>
+            <button type="submit" class="primary-action" :disabled="saving">{{ saving ? '淇濆瓨涓?..' : '淇濆瓨' }}</button>
           </div>
         </form>
       </div>
@@ -1209,45 +1209,45 @@ const api = useApi();
 const editableStatuses = new Set(['draft', 'rejected', 'unpublished']);
 const supportedPageSectionSlugs = new Set(['home', 'product', 'manufacturing', 'news', 'about', 'service']);
 const pageSectionLabels = Object.freeze({
-  'home:hero': '首页首屏标题',
-  'home:why-ruijun': '三大理由总标题',
-  'home:performance': '三大理由：增效降损',
-  'home:advanced-manufacturing': '三大理由：先进智造',
-  'home:industry-leadership': '三大理由：行业领先',
-  'home:products': '首页产品展示',
-  'home:history': '首页品牌时间轴',
-  'home:product-task': '首页底部行动区',
-  'product:hero': '产品页首屏标题',
-  'product:categories': '产品理由总标题',
-  'product:proof-efficiency': '产品指标：增效降损',
-  'product:proof-years': '产品指标：制造经验',
-  'product:proof-champion': '产品指标：行业表现',
-  'product:model-list': '产品系列列表标题',
-  'product:parameters': '技术参数标题',
-  'product:dimensions': '尺寸与资料标题',
-  'product:pagination': '产品分页文字',
-  'about:hero': '关于瑞钧首屏',
-  'about:brand-story': '品牌故事',
-  'about:overview': '公司简介',
-  'about:history': '品牌时间轴',
-  'about:factory': '厂区风貌图库',
-  'about:certificates': '认证证书图库',
-  'about:honors': '荣誉证书图库',
-  'about:patents': '专利证书图库',
-  'about:partners': '合作品牌与供应商',
-  'about:clients-domestic': '国内客户标题与图库',
-  'about:clients-global': '国外客户标题与图库'
+  'home:hero': '棣栭〉棣栧睆鏍囬',
+  'home:why-ruijun': '涓夊ぇ鐞嗙敱鎬绘爣棰?,
+  'home:performance': '涓夊ぇ鐞嗙敱锛氬鏁堥檷鎹?,
+  'home:advanced-manufacturing': '涓夊ぇ鐞嗙敱锛氬厛杩涙櫤閫?,
+  'home:industry-leadership': '涓夊ぇ鐞嗙敱锛氳涓氶鍏?,
+  'home:products': '棣栭〉浜у搧灞曠ず',
+  'home:history': '棣栭〉鍝佺墝鏃堕棿杞?,
+  'home:product-task': '棣栭〉搴曢儴琛屽姩鍖?,
+  'product:hero': '浜у搧椤甸灞忔爣棰?,
+  'product:categories': '浜у搧鐞嗙敱鎬绘爣棰?,
+  'product:proof-efficiency': '浜у搧鎸囨爣锛氬鏁堥檷鎹?,
+  'product:proof-years': '浜у搧鎸囨爣锛氬埗閫犵粡楠?,
+  'product:proof-champion': '浜у搧鎸囨爣锛氳涓氳〃鐜?,
+  'product:model-list': '浜у搧绯诲垪鍒楄〃鏍囬',
+  'product:parameters': '鎶€鏈弬鏁版爣棰?,
+  'product:dimensions': '灏哄涓庤祫鏂欐爣棰?,
+  'product:pagination': '浜у搧鍒嗛〉鏂囧瓧',
+  'about:hero': '鍏充簬鐟為挧棣栧睆',
+  'about:brand-story': '鍝佺墝鏁呬簨',
+  'about:overview': '鍏徃绠€浠?,
+  'about:history': '鍝佺墝鏃堕棿杞?,
+  'about:factory': '鍘傚尯椋庤矊鍥惧簱',
+  'about:certificates': '璁よ瘉璇佷功鍥惧簱',
+  'about:honors': '鑽ｈ獕璇佷功鍥惧簱',
+  'about:patents': '涓撳埄璇佷功鍥惧簱',
+  'about:partners': '鍚堜綔鍝佺墝涓庝緵搴斿晢',
+  'about:clients-domestic': '鍥藉唴瀹㈡埛鏍囬涓庡浘搴?,
+  'about:clients-global': '鍥藉瀹㈡埛鏍囬涓庡浘搴?
 });
 const repairPageKeys = new Set(['repair_home', 'repair_new', 'repair_warranty', 'repair_progress']);
 const repairActionCodes = new Set(['01', '02', '09', '10']);
 const activeTab = ref('home');
 const siteArea = ref('home');
 
-const siteAreaLabel = computed(() => siteAreaLabels[siteArea.value] || '官网栏目');
+const siteAreaLabel = computed(() => siteAreaLabels[siteArea.value] || '瀹樼綉鏍忕洰');
 function pageDisplayName(page) {
   const slug = String(page?.slug || '').trim();
-  if (slug === 'home') return '网站主页';
-  return siteAreaLabels[slug] || String(page?.title || slug || '未命名页面');
+  if (slug === 'home') return '缃戠珯涓婚〉';
+  return siteAreaLabels[slug] || String(page?.title || slug || '鏈懡鍚嶉〉闈?);
 }
 function syncSiteAreaForPage(page) {
   const slug = String(page?.slug || '').trim();
@@ -1257,31 +1257,31 @@ function syncSiteAreaForPage(page) {
 const siteAreaContentEntries = computed(() => siteAreaContentMap[siteArea.value] || []);
 function siteAreaEntryDescription(entry) {
   const descriptions = {
-    '首页视频': '修改官网首页首屏视频、封面和首屏文字。',
-    '三大特点': '修改首页三大理由的标题、正文和展示素材。',
-    '产品系列展示图': '修改首页产品系列的图片、名称和展示顺序。',
-    '时间轴': '修改首页时间轴背景、年份、里程碑和说明。',
-    '选型咨询': '修改首页底部联系区的标题、说明和按钮链接。',
-    '产品资料区标题': '修改产品资料区域的中英文标题；具体资料链接在“产品系列与型号”中维护。',
-    '应用案例区标题': '修改应用案例区域的中英文标题；具体案例内容需先建立并关联真实案例记录。'
+    '棣栭〉瑙嗛': '淇敼瀹樼綉棣栭〉棣栧睆瑙嗛銆佸皝闈㈠拰棣栧睆鏂囧瓧銆?,
+    '涓夊ぇ鐗圭偣': '淇敼棣栭〉涓夊ぇ鐞嗙敱鐨勬爣棰樸€佹鏂囧拰灞曠ず绱犳潗銆?,
+    '浜у搧绯诲垪灞曠ず鍥?: '淇敼棣栭〉浜у搧绯诲垪鐨勫浘鐗囥€佸悕绉板拰灞曠ず椤哄簭銆?,
+    '鏃堕棿杞?: '淇敼棣栭〉鏃堕棿杞磋儗鏅€佸勾浠姐€侀噷绋嬬鍜岃鏄庛€?,
+    '閫夊瀷鍜ㄨ': '淇敼棣栭〉搴曢儴鑱旂郴鍖虹殑鏍囬銆佽鏄庡拰鎸夐挳閾炬帴銆?,
+    '浜у搧璧勬枡鍖烘爣棰?: '淇敼浜у搧璧勬枡鍖哄煙鐨勪腑鑻辨枃鏍囬锛涘叿浣撹祫鏂欓摼鎺ュ湪鈥滀骇鍝佺郴鍒椾笌鍨嬪彿鈥濅腑缁存姢銆?,
+    '搴旂敤妗堜緥鍖烘爣棰?: '淇敼搴旂敤妗堜緥鍖哄煙鐨勪腑鑻辨枃鏍囬锛涘叿浣撴渚嬪唴瀹归渶鍏堝缓绔嬪苟鍏宠仈鐪熷疄妗堜緥璁板綍銆?
   };
   const manufacturingDescriptions = {
-    '制造首屏': '修改制造页首屏标题、说明和背景媒体。',
-    '工艺流程画布': '修改工艺节点标题、正文、连接标签和节点媒体。',
-    'CNC车间': '修改 CNC 车间标题、正文、核心设备说明和图片。',
-    '钣金车间': '修改钣金车间标题、正文、核心设备说明和图片。',
-    '装配车间': '修改装配车间标题、正文和展示图片。',
-    '精密检测': '修改精密检测标题、正文和检测设备图片。',
-    '电气装配': '修改电气装配标题、正文和展示图片。',
-    '智能物料仓储': '修改智能物料仓储标题、正文和展示图片。',
-    '生产核心设备': '修改生产核心设备标题、分页数量和设备图库。'
+    '鍒堕€犻灞?: '淇敼鍒堕€犻〉棣栧睆鏍囬銆佽鏄庡拰鑳屾櫙濯掍綋銆?,
+    '宸ヨ壓娴佺▼鐢诲竷': '淇敼宸ヨ壓鑺傜偣鏍囬銆佹鏂囥€佽繛鎺ユ爣绛惧拰鑺傜偣濯掍綋銆?,
+    'CNC杞﹂棿': '淇敼 CNC 杞﹂棿鏍囬銆佹鏂囥€佹牳蹇冭澶囪鏄庡拰鍥剧墖銆?,
+    '閽ｉ噾杞﹂棿': '淇敼閽ｉ噾杞﹂棿鏍囬銆佹鏂囥€佹牳蹇冭澶囪鏄庡拰鍥剧墖銆?,
+    '瑁呴厤杞﹂棿': '淇敼瑁呴厤杞﹂棿鏍囬銆佹鏂囧拰灞曠ず鍥剧墖銆?,
+    '绮惧瘑妫€娴?: '淇敼绮惧瘑妫€娴嬫爣棰樸€佹鏂囧拰妫€娴嬭澶囧浘鐗囥€?,
+    '鐢垫皵瑁呴厤': '淇敼鐢垫皵瑁呴厤鏍囬銆佹鏂囧拰灞曠ず鍥剧墖銆?,
+    '鏅鸿兘鐗╂枡浠撳偍': '淇敼鏅鸿兘鐗╂枡浠撳偍鏍囬銆佹鏂囧拰灞曠ず鍥剧墖銆?,
+    '鐢熶骇鏍稿績璁惧': '淇敼鐢熶骇鏍稿績璁惧鏍囬銆佸垎椤垫暟閲忓拰璁惧鍥惧簱銆?
   };
-  return descriptions[entry.label] || manufacturingDescriptions[entry.label] || '打开该栏目对应的内容、图片或资料。';
+  return descriptions[entry.label] || manufacturingDescriptions[entry.label] || '鎵撳紑璇ユ爮鐩搴旂殑鍐呭銆佸浘鐗囨垨璧勬枡銆?;
 }
 const technicalAccess = ref(false);
 // Submitting a draft for review is an editor's routine step, not an administrator
-// tool, so the 内容送审 entry cannot live inside the administrator-only advanced
-// group. Without it the tab was rendered but unreachable — no navigation anywhere
+// tool, so the 鍐呭閫佸 entry cannot live inside the administrator-only advanced
+// group. Without it the tab was rendered but unreachable 鈥?no navigation anywhere
 // set activeTab to 'submit', so the only button that calls submitForReview() was
 // on a screen nobody could open, and the publish chain had no way past `draft`.
 const workflowAccess = ref(false);
@@ -1301,7 +1301,7 @@ const series = ref([]);
 const models = ref([]);
 const parameters = ref([]);
 // Inline parameter rows are independent records. Track which rows the operator
-// actually changed, otherwise the top "保存草稿" saved only the model and the
+// actually changed, otherwise the top "淇濆瓨鑽夌" saved only the model and the
 // edited rows silently reverted on the next reload.
 const dirtyParameterIds = ref([]);
 const savedModelFingerprint = ref('');
@@ -1341,7 +1341,7 @@ const submissionMode = ref('submit');
 // The submission queue spans every content collection and routinely holds
 // hundreds of drafts (the FAQ knowledge base alone contributes 235), so the flat
 // list buried whatever the operator had just created. These two narrow it down
-// client-side — the API cannot sort by date_updated here because that field is
+// client-side 鈥?the API cannot sort by date_updated here because that field is
 // not readable through the collection permission.
 const submissionQuery = ref('');
 const submissionCollectionFilter = ref('');
@@ -1371,7 +1371,7 @@ const sectionLibraryOpen = ref(false);
 const sectionLibraryGroups = computed(() => {
   const groups = new Map();
   for (const definition of pageSectionTypeOptions.value) {
-    const category = String(definition.category || '其他');
+    const category = String(definition.category || '鍏朵粬');
     if (!groups.has(category)) groups.set(category, []);
     groups.get(category).push(definition);
   }
@@ -1388,7 +1388,7 @@ const sectionOutline = computed(() => {
     return {
       id: String(section?.id || ''),
       label: pageSectionName(section, index),
-      kind: definition ? definition.label : '模板栏目',
+      kind: definition ? definition.label : '妯℃澘鏍忕洰',
       registered: Boolean(definition),
       hidden: Boolean(section?.type) && section.enabled === false,
       review: section?.requires_claim_review === true
@@ -1465,7 +1465,7 @@ const visiblePageSections = computed(() => {
 });
 const activePageSectionLabel = computed(() => {
   const section = activePageSection.value;
-  if (!section) return '页面段落';
+  if (!section) return '椤甸潰娈佃惤';
   const index = (pageDraft.value?.sections || []).indexOf(section);
   return pageSectionName(section, index < 0 ? 0 : index);
 });
@@ -1489,8 +1489,8 @@ let livePreviewRequestSequence = 0;
 let livePreviewAutoRenewedForFrame = false;
 let livePreviewAutoRenewInFlight = false;
 let livePreviewRootTarget = null;
-// 画布根页面不随“选中元素/切换条目”变化；这两个按钮必须跟根页面走，
-// 否则选中文章或视频后 websitePreviewTarget 变成 articles/media，按钮会消失。
+// 鐢诲竷鏍归〉闈笉闅忊€滈€変腑鍏冪礌/鍒囨崲鏉＄洰鈥濆彉鍖栵紱杩欎袱涓寜閽繀椤昏窡鏍归〉闈㈣蛋锛?
+// 鍚﹀垯閫変腑鏂囩珷鎴栬棰戝悗 websitePreviewTarget 鍙樻垚 articles/media锛屾寜閽細娑堝け銆?
 const livePreviewRootSlug = ref('');
 const savedDraftFingerprint = ref('');
 const savedDraftSnapshot = ref(null);
@@ -1522,7 +1522,7 @@ const previewKind = computed(() => {
   return '';
 });
 const previewAvailable = computed(() => Boolean(previewKind.value));
-const previewTitle = computed(() => ({ page: pageDisplayName(pageDraft.value), article: editorialDraft.value?.title, series: seriesDraft.value?.name, model: modelDraft.value?.name }[previewKind.value] || '当前草稿'));
+const previewTitle = computed(() => ({ page: pageDisplayName(pageDraft.value), article: editorialDraft.value?.title, series: seriesDraft.value?.name, model: modelDraft.value?.name }[previewKind.value] || '褰撳墠鑽夌'));
 const websitePreviewTarget = computed(() => {
   if (activeTab.value === 'homepage_sections' && homepageSectionDraft.value) return { collection: 'homepage_sections', record: homepageSectionDraft.value };
   if (activeTab.value === 'pages' && pageDraft.value) return { collection: 'pages', record: pageDraft.value };
@@ -1615,8 +1615,8 @@ let preserveLivePreviewSessionOnce = false;
 // frame on every message.
 let lastPreviewSessionRecoveryAt = 0;
 const livePreviewStatusLabel = computed(() => ({
-  idle: '等待连接', opening: '正在打开', connected: '实时同步', syncing: '正在同步', error: '连接失败'
-})[livePreviewStatus.value] || '等待连接');
+  idle: '绛夊緟杩炴帴', opening: '姝ｅ湪鎵撳紑', connected: '瀹炴椂鍚屾', syncing: '姝ｅ湪鍚屾', error: '杩炴帴澶辫触'
+})[livePreviewStatus.value] || '绛夊緟杩炴帴');
 const currentLivePreviewRecord = computed(() => buildLivePreviewRecord());
 const hasUnsavedChanges = computed(() => dirtyParameterIds.value.length > 0 || (Boolean(savedDraftFingerprint.value) && currentDraftFingerprint() !== savedDraftFingerprint.value));
 const canUndo = computed(() => visualHistoryIndex.value > 0);
@@ -1639,7 +1639,7 @@ function fitVisualCanvas(force = false) {
   const el = canvasViewport.value;
   if (!el) return;
   // Opening the property panel narrows the viewport. Refitting here would zoom
-  // the whole page out (26% → ~16%) the moment an editor selects a field, so
+  // the whole page out (26% 鈫?~16%) the moment an editor selects a field, so
   // keep the current zoom while a selection is active; the viewport can scroll.
   if (selectedVisualElement.value && !force) return;
   const widthFit = (el.clientWidth - 40) / parseInt(visualCanvasWidth.value);
@@ -1728,10 +1728,10 @@ function visualMediaFilterOptions() {
     'advanced-manufacturing': 'home.reason.background',
     'industry-leadership': 'home.reason.background'
   };
-  // 视频文章详情中的媒体节点没有页面 section 属性；它仍必须使用
-  // 视频分享的受控展示位，否则画布会错误显示“待媒体”。
-  // video_url 是旧视频文章的兜底绑定，可能落在 <img> 上（elementType=image/cover），
-  // 不能只认 video 元素，否则这类文章的画布选不到任何已有素材。
+  // 瑙嗛鏂囩珷璇︽儏涓殑濯掍綋鑺傜偣娌℃湁椤甸潰 section 灞炴€э紱瀹冧粛蹇呴』浣跨敤
+  // 瑙嗛鍒嗕韩鐨勫彈鎺у睍绀轰綅锛屽惁鍒欑敾甯冧細閿欒鏄剧ず鈥滃緟濯掍綋鈥濄€?
+  // video_url 鏄棫瑙嗛鏂囩珷鐨勫厹搴曠粦瀹氾紝鍙兘钀藉湪 <img> 涓婏紙elementType=image/cover锛夛紝
+  // 涓嶈兘鍙 video 鍏冪礌锛屽惁鍒欒繖绫绘枃绔犵殑鐢诲竷閫変笉鍒颁换浣曞凡鏈夌礌鏉愩€?
   if (collection === 'articles' && articleMediaField
     && (String(element.elementType || '') === 'video' || String(element.fieldPath || '').trim() === 'video_url')) {
     return {
@@ -1753,8 +1753,8 @@ function visualMediaFilterOptions() {
 const visualMediaAssets = computed(() => filterVisualMediaAssets(mediaAssets.value, visualMediaFilterOptions()));
 const visualStagingMediaAssets = computed(() => filterPreviewStagingMediaAssets(mediaCandidates.value, visualMediaFilterOptions()));
 const visualMediaOptions = computed(() => [...visualMediaAssets.value, ...visualStagingMediaAssets.value]);
-// 展示位过滤为空时，仍然允许运营从系统里选择同类型的已发布媒体。
-// 这样视频分享卡片和页面视频槽都能复用媒体资产，而不是只能重新上传。
+// 灞曠ず浣嶈繃婊や负绌烘椂锛屼粛鐒跺厑璁歌繍钀ヤ粠绯荤粺閲岄€夋嫨鍚岀被鍨嬬殑宸插彂甯冨獟浣撱€?
+// 杩欐牱瑙嗛鍒嗕韩鍗＄墖鍜岄〉闈㈣棰戞Ы閮借兘澶嶇敤濯掍綋璧勪骇锛岃€屼笉鏄彧鑳介噸鏂颁笂浼犮€?
 const visualMediaFallbackOptions = computed(() => {
   const elementType = String(selectedVisualElement.value?.elementType || '');
   if (!['video', 'image'].includes(elementType)) return [];
@@ -1767,8 +1767,8 @@ const visualMediaFallbackOptions = computed(() => {
     const mediaType = String(asset.media_type || '').toLowerCase();
     const typeMatches = elementType === 'video' ? mediaType === 'video' : mediaType !== 'video';
     if (!typeMatches) return false;
-    // 视频分享卡片可以换成另一条视频分享素材（会保留当前卡片并合并掉源素材），
-    // 也可以换成尚未分配展示位的视频。
+    // 瑙嗛鍒嗕韩鍗＄墖鍙互鎹㈡垚鍙︿竴鏉¤棰戝垎浜礌鏉愶紙浼氫繚鐣欏綋鍓嶅崱鐗囧苟鍚堝苟鎺夋簮绱犳潗锛夛紝
+    // 涔熷彲浠ユ崲鎴愬皻鏈垎閰嶅睍绀轰綅鐨勮棰戙€?
     if (videoShareCard) {
       const currentId = String(selectedVisualElement.value?.mediaAssetId || '');
       if (id === currentId) return false;
@@ -1788,7 +1788,7 @@ const previewableMediaAssets = computed(() => [
   ...mediaAssets.value,
   ...filterPreviewStagingMediaAssets(mediaCandidates.value)
 ]);
-// 画布内素材操作：选中媒体元素后直接上传替换，并编辑素材自身属性。
+// 鐢诲竷鍐呯礌鏉愭搷浣滐細閫変腑濯掍綋鍏冪礌鍚庣洿鎺ヤ笂浼犳浛鎹紝骞剁紪杈戠礌鏉愯嚜韬睘鎬с€?
 const visualUploading = ref(false);
 const visualMediaSaving = ref(false);
 const visualMediaDraft = ref({ title: '', alt_text: '', transcript: '', copyright_status: 'owned', poster_asset_id: '' });
@@ -1859,7 +1859,7 @@ const selectedVisualFieldOptions = computed(() => {
   const fieldPath = String(selectedVisualElement.value?.fieldPath || '').trim();
   if (collection === 'articles' && fieldPath === 'category') {
     return [
-      { value: 'news', label: '动态新闻' }
+      { value: 'news', label: '鍔ㄦ€佹柊闂? }
     ];
   }
   return [];
@@ -1952,7 +1952,7 @@ function activeDraftCacheKey() {
   if (activeTab.value === 'homepage_sections' && homepageSectionDraft.value?.id != null) return productDraftKey('homepage_sections', homepageSectionDraft.value.id);
   return '';
 }
-// "本页未保存 N 项": every cached draft that differs from its saved baseline,
+// "鏈〉鏈繚瀛?N 椤?: every cached draft that differs from its saved baseline,
 // plus the active draft when it is dirty.
 // `productDraftCache` is a plain Map, so bumping this counter is what makes the
 // count recompute after a batch save updates the cached baselines.
@@ -1988,10 +1988,10 @@ function dirtyCachedDraftKeys() {
 function cachedDraftReportLabel(key) {
   const [collection, rawId] = String(key).split(':');
   const entry = productDraftCache.get(key);
-  if (collection === 'pages') return `页面：${entry?.page?.title || entry?.page?.slug || rawId}`;
-  if (collection === 'homepage_sections') return `首页区块：${entry?.section?.title || entry?.section?.section_key || rawId}`;
-  if (collection === 'product_series') return `产品系列：${entry?.series?.name || entry?.series?.series_code || rawId}`;
-  if (collection === 'product_models') return `产品型号：${entry?.model?.name || entry?.model?.model_code || rawId}`;
+  if (collection === 'pages') return `椤甸潰锛?{entry?.page?.title || entry?.page?.slug || rawId}`;
+  if (collection === 'homepage_sections') return `棣栭〉鍖哄潡锛?{entry?.section?.title || entry?.section?.section_key || rawId}`;
+  if (collection === 'product_series') return `浜у搧绯诲垪锛?{entry?.series?.name || entry?.series?.series_code || rawId}`;
+  if (collection === 'product_models') return `浜у搧鍨嬪彿锛?{entry?.model?.name || entry?.model?.model_code || rawId}`;
   return key;
 }
 
@@ -2051,12 +2051,12 @@ function isPublishedRecord(record) {
 }
 
 function saveBlockedMessage(record) {
-  return `该内容当前为「${statusLabel(record?.status)}」，不能直接保存。请先在「内容发布队列」把它退回草稿后再修改。`;
+  return `璇ュ唴瀹瑰綋鍓嶄负銆?{statusLabel(record?.status)}銆嶏紝涓嶈兘鐩存帴淇濆瓨銆傝鍏堝湪銆屽唴瀹瑰彂甯冮槦鍒椼€嶆妸瀹冮€€鍥炶崏绋垮悗鍐嶄慨鏀广€俙;
 }
 
-function confirmPublishedRevision(record, label = '这条内容') {
+function confirmPublishedRevision(record, label = '杩欐潯鍐呭') {
   if (!isPublishedRecord(record) || skipPublishedRevisionPrompt) return true;
-  return window.confirm(`${label}当前已发布。保存会生成一版新的草稿修订，官网在重新审核发布前继续显示旧版本。确认保存？`);
+  return window.confirm(`${label}褰撳墠宸插彂甯冦€備繚瀛樹細鐢熸垚涓€鐗堟柊鐨勮崏绋夸慨璁紝瀹樼綉鍦ㄩ噸鏂板鏍稿彂甯冨墠缁х画鏄剧ず鏃х増鏈€傜‘璁や繚瀛橈紵`);
 }
 
 function currentDraftCollection() {
@@ -2075,7 +2075,7 @@ function currentDraftCollection() {
 
 function currentDraftLabel() {
   const record = currentDraftRecord();
-  return String(record?.name || record?.title || record?.event || record?.field_name || record?.model_code || record?.series_code || '当前条目');
+  return String(record?.name || record?.title || record?.event || record?.field_name || record?.model_code || record?.series_code || '褰撳墠鏉＄洰');
 }
 
 async function saveWholePage(submissionName = '') {
@@ -2089,25 +2089,25 @@ async function saveWholePage(submissionName = '') {
   const pendingKeys = dirtyCachedDraftKeys()
     .sort((left, right) => (productDraftCache.get(right)?.savedAt || 0) - (productDraftCache.get(left)?.savedAt || 0));
   const activeIsDirty = hasUnsavedChanges.value;
-  if (!activeIsDirty && !pendingKeys.length) { message.value = '当前页面没有未保存的修改。'; return; }
+  if (!activeIsDirty && !pendingKeys.length) { message.value = '褰撳墠椤甸潰娌℃湁鏈繚瀛樼殑淇敼銆?; return; }
   // Preflight before the first write: a record in review/scheduled cannot be
   // saved, and discovering that halfway through used to leave a half-applied
   // batch. Abort before touching anything.
   const targets = [
-    ...(activeIsDirty ? [{ label: '当前条目', record: currentDraftRecord() }] : []),
+    ...(activeIsDirty ? [{ label: '褰撳墠鏉＄洰', record: currentDraftRecord() }] : []),
     ...pendingKeys.map((key) => ({ label: cachedDraftReportLabel(key), record: cachedDraftRecord(key), key }))
   ];
   const blocked = targets.filter((target) => target.record && !canEdit(target.record));
   if (blocked.length) {
-    error.value = `批次未开始：${blocked.map((target) => `${target.label}（${statusLabel(target.record.status)}）`).join('、')} 当前不可保存。请先在「内容发布队列」退回草稿后再试。`;
+    error.value = `鎵规鏈紑濮嬶細${blocked.map((target) => `${target.label}锛?{statusLabel(target.record.status)}锛塦).join('銆?)} 褰撳墠涓嶅彲淇濆瓨銆傝鍏堝湪銆屽唴瀹瑰彂甯冮槦鍒椼€嶉€€鍥炶崏绋垮悗鍐嶈瘯銆俙;
     message.value = '';
     return;
   }
   const publishedTargets = targets.filter((target) => isPublishedRecord(target.record));
-  if (publishedTargets.length && !window.confirm(`本批次有 ${publishedTargets.length} 项已发布内容。保存会为它们生成新的草稿修订，官网在重新审核发布前继续显示旧版本。确认继续？`)) return;
+  if (publishedTargets.length && !window.confirm(`鏈壒娆℃湁 ${publishedTargets.length} 椤瑰凡鍙戝竷鍐呭銆備繚瀛樹細涓哄畠浠敓鎴愭柊鐨勮崏绋夸慨璁紝瀹樼綉鍦ㄩ噸鏂板鏍稿彂甯冨墠缁х画鏄剧ず鏃х増鏈€傜‘璁ょ户缁紵`)) return;
   skipPublishedRevisionPrompt = true;
   batchSaving.value = true;
-  error.value = ''; message.value = `正在合并提交本页改动（${batchId}）…`;
+  error.value = ''; message.value = `姝ｅ湪鍚堝苟鎻愪氦鏈〉鏀瑰姩锛?{batchId}锛夆€;
   const failures = [];
   const savedItems = [];
   let savedCount = 0;
@@ -2115,7 +2115,7 @@ async function saveWholePage(submissionName = '') {
   try {
     if (activeIsDirty) {
       await saveVisualDraft();
-      if (error.value) { failures.push('当前条目'); failedLabel = '当前条目'; } else {
+      if (error.value) { failures.push('褰撳墠鏉＄洰'); failedLabel = '褰撳墠鏉＄洰'; } else {
         savedCount += 1;
         const record = currentDraftRecord();
         if (record?.id != null && currentDraftCollection()) {
@@ -2130,7 +2130,7 @@ async function saveWholePage(submissionName = '') {
       if (failedLabel) break;
       const label = cachedDraftReportLabel(key);
       const activated = await activateCachedDraft(key);
-      if (!activated) { failures.push(`${label}（已跳过）`); failedLabel = label; break; }
+      if (!activated) { failures.push(`${label}锛堝凡璺宠繃锛塦); failedLabel = label; break; }
       await saveVisualDraft();
       if (error.value) { failures.push(label); failedLabel = label; } else {
         savedCount += 1;
@@ -2148,9 +2148,9 @@ async function saveWholePage(submissionName = '') {
     batchSaving.value = false;
     stashProductDraft();
   }
-  message.value = `已保存 ${savedCount} 项记录${failures.length ? `，失败 ${failures.length} 项` : ''}。`;
+  message.value = `宸蹭繚瀛?${savedCount} 椤硅褰?{failures.length ? `锛屽け璐?${failures.length} 椤筦 : ''}銆俙;
   if (failures.length) {
-    error.value = `批次已停止：${failedLabel || failures[0]} 保存失败。此前已保存的 ${savedCount} 项不会自动回滚；请修正后重新保存剩余项。`;
+    error.value = `鎵规宸插仠姝細${failedLabel || failures[0]} 淇濆瓨澶辫触銆傛鍓嶅凡淇濆瓨鐨?${savedCount} 椤逛笉浼氳嚜鍔ㄥ洖婊氾紱璇蜂慨姝ｅ悗閲嶆柊淇濆瓨鍓╀綑椤广€俙;
   }
   if (savedItems.length) {
     const name = String(submissionName || '').trim() || defaultBatchSubmissionName();
@@ -2162,9 +2162,9 @@ async function saveWholePage(submissionName = '') {
         status: 'draft',
         publication_state: 'unpublished'
       });
-      message.value = `${message.value}已生成送审批次「${name}」，共 ${savedItems.length} 项。`;
+      message.value = `${message.value}宸茬敓鎴愰€佸鎵规銆?{name}銆嶏紝鍏?${savedItems.length} 椤广€俙;
     } catch {
-      message.value = `${message.value}（内容已保存，但送审批次创建失败，请重新保存以生成批次）`;
+      message.value = `${message.value}锛堝唴瀹瑰凡淇濆瓨锛屼絾閫佸鎵规鍒涘缓澶辫触锛岃閲嶆柊淇濆瓨浠ョ敓鎴愭壒娆★級`;
     }
   }
   await refreshAfterSave([]);
@@ -2278,12 +2278,12 @@ function redoVisualChange() {
 }
 
 function discardVisualChanges() {
-  if (!confirmDiscardChanges('取消未保存修改')) return;
+  if (!confirmDiscardChanges('鍙栨秷鏈繚瀛樹慨鏀?)) return;
   const baseline = cloneVisualSnapshot(savedDraftSnapshot.value);
   if (baseline == null) return;
   applyVisualState(baseline);
   selectedVisualElement.value = null;
-  message.value = '已取消未保存修改，并恢复到最近一次成功保存的草稿。';
+  message.value = '宸插彇娑堟湭淇濆瓨淇敼锛屽苟鎭㈠鍒版渶杩戜竴娆℃垚鍔熶繚瀛樼殑鑽夌銆?;
   error.value = '';
   // Drop the cached draft of the active record too, otherwise switching back
   // would resurrect the changes that were just discarded.
@@ -2306,30 +2306,30 @@ function defaultSubmissionName() {
   const now = new Date();
   const pad = (value) => String(value).padStart(2, '0');
   const stamp = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
-  return `${String(editorialDraft.value?.title || '未命名文章').trim()} ${stamp}`.slice(0, 160);
+  return `${String(editorialDraft.value?.title || '鏈懡鍚嶆枃绔?).trim()} ${stamp}`.slice(0, 160);
 }
 
 const toolbarSaveLabel = computed(() => {
-  if (batchSaving.value) return '整页保存中...';
-  if (selectedVisualRecord.value?.collection === 'articles') return '保存草稿';
-  return unsavedDraftCount.value ? `保存草稿（${unsavedDraftCount.value} 项）` : '保存草稿';
+  if (batchSaving.value) return '鏁撮〉淇濆瓨涓?..';
+  if (selectedVisualRecord.value?.collection === 'articles') return '淇濆瓨鑽夌';
+  return unsavedDraftCount.value ? `淇濆瓨鑽夌锛?{unsavedDraftCount.value} 椤癸級` : '淇濆瓨鑽夌';
 });
 const toolbarSaveTitle = computed(() => (selectedVisualRecord.value?.collection === 'articles'
-  ? '保存当前文章草稿'
-  : `保存本页所有未保存条目（共 ${unsavedDraftCount.value} 项）`));
+  ? '淇濆瓨褰撳墠鏂囩珷鑽夌'
+  : `淇濆瓨鏈〉鎵€鏈夋湭淇濆瓨鏉＄洰锛堝叡 ${unsavedDraftCount.value} 椤癸級`));
 // Toolbar button: the article flow needs the naming dialog, everything else saves
 // the whole page (B3).
 function handleToolbarSave() {
   if (activeTab.value === 'editorial' && editorialDraft.value?.id) { openSaveNameDialog(); return; }
-  if (!hasUnsavedChanges.value && !unsavedDraftCount.value) { message.value = '当前页面没有未保存的修改。'; return; }
+  if (!hasUnsavedChanges.value && !unsavedDraftCount.value) { message.value = '褰撳墠椤甸潰娌℃湁鏈繚瀛樼殑淇敼銆?; return; }
   openBatchSubmissionDialog();
 }
 
 function defaultBatchSubmissionName(firstLabel = '', count = 0) {
   const now = new Date();
   const pad = (value) => String(value).padStart(2, '0');
-  const suffix = firstLabel ? ` · ${firstLabel}${count > 1 ? ` 等${count}项` : ''}` : '';
-  return `${siteAreaLabel.value || '官网内容'}${suffix} ${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  const suffix = firstLabel ? ` 路 ${firstLabel}${count > 1 ? ` 绛?{count}椤筦 : ''}` : '';
+  return `${siteAreaLabel.value || '瀹樼綉鍐呭'}${suffix} ${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`;
 }
 
 function openBatchSubmissionDialog() {
@@ -2339,7 +2339,7 @@ function openBatchSubmissionDialog() {
     ...dirtyCachedDraftKeys().map((key) => cachedDraftReportLabel(key))
   ].filter(Boolean);
   batchMemberLabels.value = [...new Set(labels)];
-  if (!batchMemberLabels.value.length) { message.value = '当前页面没有未保存的修改。'; return; }
+  if (!batchMemberLabels.value.length) { message.value = '褰撳墠椤甸潰娌℃湁鏈繚瀛樼殑淇敼銆?; return; }
   saveNameMode.value = 'batch';
   saveNameDraft.value = defaultBatchSubmissionName(batchMemberLabels.value[0], batchMemberLabels.value.length);
   saveNameError.value = '';
@@ -2348,9 +2348,9 @@ function openBatchSubmissionDialog() {
 
 function openSaveNameDialog() {
   if (saving.value) return;
-  // 画布顶部的保存按钮不一定已经选中某个视觉元素；只要当前编辑的是
-  // articles 草稿，就必须弹出命名对话框，不能因为 selectedVisualRecord 为空
-  // 而退回直接保存（否则自定义名称永远不会写入 publication_log）。
+  // 鐢诲竷椤堕儴鐨勪繚瀛樻寜閽笉涓€瀹氬凡缁忛€変腑鏌愪釜瑙嗚鍏冪礌锛涘彧瑕佸綋鍓嶇紪杈戠殑鏄?
+  // articles 鑽夌锛屽氨蹇呴』寮瑰嚭鍛藉悕瀵硅瘽妗嗭紝涓嶈兘鍥犱负 selectedVisualRecord 涓虹┖
+  // 鑰岄€€鍥炵洿鎺ヤ繚瀛橈紙鍚﹀垯鑷畾涔夊悕绉版案杩滀笉浼氬啓鍏?publication_log锛夈€?
   const isArticleDraft = selectedVisualRecord.value?.collection === 'articles'
     || (activeTab.value === 'editorial'
       && editorialMode.value === 'articles'
@@ -2373,7 +2373,7 @@ function closeSaveNameDialog() {
 
 async function confirmSaveNameDialog() {
   const name = String(saveNameDraft.value || '').trim();
-  if (!name) { saveNameError.value = '请填写名称。'; return; }
+  if (!name) { saveNameError.value = '璇峰～鍐欏悕绉般€?; return; }
   const mode = saveNameMode.value;
   saveNameDialogOpen.value = false;
   if (mode === 'batch') {
@@ -2391,7 +2391,7 @@ async function saveVisualDraft() {
   const publishedRevision = isPublishedRecord(targetRecord);
   await saveVisualDraftRecord();
   if (!error.value && publishedRevision) {
-    message.value = `${message.value}（已生成草稿修订，官网需重新审核发布后更新）`;
+    message.value = `${message.value}锛堝凡鐢熸垚鑽夌淇锛屽畼缃戦渶閲嶆柊瀹℃牳鍙戝竷鍚庢洿鏂帮級`;
   }
 }
 
@@ -2438,10 +2438,10 @@ function commitVisualField(value) {
   const options = selectedVisualFieldOptions.value;
   const normalizedValue = options.length ? options.find((option) => option.value === value)?.value : value;
   if (normalizedValue == null || !setVisualFieldValue(target, path, normalizedValue)) {
-    error.value = '请输入有效数值或符合字段格式的内容。';
+    error.value = '璇疯緭鍏ユ湁鏁堟暟鍊兼垨绗﹀悎瀛楁鏍煎紡鐨勫唴瀹广€?;
     return;
   }
-  if (error.value === '请输入有效数值或符合字段格式的内容。') error.value = '';
+  if (error.value === '璇疯緭鍏ユ湁鏁堟暟鍊兼垨绗﹀悎瀛楁鏍煎紡鐨勫唴瀹广€?) error.value = '';
   recordVisualHistory();
   // A deep watcher can replace the debounced callback after a nested page
   // edit. Send the current controlled snapshot now; the queue remains the
@@ -2457,11 +2457,11 @@ function commitVisualLink(value) {
   const normalized = String(value || '').trim();
   if (!record || !target || !path || !canEdit(record)) return;
   if (normalized && !isValidSiteLink(normalized)) {
-    error.value = '按钮链接只能使用站内路径、页面锚点或 HTTPS 地址。';
+    error.value = '鎸夐挳閾炬帴鍙兘浣跨敤绔欏唴璺緞銆侀〉闈㈤敋鐐规垨 HTTPS 鍦板潃銆?;
     return;
   }
   if (!setVisualFieldValue(selectedVisualTarget.value, path, normalized)) return;
-  if (error.value === '按钮链接只能使用站内路径、页面锚点或 HTTPS 地址。') error.value = '';
+  if (error.value === '鎸夐挳閾炬帴鍙兘浣跨敤绔欏唴璺緞銆侀〉闈㈤敋鐐规垨 HTTPS 鍦板潃銆?) error.value = '';
   recordVisualHistory();
   queueLivePreviewUpdate(selectedVisualRecord.value);
 }
@@ -2548,7 +2548,7 @@ function addSelectedVisualListItem() {
   recordVisualHistory();
   postLivePreviewUpdate(selectedVisualRecord.value);
   queueLivePreviewUpdate(selectedVisualRecord.value);
-  message.value = '已新增一项空白条目，填写后保存草稿即可。';
+  message.value = '宸叉柊澧炰竴椤圭┖鐧芥潯鐩紝濉啓鍚庝繚瀛樿崏绋垮嵆鍙€?;
 }
 
 function removeSelectedVisualListItem() {
@@ -2558,7 +2558,7 @@ function removeSelectedVisualListItem() {
   const fieldPath = String(element?.fieldPath || '').trim();
   const reorder = getVisualListReorder(target, fieldPath);
   if (!record || !target || !element || !reorder || !canEdit(record) || reorder.length <= 1) return;
-  if (!window.confirm(`确认删除当前第 ${reorder.index + 1} 项吗？该操作会在保存草稿后生效。`)) return;
+  if (!window.confirm(`纭鍒犻櫎褰撳墠绗?${reorder.index + 1} 椤瑰悧锛熻鎿嶄綔浼氬湪淇濆瓨鑽夌鍚庣敓鏁堛€俙)) return;
   const removed = removeVisualListItem(target, fieldPath);
   if (!removed) return;
   selectedVisualElement.value = {
@@ -2572,9 +2572,9 @@ function removeSelectedVisualListItem() {
   queueLivePreviewUpdate(selectedVisualRecord.value);
 }
 
-// 视频分享卡片本身就是一个视频素材，没有文章/页面字段可写。选择系统里的
-// 另一条视频时，把卡片素材替换掉：保留原卡片的标题与展示设置，把新素材
-// 纳入视频分享位置，并删除旧素材，避免官网出现两张卡。
+// 瑙嗛鍒嗕韩鍗＄墖鏈韩灏辨槸涓€涓棰戠礌鏉愶紝娌℃湁鏂囩珷/椤甸潰瀛楁鍙啓銆傞€夋嫨绯荤粺閲岀殑
+// 鍙︿竴鏉¤棰戞椂锛屾妸鍗＄墖绱犳潗鏇挎崲鎺夛細淇濈暀鍘熷崱鐗囩殑鏍囬涓庡睍绀鸿缃紝鎶婃柊绱犳潗
+// 绾冲叆瑙嗛鍒嗕韩浣嶇疆锛屽苟鍒犻櫎鏃х礌鏉愶紝閬垮厤瀹樼綉鍑虹幇涓ゅ紶鍗°€?
 async function replaceVideoShareCardMedia(oldMediaAssetId, newMediaAssetId) {
   const oldId = String(oldMediaAssetId || '').trim();
   const newId = String(newMediaAssetId || '').trim();
@@ -2583,16 +2583,16 @@ async function replaceVideoShareCardMedia(oldMediaAssetId, newMediaAssetId) {
   const oldAsset = all.find((asset) => String(asset.id) === oldId);
   const newAsset = all.find((asset) => String(asset.id) === newId);
   if (!oldAsset || !newAsset) {
-    error.value = '找不到要替换的视频素材，请刷新后重试。';
+    error.value = '鎵句笉鍒拌鏇挎崲鐨勮棰戠礌鏉愶紝璇峰埛鏂板悗閲嶈瘯銆?;
     return false;
   }
   if (String(newAsset.media_type || '').toLowerCase() !== 'video') {
-    error.value = '视频分享卡片只能替换为视频素材。';
+    error.value = '瑙嗛鍒嗕韩鍗＄墖鍙兘鏇挎崲涓鸿棰戠礌鏉愩€?;
     return false;
   }
   const newPlacement = String(newAsset.placement_key || '');
   if (newPlacement && newPlacement !== 'news.video_share.list') {
-    error.value = '这个视频已经用于其他官网位置，不能直接改成视频分享。请先在媒体资产里上传一条视频分享专用视频。';
+    error.value = '杩欎釜瑙嗛宸茬粡鐢ㄤ簬鍏朵粬瀹樼綉浣嶇疆锛屼笉鑳界洿鎺ユ敼鎴愯棰戝垎浜€傝鍏堝湪濯掍綋璧勪骇閲屼笂浼犱竴鏉¤棰戝垎浜笓鐢ㄨ棰戙€?;
     return false;
   }
   const oldFileId = String(oldAsset.file_id || '');
@@ -2617,7 +2617,7 @@ async function replaceVideoShareCardMedia(oldMediaAssetId, newMediaAssetId) {
     try {
       await api.post('/media-poster/asset/delete', { media_asset_id: newId });
     } catch (reason) {
-      error.value = apiError(reason, '新视频已用于当前卡片，但原素材记录仍被其他内容引用，未删除。');
+      error.value = apiError(reason, '鏂拌棰戝凡鐢ㄤ簬褰撳墠鍗＄墖锛屼絾鍘熺礌鏉愯褰曚粛琚叾浠栧唴瀹瑰紩鐢紝鏈垹闄ゃ€?);
     }
     const oldFileStillUsed = [...mediaAssets.value, ...mediaCandidates.value]
       .some((asset) => String(asset.file_id || '') === oldFileId && String(asset.id) !== oldId);
@@ -2627,10 +2627,10 @@ async function replaceVideoShareCardMedia(oldMediaAssetId, newMediaAssetId) {
     await Promise.all([loadMediaAssets(), loadMediaCandidates()]);
     if (liveWebsitePreviewVisible.value) await startLiveWebsitePreview();
     visualMediaSelection.value = oldId;
-    message.value = '视频已替换，仍保留原卡片。';
+    message.value = '瑙嗛宸叉浛鎹紝浠嶄繚鐣欏師鍗＄墖銆?;
     return true;
   } catch (reason) {
-    error.value = apiError(reason, '替换视频失败，内容没有更新。');
+    error.value = apiError(reason, '鏇挎崲瑙嗛澶辫触锛屽唴瀹规病鏈夋洿鏂般€?);
     return false;
   } finally {
     visualMediaSaving.value = false;
@@ -2645,7 +2645,7 @@ function replaceArticleBodyImage(oldMediaAssetId, newMediaAssetId) {
   const all = [...mediaAssets.value, ...mediaCandidates.value];
   const newAsset = all.find((asset) => String(asset.id) === newId);
   if (!newAsset?.file_id || String(newAsset.media_type || '').toLowerCase() === 'video') {
-    error.value = '正文图片只能替换为图片素材。';
+    error.value = '姝ｆ枃鍥剧墖鍙兘鏇挎崲涓哄浘鐗囩礌鏉愩€?;
     return false;
   }
   const container = document.createElement('div');
@@ -2653,7 +2653,7 @@ function replaceArticleBodyImage(oldMediaAssetId, newMediaAssetId) {
   const image = [...container.querySelectorAll('img')]
     .find((node) => String(node.getAttribute('data-cms-preview-media-asset-id') || '') === oldId);
   if (!image) {
-    error.value = '正文中找不到这张图片的受控记录；请重新导入 Word 文档。';
+    error.value = '姝ｆ枃涓壘涓嶅埌杩欏紶鍥剧墖鐨勫彈鎺ц褰曪紱璇烽噸鏂板鍏?Word 鏂囨。銆?;
     return false;
   }
   const nextPath = `/api/public/v1/media/asset/${encodeURIComponent(String(newAsset.file_id))}`;
@@ -2662,18 +2662,18 @@ function replaceArticleBodyImage(oldMediaAssetId, newMediaAssetId) {
   image.setAttribute('data-cms-preview-field-path', 'body');
   image.setAttribute('data-cms-preview-media-asset-id', newId);
   image.setAttribute('data-cms-preview-placement-key', 'news.article.body');
-  if (!String(image.getAttribute('alt') || '').trim()) image.setAttribute('alt', String(newAsset.alt_text || newAsset.title || '正文图片'));
+  if (!String(image.getAttribute('alt') || '').trim()) image.setAttribute('alt', String(newAsset.alt_text || newAsset.title || '姝ｆ枃鍥剧墖'));
   draft.body = container.innerHTML;
   visualMediaSelection.value = newId;
   error.value = '';
-  message.value = '正文图片已替换，保存草稿后官网生效。';
+  message.value = '姝ｆ枃鍥剧墖宸叉浛鎹紝淇濆瓨鑽夌鍚庡畼缃戠敓鏁堛€?;
   queueLivePreviewUpdate(selectedVisualRecord.value);
   return true;
 }
 
 function replaceVisualMedia(selectedValue) {
-  // 不能依赖 v-model 的更新时间：@change 可能先于 v-model 执行，读到旧值会让
-  // “换了素材”实际仍写回原素材。由调用方显式传入本次选择的值。
+  // 涓嶈兘渚濊禆 v-model 鐨勬洿鏂版椂闂达細@change 鍙兘鍏堜簬 v-model 鎵ц锛岃鍒版棫鍊间細璁?
+  // 鈥滄崲浜嗙礌鏉愨€濆疄闄呬粛鍐欏洖鍘熺礌鏉愩€傜敱璋冪敤鏂规樉寮忎紶鍏ユ湰娆￠€夋嫨鐨勫€笺€?
   const assetId = String(selectedValue ?? visualMediaSelection.value ?? '').trim();
   let visualRecord = selectedVisualRecord.value;
   let record = visualRecord?.record || websitePreviewTarget.value?.record;
@@ -2681,36 +2681,36 @@ function replaceVisualMedia(selectedValue) {
   let target = selectedVisualTarget.value;
   let path = String(selectedVisualElement.value?.fieldPath || '').trim();
   const videoShareCardAssetId = String(selectedVisualElement.value?.mediaAssetId || '').trim();
-  // 动态新闻卡片封面走 cover_asset。画布选中的是列表缓存记录时，不能只改
-  // 预览对象；必须同时写进当前 editorialDraft，否则保存草稿仍读旧值。
+  // 鍔ㄦ€佹柊闂诲崱鐗囧皝闈㈣蛋 cover_asset銆傜敾甯冮€変腑鐨勬槸鍒楄〃缂撳瓨璁板綍鏃讹紝涓嶈兘鍙敼
+  // 棰勮瀵硅薄锛涘繀椤诲悓鏃跺啓杩涘綋鍓?editorialDraft锛屽惁鍒欎繚瀛樿崏绋夸粛璇绘棫鍊笺€?
   if (collection === 'articles' && path === 'cover_asset') {
     if (!/^[1-9]\d*$/.test(assetId)) return;
-    if (!editorialDraft.value?.id) { error.value = '请先在左侧打开这篇文章的草稿。'; return; }
+    if (!editorialDraft.value?.id) { error.value = '璇峰厛鍦ㄥ乏渚ф墦寮€杩欑瘒鏂囩珷鐨勮崏绋裤€?; return; }
     editorialDraft.value.cover_asset = assetId;
     if (target && typeof target === 'object') target.cover_asset = assetId;
     visualMediaSelection.value = assetId;
     error.value = '';
-    message.value = '封面已选择，保存内容草稿后官网生效。';
+    message.value = '灏侀潰宸查€夋嫨锛屼繚瀛樺唴瀹硅崏绋垮悗瀹樼綉鐢熸晥銆?;
     recordVisualHistory();
     queueLivePreviewUpdate({ collection: 'articles', record: editorialDraft.value });
     return;
   }
-  // 文章正文内联图：替换的是 article.body 里的受控 <img>，不是页面媒体字段。
+  // 鏂囩珷姝ｆ枃鍐呰仈鍥撅細鏇挎崲鐨勬槸 article.body 閲岀殑鍙楁帶 <img>锛屼笉鏄〉闈㈠獟浣撳瓧娈点€?
   if (selectedVisualIsArticleBodyImage.value) {
     if (!assetId) return;
     void replaceArticleBodyImage(videoShareCardAssetId, assetId);
     return;
   }
-  // 视频分享卡片的 media 字段路径只是画布协议占位（让选中请求合法），真正写入
-  // 的目标是 media_assets 记录；必须先于页面字段写入处理。
+  // 瑙嗛鍒嗕韩鍗＄墖鐨?media 瀛楁璺緞鍙槸鐢诲竷鍗忚鍗犱綅锛堣閫変腑璇锋眰鍚堟硶锛夛紝鐪熸鍐欏叆
+  // 鐨勭洰鏍囨槸 media_assets 璁板綍锛涘繀椤诲厛浜庨〉闈㈠瓧娈靛啓鍏ュ鐞嗐€?
   if (videoShareCardAssetId) {
     if (!assetId) return;
     void replaceVideoShareCardMedia(videoShareCardAssetId, assetId);
     return;
   }
-  // 页面区块的媒体可能来自独立媒体位（例如视频新闻首屏），画布上只有
-  // 渲染节点而没有 fieldPath。此时把选择结果写入该区块的 media 引用，
-  // 保存页面草稿后官网即可使用这条系统媒体。
+  // 椤甸潰鍖哄潡鐨勫獟浣撳彲鑳芥潵鑷嫭绔嬪獟浣撲綅锛堜緥濡傝棰戞柊闂婚灞忥級锛岀敾甯冧笂鍙湁
+  // 娓叉煋鑺傜偣鑰屾病鏈?fieldPath銆傛鏃舵妸閫夋嫨缁撴灉鍐欏叆璇ュ尯鍧楃殑 media 寮曠敤锛?
+  // 淇濆瓨椤甸潰鑽夌鍚庡畼缃戝嵆鍙娇鐢ㄨ繖鏉＄郴缁熷獟浣撱€?
   if (!path && collection === 'pages' && assetId) {
     const elementType = String(selectedVisualElement.value?.elementType || '').trim();
     const sectionKey = String(
@@ -2730,14 +2730,14 @@ function replaceVisualMedia(selectedValue) {
       section.media = media;
       visualMediaSelection.value = assetId;
       error.value = '';
-      message.value = '已选择系统媒体，保存页面草稿后官网生效。';
+      message.value = '宸查€夋嫨绯荤粺濯掍綋锛屼繚瀛橀〉闈㈣崏绋垮悗瀹樼綉鐢熸晥銆?;
       recordVisualHistory();
       postLivePreviewUpdate(selectedVisualRecord.value);
       queueLivePreviewUpdate(selectedVisualRecord.value);
       return;
     }
   }
-  // 旧视频文章只有 video_url；选中素材时改写成受管 media[0]，不要写回字符串 URL。
+  // 鏃ц棰戞枃绔犲彧鏈?video_url锛涢€変腑绱犳潗鏃舵敼鍐欐垚鍙楃 media[0]锛屼笉瑕佸啓鍥炲瓧绗︿覆 URL銆?
   const upgradingLegacyVideo = collection === 'articles' && path === 'video_url';
   if (upgradingLegacyVideo) path = 'media.0.media_asset_id';
   const mediaSlot = selectedVisualElement.value?.mediaSlot || '';
@@ -2745,27 +2745,27 @@ function replaceVisualMedia(selectedValue) {
   const isClearingGovernedSlot = !assetId && /^action-[1-8]$/.test(String(mediaSlot));
   if ((!assetId && !isClearingGovernedSlot && !canRestoreDefault) || !record || !target || !canEdit(record)) return;
   if (!path) {
-    error.value = '这个视频没有可写入的页面媒体位置。视频分享卡片请从“视频新闻 → 视频分享内容”修改。';
+    error.value = '杩欎釜瑙嗛娌℃湁鍙啓鍏ョ殑椤甸潰濯掍綋浣嶇疆銆傝棰戝垎浜崱鐗囪浠庘€滆棰戞柊闂?鈫?瑙嗛鍒嗕韩鍐呭鈥濅慨鏀广€?;
     return;
   }
-  // 画布选中的是列表里的文章时，必须先把它切成当前编辑草稿；否则改动落在
-  // 列表缓存上，editorialDraft 没变，保存草稿按钮会一直是灰的。
+  // 鐢诲竷閫変腑鐨勬槸鍒楄〃閲岀殑鏂囩珷鏃讹紝蹇呴』鍏堟妸瀹冨垏鎴愬綋鍓嶇紪杈戣崏绋匡紱鍚﹀垯鏀瑰姩钀藉湪
+  // 鍒楄〃缂撳瓨涓婏紝editorialDraft 娌″彉锛屼繚瀛樿崏绋挎寜閽細涓€鐩存槸鐏扮殑銆?
   if (collection === 'articles' && (activeTab.value !== 'editorial' || String(editorialDraft.value?.id || '') !== String(record.id || ''))) {
     const activated = activateVisualEditingTarget({ collection, itemId: record.id, fieldPath: path, sectionKey: selectedVisualElement.value?.sectionKey || '' });
     if (!activated?.record || activeTab.value !== 'editorial') {
-      error.value = '无法把该文章切换为当前草稿，请从左侧“文章/视频分享”列表重新选中后再试。';
+      error.value = '鏃犳硶鎶婅鏂囩珷鍒囨崲涓哄綋鍓嶈崏绋匡紝璇蜂粠宸︿晶鈥滄枃绔?瑙嗛鍒嗕韩鈥濆垪琛ㄩ噸鏂伴€変腑鍚庡啀璇曘€?;
       return;
     }
-    // activate 返回的是列表记录；真正要改的是 selectEditorialRecord 建好的草稿。
+    // activate 杩斿洖鐨勬槸鍒楄〃璁板綍锛涚湡姝ｈ鏀圭殑鏄?selectEditorialRecord 寤哄ソ鐨勮崏绋裤€?
     record = editorialDraft.value || activated.record;
     if (String(record.id || '') !== String(activated.record.id || '')) {
-      error.value = '文章草稿没有正确载入，请刷新工作台后重试。';
+      error.value = '鏂囩珷鑽夌娌℃湁姝ｇ‘杞藉叆锛岃鍒锋柊宸ヤ綔鍙板悗閲嶈瘯銆?;
       return;
     }
     target = record;
     visualRecord = { collection, record };
   } else if (collection === 'articles' && editorialDraft.value) {
-    // 即使选了列表缓存记录，也强制写进当前草稿，保证保存按钮能感知修改。
+    // 鍗充娇閫変簡鍒楄〃缂撳瓨璁板綍锛屼篃寮哄埗鍐欒繘褰撳墠鑽夌锛屼繚璇佷繚瀛樻寜閽兘鎰熺煡淇敼銆?
     record = editorialDraft.value;
     target = editorialDraft.value;
     visualRecord = { collection, record };
@@ -2785,7 +2785,7 @@ function replaceVisualMedia(selectedValue) {
   const posterUrl = selectedAsset?.poster_asset_id ? previewMediaAsset(selectedAsset.poster_asset_id)?.path : '';
   if (posterUrl) payload.posterUrl = posterUrl;
   if (isPreviewStagingMedia(selectedAsset)) payload.previewOnly = true;
-  if (!applyVisualMediaReplacement(target, path, assetId, { mediaSlot, allowEmpty: canRestoreDefault })) { error.value = '无法写入该媒体位置，请刷新后重试；若持续出现请改用左侧表单。'; return; }
+  if (!applyVisualMediaReplacement(target, path, assetId, { mediaSlot, allowEmpty: canRestoreDefault })) { error.value = '鏃犳硶鍐欏叆璇ュ獟浣撲綅缃紝璇峰埛鏂板悗閲嶈瘯锛涜嫢鎸佺画鍑虹幇璇锋敼鐢ㄥ乏渚ц〃鍗曘€?; return; }
   if (upgradingLegacyVideo) target.video_url = '';
   recordVisualHistory();
   if (livePreviewFrame.value?.contentWindow && livePreviewWebsiteOrigin.value) livePreviewFrame.value.contentWindow.postMessage(payload, livePreviewWebsiteOrigin.value);
@@ -2793,7 +2793,7 @@ function replaceVisualMedia(selectedValue) {
   queueLivePreviewUpdate(visualRecord);
 }
 
-// 画布内上传：媒体已取消审核，上传即发布，随后直接替换当前选中元素。
+// 鐢诲竷鍐呬笂浼狅細濯掍綋宸插彇娑堝鏍革紝涓婁紶鍗冲彂甯冿紝闅忓悗鐩存帴鏇挎崲褰撳墠閫変腑鍏冪礌銆?
 async function uploadVisualMedia(event) {
   const input = event.target;
   const file = input?.files?.[0];
@@ -2815,11 +2815,11 @@ async function uploadVisualMedia(event) {
   const scope = String(options.scope || '').trim();
   const mediaType = mediaTypeForFile(file);
   if (!placementKey || !mediaType || (options.elementType && options.elementType !== mediaType)) {
-    error.value = '当前画布位置没有匹配的受控展示位，无法直接上传；请先在「媒体资产」上传并选择展示位。';
+    error.value = '褰撳墠鐢诲竷浣嶇疆娌℃湁鍖归厤鐨勫彈鎺у睍绀轰綅锛屾棤娉曠洿鎺ヤ笂浼狅紱璇峰厛鍦ㄣ€屽獟浣撹祫浜с€嶄笂浼犲苟閫夋嫨灞曠ず浣嶃€?;
     reset();
     return;
   }
-  if (!scope) { error.value = '无法确定素材用途范围，请先在「媒体资产」上传。'; reset(); return; }
+  if (!scope) { error.value = '鏃犳硶纭畾绱犳潗鐢ㄩ€旇寖鍥达紝璇峰厛鍦ㄣ€屽獟浣撹祫浜с€嶄笂浼犮€?; reset(); return; }
   visualUploading.value = true; error.value = ''; message.value = '';
   try {
     const metadata = await readMediaMetadata(file, mediaType).catch(() => ({}));
@@ -2833,7 +2833,7 @@ async function uploadVisualMedia(event) {
     form.append('title', file.name);
     form.append('file', uploadFile, file.name);
     const uploaded = (await api.post('/files', form)).data?.data;
-    if (!uploaded?.id || !uploaded.filename_download || !uploaded.type) throw new Error('上传接口未返回完整的文件信息');
+    if (!uploaded?.id || !uploaded.filename_download || !uploaded.type) throw new Error('涓婁紶鎺ュ彛鏈繑鍥炲畬鏁寸殑鏂囦欢淇℃伅');
     const created = (await api.post('/items/media_assets', {
       file_id: String(uploaded.id),
       original_file_name: uploaded.filename_download,
@@ -2865,9 +2865,9 @@ async function uploadVisualMedia(event) {
       else if (isVideoShareCard) await replaceVideoShareCardMedia(videoShareCardAssetId, String(created.id));
       else replaceVisualMedia();
     }
-    if (!isArticleBodyImage) message.value = '素材已上传并发布，已替换当前画布内容。';
+    if (!isArticleBodyImage) message.value = '绱犳潗宸蹭笂浼犲苟鍙戝竷锛屽凡鏇挎崲褰撳墠鐢诲竷鍐呭銆?;
   } catch (reason) {
-    error.value = apiError(reason, '上传素材失败，画布内容未修改。');
+    error.value = apiError(reason, '涓婁紶绱犳潗澶辫触锛岀敾甯冨唴瀹规湭淇敼銆?);
   } finally {
     visualUploading.value = false;
     reset();
@@ -2888,12 +2888,12 @@ async function saveVisualMediaAttributes() {
     };
     if (asset.media_type === 'video') payload.poster_asset_id = visualMediaDraft.value.poster_asset_id || null;
     await api.post('/media-poster/asset', payload);
-    message.value = '素材信息已保存；已发布素材不会因此下线。';
+    message.value = '绱犳潗淇℃伅宸蹭繚瀛橈紱宸插彂甯冪礌鏉愪笉浼氬洜姝や笅绾裤€?;
     await Promise.all([loadMediaAssets(), loadMediaCandidates()]);
-    // 卡片标题直接取媒体记录 title，刷新画布才能看到改名结果。
+    // 鍗＄墖鏍囬鐩存帴鍙栧獟浣撹褰?title锛屽埛鏂扮敾甯冩墠鑳界湅鍒版敼鍚嶇粨鏋溿€?
     if (liveWebsitePreviewVisible.value) await startLiveWebsitePreview();
   } catch (reason) {
-    error.value = apiError(reason, '素材信息保存失败。');
+    error.value = apiError(reason, '绱犳潗淇℃伅淇濆瓨澶辫触銆?);
   } finally {
     visualMediaSaving.value = false;
   }
@@ -2903,18 +2903,18 @@ async function deleteMediaAsset(asset) {
   const id = String(asset?.id || '').trim();
   if (!id) return;
   const label = asset.title || asset.original_file_name || `#${id}`;
-  if (!window.confirm(`确定删除素材「${label}」吗？\n删除前会检查是否仍被内容引用；被引用时会被拒绝。`)) return;
+  if (!window.confirm(`纭畾鍒犻櫎绱犳潗銆?{label}銆嶅悧锛焅n鍒犻櫎鍓嶄細妫€鏌ユ槸鍚︿粛琚唴瀹瑰紩鐢紱琚紩鐢ㄦ椂浼氳鎷掔粷銆俙)) return;
   error.value = ''; message.value = '';
   try {
     await api.post('/media-poster/asset/delete', { media_asset_id: id });
-    message.value = `素材「${label}」已删除。`;
+    message.value = `绱犳潗銆?{label}銆嶅凡鍒犻櫎銆俙;
     await Promise.all([loadMediaAssets(), loadMediaCandidates()]);
   } catch (reason) {
-    error.value = apiError(reason, '删除素材失败。');
+    error.value = apiError(reason, '鍒犻櫎绱犳潗澶辫触銆?);
   }
 }
 
-// 画布内移除：只解绑当前内容里的媒体引用，素材本身保留，随草稿一起保存。
+// 鐢诲竷鍐呯Щ闄わ細鍙В缁戝綋鍓嶅唴瀹归噷鐨勫獟浣撳紩鐢紝绱犳潗鏈韩淇濈暀锛岄殢鑽夌涓€璧蜂繚瀛樸€?
 function removeVisualMedia() {
   const record = selectedVisualRecord.value?.record;
   const target = selectedVisualTarget.value;
@@ -2923,31 +2923,31 @@ function removeVisualMedia() {
   if (path === 'video_url') {
     target.video_url = '';
   } else if (!applyVisualMediaReplacement(target, path, '', { mediaSlot: selectedVisualElement.value?.mediaSlot || '', allowEmpty: true })) {
-    error.value = '无法清除该媒体位置，请刷新后重试。';
+    error.value = '鏃犳硶娓呴櫎璇ュ獟浣撲綅缃紝璇峰埛鏂板悗閲嶈瘯銆?;
     return;
   }
   visualMediaSelection.value = '';
   recordVisualHistory();
   queueLivePreviewUpdate(selectedVisualRecord.value);
-  message.value = '已从当前内容移除媒体，记得保存草稿。';
+  message.value = '宸蹭粠褰撳墠鍐呭绉婚櫎濯掍綋锛岃寰椾繚瀛樿崏绋裤€?;
 }
 
-// 画布内删除素材：先从当前内容解绑并保存，再尝试删除素材；仍被其他内容引用时保留素材。
+// 鐢诲竷鍐呭垹闄ょ礌鏉愶細鍏堜粠褰撳墠鍐呭瑙ｇ粦骞朵繚瀛橈紝鍐嶅皾璇曞垹闄ょ礌鏉愶紱浠嶈鍏朵粬鍐呭寮曠敤鏃朵繚鐣欑礌鏉愩€?
 async function deleteVisualMediaAsset() {
   const asset = selectedVisualMediaAsset.value;
   if (!asset) return;
   const label = asset.title || asset.original_file_name || `#${asset.id}`;
-  if (!window.confirm(`从当前内容移除并删除素材「${label}」吗？\n若仍被其他内容引用，素材会保留。`)) return;
+  if (!window.confirm(`浠庡綋鍓嶅唴瀹圭Щ闄ゅ苟鍒犻櫎绱犳潗銆?{label}銆嶅悧锛焅n鑻ヤ粛琚叾浠栧唴瀹瑰紩鐢紝绱犳潗浼氫繚鐣欍€俙)) return;
   removeVisualMedia();
   if (error.value) return;
   await saveVisualDraft();
   if (error.value) return;
   try {
     await api.post('/media-poster/asset/delete', { media_asset_id: String(asset.id) });
-    message.value = `素材「${label}」已从当前内容移除并删除。`;
+    message.value = `绱犳潗銆?{label}銆嶅凡浠庡綋鍓嶅唴瀹圭Щ闄ゅ苟鍒犻櫎銆俙;
     await Promise.all([loadMediaAssets(), loadMediaCandidates()]);
   } catch (reason) {
-    error.value = apiError(reason, '素材仍被其他内容引用，已从当前内容移除，但素材未删除。');
+    error.value = apiError(reason, '绱犳潗浠嶈鍏朵粬鍐呭寮曠敤锛屽凡浠庡綋鍓嶅唴瀹圭Щ闄わ紝浣嗙礌鏉愭湭鍒犻櫎銆?);
   }
 }
 
@@ -2978,7 +2978,7 @@ function handleVisualViewportResize() {
 
 function confirmDiscardChanges(action) {
   if (!hasUnsavedChanges.value) return true;
-  return window.confirm(`当前内容有未保存的修改。确定要${action}吗？未保存内容将丢失。`);
+  return window.confirm(`褰撳墠鍐呭鏈夋湭淇濆瓨鐨勪慨鏀广€傜‘瀹氳${action}鍚楋紵鏈繚瀛樺唴瀹瑰皢涓㈠け銆俙);
 }
 
 function clearVisualSelection() {
@@ -2987,29 +2987,29 @@ function clearVisualSelection() {
 }
 
 function visualRecordLabel(collection, record) {
-  if (collection === 'homepage_sections') return record.title || record.section_key || '首页独立区块';
+  if (collection === 'homepage_sections') return record.title || record.section_key || '棣栭〉鐙珛鍖哄潡';
   if (collection === 'pages') return pageDisplayName(record);
-  if (collection === 'product_series') return record.name || record.series_code || '未命名产品系列';
-  if (collection === 'product_models') return record.name || record.model_code || '未命名型号';
-  if (collection === 'milestones') return `${record.year || '未填写'} 年 - ${record.event || '未填写事件'}`;
-  if (collection === 'qualifications') return record.name || record.source_key || '未命名资质';
-  if (collection === 'manufacturing_evidence') return record.process || record.source_key || '未命名制造证据';
-  if (collection === 'service_locations') return [record.region, record.city].filter(Boolean).join(' - ') || '未命名服务网点';
-  if (collection === 'service_resources') return record.title || record.source_key || '未命名服务资源';
-  if (collection === 'external_service_entries') return record.entry_type || record.url || '未命名服务入口';
-  if (collection === 'repair_page_configs') return record.title || record.page_key || '未命名售后页面';
-  if (collection === 'knowledge_items') return record.question_title || record.source_key || '未命名知识条目';
-  return record.title || record.name || record.slug || record.source_key || '未命名内容';
+  if (collection === 'product_series') return record.name || record.series_code || '鏈懡鍚嶄骇鍝佺郴鍒?;
+  if (collection === 'product_models') return record.name || record.model_code || '鏈懡鍚嶅瀷鍙?;
+  if (collection === 'milestones') return `${record.year || '鏈～鍐?} 骞?- ${record.event || '鏈～鍐欎簨浠?}`;
+  if (collection === 'qualifications') return record.name || record.source_key || '鏈懡鍚嶈祫璐?;
+  if (collection === 'manufacturing_evidence') return record.process || record.source_key || '鏈懡鍚嶅埗閫犺瘉鎹?;
+  if (collection === 'service_locations') return [record.region, record.city].filter(Boolean).join(' - ') || '鏈懡鍚嶆湇鍔＄綉鐐?;
+  if (collection === 'service_resources') return record.title || record.source_key || '鏈懡鍚嶆湇鍔¤祫婧?;
+  if (collection === 'external_service_entries') return record.entry_type || record.url || '鏈懡鍚嶆湇鍔″叆鍙?;
+  if (collection === 'repair_page_configs') return record.title || record.page_key || '鏈懡鍚嶅敭鍚庨〉闈?;
+  if (collection === 'knowledge_items') return record.question_title || record.source_key || '鏈懡鍚嶇煡璇嗘潯鐩?;
+  return record.title || record.name || record.slug || record.source_key || '鏈懡鍚嶅唴瀹?;
 }
 
 function visualSelectionSource(element) {
-  const collection = String(element?.collection || '').trim() || '页面';
+  const collection = String(element?.collection || '').trim() || '椤甸潰';
   const itemId = String(element?.itemId || '').trim();
   const fieldPath = String(element?.fieldPath || '').trim();
   const sectionKey = String(element?.sectionKey || '').trim();
   const source = itemId ? `${collection}/${itemId}` : collection;
-  if (collection === 'pages' && sectionKey && fieldPath) return `${source} · sections[${sectionKey}].${fieldPath}`;
-  return fieldPath ? `${source} · ${fieldPath}` : `${source} · 区块位置`;
+  if (collection === 'pages' && sectionKey && fieldPath) return `${source} 路 sections[${sectionKey}].${fieldPath}`;
+  return fieldPath ? `${source} 路 ${fieldPath}` : `${source} 路 鍖哄潡浣嶇疆`;
 }
 
 function handleVisualPreviewRecordChange(event) {
@@ -3023,7 +3023,7 @@ function switchVisualPreviewRecord(itemId) {
   const nextId = String(itemId || '').trim();
   if (!collection || !nextId || String(target?.record?.id || '') === nextId) return false;
   if (!visualRecordChoices.value.some((choice) => choice.id === nextId)) return false;
-  if (!confirmDiscardChanges('切换预览条目')) return false;
+  if (!confirmDiscardChanges('鍒囨崲棰勮鏉＄洰')) return false;
   clearVisualSelection();
   const activated = activateVisualEditingTarget({ collection, itemId: nextId, sectionKey: websitePreviewContext.value.sectionKey }, { discardConfirmed: true });
   if (!activated?.record) return false;
@@ -3032,7 +3032,7 @@ function switchVisualPreviewRecord(itemId) {
   // Re-open the canvas for the new record: same page simply refreshes, another
   // page navigates to its route.
   if (liveWebsitePreviewVisible.value) {
-    message.value = '已切换条目，正在重新加载画布…';
+    message.value = '宸插垏鎹㈡潯鐩紝姝ｅ湪閲嶆柊鍔犺浇鐢诲竷鈥?;
     void startLiveWebsitePreview({ targetOverride: { collection: activated.collection, record: activated.record } });
   }
   return true;
@@ -3042,13 +3042,13 @@ function selectTab(tab) {
   if (tab === activeTab.value) return;
   // Series and models keep their drafts in the per-record cache, so moving
   // between their two forms cannot discard edits. Prompting here produced a
-  // false "有未保存修改" dialog right after selecting a series (the model form had
+  // false "鏈夋湭淇濆瓨淇敼" dialog right after selecting a series (the model form had
   // just been hydrated) and blocked the switch.
   const productTabs = new Set(['series', 'models']);
   const keepsDraft = productTabs.has(String(tab)) && productTabs.has(String(activeTab.value));
-  if (!keepsDraft && !confirmDiscardChanges('切换内容类型')) return;
-  // 专注画布会把除实时预览外的所有区块隐藏；切换到表单/内容区时必须退出，
-  // 否则新打开的工作区不可见，看起来像“卡死”。
+  if (!keepsDraft && !confirmDiscardChanges('鍒囨崲鍐呭绫诲瀷')) return;
+  // 涓撴敞鐢诲竷浼氭妸闄ゅ疄鏃堕瑙堝鐨勬墍鏈夊尯鍧楅殣钘忥紱鍒囨崲鍒拌〃鍗?鍐呭鍖烘椂蹇呴』閫€鍑猴紝
+  // 鍚﹀垯鏂版墦寮€鐨勫伐浣滃尯涓嶅彲瑙侊紝鐪嬭捣鏉ュ儚鈥滃崱姝烩€濄€?
   visualCanvasFocus.value = false;
   activeTab.value = tab;
   if (advancedTabs.has(tab)) showAdvanced.value = true;
@@ -3058,15 +3058,15 @@ function selectTab(tab) {
 async function selectSiteArea(area) {
   if (!Object.hasOwn(siteAreaLabels, area)) return;
   if (area === siteArea.value && activeTab.value === 'pages' && String(pageDraft.value?.slug || '') === String(area)) return;
-  if (!confirmDiscardChanges('切换官网栏目')) return;
+  if (!confirmDiscardChanges('鍒囨崲瀹樼綉鏍忕洰')) return;
   visualCanvasFocus.value = false;
-  // 每个官网栏目都对应一条 pages 记录（home/product/manufacturing/news/about/service）。
-  // 之前只有首页会自动选中页面并打开实时预览，其他栏目停在“模块总览”，
-  // 没有预览目标，画布不渲染却仍显示“关闭实时预览”，看起来像预览坏了。
+  // 姣忎釜瀹樼綉鏍忕洰閮藉搴斾竴鏉?pages 璁板綍锛坔ome/product/manufacturing/news/about/service锛夈€?
+  // 涔嬪墠鍙湁棣栭〉浼氳嚜鍔ㄩ€変腑椤甸潰骞舵墦寮€瀹炴椂棰勮锛屽叾浠栨爮鐩仠鍦ㄢ€滄ā鍧楁€昏鈥濓紝
+  // 娌℃湁棰勮鐩爣锛岀敾甯冧笉娓叉煋鍗翠粛鏄剧ず鈥滃叧闂疄鏃堕瑙堚€濓紝鐪嬭捣鏉ュ儚棰勮鍧忎簡銆?
   const page = pages.value.find((record) => String(record.slug || '') === String(area));
   siteArea.value = area;
   if (!page) {
-    // 页面记录缺失时保留模块总览；没有预览目标，预览开关保持关闭并禁用。
+    // 椤甸潰璁板綍缂哄け鏃朵繚鐣欐ā鍧楁€昏锛涙病鏈夐瑙堢洰鏍囷紝棰勮寮€鍏充繚鎸佸叧闂苟绂佺敤銆?
     activeTab.value = 'home';
     selectedPageId.value = '';
     pageDraft.value = null;
@@ -3109,11 +3109,11 @@ function isSiteAreaEntryActive(entry) {
 async function openSiteAreaEntry(entry) {
   // Series and models keep their drafts per record, so moving between the two
   // product forms cannot lose work. The global dirty fingerprint spans tabs, so
-  // it could report a false "未保存" right after a model was hydrated and block
+  // it could report a false "鏈繚瀛? right after a model was hydrated and block
   // the switch.
   const productSections = new Set(['series', 'models']);
   const keepsDraft = productSections.has(String(entry.action)) && productSections.has(String(activeTab.value));
-  if (!keepsDraft && !confirmDiscardChanges('切换官网内容模块')) return;
+  if (!keepsDraft && !confirmDiscardChanges('鍒囨崲瀹樼綉鍐呭妯″潡')) return;
   clearVisualSelection();
   markDraftSaved();
   if (entry.action === 'series') {
@@ -3172,7 +3172,7 @@ async function openSiteAreaEntry(entry) {
     page = pages.value.find((record) => record.slug === siteArea.value);
   }
   if (!page) {
-    error.value = `未找到“${siteAreaLabel.value}”对应的页面草稿，请重新加载后再试。`;
+    error.value = `鏈壘鍒扳€?{siteAreaLabel.value}鈥濆搴旂殑椤甸潰鑽夌锛岃閲嶆柊鍔犺浇鍚庡啀璇曘€俙;
     return;
   }
   activeTab.value = 'pages';
@@ -3185,7 +3185,7 @@ async function openSiteAreaEntry(entry) {
 }
 
 function requestReload() {
-  if (!confirmDiscardChanges('重新加载')) return;
+  if (!confirmDiscardChanges('閲嶆柊鍔犺浇')) return;
   load();
 }
 
@@ -3238,7 +3238,7 @@ function buildLivePreviewRecord(target = websitePreviewTarget.value) {
     // Series-level detail is persisted inside `presentation`. Send the unsaved
     // draft the same way so the canvas shows edits before they are saved, and
     // resolve feature images to the authorized preview URL.
-    // Keep blank rows in the canvas payload: the "＋" button adds one and the
+    // Keep blank rows in the canvas payload: the "锛? button adds one and the
     // editor has to see it before filling the title.
     const detail = normalizeSeriesDetail(record.detail, { keepEmpty: true });
     const presentation = { ...(record.presentation || {}) };
@@ -3346,9 +3346,13 @@ function buildLivePreviewRecord(target = websitePreviewTarget.value) {
   return previewSafeRecord(collection, materializeVisualMediaRecord(record, previewMediaAsset));
 }
 
+// Last-resort fallback only. The authoritative value is preview_open_url, which
+// the CMS endpoint builds from WEBSITE_PREVIEW_OPEN_URL; that variable must be
+// injected into the Directus process, it is not reliably read from .env alone.
+// Port 8091 is the deployed website port, replacing the old dev-only 4175.
 function fallbackWebsitePreviewOpenUrl() {
   const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
-  return `${protocol}//${window.location.hostname}:4175/api/preview/open`;
+  return `${protocol}//${window.location.hostname}:8091/api/preview/open`;
 }
 
 function submitPreviewToken(openUrl, token, targetName = 'ruijun-website-draft-preview', context = {}) {
@@ -3413,7 +3417,7 @@ async function postLivePreviewUpdate(forcedTarget = null) {
     } catch (reason) {
       // A published record can never obtain a media grant. That is expected and
       // must not abort the update: dropping the message left the canvas stuck on
-      // "连接失败", with editMode never delivered — the hero video then finished
+      // "杩炴帴澶辫触", with editMode never delivered 鈥?the hero video then finished
       // playing and unmounted, so the operator saw a canvas that ignored edits.
       error.value = mediaGrantError(reason, target);
     }
@@ -3468,8 +3472,8 @@ async function startLiveWebsitePreview({ automatic = false, targetOverride = nul
   }
   const requestSequence = ++livePreviewRequestSequence;
   liveWebsitePreviewVisible.value = true;
-  // 每次手动打开画布都刷新一次已发布素材：媒体上传即发布，管理员在别处上传后
-  // 画布的下拉应立即能看到，而不是等整页刷新。
+  // 姣忔鎵嬪姩鎵撳紑鐢诲竷閮藉埛鏂颁竴娆″凡鍙戝竷绱犳潗锛氬獟浣撲笂浼犲嵆鍙戝竷锛岀鐞嗗憳鍦ㄥ埆澶勪笂浼犲悗
+  // 鐢诲竷鐨勪笅鎷夊簲绔嬪嵆鑳界湅鍒帮紝鑰屼笉鏄瓑鏁撮〉鍒锋柊銆?
   if (!automatic) void loadMediaAssets().catch(() => {});
   // Canvas clicks should select bound elements as soon as the visual preview opens.
   visualEditMode.value = visualCanvasEditable.value;
@@ -3481,16 +3485,16 @@ async function startLiveWebsitePreview({ automatic = false, targetOverride = nul
     const response = await api.post('/content-preview-tokens/issue', { contentCollection: targetSnapshot.collection, contentItemId: targetSnapshot.record.id, ttlSeconds: 900 });
     if (requestSequence !== livePreviewRequestSequence) return;
     const data = response.data?.data;
-    if (!data?.token) throw new Error('预览令牌签发失败');
+    if (!data?.token) throw new Error('棰勮浠ょ墝绛惧彂澶辫触');
     const openUrl = data.preview_open_url || fallbackWebsitePreviewOpenUrl();
     livePreviewWebsiteOrigin.value = previewWebsiteOrigin(openUrl);
-    if (!livePreviewWebsiteOrigin.value) throw new Error('官网预览地址无效');
+    if (!livePreviewWebsiteOrigin.value) throw new Error('瀹樼綉棰勮鍦板潃鏃犳晥');
     submitPreviewToken(openUrl, data.token, 'ruijun-live-website-preview', contextSnapshot);
     return true;
   } catch (reason) {
     if (requestSequence !== livePreviewRequestSequence) return;
     livePreviewStatus.value = 'error';
-    livePreviewError.value = apiError(reason, '无法连接官网实时预览，请确认官网与内容后台服务正在运行。');
+    livePreviewError.value = apiError(reason, '鏃犳硶杩炴帴瀹樼綉瀹炴椂棰勮锛岃纭瀹樼綉涓庡唴瀹瑰悗鍙版湇鍔℃鍦ㄨ繍琛屻€?);
     return false;
   }
 }
@@ -3534,16 +3538,16 @@ function parameterPayload(parameter) {
 // The public product reader and the approval gate use the model's top-level
 // `parameters` object; the workbench table edits product_parameters rows. Keep
 // the standard fields in sync on save so a newly created model is not blocked by
-// "结构化参数" even though its spec table is filled.
+// "缁撴瀯鍖栧弬鏁? even though its spec table is filled.
 const structuredParameterKeys = Object.freeze({
-  'XY 行程': 'xyTravelMm',
-  'Z 轴行程': 'zAxisTravelMm',
-  '最大工件尺寸': 'maxWorkpieceMm',
-  '最大工件重量': 'maxWorkpieceWeightKg',
-  '最大锥度': 'maxTaperDegrees',
-  '最大切割厚度': 'maxCuttingHeightMm',
-  '机床外形尺寸': 'machineDimensionsMm',
-  '机床重量': 'machineWeightKg'
+  'XY 琛岀▼': 'xyTravelMm',
+  'Z 杞磋绋?: 'zAxisTravelMm',
+  '鏈€澶у伐浠跺昂瀵?: 'maxWorkpieceMm',
+  '鏈€澶у伐浠堕噸閲?: 'maxWorkpieceWeightKg',
+  '鏈€澶ч敟搴?: 'maxTaperDegrees',
+  '鏈€澶у垏鍓插帤搴?: 'maxCuttingHeightMm',
+  '鏈哄簥澶栧舰灏哄': 'machineDimensionsMm',
+  '鏈哄簥閲嶉噺': 'machineWeightKg'
 });
 
 function structuredModelParameters() {
@@ -3590,13 +3594,13 @@ async function persistDirtyParameters() {
 }
 
 // Reloading lists and renewing the preview are follow-up steps. A failure here
-// must not turn a successful PATCH into "保存失败，内容没有更新".
+// must not turn a successful PATCH into "淇濆瓨澶辫触锛屽唴瀹规病鏈夋洿鏂?.
 async function refreshAfterSave(loaders = []) {
   for (const load of loaders) {
     try {
       await load();
     } catch {
-      message.value = `${message.value}（列表刷新失败，请重新加载页面查看）`;
+      message.value = `${message.value}锛堝垪琛ㄥ埛鏂板け璐ワ紝璇烽噸鏂板姞杞介〉闈㈡煡鐪嬶級`;
     }
   }
   try {
@@ -3609,7 +3613,7 @@ async function renewLiveWebsitePreview() {
   livePreviewAutoRenewedForFrame = true;
   livePreviewAutoRenewInFlight = true;
   livePreviewStatus.value = 'opening';
-  livePreviewError.value = '实时预览授权已到期，正在自动恢复。未保存修改仍保留。';
+  livePreviewError.value = '瀹炴椂棰勮鎺堟潈宸插埌鏈燂紝姝ｅ湪鑷姩鎭㈠銆傛湭淇濆瓨淇敼浠嶄繚鐣欍€?;
   const renewed = await startLiveWebsitePreview({ automatic: true });
   if (!renewed) livePreviewAutoRenewInFlight = false;
 }
@@ -3648,13 +3652,13 @@ async function offerBlockedSectionSwitch(payload) {
   const page = pages.value.find((record) => String(record.slug || '') === String(siteArea.value || ''))
     || pages.value.find((record) => String(record.id) === String(pageDraft.value?.id || ''));
   if (!page) {
-    error.value = '未找到当前页面的草稿，请重新加载后再试。';
+    error.value = '鏈壘鍒板綋鍓嶉〉闈㈢殑鑽夌锛岃閲嶆柊鍔犺浇鍚庡啀璇曘€?;
     return;
   }
   const section = (page.sections || pageDraft.value?.sections || []).find((item) => String(item?.id || '') === sectionKey);
   const label = String(section?.title || section?.kicker || sectionKey);
-  if (!window.confirm(`这段内容属于「${label}」区块，当前画布没有它的编辑权。\n\n是否切换到该区块继续编辑？`)) return;
-  if (!confirmDiscardChanges('切换画布编辑区块')) return;
+  if (!window.confirm(`杩欐鍐呭灞炰簬銆?{label}銆嶅尯鍧楋紝褰撳墠鐢诲竷娌℃湁瀹冪殑缂栬緫鏉冦€俓n\n鏄惁鍒囨崲鍒拌鍖哄潡缁х画缂栬緫锛焋)) return;
+  if (!confirmDiscardChanges('鍒囨崲鐢诲竷缂栬緫鍖哄潡')) return;
   activeTab.value = 'pages';
   selectPage(page.id, true);
   activePageSectionKey.value = sectionKey;
@@ -3734,7 +3738,7 @@ function activateVisualEditingTarget(selection, { discardConfirmed = false } = {
       hasUnsavedChanges: hasUnsavedChanges.value,
       currentTarget,
       nextTarget: { collection, itemId: resolved.record.id }
-    }) && !confirmDiscardChanges('切换画布编辑内容')) return null;
+    }) && !confirmDiscardChanges('鍒囨崲鐢诲竷缂栬緫鍐呭')) return null;
   if (collection === 'pages') syncSiteAreaForPage(resolved.record);
   preserveLivePreviewSessionOnce = Boolean(
     collection !== 'pages'
@@ -3878,7 +3882,7 @@ function handleLivePreviewMessage(event) {
     if (now - lastPreviewSessionRecoveryAt < 30000) return;
     lastPreviewSessionRecoveryAt = now;
     livePreviewStatus.value = 'opening';
-    livePreviewError.value = '预览会话已失效（超过 15 分钟未操作，或页面被导航到普通地址），正在自动恢复。未保存修改仍保留。';
+    livePreviewError.value = '棰勮浼氳瘽宸插け鏁堬紙瓒呰繃 15 鍒嗛挓鏈搷浣滐紝鎴栭〉闈㈣瀵艰埅鍒版櫘閫氬湴鍧€锛夛紝姝ｅ湪鑷姩鎭㈠銆傛湭淇濆瓨淇敼浠嶄繚鐣欍€?;
     void reconnectLiveWebsitePreview();
     return;
   }
@@ -3886,11 +3890,11 @@ function handleLivePreviewMessage(event) {
     if (livePreviewAutoRenewInFlight) return;
     if (livePreviewAutoRenewedForFrame) {
       livePreviewStatus.value = 'error';
-      livePreviewError.value = '实时预览自动恢复失败，请点击重新连接实时预览。未保存修改仍保留。';
+      livePreviewError.value = '瀹炴椂棰勮鑷姩鎭㈠澶辫触锛岃鐐瑰嚮閲嶆柊杩炴帴瀹炴椂棰勮銆傛湭淇濆瓨淇敼浠嶄繚鐣欍€?;
       return;
     }
     livePreviewStatus.value = 'opening';
-    livePreviewError.value = '实时预览授权已到期，正在自动恢复。未保存修改仍保留。';
+    livePreviewError.value = '瀹炴椂棰勮鎺堟潈宸插埌鏈燂紝姝ｅ湪鑷姩鎭㈠銆傛湭淇濆瓨淇敼浠嶄繚鐣欍€?;
     void renewLiveWebsitePreview();
     return;
   }
@@ -3902,7 +3906,7 @@ function handleLivePreviewMessage(event) {
     const resolved = activateVisualEditingTarget(event.data);
     if (!resolved) return;
     selectedVisualElement.value = {
-      label: String(event.data.label || '静态媒体'),
+      label: String(event.data.label || '闈欐€佸獟浣?),
       elementType: String(event.data.elementType || 'image'),
       fieldPath: '',
       positionFieldPath: '',
@@ -3915,13 +3919,13 @@ function handleLivePreviewMessage(event) {
       placementKey: '',
       allowDefaultMedia: event.data.allowDefaultMedia === true,
       readonly: true,
-      readonlyReason: String(event.data.readonlyReason || '请先在媒体资产中导入并发布后再替换。'),
+      readonlyReason: String(event.data.readonlyReason || '璇峰厛鍦ㄥ獟浣撹祫浜т腑瀵煎叆骞跺彂甯冨悗鍐嶆浛鎹€?),
       rect: event.data.rect || null
     };
     visualMediaSelection.value = '';
-    // An unbound media slot can only be filled from the block's 图片与背景 list,
+    // An unbound media slot can only be filled from the block's 鍥剧墖涓庤儗鏅?list,
     // so bring that editor into view instead of leaving the operator to hunt for
-    // it after the canvas says "尚未绑定".
+    // it after the canvas says "灏氭湭缁戝畾".
     void revealSectionMediaEditor(event.data?.sectionKey);
     return;
   }
@@ -3939,7 +3943,7 @@ function handleLivePreviewMessage(event) {
       if (needsSeed) seedCanvasListDetail(String(resolved.collection), record);
     }
     selectedVisualElement.value = {
-      label: String(event.data.label || event.data.fieldPath || event.data.field || '画布元素'),
+      label: String(event.data.label || event.data.fieldPath || event.data.field || '鐢诲竷鍏冪礌'),
       elementType: String(event.data.elementType || 'element'),
       fieldPath: String(event.data.fieldPath || event.data.field || ''),
       linkFieldPath: String(event.data.linkFieldPath || ''),
@@ -3971,8 +3975,8 @@ function handleLivePreviewMessage(event) {
     if (!sameTarget) return;
     const fieldTarget = resolveVisualFieldTarget(record, { collection: selectedRecord?.collection || target?.collection, sectionKey });
     if (!fieldTarget) return;
-    // 视频分享卡片由 media_assets 记录自身驱动，没有页面字段路径可解析；
-    // 选中消息里的 mediaAssetId 才是当前素材，直接用它打开素材属性面板。
+    // 瑙嗛鍒嗕韩鍗＄墖鐢?media_assets 璁板綍鑷韩椹卞姩锛屾病鏈夐〉闈㈠瓧娈佃矾寰勫彲瑙ｆ瀽锛?
+    // 閫変腑娑堟伅閲岀殑 mediaAssetId 鎵嶆槸褰撳墠绱犳潗锛岀洿鎺ョ敤瀹冩墦寮€绱犳潗灞炴€ч潰鏉裤€?
     visualMediaSelection.value = isVisualMediaSelection(event.data)
       ? (String(event.data.mediaAssetId || '').trim()
         || getVisualMediaAssetId(fieldTarget, fieldPath, { mediaSlot: String(event.data.mediaSlot || '') }))
@@ -4027,19 +4031,19 @@ async function openWebsitePreview() {
   const target = websitePreviewTarget.value;
   if (!websitePreviewAvailable.value || !target) return;
   const previewWindow = window.open('about:blank', 'ruijun-website-draft-preview');
-  if (!previewWindow) { error.value = '浏览器阻止了预览窗口，请允许本站点打开新窗口后重试。'; return; }
+  if (!previewWindow) { error.value = '娴忚鍣ㄩ樆姝簡棰勮绐楀彛锛岃鍏佽鏈珯鐐规墦寮€鏂扮獥鍙ｅ悗閲嶈瘯銆?; return; }
   try { previewWindow.opener = null; } catch { /* Browser policy can forbid changing opener. */ }
   websitePreviewOpening.value = true;
   error.value = ''; message.value = '';
   try {
     const response = await api.post('/content-preview-tokens/issue', { contentCollection: target.collection, contentItemId: target.record.id, ttlSeconds: 900 });
     const data = response.data?.data;
-    if (!data?.token) throw new Error('预览令牌签发失败');
+    if (!data?.token) throw new Error('棰勮浠ょ墝绛惧彂澶辫触');
     submitPreviewToken(data.preview_open_url || fallbackWebsitePreviewOpenUrl(), data.token, 'ruijun-website-draft-preview', websitePreviewContext.value);
-    message.value = '已在新窗口打开官网草稿预览；该窗口是只读的，不会公开发布。要在画面上选中和修改，请关闭它并使用「打开实时预览」。';
+    message.value = '宸插湪鏂扮獥鍙ｆ墦寮€瀹樼綉鑽夌棰勮锛涜绐楀彛鏄彧璇荤殑锛屼笉浼氬叕寮€鍙戝竷銆傝鍦ㄧ敾闈笂閫変腑鍜屼慨鏀癸紝璇峰叧闂畠骞朵娇鐢ㄣ€屾墦寮€瀹炴椂棰勮銆嶃€?;
   } catch (reason) {
     previewWindow.close();
-    error.value = apiError(reason, '无法打开官网预览，请确认草稿已保存且预览服务正在运行。');
+    error.value = apiError(reason, '鏃犳硶鎵撳紑瀹樼綉棰勮锛岃纭鑽夌宸蹭繚瀛樹笖棰勮鏈嶅姟姝ｅ湪杩愯銆?);
   } finally { websitePreviewOpening.value = false; }
 }
 
@@ -4157,8 +4161,8 @@ function companyMediaScope() {
 
 function mediaReferenceLabel(reference, scope) {
   const asset = [...reviewedMediaAssets(scope), ...mediaCandidates.value].find((candidate) => String(candidate.id) === String(reference.media_asset_id));
-  if (!asset) return `当前引用 ${reference.media_asset_id}（尚未通过此选择器验证）`;
-  return isPreviewStagingMedia(asset, { scope }) ? `${mediaAssetLabel(asset)}（草稿素材，仅当前内部预览）` : mediaAssetLabel(asset);
+  if (!asset) return `褰撳墠寮曠敤 ${reference.media_asset_id}锛堝皻鏈€氳繃姝ら€夋嫨鍣ㄩ獙璇侊級`;
+  return isPreviewStagingMedia(asset, { scope }) ? `${mediaAssetLabel(asset)}锛堣崏绋跨礌鏉愶紝浠呭綋鍓嶅唴閮ㄩ瑙堬級` : mediaAssetLabel(asset);
 }
 
 const mediaUploadRules = Object.freeze({
@@ -4188,9 +4192,9 @@ function applyMediaPlacementContext(placementKey, force = false) {
   if (placement?.muted) mediaDraft.value.muted = true;
 }
 
-// 使用范围 → 页面 slug。取值必须用服务端的词表：视频新闻是 `article`、关于瑞钧是 `brand`，
-// 与 content-preview/page-preview-media-policy.mjs 的 pageScopes 保持一致。
-// 曾经这里写成 `news` / `about`，导致这两个页面选择时上传必然 400。
+// 浣跨敤鑼冨洿 鈫?椤甸潰 slug銆傚彇鍊煎繀椤荤敤鏈嶅姟绔殑璇嶈〃锛氳棰戞柊闂绘槸 `article`銆佸叧浜庣憺閽ф槸 `brand`锛?
+// 涓?content-preview/page-preview-media-policy.mjs 鐨?pageScopes 淇濇寔涓€鑷淬€?
+// 鏇剧粡杩欓噷鍐欐垚 `news` / `about`锛屽鑷磋繖涓や釜椤甸潰閫夋嫨鏃朵笂浼犲繀鐒?400銆?
 const mediaScopePageKeys = Object.freeze({ homepage: 'home', product: 'product', manufacturing: 'manufacturing', article: 'news', brand: 'about', service: 'service' });
 const compatibleMediaPlacements = computed(() => mediaPlacementOptions.filter((option) => {
   const context = mediaPlacementContexts[option.key];
@@ -4208,29 +4212,29 @@ function syncMediaScopeContext() {
 }
 const selectedMediaPlacementHelp = computed(() => {
   const spec = selectedMediaPlacement.value;
-  if (!spec) return '选择文件后再选择对应的官网展示位置。';
+  if (!spec) return '閫夋嫨鏂囦欢鍚庡啀閫夋嫨瀵瑰簲鐨勫畼缃戝睍绀轰綅缃€?;
   const requirements = [];
-  // 尺寸只是建议，不再拦截：运营手里常常只有一种素材，卡尺寸等于没法上线。
-  if (spec.minWidth && spec.minHeight) requirements.push(`建议 ${spec.minWidth} x ${spec.minHeight} px 以上（不达标也能上传，只是显示可能偏模糊）`);
-  if (spec.aspectRatio) requirements.push(`建议比例 ${spec.aspectRatio}`);
-  requirements.push(`最大 ${readableFileSize(spec.maxBytes)}`);
-  if (spec.maxDurationSeconds) requirements.push(`建议时长不超过 ${spec.maxDurationSeconds} 秒`);
-  if (spec.posterRecommended) requirements.push('建议补充封面图片（未设置时官网先显示视频首帧）');
-  if (spec.transcriptRequired) requirements.push('必须填写字幕或文字稿');
+  // 灏哄鍙槸寤鸿锛屼笉鍐嶆嫤鎴細杩愯惀鎵嬮噷甯稿父鍙湁涓€绉嶇礌鏉愶紝鍗″昂瀵哥瓑浜庢病娉曚笂绾裤€?
+  if (spec.minWidth && spec.minHeight) requirements.push(`寤鸿 ${spec.minWidth} x ${spec.minHeight} px 浠ヤ笂锛堜笉杈炬爣涔熻兘涓婁紶锛屽彧鏄樉绀哄彲鑳藉亸妯＄硦锛塦);
+  if (spec.aspectRatio) requirements.push(`寤鸿姣斾緥 ${spec.aspectRatio}`);
+  requirements.push(`鏈€澶?${readableFileSize(spec.maxBytes)}`);
+  if (spec.maxDurationSeconds) requirements.push(`寤鸿鏃堕暱涓嶈秴杩?${spec.maxDurationSeconds} 绉抈);
+  if (spec.posterRecommended) requirements.push('寤鸿琛ュ厖灏侀潰鍥剧墖锛堟湭璁剧疆鏃跺畼缃戝厛鏄剧ず瑙嗛棣栧抚锛?);
+  if (spec.transcriptRequired) requirements.push('蹇呴』濉啓瀛楀箷鎴栨枃瀛楃');
 
-  // 已经量出实际尺寸时，直接对比给出结论，省得运营自己算。
+  // 宸茬粡閲忓嚭瀹為檯灏哄鏃讹紝鐩存帴瀵规瘮缁欏嚭缁撹锛岀渷寰楄繍钀ヨ嚜宸辩畻銆?
   const measured = [];
   if (Number.isInteger(mediaDraft.value.width) && mediaDraft.value.width > 0
     && Number.isInteger(mediaDraft.value.height) && mediaDraft.value.height > 0) {
-    measured.push(`当前素材 ${mediaDraft.value.width} x ${mediaDraft.value.height} px`);
+    measured.push(`褰撳墠绱犳潗 ${mediaDraft.value.width} x ${mediaDraft.value.height} px`);
   }
-  return `${spec.label}：${requirements.join('；')}。${measured.length ? measured.join('；') + '。' : ''}`;
+  return `${spec.label}锛?{requirements.join('锛?)}銆?{measured.length ? measured.join('锛?) + '銆? : ''}`;
 });
 const mediaMetadataLabel = computed(() => {
-  if (mediaDraft.value.media_type === 'document') return 'PDF 文档';
-  if (!mediaDraft.value.width || !mediaDraft.value.height) return '正在读取尺寸';
-  const duration = mediaDraft.value.media_type === 'video' ? ` · ${mediaDraft.value.duration_seconds} 秒` : '';
-  return `${mediaDraft.value.width} x ${mediaDraft.value.height} px · ${mediaDraft.value.aspect_ratio}${duration}`;
+  if (mediaDraft.value.media_type === 'document') return 'PDF 鏂囨。';
+  if (!mediaDraft.value.width || !mediaDraft.value.height) return '姝ｅ湪璇诲彇灏哄';
+  const duration = mediaDraft.value.media_type === 'video' ? ` 路 ${mediaDraft.value.duration_seconds} 绉抈 : '';
+  return `${mediaDraft.value.width} x ${mediaDraft.value.height} px 路 ${mediaDraft.value.aspect_ratio}${duration}`;
 });
 const publishedImageAssets = computed(() => mediaAssets.value.filter((asset) => asset.media_type === 'image' || String(asset.mime_type || '').startsWith('image/')));
 const videoPosterOptions = computed(() => videoPosterAssets({
@@ -4239,7 +4243,7 @@ const videoPosterOptions = computed(() => videoPosterAssets({
   publishedAssets: publishedImageAssets.value,
   candidates: mediaCandidates.value
 }));
-// 已登记素材的封面补录：走只改封面的端点，避免已发布视频被退回草稿。
+// 宸茬櫥璁扮礌鏉愮殑灏侀潰琛ュ綍锛氳蛋鍙敼灏侀潰鐨勭鐐癸紝閬垮厤宸插彂甯冭棰戣閫€鍥炶崏绋裤€?
 const mediaPosterSelections = ref({});
 const mediaPosterSavingId = ref('');
 const mediaPosterOptions = (asset) => mediaPosterOptionsFor(asset, { publishedAssets: publishedImageAssets.value, candidates: mediaCandidates.value });
@@ -4248,15 +4252,15 @@ async function saveMediaPoster(asset) {
   const id = String(asset?.id || '');
   if (!id) return;
   const posterId = String(mediaPosterSelections.value[id] || '').trim();
-  if (posterId && posterId === id) { error.value = '封面不能指向视频素材本身。'; return; }
+  if (posterId && posterId === id) { error.value = '灏侀潰涓嶈兘鎸囧悜瑙嗛绱犳潗鏈韩銆?; return; }
   mediaPosterSavingId.value = id;
   error.value = ''; message.value = '';
   try {
     await api.post('/media-poster', { media_asset_id: id, poster_asset_id: posterId || null });
-    message.value = posterId ? '封面已保存。封面发布后会替换视频首帧显示。' : '已清除封面，官网将显示视频首帧。';
+    message.value = posterId ? '灏侀潰宸蹭繚瀛樸€傚皝闈㈠彂甯冨悗浼氭浛鎹㈣棰戦甯ф樉绀恒€? : '宸叉竻闄ゅ皝闈紝瀹樼綉灏嗘樉绀鸿棰戦甯с€?;
     await Promise.all([loadMediaAssets(), loadMediaCandidates()]);
   } catch (reason) {
-    error.value = apiError(reason, '封面保存失败，视频内容没有变化。');
+    error.value = apiError(reason, '灏侀潰淇濆瓨澶辫触锛岃棰戝唴瀹规病鏈夊彉鍖栥€?);
   } finally {
     mediaPosterSavingId.value = '';
   }
@@ -4277,7 +4281,7 @@ function eligibleEditorialCoverAssets(category) {
 }
 
 function editorialMediaAssetLabel(asset) {
-  return isPreviewStagingMedia(asset) ? `${mediaAssetLabel(asset)}（草稿素材，仅当前内部预览）` : mediaAssetLabel(asset);
+  return isPreviewStagingMedia(asset) ? `${mediaAssetLabel(asset)}锛堣崏绋跨礌鏉愶紝浠呭綋鍓嶅唴閮ㄩ瑙堬級` : mediaAssetLabel(asset);
 }
 
 function isEditorialCoverAssetAllowed(assetId, category) {
@@ -4286,18 +4290,18 @@ function isEditorialCoverAssetAllowed(assetId, category) {
 
 function readableFileSize(value) {
   const bytes = Number(value);
-  if (!Number.isFinite(bytes) || bytes < 0) return '未知大小';
+  if (!Number.isFinite(bytes) || bytes < 0) return '鏈煡澶у皬';
   if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(bytes >= 100 * 1024 * 1024 ? 0 : 1)} MB`;
 }
 
 function usageScopeLabel(scope) {
-  return { homepage: '网站主页', product: '产品展示', manufacturing: '先进制造', article: '视频新闻', brand: '关于瑞钧', service: '服务支持' }[scope] || scope || '未分类';
+  return { homepage: '缃戠珯涓婚〉', product: '浜у搧灞曠ず', manufacturing: '鍏堣繘鍒堕€?, article: '瑙嗛鏂伴椈', brand: '鍏充簬鐟為挧', service: '鏈嶅姟鏀寔' }[scope] || scope || '鏈垎绫?;
 }
 
 function videoPosterAssetLabel(asset) {
   const internalDraft = asset?.status !== 'published' || asset?.publication_state !== 'published';
-  return `${mediaAssetLabel(asset)}${internalDraft ? '（仅内部预览草稿）' : ''}`;
+  return `${mediaAssetLabel(asset)}${internalDraft ? '锛堜粎鍐呴儴棰勮鑽夌锛? : ''}`;
 }
 
 async function readMediaMetadata(file, mediaType) {
@@ -4306,7 +4310,7 @@ async function readMediaMetadata(file, mediaType) {
   try {
     if (mediaType === 'image') {
       const image = new Image();
-      const dimensions = await new Promise((resolve, reject) => { image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight }); image.onerror = () => reject(new Error('无法读取图片尺寸')); image.src = url; });
+      const dimensions = await new Promise((resolve, reject) => { image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight }); image.onerror = () => reject(new Error('鏃犳硶璇诲彇鍥剧墖灏哄')); image.src = url; });
       const divisor = greatestCommonDivisor(dimensions.width, dimensions.height);
       return { ...dimensions, duration_seconds: 0, aspect_ratio: `${dimensions.width / divisor}:${dimensions.height / divisor}` };
     }
@@ -4334,19 +4338,19 @@ async function selectMediaFile(event) {
     applyMediaPlacementContext(mediaDraft.value.placement_key);
   } catch (reason) {
     error.value = '';
-    message.value = '浏览器暂时无法读取视频信息，仍可继续上传；上传后将由服务端校验。';
+    message.value = '娴忚鍣ㄦ殏鏃舵棤娉曡鍙栬棰戜俊鎭紝浠嶅彲缁х画涓婁紶锛涗笂浼犲悗灏嗙敱鏈嶅姟绔牎楠屻€?;
   }
 }
 
 function validateMediaFile(file) {
-  if (!file) return '请选择要登记的媒体文件。';
+  if (!file) return '璇烽€夋嫨瑕佺櫥璁扮殑濯掍綋鏂囦欢銆?;
   const mime = String(file.type || '').toLowerCase().trim();
   const extension = String(file.name || '').toLowerCase().split('.').pop();
   const normalizedMime = mime === 'video/quicktime' || ['mov', 'm4v'].includes(extension) ? 'video/mp4' : mime;
   const limit = mediaUploadRules[normalizedMime] || mediaUploadRules[mime];
-  if (!limit) return '仅支持 JPG、PNG、WebP、AVIF、MP4、WebM 或 PDF 文件。';
-  if (file.size < 1) return '不能上传空文件。';
-  if (file.size > limit) return `文件超过 ${readableFileSize(limit)} 的上限。`;
+  if (!limit) return '浠呮敮鎸?JPG銆丳NG銆乄ebP銆丄VIF銆丮P4銆乄ebM 鎴?PDF 鏂囦欢銆?;
+  if (file.size < 1) return '涓嶈兘涓婁紶绌烘枃浠躲€?;
+  if (file.size > limit) return `鏂囦欢瓒呰繃 ${readableFileSize(limit)} 鐨勪笂闄愩€俙;
   return '';
 }
 
@@ -4354,14 +4358,14 @@ function validateMediaCandidate() {
   const fileError = validateMediaFile(mediaDraft.value.file);
   if (fileError) return fileError;
   const spec = selectedMediaPlacement.value;
-  if (!spec || spec.mediaType !== mediaDraft.value.media_type) return '请选择与文件类型一致的官网展示位置。';
-  // 尺寸 / 体积 / 时长不再拦截（与后端 media-asset-governance.mjs 的策略一致）：
-  // 这些只影响画质，运营手里常常只有一种素材，卡住等于没法上线。
-  // 画质差距由 selectedMediaPlacementHelp 以提示形式展示。
-  // 下面这些保留，因为缺了页面会直接坏掉。
-  if (spec.transcriptRequired && !String(mediaDraft.value.transcript || '').trim()) return `${spec.label}必须填写字幕或文字稿。`;
-  if (spec.autoplay && !mediaDraft.value.autoplay) return `${spec.label}必须启用自动播放。`;
-  if (spec.muted && !mediaDraft.value.muted) return `${spec.label}自动播放时必须默认静音。`;
+  if (!spec || spec.mediaType !== mediaDraft.value.media_type) return '璇烽€夋嫨涓庢枃浠剁被鍨嬩竴鑷寸殑瀹樼綉灞曠ず浣嶇疆銆?;
+  // 灏哄 / 浣撶Н / 鏃堕暱涓嶅啀鎷︽埅锛堜笌鍚庣 media-asset-governance.mjs 鐨勭瓥鐣ヤ竴鑷达級锛?
+  // 杩欎簺鍙奖鍝嶇敾璐紝杩愯惀鎵嬮噷甯稿父鍙湁涓€绉嶇礌鏉愶紝鍗′綇绛変簬娌℃硶涓婄嚎銆?
+  // 鐢昏川宸窛鐢?selectedMediaPlacementHelp 浠ユ彁绀哄舰寮忓睍绀恒€?
+  // 涓嬮潰杩欎簺淇濈暀锛屽洜涓虹己浜嗛〉闈細鐩存帴鍧忔帀銆?
+  if (spec.transcriptRequired && !String(mediaDraft.value.transcript || '').trim()) return `${spec.label}蹇呴』濉啓瀛楀箷鎴栨枃瀛楃銆俙;
+  if (spec.autoplay && !mediaDraft.value.autoplay) return `${spec.label}蹇呴』鍚敤鑷姩鎾斁銆俙;
+  if (spec.muted && !mediaDraft.value.muted) return `${spec.label}鑷姩鎾斁鏃跺繀椤婚粯璁ら潤闊炽€俙;
   return '';
 }
 
@@ -4370,13 +4374,13 @@ function companyRecords(mode) {
 }
 
 function companyLabel(record) {
-  if (companyMode.value === 'milestones') return `${record.year || '未填写'} 年 - ${record.event || '未填写事件'}`;
-  if (companyMode.value === 'qualifications') return record.name || record.source_key || '未命名资质';
-  return record.process || record.source_key || '未命名制造证据';
+  if (companyMode.value === 'milestones') return `${record.year || '鏈～鍐?} 骞?- ${record.event || '鏈～鍐欎簨浠?}`;
+  if (companyMode.value === 'qualifications') return record.name || record.source_key || '鏈懡鍚嶈祫璐?;
+  return record.process || record.source_key || '鏈懡鍚嶅埗閫犺瘉鎹?;
 }
 
 function companyHeading() {
-  return { milestones: '发展历程', qualifications: '资质证书', manufacturing_evidence: '制造证据' }[companyMode.value];
+  return { milestones: '鍙戝睍鍘嗙▼', qualifications: '璧勮川璇佷功', manufacturing_evidence: '鍒堕€犺瘉鎹? }[companyMode.value];
 }
 
 function serviceRecords(mode) {
@@ -4384,9 +4388,9 @@ function serviceRecords(mode) {
 }
 
 function serviceLabel(record) {
-  if (serviceMode.value === 'service_resources') return record.title || record.source_key || record.type || '未命名服务资料';
-  if (serviceMode.value === 'service_locations') return `${record.region || '未填写'} ${record.city || '未填写'}`;
-  return record.entry_type || '未命名售后入口';
+  if (serviceMode.value === 'service_resources') return record.title || record.source_key || record.type || '鏈懡鍚嶆湇鍔¤祫鏂?;
+  if (serviceMode.value === 'service_locations') return `${record.region || '鏈～鍐?} ${record.city || '鏈～鍐?}`;
+  return record.entry_type || '鏈懡鍚嶅敭鍚庡叆鍙?;
 }
 
 function serviceSecondary(record) {
@@ -4396,7 +4400,7 @@ function serviceSecondary(record) {
 }
 
 function serviceHeading() {
-  return { service_resources: '服务资料', service_locations: '服务网点', external_service_entries: '售后入口' }[serviceMode.value];
+  return { service_resources: '鏈嶅姟璧勬枡', service_locations: '鏈嶅姟缃戠偣', external_service_entries: '鍞悗鍏ュ彛' }[serviceMode.value];
 }
 
 function editorialRecords(mode) {
@@ -4404,15 +4408,15 @@ function editorialRecords(mode) {
 }
 
 function editorialLabel(record) {
-  return editorialMode.value === 'articles' ? (record.title || record.slug || '未命名文章') : (record.slug || '未命名案例');
+  return editorialMode.value === 'articles' ? (record.title || record.slug || '鏈懡鍚嶆枃绔?) : (record.slug || '鏈懡鍚嶆渚?);
 }
 
 function editorialSecondary(record) {
-  return editorialMode.value === 'articles' ? (record.category || record.slug || '') : (record.model_code || record.industry || '客户案例');
+  return editorialMode.value === 'articles' ? (record.category || record.slug || '') : (record.model_code || record.industry || '瀹㈡埛妗堜緥');
 }
 
 function editorialHeading() {
-  return editorialMode.value === 'articles' ? '新闻与文章' : '客户案例';
+  return editorialMode.value === 'articles' ? '鏂伴椈涓庢枃绔? : '瀹㈡埛妗堜緥';
 }
 
 function normalizeService(record) {
@@ -4423,7 +4427,7 @@ function normalizeService(record) {
 }
 
 function riskLabel(value) {
-  return { high: '高风险', medium: '中风险', low: '低风险' }[String(value || '').toLowerCase()] || '未分类';
+  return { high: '楂橀闄?, medium: '涓闄?, low: '浣庨闄? }[String(value || '').toLowerCase()] || '鏈垎绫?;
 }
 
 const filteredKnowledge = computed(() => {
@@ -4483,10 +4487,10 @@ function homeHeroVideoOptionsForSection(section) {
 
 function setHomeHeroVideo(section, assetId) {
   if (!setHomeHeroVideoAsset(section, assetId, homeHeroVideoOptionsForSection(section))) {
-    error.value = '该素材不是首页首屏视频，未保存修改。';
+    error.value = '璇ョ礌鏉愪笉鏄椤甸灞忚棰戯紝鏈繚瀛樹慨鏀广€?;
     return;
   }
-  if (error.value === '该素材不是首页首屏视频，未保存修改。') error.value = '';
+  if (error.value === '璇ョ礌鏉愪笉鏄椤甸灞忚棰戯紝鏈繚瀛樹慨鏀广€?) error.value = '';
 }
 
 function newsHeroVideoOptionsForSection(section) {
@@ -4495,15 +4499,15 @@ function newsHeroVideoOptionsForSection(section) {
 
 function setNewsHeroVideo(section, assetId) {
   if (!setNewsHeroVideoAsset(section, assetId, newsHeroVideoOptionsForSection(section))) {
-    error.value = '该素材不是视频新闻首屏视频，未保存修改。';
+    error.value = '璇ョ礌鏉愪笉鏄棰戞柊闂婚灞忚棰戯紝鏈繚瀛樹慨鏀广€?;
     return;
   }
-  if (error.value === '该素材不是视频新闻首屏视频，未保存修改。') error.value = '';
+  if (error.value === '璇ョ礌鏉愪笉鏄棰戞柊闂婚灞忚棰戯紝鏈繚瀛樹慨鏀广€?) error.value = '';
 }
 
 function pageMediaOptionLabel(asset, scope) {
   return isPreviewStagingMedia(asset, { scope })
-    ? `${mediaAssetLabel(asset)}（草稿素材，仅当前内部预览）`
+    ? `${mediaAssetLabel(asset)}锛堣崏绋跨礌鏉愶紝浠呭綋鍓嶅唴閮ㄩ瑙堬級`
     : mediaAssetLabel(asset);
 }
 
@@ -4552,7 +4556,7 @@ function serviceResourceMediaAssetLabel(asset, type = serviceDraft.value?.type) 
   const isVideo = String(type || '') === 'video';
   const placementKey = serviceResourceMediaPlacement(type);
   return isPreviewStagingMedia(asset, { scope: 'service', placementKey, elementType: isVideo ? 'video' : '' })
-    ? `${mediaAssetLabel(asset)}（${isVideo ? '草稿素材，仅当前内部预览' : '仅内部预览下载'}）`
+    ? `${mediaAssetLabel(asset)}锛?{isVideo ? '鑽夌绱犳潗锛屼粎褰撳墠鍐呴儴棰勮' : '浠呭唴閮ㄩ瑙堜笅杞?}锛塦
     : mediaAssetLabel(asset);
 }
 
@@ -4570,20 +4574,20 @@ function serviceTutorialPosterAssetLabel(asset) {
     placementKey: 'service.tutorial.poster',
     elementType: 'image'
   })
-    ? `${mediaAssetLabel(asset)}（草稿素材，仅当前内部预览）`
+    ? `${mediaAssetLabel(asset)}锛堣崏绋跨礌鏉愶紝浠呭綋鍓嶅唴閮ㄩ瑙堬級`
     : mediaAssetLabel(asset);
 }
 
 function modelResourceMediaAssetLabel(asset) {
   return isPreviewStagingMedia(asset, { scope: 'product', placementKey: 'product.document' })
-    ? `${mediaAssetLabel(asset)}（仅内部预览下载）`
+    ? `${mediaAssetLabel(asset)}锛堜粎鍐呴儴棰勮涓嬭浇锛塦
     : mediaAssetLabel(asset);
 }
 
 function modelDrawingMediaAssetLabel(asset) {
   const label = formatProductDrawingMediaLabel(asset);
   return isPreviewStagingMedia(asset, { scope: 'product', placementKey: 'product.gallery.image', elementType: 'image' })
-    ? `${label}（仅内部预览草稿）`
+    ? `${label}锛堜粎鍐呴儴棰勮鑽夌锛塦
     : label;
 }
 
@@ -4596,7 +4600,7 @@ function qualificationMediaAssets() {
 
 function qualificationMediaAssetLabel(asset) {
   return isPreviewStagingMedia(asset, { scope: 'qualification', placementKey: 'qualification.image', elementType: 'image' })
-    ? `${mediaAssetLabel(asset)}（草稿素材，仅当前内部预览）`
+    ? `${mediaAssetLabel(asset)}锛堣崏绋跨礌鏉愶紝浠呭綋鍓嶅唴閮ㄩ瑙堬級`
     : mediaAssetLabel(asset);
 }
 
@@ -4613,8 +4617,8 @@ function isCompanyMediaSelectable(value) {
 
 function mediaAssetLabel(asset) {
   const title = String(asset?.title || '').trim();
-  const filename = String(asset?.original_file_name || `素材 ${asset?.id || ''}`).trim();
-  return `${title || filename} · ${filename} · ${asset?.mime_type || '未知类型'}`;
+  const filename = String(asset?.original_file_name || `绱犳潗 ${asset?.id || ''}`).trim();
+  return `${title || filename} 路 ${filename} 路 ${asset?.mime_type || '鏈煡绫诲瀷'}`;
 }
 
 function isPreviewableMedia(asset) {
@@ -4622,10 +4626,10 @@ function isPreviewableMedia(asset) {
 }
 
 function mediaPreviewLabel(asset) {
-  if (isPreviewableMedia(asset)) return '图片';
-  if (String(asset?.mime_type || '').startsWith('video/')) return '视频';
+  if (isPreviewableMedia(asset)) return '鍥剧墖';
+  if (String(asset?.mime_type || '').startsWith('video/')) return '瑙嗛';
   if (asset?.mime_type === 'application/pdf') return 'PDF';
-  return '文件';
+  return '鏂囦欢';
 }
 
 function mediaPreviewUrl(asset) {
@@ -4678,11 +4682,11 @@ function canDeleteEditorialDraft(record) {
 }
 
 function statusLabel(status) {
-  return { draft: '草稿', rejected: '退回修改', unpublished: '已下线', review: '审核中', scheduled: '待发布', published: '已发布', archived: '已归档' }[status] || status || '未知';
+  return { draft: '鑽夌', rejected: '閫€鍥炰慨鏀?, unpublished: '宸蹭笅绾?, review: '瀹℃牳涓?, scheduled: '寰呭彂甯?, published: '宸插彂甯?, archived: '宸插綊妗? }[status] || status || '鏈煡';
 }
 
 function knowledgeSyncStatusLabel(status) {
-  return { eligible: '等待同步', synced: '已同步', failed: '同步失败', not_eligible: '暂不满足同步条件' }[status] || '暂不满足同步条件';
+  return { eligible: '绛夊緟鍚屾', synced: '宸插悓姝?, failed: '鍚屾澶辫触', not_eligible: '鏆備笉婊¤冻鍚屾鏉′欢' }[status] || '鏆備笉婊¤冻鍚屾鏉′欢';
 }
 
 function nativeItemPath(collection, id) {
@@ -4695,19 +4699,19 @@ function apiError(reason, fallback) {
   const message = String(issue?.message || '').trim();
   const code = String(issue?.extensions?.code || '');
   if (status === 401) {
-    return '登录会话已失效。未保存内容仍保留在页面中，请重新登录后保存。';
+    return '鐧诲綍浼氳瘽宸插け鏁堛€傛湭淇濆瓨鍐呭浠嶄繚鐣欏湪椤甸潰涓紝璇烽噸鏂扮櫥褰曞悗淇濆瓨銆?;
   }
   if (status === 403) {
     // The publication workflow rejects writes to review/scheduled records with
     // a Chinese reason. Treating every 403 as "login expired" sent operators to
     // re-login while the actual fix was to take the record back to draft.
-    if (code === 'PUBLICATION_BLOCKED' || /只能发布|已批准|当前状态|审核|发布队列|退回草稿|下线/.test(message)) {
-      return `当前内容不能保存：${message || '记录状态不允许保存'}。请先在「内容发布队列」退回草稿后再修改。`;
+    if (code === 'PUBLICATION_BLOCKED' || /鍙兘鍙戝竷|宸叉壒鍑唡褰撳墠鐘舵€亅瀹℃牳|鍙戝竷闃熷垪|閫€鍥炶崏绋縷涓嬬嚎/.test(message)) {
+      return `褰撳墠鍐呭涓嶈兘淇濆瓨锛?{message || '璁板綍鐘舵€佷笉鍏佽淇濆瓨'}銆傝鍏堝湪銆屽唴瀹瑰彂甯冮槦鍒椼€嶉€€鍥炶崏绋垮悗鍐嶄慨鏀广€俙;
     }
-    if (/permission to access field|字段|field/i.test(message)) {
-      return `当前账号没有该字段的保存权限：${message || '请联系管理员调整权限'}`;
+    if (/permission to access field|瀛楁|field/i.test(message)) {
+      return `褰撳墠璐﹀彿娌℃湁璇ュ瓧娈电殑淇濆瓨鏉冮檺锛?{message || '璇疯仈绯荤鐞嗗憳璋冩暣鏉冮檺'}`;
     }
-    return `当前账号没有保存权限：${message || '请确认内容状态或联系管理员'}`;
+    return `褰撳墠璐﹀彿娌℃湁淇濆瓨鏉冮檺锛?{message || '璇风‘璁ゅ唴瀹圭姸鎬佹垨鑱旂郴绠＄悊鍛?}`;
   }
   return message || fallback;
 }
@@ -4722,12 +4726,12 @@ function mediaGrantError(reason, target) {
   const record = target?.record || {};
   const published = String(record.publication_state || '') === 'published' || String(record.status || '') === 'published';
   if (code === 'PREVIEW_MEDIA_INVALID' && published) {
-    return '这条内容已经发布，画布不能替换它的素材。请先在「内容发布队列」把它下线，再恢复为草稿，然后回来换素材。';
+    return '杩欐潯鍐呭宸茬粡鍙戝竷锛岀敾甯冧笉鑳芥浛鎹㈠畠鐨勭礌鏉愩€傝鍏堝湪銆屽唴瀹瑰彂甯冮槦鍒椼€嶆妸瀹冧笅绾匡紝鍐嶆仮澶嶄负鑽夌锛岀劧鍚庡洖鏉ユ崲绱犳潗銆?;
   }
   if (code === 'PREVIEW_MEDIA_INVALID') {
-    return '所选素材不适用于这个区块：素材的用途范围、所属页面和展示位置必须与当前区块一致。请到「媒体资产」核对该素材登记的位置。';
+    return '鎵€閫夌礌鏉愪笉閫傜敤浜庤繖涓尯鍧楋細绱犳潗鐨勭敤閫旇寖鍥淬€佹墍灞為〉闈㈠拰灞曠ず浣嶇疆蹇呴』涓庡綋鍓嶅尯鍧椾竴鑷淬€傝鍒般€屽獟浣撹祫浜с€嶆牳瀵硅绱犳潗鐧昏鐨勪綅缃€?;
   }
-  return issue?.message || '素材预览授权失败，请重新打开预览。';
+  return issue?.message || '绱犳潗棰勮鎺堟潈澶辫触锛岃閲嶆柊鎵撳紑棰勮銆?;
 }
 
 function setSaveError(reason, fallback) {
@@ -4739,21 +4743,21 @@ function setSaveError(reason, fallback) {
 }
 
 const contentQueueDefinitions = Object.freeze([
-  { collection: 'content_submissions', label: '送审批次', fields: ['submission_name', 'batch_key', 'items'] },
-  { collection: 'pages', label: '页面文案', fields: ['title', 'slug'] },
-  { collection: 'product_series', label: '产品系列', fields: ['name', 'series_code'] },
-  { collection: 'product_models', label: '产品型号', fields: ['name', 'model_code'] },
-  { collection: 'product_parameters', label: '技术参数', fields: ['field_name', 'model_code'] },
-  { collection: 'articles', label: '文章资讯', fields: ['title', 'slug'] },
-  { collection: 'case_studies', label: '客户案例', fields: ['slug', 'model_code'] },
-  { collection: 'manufacturing_evidence', label: '制造证据', fields: ['process', 'source_key'] },
-  { collection: 'qualifications', label: '资质证书', fields: ['name', 'certificate_number'] },
-  { collection: 'milestones', label: '发展历程', fields: ['event', 'year'] },
-  { collection: 'service_resources', label: '服务资料', fields: ['source_key', 'type'] },
-  { collection: 'service_locations', label: '服务网点', fields: ['city', 'region'] },
-  { collection: 'knowledge_items', label: '常见问题知识', fields: ['question_title', 'source_key'] },
-  { collection: 'external_service_entries', label: '售后入口', fields: ['entry_type', 'url'] },
-  { collection: 'site_settings', label: '全站设置', fields: ['setting_key'] }
+  { collection: 'content_submissions', label: '閫佸鎵规', fields: ['submission_name', 'batch_key', 'items'] },
+  { collection: 'pages', label: '椤甸潰鏂囨', fields: ['title', 'slug'] },
+  { collection: 'product_series', label: '浜у搧绯诲垪', fields: ['name', 'series_code'] },
+  { collection: 'product_models', label: '浜у搧鍨嬪彿', fields: ['name', 'model_code'] },
+  { collection: 'product_parameters', label: '鎶€鏈弬鏁?, fields: ['field_name', 'model_code'] },
+  { collection: 'articles', label: '鏂囩珷璧勮', fields: ['title', 'slug'] },
+  { collection: 'case_studies', label: '瀹㈡埛妗堜緥', fields: ['slug', 'model_code'] },
+  { collection: 'manufacturing_evidence', label: '鍒堕€犺瘉鎹?, fields: ['process', 'source_key'] },
+  { collection: 'qualifications', label: '璧勮川璇佷功', fields: ['name', 'certificate_number'] },
+  { collection: 'milestones', label: '鍙戝睍鍘嗙▼', fields: ['event', 'year'] },
+  { collection: 'service_resources', label: '鏈嶅姟璧勬枡', fields: ['source_key', 'type'] },
+  { collection: 'service_locations', label: '鏈嶅姟缃戠偣', fields: ['city', 'region'] },
+  { collection: 'knowledge_items', label: '甯歌闂鐭ヨ瘑', fields: ['question_title', 'source_key'] },
+  { collection: 'external_service_entries', label: '鍞悗鍏ュ彛', fields: ['entry_type', 'url'] },
+  { collection: 'site_settings', label: '鍏ㄧ珯璁剧疆', fields: ['setting_key'] }
 ]);
 
 function reviewRecordKey(record) {
@@ -4802,7 +4806,7 @@ async function loadReviewQueue() {
     if (activeTab.value === 'review') markDraftSaved();
   } catch (reason) {
     reviewQueue.value = [];
-    error.value = apiError(reason, '无法读取待审核内容。请确认当前账号具有对应审核权限。');
+    error.value = apiError(reason, '鏃犳硶璇诲彇寰呭鏍稿唴瀹广€傝纭褰撳墠璐﹀彿鍏锋湁瀵瑰簲瀹℃牳鏉冮檺銆?);
   } finally {
     reviewLoading.value = false;
   }
@@ -4821,22 +4825,22 @@ async function loadSubmissionQueue() {
     if (activeTab.value === 'submit') markDraftSaved();
   } catch (reason) {
     submissionQueue.value = [];
-    error.value = apiError(reason, '无法读取草稿清单。请确认当前账号具有内容读取权限。');
+    error.value = apiError(reason, '鏃犳硶璇诲彇鑽夌娓呭崟銆傝纭褰撳墠璐﹀彿鍏锋湁鍐呭璇诲彇鏉冮檺銆?);
   } finally {
     submissionLoading.value = false;
   }
 }
 
 function invalidateSubmissionQueue() {
-  // 保存/新建/删除后旧清单立即失效。留到用户真正进入“内容送审”时再请求，
-  // 避免在编辑页无意义地刷新几十个集合。
+  // 淇濆瓨/鏂板缓/鍒犻櫎鍚庢棫娓呭崟绔嬪嵆澶辨晥銆傜暀鍒扮敤鎴风湡姝ｈ繘鍏モ€滃唴瀹归€佸鈥濇椂鍐嶈姹傦紝
+  // 閬垮厤鍦ㄧ紪杈戦〉鏃犳剰涔夊湴鍒锋柊鍑犲崄涓泦鍚堛€?
   submissionQueueLoaded.value = false;
   if (activeTab.value === 'submit') void loadSubmissionQueue();
 }
 
 function setSubmissionMode(mode) {
   if (!['submit', 'restore'].includes(mode) || submissionMode.value === mode) return;
-  if (!confirmDiscardChanges('切换审核任务')) return;
+  if (!confirmDiscardChanges('鍒囨崲瀹℃牳浠诲姟')) return;
   submissionMode.value = mode;
   selectedSubmissionKey.value = '';
   submissionNote.value = '';
@@ -4861,14 +4865,14 @@ watch(filteredSubmissionQueue, (visible) => {
 });
 
 function selectReviewRecord(record, force = false) {
-  if (!force && !confirmDiscardChanges('切换审核记录')) return;
+  if (!force && !confirmDiscardChanges('鍒囨崲瀹℃牳璁板綍')) return;
   selectedReviewKey.value = reviewRecordKey(record);
   reviewNote.value = '';
   markDraftSaved();
 }
 
 function selectSubmissionRecord(record, force = false) {
-  if (!force && !confirmDiscardChanges('切换草稿记录')) return;
+  if (!force && !confirmDiscardChanges('鍒囨崲鑽夌璁板綍')) return;
   selectedSubmissionKey.value = submissionRecordKey(record);
   submissionNote.value = '';
   markDraftSaved();
@@ -4887,7 +4891,7 @@ async function submitForReview() {
       // and used to leave the batch stuck with an unrelated/incomplete item.
       const blockers = await batchReadinessBlockers(items);
       if (blockers.length) {
-        error.value = `批次未提交，以下内容未达到发布条件：${blockers.join('；')}`;
+        error.value = `鎵规鏈彁浜わ紝浠ヤ笅鍐呭鏈揪鍒板彂甯冩潯浠讹細${blockers.join('锛?)}`;
         message.value = '';
         return;
       }
@@ -4900,7 +4904,7 @@ async function submitForReview() {
         }
       }
       if (failures.length) {
-        error.value = `批次未提交：${failures.length} 项失败（${failures.join('、')}），其余已改为审核中；请修正后重试。`;
+        error.value = `鎵规鏈彁浜わ細${failures.length} 椤瑰け璐ワ紙${failures.join('銆?)}锛夛紝鍏朵綑宸叉敼涓哄鏍镐腑锛涜淇鍚庨噸璇曘€俙;
         message.value = '';
         await loadSubmissionQueue();
         return;
@@ -4909,10 +4913,10 @@ async function submitForReview() {
     } else {
       await api.patch(`/items/${encodeURIComponent(record.collection)}/${encodeURIComponent(record.id)}`, { status: 'review', review_note: submissionNote.value || null });
     }
-    message.value = '已提交审核。整批内容将由对应审核角色处理，前端不会直接发布。';
+    message.value = '宸叉彁浜ゅ鏍搞€傛暣鎵瑰唴瀹瑰皢鐢卞搴斿鏍歌鑹插鐞嗭紝鍓嶇涓嶄細鐩存帴鍙戝竷銆?;
     await Promise.all([loadSubmissionQueue(), loadReviewQueue()]);
   } catch (reason) {
-    error.value = apiError(reason, '提交审核失败。请补全来源、受控媒体或内容前置条件后重试。');
+    error.value = apiError(reason, '鎻愪氦瀹℃牳澶辫触銆傝琛ュ叏鏉ユ簮銆佸彈鎺у獟浣撴垨鍐呭鍓嶇疆鏉′欢鍚庨噸璇曘€?);
   } finally {
     submissionSaving.value = false;
   }
@@ -4926,10 +4930,10 @@ async function restoreDraft() {
   message.value = '';
   try {
     await api.patch(`/items/${encodeURIComponent(record.collection)}/${encodeURIComponent(record.id)}`, { status: 'draft', review_note: submissionNote.value || null });
-    message.value = '内容已恢复为草稿，可继续编辑后再次提交审核。';
+    message.value = '鍐呭宸叉仮澶嶄负鑽夌锛屽彲缁х画缂栬緫鍚庡啀娆℃彁浜ゅ鏍搞€?;
     await loadSubmissionQueue();
   } catch (reason) {
-    error.value = apiError(reason, '恢复草稿失败。请确认当前账号具有内容编辑权限。');
+    error.value = apiError(reason, '鎭㈠鑽夌澶辫触銆傝纭褰撳墠璐﹀彿鍏锋湁鍐呭缂栬緫鏉冮檺銆?);
   } finally {
     submissionSaving.value = false;
   }
@@ -4943,8 +4947,8 @@ async function batchReadinessBlockers(items) {
     return items.flatMap((item) => {
       const editPath = `/admin/content/${encodeURIComponent(item.collection)}/${encodeURIComponent(String(item.id))}`;
       const readiness = report.items.find((entry) => String(entry.edit_path || '') === editPath);
-      const blockers = (readiness?.blockers || []).filter((blocker) => blocker !== '未完成发布');
-      return blockers.length ? [`${item.label || item.id}：${blockers.join('、')}`] : [];
+      const blockers = (readiness?.blockers || []).filter((blocker) => blocker !== '鏈畬鎴愬彂甯?);
+      return blockers.length ? [`${item.label || item.id}锛?{blockers.join('銆?)}`] : [];
     });
   } catch {
     // Readiness is publisher-only. A reviewer still gets the server's per-item
@@ -4972,7 +4976,7 @@ async function decideReview(status) {
       if (status === 'scheduled') {
         const blockers = await batchReadinessBlockers(items);
         if (blockers.length) {
-          error.value = `批次未批准，以下内容未达到发布条件：${blockers.join('；')}`;
+          error.value = `鎵规鏈壒鍑嗭紝浠ヤ笅鍐呭鏈揪鍒板彂甯冩潯浠讹細${blockers.join('锛?)}`;
           message.value = '';
           return;
         }
@@ -4986,7 +4990,7 @@ async function decideReview(status) {
         }
       }
       if (failures.length) {
-        error.value = `批次未完成审核：${failures.length} 项失败（${failures.join('、')}）；请逐项修正后重试。`;
+        error.value = `鎵规鏈畬鎴愬鏍革細${failures.length} 椤瑰け璐ワ紙${failures.join('銆?)}锛夛紱璇烽€愰」淇鍚庨噸璇曘€俙;
         message.value = '';
         await loadReviewQueue();
         return;
@@ -4995,14 +4999,14 @@ async function decideReview(status) {
     } else {
       await api.patch(`/items/${encodeURIComponent(record.collection)}/${encodeURIComponent(record.id)}`, { status, review_note: reviewNote.value || null });
     }
-    message.value = status === 'scheduled' ? '整批审核已提交为待发布，是否允许流转由服务端规则确认。' : '已整批退回修改，内容编辑人员可在草稿流程中继续完善。';
+    message.value = status === 'scheduled' ? '鏁存壒瀹℃牳宸叉彁浜や负寰呭彂甯冿紝鏄惁鍏佽娴佽浆鐢辨湇鍔＄瑙勫垯纭銆? : '宸叉暣鎵归€€鍥炰慨鏀癸紝鍐呭缂栬緫浜哄憳鍙湪鑽夌娴佺▼涓户缁畬鍠勩€?;
     if (status === 'scheduled' && hasProductItem) {
       productReleaseHint.value = true;
-      message.value = '产品内容已批准进入待发布。请前往「产品统一发布」生成公开快照。';
+      message.value = '浜у搧鍐呭宸叉壒鍑嗚繘鍏ュ緟鍙戝竷銆傝鍓嶅線銆屼骇鍝佺粺涓€鍙戝竷銆嶇敓鎴愬叕寮€蹇収銆?;
     }
     await loadReviewQueue();
   } catch (reason) {
-    error.value = apiError(reason, '审核流转失败。请确认当前账号角色及内容就绪状态。');
+    error.value = apiError(reason, '瀹℃牳娴佽浆澶辫触銆傝纭褰撳墠璐﹀彿瑙掕壊鍙婂唴瀹瑰氨缁姸鎬併€?);
   } finally {
     reviewSaving.value = false;
   }
@@ -5028,14 +5032,14 @@ function notifyCanvasSeriesSelection(record) {
   if (!record?.id || !livePreviewFrame.value?.contentWindow || !livePreviewWebsiteOrigin.value) return;
   // Tell the canvas which card the operator selected in the left list. Without
   // this the iframe kept its previous `activeSeriesCode`, so the next
-  // "＋ 新增机型" wrote the model into the old series.
+  // "锛?鏂板鏈哄瀷" wrote the model into the old series.
   livePreviewFrame.value.contentWindow.postMessage({
     type: 'ruijun:cms-preview:notice',
     kind: 'series-selected',
     itemId: String(record.id),
     seriesCode: String(record.series_code || ''),
     slug: String(record.slug || ''),
-    label: record.name || record.series_code || '系列'
+    label: record.name || record.series_code || '绯诲垪'
   }, livePreviewWebsiteOrigin.value);
 }
 
@@ -5071,7 +5075,7 @@ function selectSeries(id, force = false, notifyCanvas = true, syncModel = true) 
     }
   }
   // A canvas-originated selection already shows that card; echoing a notice
-  // back would make the page select → notify → select again.
+  // back would make the page select 鈫?notify 鈫?select again.
   if (notifyCanvas && record) notifyCanvasSeriesSelection(record);
 }
 
@@ -5098,12 +5102,12 @@ const seriesSupportsDetail = computed(() => seriesDetailKey({
 function initializeSeriesDetail() {
   if (!seriesDraft.value || !canEdit(seriesDraft.value) || !seriesSupportsDetail.value) return;
   const seeded = defaultSeriesDetail({ ...seriesDraft.value, id: seriesDraft.value.slug || seriesDraft.value.series_code });
-  if (!seeded) { error.value = '该系列没有可初始化的原版详情。'; return; }
+  if (!seeded) { error.value = '璇ョ郴鍒楁病鏈夊彲鍒濆鍖栫殑鍘熺増璇︽儏銆?; return; }
   seriesDraft.value.detail = {
     intro: { ...emptySeriesDetail().intro, ...(seeded.intro || {}) },
     features: (seeded.features || []).map((feature) => ({ label: feature.label, detail: feature.detail || '', note: feature.note || '' }))
   };
-  message.value = '已写入官网原版详情，修改后请保存草稿。';
+  message.value = '宸插啓鍏ュ畼缃戝師鐗堣鎯咃紝淇敼鍚庤淇濆瓨鑽夌銆?;
 }
 
 function addSeriesDetailFeature() {
@@ -5127,7 +5131,7 @@ function moveSeriesDetailFeature(index, offset) {
 function initializeModelDetail() {
   if (!modelDraft.value || !canEdit(modelDraft.value)) return;
   const seeded = defaultModelConfiguration({ series_code: modelDraft.value.series_code, slug: modelDraft.value.slug });
-  if (!seeded) { error.value = '该系列没有可初始化的原版详情。'; return; }
+  if (!seeded) { error.value = '璇ョ郴鍒楁病鏈夊彲鍒濆鍖栫殑鍘熺増璇︽儏銆?; return; }
   if (seeded.intro) {
     for (const [key, value] of Object.entries(seeded.intro)) {
       if (!String(modelDraft.value.configuration.intro[key] || '').trim()) modelDraft.value.configuration.intro[key] = value;
@@ -5142,18 +5146,18 @@ function initializeModelDetail() {
       media_asset_id: ''
     }));
   }
-  message.value = '已写入官网原版详情，修改后请保存草稿。';
+  message.value = '宸插啓鍏ュ畼缃戝師鐗堣鎯咃紝淇敼鍚庤淇濆瓨鑽夌銆?;
 }
 
 function selectCompanyMode(mode, force = false) {
-  if (!force && mode !== companyMode.value && !confirmDiscardChanges('切换企业资料类型')) return;
+  if (!force && mode !== companyMode.value && !confirmDiscardChanges('鍒囨崲浼佷笟璧勬枡绫诲瀷')) return;
   companyMode.value = mode;
   const nextId = companyRecords(mode).some((item) => item.id === selectedCompanyId.value) ? selectedCompanyId.value : companyRecords(mode)[0]?.id;
   if (nextId) selectCompanyRecord(nextId, true); else { selectedCompanyId.value = ''; companyDraft.value = null; markDraftSaved(); }
 }
 
 function selectCompanyRecord(id, force = false) {
-  if (!force && id !== selectedCompanyId.value && !confirmDiscardChanges('切换企业资料')) return;
+  if (!force && id !== selectedCompanyId.value && !confirmDiscardChanges('鍒囨崲浼佷笟璧勬枡')) return;
   selectedCompanyId.value = id;
   const record = companyRecords(companyMode.value).find((item) => item.id === id);
   companyMediaSelection.value = '';
@@ -5230,14 +5234,14 @@ function removeEditorialMediaReference(assetId) {
 }
 
 function selectServiceMode(mode, force = false) {
-  if (!force && mode !== serviceMode.value && !confirmDiscardChanges('切换服务内容类型')) return;
+  if (!force && mode !== serviceMode.value && !confirmDiscardChanges('鍒囨崲鏈嶅姟鍐呭绫诲瀷')) return;
   serviceMode.value = mode;
   const nextId = serviceRecords(mode).some((item) => item.id === selectedServiceId.value) ? selectedServiceId.value : serviceRecords(mode)[0]?.id;
   if (nextId) selectServiceRecord(nextId, true); else { selectedServiceId.value = ''; serviceDraft.value = null; markDraftSaved(); }
 }
 
 function selectServiceRecord(id, force = false) {
-  if (!force && id !== selectedServiceId.value && !confirmDiscardChanges('切换服务内容')) return;
+  if (!force && id !== selectedServiceId.value && !confirmDiscardChanges('鍒囨崲鏈嶅姟鍐呭')) return;
   selectedServiceId.value = id;
   const record = serviceRecords(serviceMode.value).find((item) => item.id === id);
   serviceDraft.value = record ? normalizeService(record) : null;
@@ -5245,7 +5249,7 @@ function selectServiceRecord(id, force = false) {
 }
 
 function selectEditorialMode(mode, force = false) {
-  if (!force && mode !== editorialMode.value && !confirmDiscardChanges('切换内容类型')) return;
+  if (!force && mode !== editorialMode.value && !confirmDiscardChanges('鍒囨崲鍐呭绫诲瀷')) return;
   editorialMode.value = mode;
   // Video shares are edited by the media-first card workspace, not by the
   // article form. Selecting a video article here would leak its draft into the
@@ -5273,7 +5277,7 @@ function submissionNameFromLog(record) {
 }
 
 function selectEditorialRecord(id, force = false) {
-  if (!force && id !== selectedEditorialId.value && !confirmDiscardChanges('切换文章或案例')) return;
+  if (!force && id !== selectedEditorialId.value && !confirmDiscardChanges('鍒囨崲鏂囩珷鎴栨渚?)) return;
   selectedEditorialId.value = id;
   const record = editorialRecords(editorialMode.value).find((item) => String(item.id) === String(id));
   editorialDraft.value = record ? normalizeEditorial(record) : null;
@@ -5301,7 +5305,7 @@ function handleVideoShareNotify(payload) {
 }
 
 function selectKnowledge(id, force = false) {
-  if (!force && id !== selectedKnowledgeId.value && !confirmDiscardChanges('切换知识草稿')) return;
+  if (!force && id !== selectedKnowledgeId.value && !confirmDiscardChanges('鍒囨崲鐭ヨ瘑鑽夌')) return;
   selectedKnowledgeId.value = id;
   const record = knowledgeItems.value.find((item) => item.id === id);
   knowledgeDraft.value = record ? normalizeKnowledge(record) : null;
@@ -5392,9 +5396,9 @@ function sectionEmptyStateIsHiddenByRecords(section) {
 }
 
 function sectionEmptyStateLabel(section) {
-  if (pageDraft.value?.slug === 'news' && String(section?.id || '') === 'dynamic-news') return '空状态说明（仅当没有动态新闻时显示）';
-  if (pageDraft.value?.slug === 'news' && String(section?.id || '') === 'video-sharing') return '空状态说明（仅当没有视频分享时显示）';
-  return '补充说明';
+  if (pageDraft.value?.slug === 'news' && String(section?.id || '') === 'dynamic-news') return '绌虹姸鎬佽鏄庯紙浠呭綋娌℃湁鍔ㄦ€佹柊闂绘椂鏄剧ず锛?;
+  if (pageDraft.value?.slug === 'news' && String(section?.id || '') === 'video-sharing') return '绌虹姸鎬佽鏄庯紙浠呭綋娌℃湁瑙嗛鍒嗕韩鏃舵樉绀猴級';
+  return '琛ュ厖璇存槑';
 }
 
 function pageMediaScope() {
@@ -5408,19 +5412,19 @@ function pageMediaScope() {
 }
 
 function pageMediaScopeLabel() {
-  return ({ homepage: '网站主页', service: '服务', manufacturing: '制造', article: '文章与资讯', product: '产品', brand: '品牌与企业' })[pageMediaScope()] || '品牌与企业';
+  return ({ homepage: '缃戠珯涓婚〉', service: '鏈嶅姟', manufacturing: '鍒堕€?, article: '鏂囩珷涓庤祫璁?, product: '浜у搧', brand: '鍝佺墝涓庝紒涓? })[pageMediaScope()] || '鍝佺墝涓庝紒涓?;
 }
 
 function addAboutSections() {
   if (!pageDraft.value || !isAboutPage()) return;
   const defaults = [
-    { id: 'hero', title: '专攻电加工卡脖子技术\n为客户创造最大价值', kicker: '30', description: '年深耕线切割制造' },
-    { id: 'brand-story', title: '品牌故事', body: '上世纪 90 年代初，二十来岁的年轻兄弟俩立足温州，经营线切割加工业务，并随父亲经销国营线切割机床。随着市场经济蓬勃发展，市场机床需求高涨，国营厂产能难以满足订单。1997 年，兄弟二人创办丰华数控，转型自主生产机床。\n\n2003 年“非典”市场遇冷，团队潜心研发，成功推出中走丝线切割机床。2006 年企业迁至产业区位更优的昆山，因“丰华”商标已被注册，取自兄弟姓名各一字，定名瑞钧。\n\n2013 年整机销量突破 1000 台；2014 年迁入新制造基地，2016 年扩建标准化产线，跻身行业头部。2022 年研发自动穿丝中走丝，迈向设备自动化。2023 年斥资数亿元在常熟建设 4.0 智慧工厂，引进百台加工母机，新工厂于 2025 年正式投产。' },
-    { id: 'overview', title: '愿景：成为一家为客户创造更大价值的企业', body: '瑞钧智科是一家专业研发、制造与销售电火花周边系统及数控机床的高新技术企业。公司始创于1997年，在江苏昆山、常熟建有制造基地，持续为客户提供智能化中走丝线切割机床。', kicker: '累计数万用户', description: '精神：专注、专业、诚信、创新', items: ['我们拥有完全自主的产品设计、研发！', '我们拥有全产业链制造能力！', '我们拥有技术一流的员工团队！', '我们拥有先进的精良设备！', '我们拥有保证产品质量的严谨章程！', '我们拥有完善的售前、售中、售后服务！'].map((label) => ({ label })) },
-    { id: 'history', title: '瑞钧智科的中走丝制造历史' },
-    { id: 'factory', title: '厂区风貌' }, { id: 'certificates', title: '认证证书' },
-    { id: 'honors', title: '荣誉证书' }, { id: 'patents', title: '专利证书', description: '79件专利，其中发明专利9件' },
-    { id: 'partners', title: '众多世界知名品牌厂家和供应商合作' }, { id: 'clients-domestic', title: '国内客户' }, { id: 'clients-global', title: '国外客户' }
+    { id: 'hero', title: '涓撴敾鐢靛姞宸ュ崱鑴栧瓙鎶€鏈痋n涓哄鎴峰垱閫犳渶澶т环鍊?, kicker: '30', description: '骞存繁鑰曠嚎鍒囧壊鍒堕€? },
+    { id: 'brand-story', title: '鍝佺墝鏁呬簨', body: '涓婁笘绾?90 骞翠唬鍒濓紝浜屽崄鏉ュ瞾鐨勫勾杞诲厔寮熶咯绔嬭冻娓╁窞锛岀粡钀ョ嚎鍒囧壊鍔犲伐涓氬姟锛屽苟闅忕埗浜茬粡閿€鍥借惀绾垮垏鍓叉満搴娿€傞殢鐫€甯傚満缁忔祹钃媰鍙戝睍锛屽競鍦烘満搴婇渶姹傞珮娑紝鍥借惀鍘備骇鑳介毦浠ユ弧瓒宠鍗曘€?997 骞达紝鍏勫紵浜屼汉鍒涘姙涓板崕鏁版帶锛岃浆鍨嬭嚜涓荤敓浜ф満搴娿€俓n\n2003 骞粹€滈潪鍏糕€濆競鍦洪亣鍐凤紝鍥㈤槦娼滃績鐮斿彂锛屾垚鍔熸帹鍑轰腑璧颁笣绾垮垏鍓叉満搴娿€?006 骞翠紒涓氳縼鑷充骇涓氬尯浣嶆洿浼樼殑鏄嗗北锛屽洜鈥滀赴鍗庘€濆晢鏍囧凡琚敞鍐岋紝鍙栬嚜鍏勫紵濮撳悕鍚勪竴瀛楋紝瀹氬悕鐟為挧銆俓n\n2013 骞存暣鏈洪攢閲忕獊鐮?1000 鍙帮紱2014 骞磋縼鍏ユ柊鍒堕€犲熀鍦帮紝2016 骞存墿寤烘爣鍑嗗寲浜х嚎锛岃坊韬涓氬ご閮ㄣ€?022 骞寸爺鍙戣嚜鍔ㄧ┛涓濅腑璧颁笣锛岃繄鍚戣澶囪嚜鍔ㄥ寲銆?023 骞存枼璧勬暟浜垮厓鍦ㄥ父鐔熷缓璁?4.0 鏅烘収宸ュ巶锛屽紩杩涚櫨鍙板姞宸ユ瘝鏈猴紝鏂板伐鍘備簬 2025 骞存寮忔姇浜с€? },
+    { id: 'overview', title: '鎰挎櫙锛氭垚涓轰竴瀹朵负瀹㈡埛鍒涢€犳洿澶т环鍊肩殑浼佷笟', body: '鐟為挧鏅虹鏄竴瀹朵笓涓氱爺鍙戙€佸埗閫犱笌閿€鍞數鐏姳鍛ㄨ竟绯荤粺鍙婃暟鎺ф満搴婄殑楂樻柊鎶€鏈紒涓氥€傚叕鍙稿鍒涗簬1997骞达紝鍦ㄦ睙鑻忔槅灞便€佸父鐔熷缓鏈夊埗閫犲熀鍦帮紝鎸佺画涓哄鎴锋彁渚涙櫤鑳藉寲涓蛋涓濈嚎鍒囧壊鏈哄簥銆?, kicker: '绱鏁颁竾鐢ㄦ埛', description: '绮剧锛氫笓娉ㄣ€佷笓涓氥€佽瘹淇°€佸垱鏂?, items: ['鎴戜滑鎷ユ湁瀹屽叏鑷富鐨勪骇鍝佽璁°€佺爺鍙戯紒', '鎴戜滑鎷ユ湁鍏ㄤ骇涓氶摼鍒堕€犺兘鍔涳紒', '鎴戜滑鎷ユ湁鎶€鏈竴娴佺殑鍛樺伐鍥㈤槦锛?, '鎴戜滑鎷ユ湁鍏堣繘鐨勭簿鑹澶囷紒', '鎴戜滑鎷ユ湁淇濊瘉浜у搧璐ㄩ噺鐨勪弗璋ㄧ珷绋嬶紒', '鎴戜滑鎷ユ湁瀹屽杽鐨勫敭鍓嶃€佸敭涓€佸敭鍚庢湇鍔★紒'].map((label) => ({ label })) },
+    { id: 'history', title: '鐟為挧鏅虹鐨勪腑璧颁笣鍒堕€犲巻鍙? },
+    { id: 'factory', title: '鍘傚尯椋庤矊' }, { id: 'certificates', title: '璁よ瘉璇佷功' },
+    { id: 'honors', title: '鑽ｈ獕璇佷功' }, { id: 'patents', title: '涓撳埄璇佷功', description: '79浠朵笓鍒╋紝鍏朵腑鍙戞槑涓撳埄9浠? },
+    { id: 'partners', title: '浼楀涓栫晫鐭ュ悕鍝佺墝鍘傚鍜屼緵搴斿晢鍚堜綔' }, { id: 'clients-domestic', title: '鍥藉唴瀹㈡埛' }, { id: 'clients-global', title: '鍥藉瀹㈡埛' }
   ];
   for (const section of defaults) {
     const existing = pageDraft.value.sections.find((item) => item.id === section.id);
@@ -5434,37 +5438,37 @@ function addAboutSections() {
 
 const requiredPageSections = Object.freeze({
   home: [
-    { id: 'hero', title: '瑞钧智科中走丝线切割机床', body: '', label: '', href: '#reasons' },
-    { id: 'why-ruijun', title: '选择瑞钧的\n三大理由' },
-    { id: 'performance', kicker: '增效降损', shortTitle: '增效降损', introTitle: '增效降损', introDetail: '效能提升50%，丝损降低30%', title: '增效降损', body: '效能提升50%，丝损降低30%', description: '效能提升50%，丝损降低30%', mode: 'machine', requires_claim_review: true },
-    { id: 'advanced-manufacturing', kicker: '先进智造', shortTitle: '先进智造', introTitle: '先进智造', introDetail: '30年技术沉淀，先进制造工厂', title: '30年技术沉淀，先进制造工厂', description: '30年技术沉淀，先进制造工厂', mode: 'photo' },
-    { id: 'industry-leadership', kicker: '领军品牌', shortTitle: '领军品牌', introTitle: '行业领军品牌', introDetail: '销量持续领先，品质始终如一', title: '销量持续领先，品质始终如一', description: '销量持续领先，品质始终如一', mode: 'photo' },
-    { id: 'products', title: '我们的产品' },
-    { id: 'history', title: '瑞钧智科的中走丝制造历史' },
-    { id: 'product-task', title: '让下一台设备匹配你的加工任务', body: '通过工件、精度、节拍和自动化需求获得选型建议。', label: '获取选型建议', href: '/contact' }
+    { id: 'hero', title: '鐟為挧鏅虹涓蛋涓濈嚎鍒囧壊鏈哄簥', body: '', label: '', href: '#reasons' },
+    { id: 'why-ruijun', title: '閫夋嫨鐟為挧鐨刓n涓夊ぇ鐞嗙敱' },
+    { id: 'performance', kicker: '澧炴晥闄嶆崯', shortTitle: '澧炴晥闄嶆崯', introTitle: '澧炴晥闄嶆崯', introDetail: '鏁堣兘鎻愬崌50%锛屼笣鎹熼檷浣?0%', title: '澧炴晥闄嶆崯', body: '鏁堣兘鎻愬崌50%锛屼笣鎹熼檷浣?0%', description: '鏁堣兘鎻愬崌50%锛屼笣鎹熼檷浣?0%', mode: 'machine', requires_claim_review: true },
+    { id: 'advanced-manufacturing', kicker: '鍏堣繘鏅洪€?, shortTitle: '鍏堣繘鏅洪€?, introTitle: '鍏堣繘鏅洪€?, introDetail: '30骞存妧鏈矇娣€锛屽厛杩涘埗閫犲伐鍘?, title: '30骞存妧鏈矇娣€锛屽厛杩涘埗閫犲伐鍘?, description: '30骞存妧鏈矇娣€锛屽厛杩涘埗閫犲伐鍘?, mode: 'photo' },
+    { id: 'industry-leadership', kicker: '棰嗗啗鍝佺墝', shortTitle: '棰嗗啗鍝佺墝', introTitle: '琛屼笟棰嗗啗鍝佺墝', introDetail: '閿€閲忔寔缁鍏堬紝鍝佽川濮嬬粓濡備竴', title: '閿€閲忔寔缁鍏堬紝鍝佽川濮嬬粓濡備竴', description: '閿€閲忔寔缁鍏堬紝鍝佽川濮嬬粓濡備竴', mode: 'photo' },
+    { id: 'products', title: '鎴戜滑鐨勪骇鍝? },
+    { id: 'history', title: '鐟為挧鏅虹鐨勪腑璧颁笣鍒堕€犲巻鍙? },
+    { id: 'product-task', title: '璁╀笅涓€鍙拌澶囧尮閰嶄綘鐨勫姞宸ヤ换鍔?, body: '閫氳繃宸ヤ欢銆佺簿搴︺€佽妭鎷嶅拰鑷姩鍖栭渶姹傝幏寰楅€夊瀷寤鸿銆?, label: '鑾峰彇閫夊瀷寤鸿', href: '/contact' }
   ],
   product: [
-    { id: 'hero', title: '产品展示', body: '按加工任务、自动化方式与规格选择设备。' },
-    { id: 'categories', title: '选择瑞钧理由' },
-    { id: 'proof-efficiency', title: '增效降损', body: '效能提升50%，丝损降低30%', requires_claim_review: true },
-    { id: 'proof-years', title: '30 YEARS', body: '30年技术沉淀，先进智造工厂' },
-    { id: 'proof-champion', title: 'Champion', body: '销量持续领先，品质始终如一' },
-    { id: 'model-list', title: '产品系列' },
-    { id: 'parameters', title: '技术参数' }, { id: 'dimensions', title: '尺寸与资料' },
-    { id: 'pagination', title: '更多产品', description: '没有符合条件的产品。' }
+    { id: 'hero', title: '浜у搧灞曠ず', body: '鎸夊姞宸ヤ换鍔°€佽嚜鍔ㄥ寲鏂瑰紡涓庤鏍奸€夋嫨璁惧銆? },
+    { id: 'categories', title: '閫夋嫨鐟為挧鐞嗙敱' },
+    { id: 'proof-efficiency', title: '澧炴晥闄嶆崯', body: '鏁堣兘鎻愬崌50%锛屼笣鎹熼檷浣?0%', requires_claim_review: true },
+    { id: 'proof-years', title: '30 YEARS', body: '30骞存妧鏈矇娣€锛屽厛杩涙櫤閫犲伐鍘? },
+    { id: 'proof-champion', title: 'Champion', body: '閿€閲忔寔缁鍏堬紝鍝佽川濮嬬粓濡備竴' },
+    { id: 'model-list', title: '浜у搧绯诲垪' },
+    { id: 'parameters', title: '鎶€鏈弬鏁? }, { id: 'dimensions', title: '灏哄涓庤祫鏂? },
+    { id: 'pagination', title: '鏇村浜у搧', description: '娌℃湁绗﹀悎鏉′欢鐨勪骇鍝併€? }
   ],
   manufacturing: [
-    { id: 'hero', title: '先进制造', body: '全产业链制造与严格质量控制。' },
-    { id: 'process', title: '世界一流的生产工艺' },
-    { id: 'precision-machining', title: 'CNC车间' }, { id: 'sheet-metal', title: '钣金车间' },
-    { id: 'standardized-assembly', title: '装配车间' }, { id: 'whole-machine-validation', title: '精密检测' },
-    { id: 'electrical-assembly', title: '电气装配' }, { id: 'smart-warehouse', title: '智能物料仓储' },
-    { id: 'core-equipment', title: '生产核心设备' }
+    { id: 'hero', title: '鍏堣繘鍒堕€?, body: '鍏ㄤ骇涓氶摼鍒堕€犱笌涓ユ牸璐ㄩ噺鎺у埗銆? },
+    { id: 'process', title: '涓栫晫涓€娴佺殑鐢熶骇宸ヨ壓' },
+    { id: 'precision-machining', title: 'CNC杞﹂棿' }, { id: 'sheet-metal', title: '閽ｉ噾杞﹂棿' },
+    { id: 'standardized-assembly', title: '瑁呴厤杞﹂棿' }, { id: 'whole-machine-validation', title: '绮惧瘑妫€娴? },
+    { id: 'electrical-assembly', title: '鐢垫皵瑁呴厤' }, { id: 'smart-warehouse', title: '鏅鸿兘鐗╂枡浠撳偍' },
+    { id: 'core-equipment', title: '鐢熶骇鏍稿績璁惧' }
   ],
   news: [
-    { id: 'hero', title: '视频新闻', body: '展示官方热门视频、展会新闻' },
-    { id: 'dynamic-news', title: '动态新闻', description: '暂无动态新闻。' },
-    { id: 'video-sharing', title: '视频分享', description: '暂无视频分享。' }
+    { id: 'hero', title: '瑙嗛鏂伴椈', body: '灞曠ず瀹樻柟鐑棬瑙嗛銆佸睍浼氭柊闂? },
+    { id: 'dynamic-news', title: '鍔ㄦ€佹柊闂?, description: '鏆傛棤鍔ㄦ€佹柊闂汇€? },
+    { id: 'video-sharing', title: '瑙嗛鍒嗕韩', description: '鏆傛棤瑙嗛鍒嗕韩銆? }
   ]
 });
 
@@ -5489,10 +5493,10 @@ function addHomeReasonSection() {
   pageDraft.value.sections.push({
     id: `reason-${number}`,
     kicker: '',
-    shortTitle: `理由 ${number}`,
-    introTitle: `首页理由 ${number}`,
+    shortTitle: `鐞嗙敱 ${number}`,
+    introTitle: `棣栭〉鐞嗙敱 ${number}`,
     introDetail: '',
-    title: `首页理由 ${number}`,
+    title: `棣栭〉鐞嗙敱 ${number}`,
     body: '',
     description: '',
     label: '',
@@ -5510,20 +5514,20 @@ function pageSectionName(section, index) {
   return pageSectionLabels[`${pageKey}:${sectionKey}`]
     || String(section?.title || '').trim()
     || (section?.type ? getPageSectionDefinition(section.type, pageKey)?.label : '')
-    || `段落 ${index + 1}`;
+    || `娈佃惤 ${index + 1}`;
 }
 
 function addServiceSections() {
   if (!pageDraft.value || !isServicePage()) return;
   const defaults = [
     {
-      id: 'hero', kicker: 'SERVICE SUPPORT', title: '售后服务', body: '在线报单、进度追踪、专人支持，全程透明可查', description: '快人一步', label: '在线支持',
-      items: [{ label: '全球服务网络 原厂备件保障' }, { label: '国内50多个直属办事处，覆盖全国主要省市' }, { label: '海外 20 余家长期合作经销商' }], media: []
+      id: 'hero', kicker: 'SERVICE SUPPORT', title: '鍞悗鏈嶅姟', body: '鍦ㄧ嚎鎶ュ崟銆佽繘搴﹁拷韪€佷笓浜烘敮鎸侊紝鍏ㄧ▼閫忔槑鍙煡', description: '蹇汉涓€姝?, label: '鍦ㄧ嚎鏀寔',
+      items: [{ label: '鍏ㄧ悆鏈嶅姟缃戠粶 鍘熷巶澶囦欢淇濋殰' }, { label: '鍥藉唴50澶氫釜鐩村睘鍔炰簨澶勶紝瑕嗙洊鍏ㄥ浗涓昏鐪佸競' }, { label: '娴峰 20 浣欏闀挎湡鍚堜綔缁忛攢鍟? }], media: []
     },
-    { id: 'support', title: '瑞钧支持', body: '需要协助 从这里开始', description: '输入设备型号、故障现象、维修进度或保修问题', label: '咨询 AI', media: [] },
-    { id: 'support-models', title: '设备型号', body: '', items: [], media: [] },
-    { id: 'support-actions', title: '服务选项', body: '选择服务项目，机型可在后续步骤补充', items: [], media: [] },
-    { id: 'office-directory', kicker: 'RUIJUN SERVICE NETWORK', title: '国内直属办事处覆盖全国主要省市', body: '', items: [], media: [] }
+    { id: 'support', title: '鐟為挧鏀寔', body: '闇€瑕佸崗鍔?浠庤繖閲屽紑濮?, description: '杈撳叆璁惧鍨嬪彿銆佹晠闅滅幇璞°€佺淮淇繘搴︽垨淇濅慨闂', label: '鍜ㄨ AI', media: [] },
+    { id: 'support-models', title: '璁惧鍨嬪彿', body: '', items: [], media: [] },
+    { id: 'support-actions', title: '鏈嶅姟閫夐」', body: '閫夋嫨鏈嶅姟椤圭洰锛屾満鍨嬪彲鍦ㄥ悗缁楠よˉ鍏?, items: [], media: [] },
+    { id: 'office-directory', kicker: 'RUIJUN SERVICE NETWORK', title: '鍥藉唴鐩村睘鍔炰簨澶勮鐩栧叏鍥戒富瑕佺渷甯?, body: '', items: [], media: [] }
   ];
   for (const section of defaults) {
     const existing = pageDraft.value.sections.find((item) => item.id === section.id);
@@ -5538,10 +5542,10 @@ function addServiceSections() {
 function addServiceItem(section, kind) {
   if (!section) return;
   section.items ||= [];
-  if (kind === 'model') section.items.push({ label: '新设备型号', media_role: `model-${section.items.length + 1}` });
-  else if (kind === 'action') section.items.push({ number: String(section.items.length + 1).padStart(2, '0'), title: '新服务入口', body: '点击后打开对应服务', description: '', media_role: `action-${section.items.length + 1}` });
-  else if (kind === 'office') section.items.push({ title: '新区域', media_role: `office-${section.items.length + 1}`, map_media_role: `office-map-${section.items.length + 1}`, offices: [{ address: '门店地址', manager: '负责人', phone: '' }] });
-  else section.items.push({ label: '新说明文字' });
+  if (kind === 'model') section.items.push({ label: '鏂拌澶囧瀷鍙?, media_role: `model-${section.items.length + 1}` });
+  else if (kind === 'action') section.items.push({ number: String(section.items.length + 1).padStart(2, '0'), title: '鏂版湇鍔″叆鍙?, body: '鐐瑰嚮鍚庢墦寮€瀵瑰簲鏈嶅姟', description: '', media_role: `action-${section.items.length + 1}` });
+  else if (kind === 'office') section.items.push({ title: '鏂板尯鍩?, media_role: `office-${section.items.length + 1}`, map_media_role: `office-map-${section.items.length + 1}`, offices: [{ address: '闂ㄥ簵鍦板潃', manager: '璐熻矗浜?, phone: '' }] });
+  else section.items.push({ label: '鏂拌鏄庢枃瀛? });
 }
 
 function removeServiceItem(section, index) {
@@ -5555,7 +5559,7 @@ function addGenericSectionItem(section) {
     section.items.push({ ...createManufacturingProcessNode(section.items.length), ...defaultSectionPresentation() });
     return;
   }
-  section.items.push({ label: '', title: '新内容', body: '', description: '', media_role: `item-${section.items.length + 1}`, href: '', sort_order: section.items.length, ...defaultSectionPresentation() });
+  section.items.push({ label: '', title: '鏂板唴瀹?, body: '', description: '', media_role: `item-${section.items.length + 1}`, href: '', sort_order: section.items.length, ...defaultSectionPresentation() });
 }
 
 function removeGenericSectionItem(section, index) {
@@ -5574,7 +5578,7 @@ function moveGenericSectionItem(section, index, direction) {
 function addOffice(section, region) {
   if (!section?.items?.[region]) return;
   section.items[region].offices ||= [];
-  section.items[region].offices.push({ address: '门店地址', manager: '负责人', phone: '' });
+  section.items[region].offices.push({ address: '闂ㄥ簵鍦板潃', manager: '璐熻矗浜?, phone: '' });
 }
 
 function removeOffice(section, region, index) {
@@ -5583,8 +5587,8 @@ function removeOffice(section, region, index) {
 
 // Roles the website actually binds to a slot. A media entry whose role is empty
 // matches none of them, so the element stays read-only on the canvas and the
-// operator sees "此为静态素材" even after adding an asset. Derive the role from
-// the asset's registered placement so "添加素材" is enough on its own.
+// operator sees "姝や负闈欐€佺礌鏉? even after adding an asset. Derive the role from
+// the asset's registered placement so "娣诲姞绱犳潗" is enough on its own.
 const pageMediaSlotRoles = new Set([
   'background', 'image', 'photo', 'primary', 'foreground', 'icon', 'video', 'cover',
   'gallery', 'map', 'drawing', 'technical', 'equipment', 'feature', 'asset'
@@ -5610,9 +5614,9 @@ function removePageMedia(section, assetId) {
 }
 
 function pageMediaLabel(reference) {
-  if (!String(reference.media_asset_id ?? '').trim()) return '沿用官网默认图案';
+  if (!String(reference.media_asset_id ?? '').trim()) return '娌跨敤瀹樼綉榛樿鍥炬';
   const asset = pageMediaOptions(pageMediaScope()).find((candidate) => String(candidate.id) === String(reference.media_asset_id));
-  return asset ? pageMediaOptionLabel(asset, pageMediaScope()) : `当前引用 ${reference.media_asset_id}（尚未通过此选择器验证）`;
+  return asset ? pageMediaOptionLabel(asset, pageMediaScope()) : `褰撳墠寮曠敤 ${reference.media_asset_id}锛堝皻鏈€氳繃姝ら€夋嫨鍣ㄩ獙璇侊級`;
 }
 
 // Registry-driven media and list editing. These stay generic so a newly
@@ -5629,7 +5633,7 @@ function addRegisteredSectionMedia(section, field) {
   const list = registeredSectionList(section, field);
   const max = Number.isInteger(field.maxItems) ? field.maxItems : 1;
   if (list.length >= max) {
-    error.value = `“${field.label}”最多只能有 ${max} 个素材。`;
+    error.value = `鈥?{field.label}鈥濇渶澶氬彧鑳芥湁 ${max} 涓礌鏉愩€俙;
     return;
   }
   if (list.some((entry) => String(entry.media_asset_id) === assetId)) return;
@@ -5654,7 +5658,7 @@ function addRegisteredSectionItem(section, field) {
   const list = registeredSectionList(section, field);
   const max = Number.isInteger(field.maxItems) ? field.maxItems : 20;
   if (list.length >= max) {
-    error.value = `“${field.label}”最多只能有 ${max} 项。`;
+    error.value = `鈥?{field.label}鈥濇渶澶氬彧鑳芥湁 ${max} 椤广€俙;
     return;
   }
   list.push(Object.fromEntries((field.itemFields || []).map((itemField) => [itemField.key, ''])));
@@ -5693,13 +5697,13 @@ function addPageSection(type) {
   if (!pageDraft.value || !canEdit(pageDraft.value)) return;
   const section = createPageSectionInstance(type, pageDraft.value.slug, pageDraft.value.sections);
   if (!section) {
-    error.value = '当前页面没有注册该区块类型。';
+    error.value = '褰撳墠椤甸潰娌℃湁娉ㄥ唽璇ュ尯鍧楃被鍨嬨€?;
     return;
   }
   pageDraft.value.sections.push({ ...section, ...defaultSectionPresentation() });
   activePageSectionKey.value = section.id;
   error.value = '';
-  message.value = `已添加“${pageSectionTypeOptions.value.find((item) => item.type === section.type)?.label || section.type}”区块，请填写内容后保存草稿。`;
+  message.value = `宸叉坊鍔犫€?{pageSectionTypeOptions.value.find((item) => item.type === section.type)?.label || section.type}鈥濆尯鍧楋紝璇峰～鍐欏唴瀹瑰悗淇濆瓨鑽夌銆俙;
   recordVisualHistory();
   queueLivePreviewUpdate({ collection: 'pages', record: pageDraft.value });
 }
@@ -5746,7 +5750,7 @@ function duplicatePageSection(section) {
   if (!canEdit(pageDraft.value) || !Array.isArray(sections) || index < 0 || !section?.type) return;
   const clone = createPageSectionInstance(section.type, pageDraft.value.slug, sections);
   if (!clone) {
-    error.value = '当前页面没有注册该区块类型。';
+    error.value = '褰撳墠椤甸潰娌℃湁娉ㄥ唽璇ュ尯鍧楃被鍨嬨€?;
     return;
   }
   // Carry the editable content across; the fresh id keeps both blocks independent.
@@ -5757,7 +5761,7 @@ function duplicatePageSection(section) {
   sections.splice(index + 1, 0, { ...section, ...clone });
   activePageSectionKey.value = clone.id;
   error.value = '';
-  message.value = '已复制区块，请确认内容后保存草稿。';
+  message.value = '宸插鍒跺尯鍧楋紝璇风‘璁ゅ唴瀹瑰悗淇濆瓨鑽夌銆?;
   recordVisualHistory();
   postLivePreviewUpdate({ collection: 'pages', record: pageDraft.value });
   queueLivePreviewUpdate({ collection: 'pages', record: pageDraft.value });
@@ -5781,7 +5785,7 @@ function applyRegisteredSectionPreset(section) {
   Object.assign(section, applyPageSectionPreset(section, key, pageDraft.value.slug));
   sectionPresetSelection.value[section.id] = '';
   error.value = '';
-  message.value = '已套用预设，请确认内容后保存草稿。';
+  message.value = '宸插鐢ㄩ璁撅紝璇风‘璁ゅ唴瀹瑰悗淇濆瓨鑽夌銆?;
   recordVisualHistory();
   postLivePreviewUpdate({ collection: 'pages', record: pageDraft.value });
   queueLivePreviewUpdate({ collection: 'pages', record: pageDraft.value });
@@ -5789,7 +5793,7 @@ function applyRegisteredSectionPreset(section) {
 
 // Cross-page reuse. True "shared modules" would need a new collection plus
 // reference-integrity rules (what happens when a referenced block is edited or
-// deleted), and the site-wide chrome is already component-driven — so the real
+// deleted), and the site-wide chrome is already component-driven 鈥?so the real
 // remaining need is "I built this block, I want it on another page". A clipboard
 // covers that without inventing a reference graph.
 const copiedPageSection = ref(null);
@@ -5804,7 +5808,7 @@ function copyPageSectionForReuse(section) {
   if (!section?.type || !canEdit(pageDraft.value)) return;
   copiedPageSection.value = JSON.parse(JSON.stringify(section));
   error.value = '';
-  message.value = '已复制区块，切换到目标页面后点击「粘贴区块」。';
+  message.value = '宸插鍒跺尯鍧楋紝鍒囨崲鍒扮洰鏍囬〉闈㈠悗鐐瑰嚮銆岀矘璐村尯鍧椼€嶃€?;
 }
 
 function pastePageSection() {
@@ -5812,13 +5816,13 @@ function pastePageSection() {
   if (!copied?.type || !pageDraft.value || !canEdit(pageDraft.value)) return;
   const definition = getPageSectionDefinition(copied.type, pageDraft.value.slug);
   if (!definition) {
-    error.value = '当前页面没有注册该区块类型，无法粘贴。';
+    error.value = '褰撳墠椤甸潰娌℃湁娉ㄥ唽璇ュ尯鍧楃被鍨嬶紝鏃犳硶绮樿创銆?;
     return;
   }
   const sections = pageDraft.value.sections;
   const clone = createPageSectionInstance(copied.type, pageDraft.value.slug, sections);
   if (!clone) {
-    error.value = '无法为此区块生成唯一标识，请重试。';
+    error.value = '鏃犳硶涓烘鍖哄潡鐢熸垚鍞竴鏍囪瘑锛岃閲嶈瘯銆?;
     return;
   }
   // Carry the source content across; the fresh id keeps the two blocks independent.
@@ -5829,7 +5833,7 @@ function pastePageSection() {
   sections.push({ ...copied, ...clone });
   activePageSectionKey.value = clone.id;
   error.value = '';
-  message.value = '已粘贴区块，请确认内容后保存草稿。';
+  message.value = '宸茬矘璐村尯鍧楋紝璇风‘璁ゅ唴瀹瑰悗淇濆瓨鑽夌銆?;
   recordVisualHistory();
   postLivePreviewUpdate({ collection: 'pages', record: pageDraft.value });
   queueLivePreviewUpdate({ collection: 'pages', record: pageDraft.value });
@@ -5847,7 +5851,7 @@ function removePageSection(section) {
   const sections = pageDraft.value?.sections;
   const index = pageSectionIndex(section);
   if (!canEdit(pageDraft.value) || !Array.isArray(sections) || index < 0 || sections.length <= 1) return;
-  if (section.type && !window.confirm(`确定删除“${getPageSectionDefinition(section.type, pageDraft.value.slug)?.label || '自定义区块'}”吗？删除会在保存草稿后生效。`)) return;
+  if (section.type && !window.confirm(`纭畾鍒犻櫎鈥?{getPageSectionDefinition(section.type, pageDraft.value.slug)?.label || '鑷畾涔夊尯鍧?}鈥濆悧锛熷垹闄や細鍦ㄤ繚瀛樿崏绋垮悗鐢熸晥銆俙)) return;
   sections.splice(index, 1);
   if (activePageSectionKey.value === section.id) activePageSectionKey.value = '';
   if (section.type) {
@@ -5892,25 +5896,25 @@ function removeFooterColumnLink(columnIndex, linkIndex) {
 }
 
 function validateSections(sections, pageSlug = pageDraft.value?.slug) {
-  if (!sections.length) return '至少保留一个页面段落。';
+  if (!sections.length) return '鑷冲皯淇濈暀涓€涓〉闈㈡钀姐€?;
   const ids = new Set();
   for (const section of sections) {
-    if (!/^[a-z0-9][a-z0-9-]{0,79}$/.test(section.id)) return '段落标识只能使用小写字母、数字和短横线。';
-    if (ids.has(section.id)) return `段落标识“${section.id}”重复。`;
+    if (!/^[a-z0-9][a-z0-9-]{0,79}$/.test(section.id)) return '娈佃惤鏍囪瘑鍙兘浣跨敤灏忓啓瀛楁瘝銆佹暟瀛楀拰鐭í绾裤€?;
+    if (ids.has(section.id)) return `娈佃惤鏍囪瘑鈥?{section.id}鈥濋噸澶嶃€俙;
     ids.add(section.id);
     const registeredSectionError = validatePageSectionInstance(section, pageSlug);
     if (registeredSectionError) return registeredSectionError;
-    if (section.href && !isValidSiteLink(section.href)) return `段落“${section.id}”的按钮链接只能使用站内路径或 HTTPS 地址。`;
+    if (section.href && !isValidSiteLink(section.href)) return `娈佃惤鈥?{section.id}鈥濈殑鎸夐挳閾炬帴鍙兘浣跨敤绔欏唴璺緞鎴?HTTPS 鍦板潃銆俙;
     for (const item of Array.isArray(section.items) ? section.items : []) {
-      if (item?.href && !isValidSiteLink(item.href)) return `段落“${section.id}”的重复内容链接只能使用站内路径或 HTTPS 地址。`;
+      if (item?.href && !isValidSiteLink(item.href)) return `娈佃惤鈥?{section.id}鈥濈殑閲嶅鍐呭閾炬帴鍙兘浣跨敤绔欏唴璺緞鎴?HTTPS 鍦板潃銆俙;
       const itemPresentationError = validateSectionPresentation(item);
-      if (itemPresentationError) return `段落“${section.id}”的重复内容：${itemPresentationError}`;
-      if (item?.anchor && !['auto', 'top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right'].includes(item.anchor)) return `段落“${section.id}”包含不受支持的工艺节点锚点。`;
+      if (itemPresentationError) return `娈佃惤鈥?{section.id}鈥濈殑閲嶅鍐呭锛?{itemPresentationError}`;
+      if (item?.anchor && !['auto', 'top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right'].includes(item.anchor)) return `娈佃惤鈥?{section.id}鈥濆寘鍚笉鍙楁敮鎸佺殑宸ヨ壓鑺傜偣閿氱偣銆俙;
     }
     const pageSize = Number(section.pagination?.page_size || 6);
-    if (!Number.isInteger(pageSize) || pageSize < 1 || pageSize > 6) return `段落“${section.id}”的每页数量只能是 1 至 6。`;
+    if (!Number.isInteger(pageSize) || pageSize < 1 || pageSize > 6) return `娈佃惤鈥?{section.id}鈥濈殑姣忛〉鏁伴噺鍙兘鏄?1 鑷?6銆俙;
     const presentationError = validateSectionPresentation(section);
-    if (presentationError) return `段落“${section.id}”：${presentationError}`;
+    if (presentationError) return `娈佃惤鈥?{section.id}鈥濓細${presentationError}`;
   }
   return '';
 }
@@ -5922,19 +5926,19 @@ function isValidSiteLink(value) {
 }
 
 function validateSettingLinks(links, label) {
-  if (!links.length) return `${label}至少需要保留一项。`;
+  if (!links.length) return `${label}鑷冲皯闇€瑕佷繚鐣欎竴椤广€俙;
   for (const link of links) {
-    if (!String(link.label || '').trim()) return `${label}的显示名称不能为空。`;
-    if (!isValidSiteLink(link.href)) return `${label}链接只能使用站内路径或 HTTPS 地址。`;
+    if (!String(link.label || '').trim()) return `${label}鐨勬樉绀哄悕绉颁笉鑳戒负绌恒€俙;
+    if (!isValidSiteLink(link.href)) return `${label}閾炬帴鍙兘浣跨敤绔欏唴璺緞鎴?HTTPS 鍦板潃銆俙;
   }
   return '';
 }
 
 function validateFooterColumns(columns) {
-  if (!Array.isArray(columns)) return '页脚栏目配置无效。';
+  if (!Array.isArray(columns)) return '椤佃剼鏍忕洰閰嶇疆鏃犳晥銆?;
   for (const column of columns) {
-    if (!String(column?.title || '').trim()) return '页脚栏目标题不能为空。';
-    const errorText = validateSettingLinks(Array.isArray(column.links) ? column.links : [], `页脚栏目“${column.title}”链接`);
+    if (!String(column?.title || '').trim()) return '椤佃剼鏍忕洰鏍囬涓嶈兘涓虹┖銆?;
+    const errorText = validateSettingLinks(Array.isArray(column.links) ? column.links : [], `椤佃剼鏍忕洰鈥?{column.title}鈥濋摼鎺);
     if (errorText) return errorText;
   }
   return '';
@@ -6010,7 +6014,7 @@ async function loadRepairPages() {
 }
 
 function selectRepairPage(id, force = false) {
-  if (!force && id !== selectedRepairPageId.value && !confirmDiscardChanges('切换售后页面')) return;
+  if (!force && id !== selectedRepairPageId.value && !confirmDiscardChanges('鍒囨崲鍞悗椤甸潰')) return;
   selectedRepairPageId.value = id;
   const record = repairPages.value.find((item) => item.id === id);
   repairDraft.value = record ? normalizeRepairPage(record) : null;
@@ -6077,7 +6081,7 @@ async function loadParameters(modelCode) {
     parameters.value = Array.isArray(response.data?.data) ? response.data.data.map((record) => ({ ...record, sort_order: Number.isFinite(Number(record.sort_order)) ? Number(record.sort_order) : 0 })) : [];
   } catch (reason) {
     parameters.value = [];
-    error.value = apiError(reason, '无法读取该型号的技术参数。');
+    error.value = apiError(reason, '鏃犳硶璇诲彇璇ュ瀷鍙风殑鎶€鏈弬鏁般€?);
   } finally {
     parametersLoading.value = false;
   }
@@ -6097,14 +6101,14 @@ async function load() {
   try {
     await Promise.all([...everyday(), ...technical()]);
     markDraftSaved();
-    message.value = '已加载当前账号有权限查看的结构化内容。';
+    message.value = '宸插姞杞藉綋鍓嶈处鍙锋湁鏉冮檺鏌ョ湅鐨勭粨鏋勫寲鍐呭銆?;
   } catch (reason) {
     // A load right after a page reload can race the admin app's own session
     // handoff: the extension mounts with no access token, /auth/refresh answers
     // 400 ("The refresh token is required in either the payload or cookie"), and
     // every content call comes back 403. The handshake completes a moment later,
     // and Promise.all's siblings keep running anyway, so the page is in fact
-    // loaded and editable — leaving the panel reporting "无法读取后台内容" would
+    // loaded and editable 鈥?leaving the panel reporting "鏃犳硶璇诲彇鍚庡彴鍐呭" would
     // send the operator hunting a permission problem that does not exist.
     // One retry settles it; the error is only kept if it persists.
     await new Promise((resolve) => window.setTimeout(resolve, 1500));
@@ -6112,9 +6116,9 @@ async function load() {
       await Promise.all([...everyday(), ...technical()]);
       error.value = '';
       markDraftSaved();
-      message.value = '已加载当前账号有权限查看的结构化内容。';
+      message.value = '宸插姞杞藉綋鍓嶈处鍙锋湁鏉冮檺鏌ョ湅鐨勭粨鏋勫寲鍐呭銆?;
     } catch (retryReason) {
-      error.value = apiError(retryReason, '无法读取后台内容。请确认当前账号有内容读取权限。');
+      error.value = apiError(retryReason, '鏃犳硶璇诲彇鍚庡彴鍐呭銆傝纭褰撳墠璐﹀彿鏈夊唴瀹硅鍙栨潈闄愩€?);
     }
   } finally {
     loading.value = false;
@@ -6126,8 +6130,8 @@ async function savePage() {
   // Canvas-only empty media slots make every editable location selectable, but
   // they are not content: normalizePageMediaReferences drops any entry without an
   // asset id. Validation therefore has to judge the shape that will actually be
-  // persisted, not the canvas draft — otherwise those placeholders are read as
-  // "未登记的素材" and every save is rejected. This only started biting once the
+  // persisted, not the canvas draft 鈥?otherwise those placeholders are read as
+  // "鏈櫥璁扮殑绱犳潗" and every save is rejected. This only started biting once the
   // service page's sections gained a registered `type`: unregistered legacy
   // sections skip field validation entirely, so the placeholders went unnoticed.
   const persistedSections = normalizeSections(pageDraft.value.sections);
@@ -6143,18 +6147,18 @@ async function savePage() {
     if (!seo.description) delete seo.description;
     await api.patch(`/items/pages/${encodeURIComponent(pageDraft.value.id)}`, { title: pageDraft.value.title, slug: pageDraft.value.slug, language: pageDraft.value.language, sections: persistedSections, seo });
     if (JSON.stringify(pageDraft.value) !== pageBefore) {
-      message.value = '页面草稿已保存；保存期间又有新的修改，尚未写入，请再次保存。';
+      message.value = '椤甸潰鑽夌宸蹭繚瀛橈紱淇濆瓨鏈熼棿鍙堟湁鏂扮殑淇敼锛屽皻鏈啓鍏ワ紝璇峰啀娆′繚瀛樸€?;
       await refreshAfterSave([]);
       return;
     }
-    message.value = '页面草稿已保存，并已进入内容版本审计。';
+    message.value = '椤甸潰鑽夌宸蹭繚瀛橈紝骞跺凡杩涘叆鍐呭鐗堟湰瀹¤銆?;
     markDraftSaved();
     // A newly attached draft asset is not part of the previous one-time
     // preview session's allow-list. Renew it after a successful page save so
     // the canvas keeps working without requiring a manual reconnect.
     await refreshAfterSave([loadPages]);
   } catch (reason) {
-    setSaveError(reason, '保存页面失败，内容没有更新。');
+    setSaveError(reason, '淇濆瓨椤甸潰澶辫触锛屽唴瀹规病鏈夋洿鏂般€?);
   } finally { saving.value = false; }
 }
 
@@ -6179,52 +6183,52 @@ async function saveHomepageSection() {
       review_note: record.review_note
     };
     await api.patch(`/items/homepage_sections/${encodeURIComponent(record.id)}`, payload);
-    message.value = '首页区块草稿已保存，并已进入内容版本审计。';
+    message.value = '棣栭〉鍖哄潡鑽夌宸蹭繚瀛橈紝骞跺凡杩涘叆鍐呭鐗堟湰瀹¤銆?;
     markDraftSaved();
     let reloaded = true;
-    try { await loadHomepageSections(); } catch { reloaded = false; message.value += '（列表刷新失败，请重新加载页面查看）'; }
+    try { await loadHomepageSections(); } catch { reloaded = false; message.value += '锛堝垪琛ㄥ埛鏂板け璐ワ紝璇烽噸鏂板姞杞介〉闈㈡煡鐪嬶級'; }
     const persisted = reloaded ? homepageSections.value.find((item) => String(item.id) === String(record.id)) : null;
     if (persisted) {
       homepageSectionDraft.value = clone(persisted);
       markDraftSaved();
     } else if (reloaded) {
-      message.value += '（保存成功，但未能回读该区块，请重新加载页面）';
+      message.value += '锛堜繚瀛樻垚鍔燂紝浣嗘湭鑳藉洖璇昏鍖哄潡锛岃閲嶆柊鍔犺浇椤甸潰锛?;
     }
     await refreshAfterSave([]);
   } catch (reason) {
-    setSaveError(reason, '保存首页区块失败，内容没有更新。');
+    setSaveError(reason, '淇濆瓨棣栭〉鍖哄潡澶辫触锛屽唴瀹规病鏈夋洿鏂般€?);
   } finally { saving.value = false; }
 }
 
 async function saveRepairPage() {
   if (!repairDraft.value || !canEdit(repairDraft.value)) return;
-  if (!repairPageKeys.has(repairDraft.value.page_key)) { error.value = '不支持的售后页面键。'; return; }
+  if (!repairPageKeys.has(repairDraft.value.page_key)) { error.value = '涓嶆敮鎸佺殑鍞悗椤甸潰閿€?; return; }
   let parsed = {};
   try {
     for (const key of ['model_cards', 'action_cards', 'process_steps', 'notices', 'faq_refs', 'seo']) parsed[key] = JSON.parse(repairDraft.value[`${key}_text`] || (key === 'seo' ? '{}' : '[]'));
-  } catch { error.value = '售后页面配置中的 JSON 格式不正确。'; return; }
+  } catch { error.value = '鍞悗椤甸潰閰嶇疆涓殑 JSON 鏍煎紡涓嶆纭€?; return; }
   const actions = Array.isArray(parsed.action_cards) ? parsed.action_cards : [];
-  if (actions.some((item) => !repairActionCodes.has(String(item.action)))) { error.value = '动作卡片仅允许 01、02、09、10。'; return; }
+  if (actions.some((item) => !repairActionCodes.has(String(item.action)))) { error.value = '鍔ㄤ綔鍗＄墖浠呭厑璁?01銆?2銆?9銆?0銆?; return; }
   saving.value = true; error.value = ''; message.value = '';
   try {
     await api.patch(`/items/repair_page_configs/${encodeURIComponent(repairDraft.value.id)}`, { page_key: repairDraft.value.page_key, title: repairDraft.value.title, intro: repairDraft.value.intro, hero_asset: repairDraft.value.hero_asset || null, ...parsed, language: repairDraft.value.language || 'zh-CN' });
-    message.value = '售后页面草稿已保存，并已进入内容版本审计。';
+    message.value = '鍞悗椤甸潰鑽夌宸蹭繚瀛橈紝骞跺凡杩涘叆鍐呭鐗堟湰瀹¤銆?;
     markDraftSaved();
     await refreshAfterSave([loadRepairPages]);
-  } catch (reason) { error.value = apiError(reason, '保存售后页面草稿失败。'); }
+  } catch (reason) { error.value = apiError(reason, '淇濆瓨鍞悗椤甸潰鑽夌澶辫触銆?); }
   finally { saving.value = false; }
 }
 
 async function saveSeries() {
   if (!seriesDraft.value || !canEdit(seriesDraft.value)) return;
   const invalidDetailFeature = (seriesDraft.value.detail?.features || []).find((feature) => !String(feature?.label || '').trim());
-  if (invalidDetailFeature) { error.value = '每个设备组成项都必须填写标题。'; return; }
+  if (invalidDetailFeature) { error.value = '姣忎釜璁惧缁勬垚椤归兘蹇呴』濉啓鏍囬銆?; return; }
   const previous = series.value.find((item) => String(item.id) === String(seriesDraft.value.id));
   const previousCode = String(previous?.series_code || '').trim();
   const nextCode = String(seriesDraft.value.series_code || '').trim();
-  if (!nextCode) { error.value = '所属系列编码不能为空。'; return; }
+  if (!nextCode) { error.value = '鎵€灞炵郴鍒楃紪鐮佷笉鑳戒负绌恒€?; return; }
   if (series.value.some((item) => String(item.id) !== String(seriesDraft.value.id) && String(item.series_code || '').trim() === nextCode)) {
-    error.value = '该系列编码已被其他系列使用，请换一个。';
+    error.value = '璇ョ郴鍒楃紪鐮佸凡琚叾浠栫郴鍒椾娇鐢紝璇锋崲涓€涓€?;
     return;
   }
   // `product_models.series_code` is a denormalized copy, not a foreign key.
@@ -6236,10 +6240,10 @@ async function saveSeries() {
   if (renamedModels.length) {
     const locked = renamedModels.filter((model) => !canEdit(model));
     if (locked.length) {
-      error.value = `该系列下有 ${locked.length} 个已发布或审核中的机型，修改系列编码前请先下线；本次未保存。`;
+      error.value = `璇ョ郴鍒椾笅鏈?${locked.length} 涓凡鍙戝竷鎴栧鏍镐腑鐨勬満鍨嬶紝淇敼绯诲垪缂栫爜鍓嶈鍏堜笅绾匡紱鏈鏈繚瀛樸€俙;
       return;
     }
-    if (!window.confirm(`系列编码将从「${previousCode}」改为「${nextCode}」，并同步更新 ${renamedModels.length} 个机型。确认保存？`)) return;
+    if (!window.confirm(`绯诲垪缂栫爜灏嗕粠銆?{previousCode}銆嶆敼涓恒€?{nextCode}銆嶏紝骞跺悓姝ユ洿鏂?${renamedModels.length} 涓満鍨嬨€傜‘璁や繚瀛橈紵`)) return;
   }
   saving.value = true; error.value = ''; message.value = '';
   try {
@@ -6252,10 +6256,10 @@ async function saveSeries() {
       await api.patch(`/items/product_models/${encodeURIComponent(model.id)}`, { series_code: nextCode });
     }
     message.value = renamedModels.length
-      ? `产品系列草稿已保存，并同步更新 ${renamedModels.length} 个机型的所属系列编码。`
-      : '产品系列草稿已保存，并已进入内容版本审计。';
+      ? `浜у搧绯诲垪鑽夌宸蹭繚瀛橈紝骞跺悓姝ユ洿鏂?${renamedModels.length} 涓満鍨嬬殑鎵€灞炵郴鍒楃紪鐮併€俙
+      : '浜у搧绯诲垪鑽夌宸蹭繚瀛橈紝骞跺凡杩涘叆鍐呭鐗堟湰瀹¤銆?;
     if (JSON.stringify(seriesDraft.value) !== seriesBefore) {
-      message.value = '产品系列草稿已保存；保存期间又有新的修改，尚未写入，请再次保存。';
+      message.value = '浜у搧绯诲垪鑽夌宸蹭繚瀛橈紱淇濆瓨鏈熼棿鍙堟湁鏂扮殑淇敼锛屽皻鏈啓鍏ワ紝璇峰啀娆′繚瀛樸€?;
       await refreshAfterSave([]);
       return;
     }
@@ -6265,7 +6269,7 @@ async function saveSeries() {
       modelDraft.value.series_code = nextCode;
     }
   } catch (reason) {
-    error.value = apiError(reason, '保存产品系列失败，内容没有更新。');
+    error.value = apiError(reason, '淇濆瓨浜у搧绯诲垪澶辫触锛屽唴瀹规病鏈夋洿鏂般€?);
   } finally { saving.value = false; }
 }
 
@@ -6282,11 +6286,11 @@ async function saveCompanyRecord() {
       payload = { process: companyDraft.value.process, description: companyDraft.value.description, inspection_evidence: companyDraft.value.inspection_evidence || null, media: companyDraft.value.mediaReferences, sort_order: Number(companyDraft.value.sort_order) || 0 };
     }
     await api.patch(`/items/${encodeURIComponent(companyMode.value)}/${encodeURIComponent(companyDraft.value.id)}`, payload);
-    message.value = '企业资料草稿已保存，并已进入内容版本审计。';
+    message.value = '浼佷笟璧勬枡鑽夌宸蹭繚瀛橈紝骞跺凡杩涘叆鍐呭鐗堟湰瀹¤銆?;
     markDraftSaved();
     await refreshAfterSave([loadCompany]);
   } catch (reason) {
-    error.value = apiError(reason, '保存企业资料失败，内容没有更新。');
+    error.value = apiError(reason, '淇濆瓨浼佷笟璧勬枡澶辫触锛屽唴瀹规病鏈夋洿鏂般€?);
   } finally { saving.value = false; }
 }
 
@@ -6294,14 +6298,14 @@ async function createServiceResource() {
   saving.value = true; error.value = ''; message.value = '';
   try {
     const response = await api.post('/items/service_resources', {
-      source_key: nextServiceKey('service-resource'), type: 'video', title: '未命名服务资料', language: 'zh-CN',
+      source_key: nextServiceKey('service-resource'), type: 'video', title: '鏈懡鍚嶆湇鍔¤祫鏂?, language: 'zh-CN',
       applicable_models: [], sort_order: service.value.service_resources.length, status: 'draft', publication_state: 'unpublished'
     });
     const id = response.data?.data?.id;
     await loadService();
     if (id) selectServiceRecord(id, true);
-    message.value = '新的服务资料草稿已创建。请填写内容并关联已审核的文件。';
-  } catch (reason) { error.value = apiError(reason, '创建服务资料草稿失败。'); }
+    message.value = '鏂扮殑鏈嶅姟璧勬枡鑽夌宸插垱寤恒€傝濉啓鍐呭骞跺叧鑱斿凡瀹℃牳鐨勬枃浠躲€?;
+  } catch (reason) { error.value = apiError(reason, '鍒涘缓鏈嶅姟璧勬枡鑽夌澶辫触銆?); }
   finally { saving.value = false; }
 }
 
@@ -6310,15 +6314,15 @@ async function createKnowledgeRecord() {
   try {
     const response = await api.post('/items/knowledge_items', {
       source_key: nextServiceKey('website-knowledge'), visibility: 'public', channel: 'website', category: 'knowledge_share',
-      question_title: '未命名知识内容', applicable_models: [], error_codes: [], symptoms: '', troubleshooting_steps: [{ type: 'manual_step', content: '请填写内容' }],
-      risk_level: 'low', safety_preconditions: [], media: [], version: 'v1.0', technical_reviewer: '待指定',
+      question_title: '鏈懡鍚嶇煡璇嗗唴瀹?, applicable_models: [], error_codes: [], symptoms: '', troubleshooting_steps: [{ type: 'manual_step', content: '璇峰～鍐欏唴瀹? }],
+      risk_level: 'low', safety_preconditions: [], media: [], version: 'v1.0', technical_reviewer: '寰呮寚瀹?,
       sort_order: knowledgeItems.value.length, status: 'draft', publication_state: 'unpublished'
     });
     const id = response.data?.data?.id;
     await loadKnowledge();
     if (id) selectKnowledge(id, true);
-    message.value = '新的官网知识草稿已创建。';
-  } catch (reason) { error.value = apiError(reason, '创建官网知识草稿失败。'); }
+    message.value = '鏂扮殑瀹樼綉鐭ヨ瘑鑽夌宸插垱寤恒€?;
+  } catch (reason) { error.value = apiError(reason, '鍒涘缓瀹樼綉鐭ヨ瘑鑽夌澶辫触銆?); }
   finally { saving.value = false; }
 }
 
@@ -6336,20 +6340,20 @@ async function saveServiceRecord() {
       payload = { url: serviceDraft.value.url, enabled: serviceDraft.value.enabled === true, open_mode: serviceDraft.value.open_mode, fallback_phone: serviceDraft.value.fallback_phone || null, health_status: serviceDraft.value.health_status || null };
     }
     await api.patch(`/items/${encodeURIComponent(serviceMode.value)}/${encodeURIComponent(serviceDraft.value.id)}`, payload);
-    message.value = '服务支持草稿已保存，并已进入内容版本审计。';
+    message.value = '鏈嶅姟鏀寔鑽夌宸蹭繚瀛橈紝骞跺凡杩涘叆鍐呭鐗堟湰瀹¤銆?;
     markDraftSaved();
     await refreshAfterSave([loadService]);
   } catch (reason) {
-    error.value = apiError(reason, '保存服务支持内容失败，内容没有更新。');
+    error.value = apiError(reason, '淇濆瓨鏈嶅姟鏀寔鍐呭澶辫触锛屽唴瀹规病鏈夋洿鏂般€?);
   } finally { saving.value = false; }
 }
 
 async function saveKnowledge() {
   if (!knowledgeDraft.value || !canEdit(knowledgeDraft.value)) return;
   const stepsText = String(knowledgeDraft.value.troubleshootingStepsText || '').trim();
-  if (!stepsText) { error.value = '请填写至少一条排障步骤或保留原始知识内容。'; return; }
+  if (!stepsText) { error.value = '璇峰～鍐欒嚦灏戜竴鏉℃帓闅滄楠ゆ垨淇濈暀鍘熷鐭ヨ瘑鍐呭銆?; return; }
   if (knowledgeDraft.value.risk_level === 'high' && (!String(knowledgeDraft.value.safetyPreconditionsText || '').trim() || !String(knowledgeDraft.value.escalation_guidance || '').trim())) {
-    error.value = '高风险知识必须补充安全前置条件和人工升级说明。';
+    error.value = '楂橀闄╃煡璇嗗繀椤昏ˉ鍏呭畨鍏ㄥ墠缃潯浠跺拰浜哄伐鍗囩骇璇存槑銆?;
     return;
   }
   saving.value = true; error.value = ''; message.value = '';
@@ -6375,11 +6379,11 @@ async function saveKnowledge() {
       sort_order: Number(knowledgeDraft.value.sort_order) || 0,
       technical_reviewer: knowledgeDraft.value.technical_reviewer
     });
-    message.value = '常见问题知识草稿已保存，并已进入内容版本审计。';
+    message.value = '甯歌闂鐭ヨ瘑鑽夌宸蹭繚瀛橈紝骞跺凡杩涘叆鍐呭鐗堟湰瀹¤銆?;
     markDraftSaved();
     await refreshAfterSave([loadKnowledge]);
   } catch (reason) {
-    error.value = apiError(reason, '保存常见问题知识草稿失败，内容没有更新。');
+    error.value = apiError(reason, '淇濆瓨甯歌闂鐭ヨ瘑鑽夌澶辫触锛屽唴瀹规病鏈夋洿鏂般€?);
   } finally { saving.value = false; }
 }
 
@@ -6400,7 +6404,7 @@ async function createMediaCandidate() {
     const uploaded = upload.data?.data;
     uploadedFileId = String(uploaded?.id || '');
     if (!uploadedFileId || !uploaded?.filename_download || !uploaded?.type || !Number.isFinite(Number(uploaded?.filesize))) {
-      throw new Error('上传接口未返回完整的文件元数据');
+      throw new Error('涓婁紶鎺ュ彛鏈繑鍥炲畬鏁寸殑鏂囦欢鍏冩暟鎹?);
     }
     const serverWidth = Number(uploaded?.width);
     const serverHeight = Number(uploaded?.height);
@@ -6461,8 +6465,8 @@ async function createMediaCandidate() {
     mediaDraft.value = emptyMediaDraft();
     if (mediaFileInput.value) mediaFileInput.value.value = '';
     message.value = metadataUnavailable
-      ? '媒体素材已上传并发布。浏览器未能读取真实尺寸，后台按展示位建议尺寸标记，请核对显示效果。'
-      : '媒体素材已上传并发布，可直接在画布中使用。';
+      ? '濯掍綋绱犳潗宸蹭笂浼犲苟鍙戝竷銆傛祻瑙堝櫒鏈兘璇诲彇鐪熷疄灏哄锛屽悗鍙版寜灞曠ず浣嶅缓璁昂瀵告爣璁帮紝璇锋牳瀵规樉绀烘晥鏋溿€?
+      : '濯掍綋绱犳潗宸蹭笂浼犲苟鍙戝竷锛屽彲鐩存帴鍦ㄧ敾甯冧腑浣跨敤銆?;
     await Promise.all([loadMediaCandidates(), loadMediaAssets()]);
     markDraftSaved();
   } catch (reason) {
@@ -6470,8 +6474,8 @@ async function createMediaCandidate() {
       try { await api.delete(`/files/${encodeURIComponent(uploadedFileId)}`); } catch { /* Keep the original error if orphan cleanup is unavailable. */ }
     }
     error.value = mediaRegistered
-      ? '素材已登记，但列表刷新失败。文件已保留，请重新加载，不要重复上传。'
-      : apiError(reason, '媒体上传或候选登记失败，官网内容没有更新。');
+      ? '绱犳潗宸茬櫥璁帮紝浣嗗垪琛ㄥ埛鏂板け璐ャ€傛枃浠跺凡淇濈暀锛岃閲嶆柊鍔犺浇锛屼笉瑕侀噸澶嶄笂浼犮€?
+      : apiError(reason, '濯掍綋涓婁紶鎴栧€欓€夌櫥璁板け璐ワ紝瀹樼綉鍐呭娌℃湁鏇存柊銆?);
   } finally { saving.value = false; }
 }
 
@@ -6479,7 +6483,7 @@ async function createEditorialRecord({ media = [] } = {}) {
   saving.value = true; error.value = ''; message.value = '';
   try {
     const payload = editorialMode.value === 'articles'
-      ? { slug: nextDraftSlug('article'), category: editorialCategory.value || 'news', title: '未命名文章', display_date: new Date().toISOString().slice(0, 10), sort_order: 0, summary: '', body: '', transcript: '', media: Array.isArray(media) ? media : [], seo: {}, published_at: new Date().toISOString().slice(0, 10), status: 'draft', publication_state: 'unpublished' }
+      ? { slug: nextDraftSlug('article'), category: editorialCategory.value || 'news', title: '鏈懡鍚嶆枃绔?, display_date: new Date().toISOString().slice(0, 10), sort_order: 0, summary: '', body: '', transcript: '', media: Array.isArray(media) ? media : [], seo: {}, published_at: new Date().toISOString().slice(0, 10), status: 'draft', publication_state: 'unpublished' }
       : { slug: nextDraftSlug('case-study'), industry: '', material: '', thickness: '', model_code: '', process: '', result: '', authorization_status: 'review_required', status: 'draft', publication_state: 'unpublished' };
     const response = await api.post(`/items/${encodeURIComponent(editorialMode.value)}`, payload);
     const id = response.data?.data?.id;
@@ -6487,19 +6491,19 @@ async function createEditorialRecord({ media = [] } = {}) {
     if (id) selectEditorialRecord(id, true);
     markDraftSaved();
     invalidateSubmissionQueue();
-    message.value = editorialMode.value === 'articles' ? '新的文章草稿已创建。' : '新的客户案例草稿已创建。';
+    message.value = editorialMode.value === 'articles' ? '鏂扮殑鏂囩珷鑽夌宸插垱寤恒€? : '鏂扮殑瀹㈡埛妗堜緥鑽夌宸插垱寤恒€?;
   } catch (reason) {
-    error.value = apiError(reason, '创建草稿失败，请确认当前账号拥有内容编辑权限。');
+    error.value = apiError(reason, '鍒涘缓鑽夌澶辫触锛岃纭褰撳墠璐﹀彿鎷ユ湁鍐呭缂栬緫鏉冮檺銆?);
   } finally { saving.value = false; }
 }
 
-// 画布内的“新建内容”：从新闻列表画布直接建一篇视频分享或动态新闻，
-// 建完自动切到该文章的详情画布，不离开画布去左侧表单。
+// 鐢诲竷鍐呯殑鈥滄柊寤哄唴瀹光€濓細浠庢柊闂诲垪琛ㄧ敾甯冪洿鎺ュ缓涓€绡囪棰戝垎浜垨鍔ㄦ€佹柊闂伙紝
+// 寤哄畬鑷姩鍒囧埌璇ユ枃绔犵殑璇︽儏鐢诲竷锛屼笉绂诲紑鐢诲竷鍘诲乏渚ц〃鍗曘€?
 async function createEditorialFromCanvas(category) {
   if (category === 'video') {
-    if (!confirmDiscardChanges('新增视频分享')) return;
-    // 从专注画布点“新增视频分享”时，编辑区被专注样式隐藏；先退出专注，
-    // 再切到视频分享工作区并打开新增弹窗。
+    if (!confirmDiscardChanges('鏂板瑙嗛鍒嗕韩')) return;
+    // 浠庝笓娉ㄧ敾甯冪偣鈥滄柊澧炶棰戝垎浜€濇椂锛岀紪杈戝尯琚笓娉ㄦ牱寮忛殣钘忥紱鍏堥€€鍑轰笓娉紝
+    // 鍐嶅垏鍒拌棰戝垎浜伐浣滃尯骞舵墦寮€鏂板寮圭獥銆?
     visualCanvasFocus.value = false;
     editorialMode.value = 'articles';
     editorialCategory.value = 'video';
@@ -6508,7 +6512,7 @@ async function createEditorialFromCanvas(category) {
     videoShareWorkspace.value?.openCreate();
     return;
   }
-  if (!confirmDiscardChanges('新建内容')) return;
+  if (!confirmDiscardChanges('鏂板缓鍐呭')) return;
   visualCanvasFocus.value = false;
   editorialMode.value = 'articles';
   editorialCategory.value = 'news';
@@ -6519,7 +6523,7 @@ async function createEditorialFromCanvas(category) {
   articlePreviewSurface.value = 'detail';
   await nextTick();
   if (!liveWebsitePreviewVisible.value) await startLiveWebsitePreview();
-  message.value = '已新建动态新闻草稿，可直接在画布中编辑。';
+  message.value = '宸叉柊寤哄姩鎬佹柊闂昏崏绋匡紝鍙洿鎺ュ湪鐢诲竷涓紪杈戙€?;
 }
 
 const createArticleOpen = ref(false);
@@ -6545,13 +6549,13 @@ function createArticleFromCanvas(category) {
     return;
   }
   createArticleCategory.value = 'news';
-  createArticleTitle.value = createArticleCategory.value === 'video' ? '新建视频分享' : '新建动态新闻';
+  createArticleTitle.value = createArticleCategory.value === 'video' ? '鏂板缓瑙嗛鍒嗕韩' : '鏂板缓鍔ㄦ€佹柊闂?;
   createArticleMediaId.value = '';
   createArticleOpen.value = true;
 }
 async function confirmCreateArticle() {
   const title = createArticleTitle.value.normalize('NFKC').trim().slice(0, 240);
-  if (!title) { error.value = '标题不能为空。'; return; }
+  if (!title) { error.value = '鏍囬涓嶈兘涓虹┖銆?; return; }
   const isVideo = createArticleCategory.value === 'video';
   const mediaId = String(createArticleMediaId.value || '').trim();
   createArticleSaving.value = true; error.value = ''; message.value = '';
@@ -6566,22 +6570,22 @@ async function confirmCreateArticle() {
       published_at: new Date().toISOString().slice(0, 10),
       status: 'draft', publication_state: 'unpublished'
     };
-    // 动态新闻的图片是封面字段，不是视频文章那种 media 列表。
+    // 鍔ㄦ€佹柊闂荤殑鍥剧墖鏄皝闈㈠瓧娈碉紝涓嶆槸瑙嗛鏂囩珷閭ｇ media 鍒楄〃銆?
     if (!isVideo && mediaId) payload.cover_asset = mediaId;
     await api.post('/items/articles', payload);
     createArticleOpen.value = false;
     await Promise.all([loadEditorial(), loadMediaAssets()]);
     await startLiveWebsitePreview();
-    message.value = `已新增「${title}」${mediaId ? '并绑定所选媒体' : ''}，可在画布中继续编辑。`;
+    message.value = `宸叉柊澧炪€?{title}銆?{mediaId ? '骞剁粦瀹氭墍閫夊獟浣? : ''}锛屽彲鍦ㄧ敾甯冧腑缁х画缂栬緫銆俙;
   } catch (reason) {
-    error.value = apiError(reason, '新增文章失败。');
+    error.value = apiError(reason, '鏂板鏂囩珷澶辫触銆?);
   } finally {
     createArticleSaving.value = false;
   }
 }
 
-// 文章信息面板可能先在“页面草稿”状态下被打开；此时直接编辑 editorialDraft
-// 不会改变当前草稿指纹，保存草稿会一直是灰的。聚焦面板时先切到该文章草稿。
+// 鏂囩珷淇℃伅闈㈡澘鍙兘鍏堝湪鈥滈〉闈㈣崏绋库€濈姸鎬佷笅琚墦寮€锛涙鏃剁洿鎺ョ紪杈?editorialDraft
+// 涓嶄細鏀瑰彉褰撳墠鑽夌鎸囩汗锛屼繚瀛樿崏绋夸細涓€鐩存槸鐏扮殑銆傝仛鐒﹂潰鏉挎椂鍏堝垏鍒拌鏂囩珷鑽夌銆?
 function ensureArticleDraftActive() {
   const record = selectedVisualRecord.value?.record;
   if (!record?.id) return;
@@ -6591,7 +6595,7 @@ function ensureArticleDraftActive() {
 
 async function deleteSelectedVisualArticle() {  const record = selectedVisualRecord.value?.record;
   if (!record?.id) return;
-  await deleteArticleFromCanvas({ collection: 'articles', targetItemId: String(record.id), label: `删除 ${record.title || ''}` });
+  await deleteArticleFromCanvas({ collection: 'articles', targetItemId: String(record.id), label: `鍒犻櫎 ${record.title || ''}` });
 }
 
 async function deleteSelectedVideoShareCard() {
@@ -6599,7 +6603,7 @@ async function deleteSelectedVideoShareCard() {
   if (!mediaAssetId) return;
   await deleteCandidateMedia({
     mediaAssetId,
-    label: `删除 ${selectedVisualElement.value?.label || '当前视频分享卡片'}`
+    label: `鍒犻櫎 ${selectedVisualElement.value?.label || '褰撳墠瑙嗛鍒嗕韩鍗＄墖'}`
   });
   clearVisualSelection();
 }
@@ -6612,15 +6616,15 @@ async function deleteSelectedArticleBodyImage() {
   container.innerHTML = String(draft.body);
   const image = [...container.querySelectorAll('img')]
     .find((node) => String(node.getAttribute('data-cms-preview-media-asset-id') || '') === mediaAssetId);
-  if (!image) { error.value = '正文中找不到这张图片的受控记录。'; return; }
+  if (!image) { error.value = '姝ｆ枃涓壘涓嶅埌杩欏紶鍥剧墖鐨勫彈鎺ц褰曘€?; return; }
   image.remove();
   draft.body = container.innerHTML;
   visualMediaSaving.value = true; error.value = ''; message.value = '';
   try {
     await api.post('/media-poster/asset/delete', { media_asset_id: mediaAssetId });
-    message.value = '正文图片已删除，保存草稿后官网生效。';
+    message.value = '姝ｆ枃鍥剧墖宸插垹闄わ紝淇濆瓨鑽夌鍚庡畼缃戠敓鏁堛€?;
   } catch (reason) {
-    error.value = apiError(reason, '图片已从正文移除，但素材仍被其他内容引用，未删除媒体资产。');
+    error.value = apiError(reason, '鍥剧墖宸蹭粠姝ｆ枃绉婚櫎锛屼絾绱犳潗浠嶈鍏朵粬鍐呭寮曠敤锛屾湭鍒犻櫎濯掍綋璧勪骇銆?);
   } finally {
     visualMediaSaving.value = false;
     await Promise.all([loadMediaAssets(), loadMediaCandidates()]);
@@ -6629,7 +6633,7 @@ async function deleteSelectedArticleBodyImage() {
   }
 }
 
-// Canvas "＋ / ×" buttons name one of these arrays directly. The allowlist keeps
+// Canvas "锛?/ 脳" buttons name one of these arrays directly. The allowlist keeps
 // the command surface as small as the two detail editors that expose it.
 const canvasListPaths = new Set(['configuration.features', 'detail.features']);
 
@@ -6640,7 +6644,7 @@ function canvasListTarget(collection, itemId) {
 }
 
 // A record whose detail was never initialized renders the website original. Both
-// "＋" and "×" seed that original into the draft first, otherwise the edit would
+// "锛? and "脳" seed that original into the draft first, otherwise the edit would
 // replace the visible copy with a single blank row (add) or hit nothing at all
 // (remove). Returns false when nothing can be seeded.
 function seedCanvasListDetail(collection, record) {
@@ -6648,18 +6652,18 @@ function seedCanvasListDetail(collection, record) {
     if (Array.isArray(record.configuration?.features) && record.configuration.features.length) return true;
     initializeModelDetail();
     if (Array.isArray(record.configuration?.features) && record.configuration.features.length) return true;
-    error.value = '该型号没有可初始化的官网原版详情，请先在左侧表单新增。';
+    error.value = '璇ュ瀷鍙锋病鏈夊彲鍒濆鍖栫殑瀹樼綉鍘熺増璇︽儏锛岃鍏堝湪宸︿晶琛ㄥ崟鏂板銆?;
     return false;
   }
   if (collection === 'product_series') {
     if (Array.isArray(record.detail?.features) && record.detail.features.length) return true;
     if (!seriesSupportsDetail.value) {
-      error.value = '该系列属于型号型系列，没有系列级详情；请先选中具体型号再编辑它的介绍与特点。';
+      error.value = '璇ョ郴鍒楀睘浜庡瀷鍙峰瀷绯诲垪锛屾病鏈夌郴鍒楃骇璇︽儏锛涜鍏堥€変腑鍏蜂綋鍨嬪彿鍐嶇紪杈戝畠鐨勪粙缁嶄笌鐗圭偣銆?;
       return false;
     }
     initializeSeriesDetail();
     if (Array.isArray(record.detail?.features) && record.detail.features.length) return true;
-    error.value = '该系列没有可初始化的官网原版详情，请先在左侧表单新增。';
+    error.value = '璇ョ郴鍒楁病鏈夊彲鍒濆鍖栫殑瀹樼綉鍘熺増璇︽儏锛岃鍏堝湪宸︿晶琛ㄥ崟鏂板銆?;
     return false;
   }
   return false;
@@ -6690,7 +6694,7 @@ async function applyCanvasListAction(kind, payload) {
   const requestedPath = String(payload?.listPath || '').trim();
   if (!canvasListPaths.has(requestedPath)) return;
   const owner = canvasListOwner(payload);
-  if (!owner) { error.value = '画布没有识别到该详情所属的系列，请先在左侧选中系列后再增删。'; return; }
+  if (!owner) { error.value = '鐢诲竷娌℃湁璇嗗埆鍒拌璇︽儏鎵€灞炵殑绯诲垪锛岃鍏堝湪宸︿晶閫変腑绯诲垪鍚庡啀澧炲垹銆?; return; }
   const collection = owner.collection;
   const itemId = owner.itemId;
   // The page cannot know whether the resolved owner is a model or a series (the
@@ -6707,22 +6711,22 @@ async function applyCanvasListAction(kind, payload) {
     // ===, so pass the raw record id).
     if (collection === 'product_models') {
       const target = models.value.find((model) => String(model.id) === itemId);
-      if (!target) { error.value = '没有找到该详情对应的型号记录，请先在左侧选中型号。'; return; }
+      if (!target) { error.value = '娌℃湁鎵惧埌璇ヨ鎯呭搴旂殑鍨嬪彿璁板綍锛岃鍏堝湪宸︿晶閫変腑鍨嬪彿銆?; return; }
       await selectModel(target.id, true);
     } else {
       const target = series.value.find((candidate) => String(candidate.id) === itemId);
-      if (!target) { error.value = '没有找到该详情对应的系列记录，请先在左侧选中系列。'; return; }
+      if (!target) { error.value = '娌℃湁鎵惧埌璇ヨ鎯呭搴旂殑绯诲垪璁板綍锛岃鍏堝湪宸︿晶閫変腑绯诲垪銆?; return; }
       selectSeries(target.id, true, false, false);
     }
     record = canvasListTarget(collection, itemId);
   }
-  if (!record || !canEdit(record)) { error.value = '该内容当前不可编辑，无法在画布中增删列表项。'; return; }
+  if (!record || !canEdit(record)) { error.value = '璇ュ唴瀹瑰綋鍓嶄笉鍙紪杈戯紝鏃犳硶鍦ㄧ敾甯冧腑澧炲垹鍒楄〃椤广€?; return; }
   error.value = '';
   if (kind === 'remove') {
     const index = Number(payload?.listIndex);
     const items = path.split('.').reduce((cursor, part) => (cursor && typeof cursor === 'object' ? cursor[part] : null), record);
     const label = String(payload?.listLabel || (Array.isArray(items) ? items[index]?.label : '') || '').trim();
-    if (!window.confirm(`确认删除${label ? `「${label}」` : `第 ${index + 1} 项`}吗？该操作会在保存草稿后生效。`)) return;
+    if (!window.confirm(`纭鍒犻櫎${label ? `銆?{label}銆峘 : `绗?${index + 1} 椤筦}鍚楋紵璇ユ搷浣滀細鍦ㄤ繚瀛樿崏绋垮悗鐢熸晥銆俙)) return;
     if (!seedCanvasListDetail(collection, record)) return;
     const removed = removeVisualListItemAt(record, path, index);
     if (!removed) return;
@@ -6730,19 +6734,19 @@ async function applyCanvasListAction(kind, payload) {
     recordVisualHistory();
     postLivePreviewUpdate({ collection, record });
     queueLivePreviewUpdate({ collection, record });
-    message.value = '已删除一项，保存草稿后生效。';
+    message.value = '宸插垹闄や竴椤癸紝淇濆瓨鑽夌鍚庣敓鏁堛€?;
     return;
   }
   if (!seedCanvasListDetail(collection, record)) return;
   const added = appendVisualListItem(record, path);
   if (!added) {
-    error.value = '当前详情没有可新增的列表，请先在左侧初始化详情。';
+    error.value = '褰撳墠璇︽儏娌℃湁鍙柊澧炵殑鍒楄〃锛岃鍏堝湪宸︿晶鍒濆鍖栬鎯呫€?;
     return;
   }
   recordVisualHistory();
   postLivePreviewUpdate({ collection, record });
   queueLivePreviewUpdate({ collection, record });
-  message.value = '已写入官网原版详情并追加一条空白条目，填写标题后保存草稿即可。';
+  message.value = '宸插啓鍏ュ畼缃戝師鐗堣鎯呭苟杩藉姞涓€鏉＄┖鐧芥潯鐩紝濉啓鏍囬鍚庝繚瀛樿崏绋垮嵆鍙€?;
 }
 
 // A product-series card is a `product_series` record with models and parameters
@@ -6750,8 +6754,8 @@ async function applyCanvasListAction(kind, payload) {
 // allowed while it has no models and has never been published.
 // A draft card in the canvas has no editable form of its own yet: clicking its name
 // opens the series in the left panel (and shows that series in the canvas).
-// "＋ 新增系列卡片" opens a form first: the operator types the name/positioning and
-// picks a cover, then confirms — the card is created with real content instead of
+// "锛?鏂板绯诲垪鍗＄墖" opens a form first: the operator types the name/positioning and
+// picks a cover, then confirms 鈥?the card is created with real content instead of
 // a placeholder that then has to be hunted down in the draft strip.
 const seriesCreateOpen = ref(false);
 const seriesCreateSaving = ref(false);
@@ -6811,12 +6815,12 @@ function closeSeriesCreateDialog() {
 
 async function confirmSeriesCreate() {
   const name = String(seriesCreateDraft.name || '').trim();
-  if (!name) { seriesCreateError.value = '请填写系列名称。'; return; }
+  if (!name) { seriesCreateError.value = '璇峰～鍐欑郴鍒楀悕绉般€?; return; }
   const code = String(seriesCreateDraft.code || '').trim();
-  if (!code) { seriesCreateError.value = '请填写系列编码；中文名称不会自动生成编码，请手动填写英文编码。'; return; }
-  if (!/^[a-z0-9][a-z0-9-]{0,79}$/.test(code)) { seriesCreateError.value = '系列编码只能使用小写字母、数字和连字符，且以字母或数字开头。'; return; }
+  if (!code) { seriesCreateError.value = '璇峰～鍐欑郴鍒楃紪鐮侊紱涓枃鍚嶇О涓嶄細鑷姩鐢熸垚缂栫爜锛岃鎵嬪姩濉啓鑻辨枃缂栫爜銆?; return; }
+  if (!/^[a-z0-9][a-z0-9-]{0,79}$/.test(code)) { seriesCreateError.value = '绯诲垪缂栫爜鍙兘浣跨敤灏忓啓瀛楁瘝銆佹暟瀛楀拰杩炲瓧绗︼紝涓斾互瀛楁瘝鎴栨暟瀛楀紑澶淬€?; return; }
   if (series.value.some((item) => String(item.series_code || '').toLowerCase() === code.toLowerCase())) {
-    seriesCreateError.value = `系列编码「${code}」已被其他系列使用，请换一个。`;
+    seriesCreateError.value = `绯诲垪缂栫爜銆?{code}銆嶅凡琚叾浠栫郴鍒椾娇鐢紝璇锋崲涓€涓€俙;
     return;
   }
   const position = Math.min(0, ...series.value.map((item) => Number(item.sort_order) || 0)) - 1;
@@ -6828,7 +6832,7 @@ async function confirmSeriesCreate() {
       series_code: code,
       slug: `new-series-${Date.now().toString(36)}`,
       name,
-      positioning: String(seriesCreateDraft.positioning || '').trim() || '待填写',
+      positioning: String(seriesCreateDraft.positioning || '').trim() || '寰呭～鍐?,
       ...(String(seriesCreateDraft.coverAssetId || '').trim() ? { cover_asset: String(seriesCreateDraft.coverAssetId).trim() } : {}),
       sort_order: position,
       status: 'draft',
@@ -6846,15 +6850,15 @@ async function confirmSeriesCreate() {
         type: 'ruijun:cms-preview:notice',
         kind: 'series-added',
         itemId: String(record.id),
-        label: record.name || record.series_code || '新系列'
+        label: record.name || record.series_code || '鏂扮郴鍒?
       }, livePreviewWebsiteOrigin.value);
     } else {
       await loadSeries();
     }
-    message.value = `已新增草稿卡片「${name}」，可在左侧继续补充详情后保存。`;
+    message.value = `宸叉柊澧炶崏绋垮崱鐗囥€?{name}銆嶏紝鍙湪宸︿晶缁х画琛ュ厖璇︽儏鍚庝繚瀛樸€俙;
     seriesCreateOpen.value = false;
   } catch (reason) {
-    seriesCreateError.value = apiError(reason, '新增系列卡片失败。');
+    seriesCreateError.value = apiError(reason, '鏂板绯诲垪鍗＄墖澶辫触銆?);
   } finally {
     seriesCreateSaving.value = false;
   }
@@ -6863,13 +6867,13 @@ async function confirmSeriesCreate() {
 // selected, a template-only name gets a draft record so its name becomes editable.
 async function focusCanvasModel(payload) {
   const code = String(payload?.modelCode || payload?.modelName || '').trim();
-  if (!code) { error.value = '画布没有识别到机型名称。'; return; }
+  if (!code) { error.value = '鐢诲竷娌℃湁璇嗗埆鍒版満鍨嬪悕绉般€?; return; }
   const activeWasDirty = hasUnsavedChanges.value;
   const dirtyKeysBefore = new Set(dirtyCachedDraftKeys());
   const seriesCode = String(payload?.seriesCode || '').trim();
   const modelId = String(payload?.modelId || '').trim();
   // Prefer the record id the canvas sent: resolving by name alone could land on a
-  // same-named model of another family (and jump to 灵动切割工作站).
+  // same-named model of another family (and jump to 鐏靛姩鍒囧壊宸ヤ綔绔?.
   let existing = modelId ? models.value.find((model) => String(model.id) === modelId) : null;
   if (!existing && modelId) {
     existing = await api.get(`/items/product_models/${encodeURIComponent(modelId)}`)
@@ -6930,20 +6934,20 @@ async function focusCanvasModel(payload) {
     activeTab.value = 'models';
     await selectModel(existing.id, true);
     baselineCanvasSelection(activeWasDirty, dirtyKeysBefore);
-    message.value = '已在左侧打开该机型，可修改名称、参数与详情。';
+    message.value = '宸插湪宸︿晶鎵撳紑璇ユ満鍨嬶紝鍙慨鏀瑰悕绉般€佸弬鏁颁笌璇︽儏銆?;
     return;
   }
   // A template-only name belongs to the website original, not a CMS record.
   // Selecting it must not create a record (which also reloaded the canvas); the
-  // explicit "＋新增机型" action is the creation path.
+  // explicit "锛嬫柊澧炴満鍨? action is the creation path.
   error.value = '';
-  message.value = '该机型是官网原版名称，尚未建立 CMS 记录；请点画布上的「＋新增机型」建立后再编辑。';
+  message.value = '璇ユ満鍨嬫槸瀹樼綉鍘熺増鍚嶇О锛屽皻鏈缓绔?CMS 璁板綍锛涜鐐圭敾甯冧笂鐨勩€岋紜鏂板鏈哄瀷銆嶅缓绔嬪悗鍐嶇紪杈戙€?;
 }
 function baselineCanvasSelection(activeWasDirty, dirtyKeysBefore) {
   // Opening a card from the canvas is a read/navigation action. Series
   // normalization, auto-selecting the first model and the async parameter load
   // all mutate drafts after render; without re-baselining them the badge showed
-  // "未保存" immediately after clicking "详情" without any operator input.
+  // "鏈繚瀛? immediately after clicking "璇︽儏" without any operator input.
   // Only records that were genuinely dirty before the click keep their baseline.
   setTimeout(() => {
     const activeKey = activeDraftCacheKey();
@@ -6962,9 +6966,9 @@ async function focusCanvasSeries(payload) {
   const activeWasDirty = hasUnsavedChanges.value;
   const dirtyKeysBefore = new Set(dirtyCachedDraftKeys());
   const activated = activateVisualEditingTarget({ collection: 'product_series', itemId: id }, { discardConfirmed: true });
-  if (!activated?.record) { error.value = '没有找到该系列草稿，请刷新后重试。'; return; }
+  if (!activated?.record) { error.value = '娌℃湁鎵惧埌璇ョ郴鍒楄崏绋匡紝璇峰埛鏂板悗閲嶈瘯銆?; return; }
   baselineCanvasSelection(activeWasDirty, dirtyKeysBefore);
-  message.value = '已在左侧打开该系列：补充名称、定位、封面与机型后保存。';
+  message.value = '宸插湪宸︿晶鎵撳紑璇ョ郴鍒楋細琛ュ厖鍚嶇О銆佸畾浣嶃€佸皝闈笌鏈哄瀷鍚庝繚瀛樸€?;
   // The page already opens the series panel in place, and the preview token
   // carries the related series/models. `activateVisualEditingTarget` preserved
   // the session, so re-issuing a token here only reloaded the canvas.
@@ -6978,10 +6982,10 @@ async function addCanvasSeries() {
   const stamp = Date.now().toString(36);
   try {
     const created = await api.post('/items/product_series', {
-      series_code: `新系列-${series.value.length + 1}`,
+      series_code: `鏂扮郴鍒?${series.value.length + 1}`,
       slug: `new-series-${stamp}`,
-      name: '新系列',
-      positioning: '待填写',
+      name: '鏂扮郴鍒?,
+      positioning: '寰呭～鍐?,
       sort_order: position,
       status: 'draft',
       publication_state: 'unpublished'
@@ -6994,7 +6998,7 @@ async function addCanvasSeries() {
       // instead of reloading into a page that still does not know about it.
       postLivePreviewUpdate({ collection: 'product_series', record });
       queueLivePreviewUpdate({ collection: 'product_series', record });
-      // Select the card on the canvas as well: otherwise the next "新增机型"
+      // Select the card on the canvas as well: otherwise the next "鏂板鏈哄瀷"
       // still sends the previous `activeSeriesCode`.
       selectSeries(record.id, true);
       // Tell the canvas where the new card went: it lives in the draft strip below
@@ -7003,23 +7007,23 @@ async function addCanvasSeries() {
         type: 'ruijun:cms-preview:notice',
         kind: 'series-added',
         itemId: String(record.id),
-        label: record.name || record.series_code || '新系列'
+        label: record.name || record.series_code || '鏂扮郴鍒?
       }, livePreviewWebsiteOrigin.value);
     } else {
       await loadSeries();
     }
-    message.value = '已新增一条系列卡片草稿（名称、定位、封面待填写），发布前需补来源与机型。';
+    message.value = '宸叉柊澧炰竴鏉＄郴鍒楀崱鐗囪崏绋匡紙鍚嶇О銆佸畾浣嶃€佸皝闈㈠緟濉啓锛夛紝鍙戝竷鍓嶉渶琛ユ潵婧愪笌鏈哄瀷銆?;
   } catch (reason) {
-    error.value = apiError(reason, '新增系列卡片失败。');
+    error.value = apiError(reason, '鏂板绯诲垪鍗＄墖澶辫触銆?);
   }
 }
 
 async function removeCanvasSeries(payload) {
   const id = String(payload?.seriesRecordId || '').trim();
   const record = series.value.find((item) => String(item.id) === id);
-  if (!record) { error.value = '画布没有识别到要删除的系列卡片。'; return; }
+  if (!record) { error.value = '鐢诲竷娌℃湁璇嗗埆鍒拌鍒犻櫎鐨勭郴鍒楀崱鐗囥€?; return; }
   if (!canDeleteContent(record)) {
-    error.value = '已发布或审核中的系列不能直接删除，请先在发布队列下线并退回草稿。';
+    error.value = '宸插彂甯冩垨瀹℃牳涓殑绯诲垪涓嶈兘鐩存帴鍒犻櫎锛岃鍏堝湪鍙戝竷闃熷垪涓嬬嚎骞堕€€鍥炶崏绋裤€?;
     return;
   }
   error.value = ''; message.value = '';
@@ -7028,12 +7032,12 @@ async function removeCanvasSeries(payload) {
     const modelsResponse = await api.get(`/items/product_models?fields=id,model_code,status,publication_state&filter[series_code][_eq]=${encodeURIComponent(String(record.series_code || ''))}&limit=-1`);
     childModels = Array.isArray(modelsResponse.data?.data) ? modelsResponse.data.data : [];
   } catch {
-    error.value = '无法确认该系列下的机型，未执行删除。';
+    error.value = '鏃犳硶纭璇ョ郴鍒椾笅鐨勬満鍨嬶紝鏈墽琛屽垹闄ゃ€?;
     return;
   }
   const undeletableModels = childModels.filter((model) => !canDeleteContent(model));
   if (undeletableModels.length) {
-    error.value = `该系列下有 ${undeletableModels.length} 台已发布或审核中的机型，不能级联删除；请先在发布队列下线并退回草稿。`;
+    error.value = `璇ョ郴鍒椾笅鏈?${undeletableModels.length} 鍙板凡鍙戝竷鎴栧鏍镐腑鐨勬満鍨嬶紝涓嶈兘绾ц仈鍒犻櫎锛涜鍏堝湪鍙戝竷闃熷垪涓嬬嚎骞堕€€鍥炶崏绋裤€俙;
     return;
   }
   const childParameters = [];
@@ -7044,19 +7048,19 @@ async function removeCanvasSeries(payload) {
       const parameterResponse = await api.get(`/items/product_parameters?fields=id,status,publication_state&filter[model_code][_eq]=${encodeURIComponent(code)}&limit=-1`);
       childParameters.push(...(Array.isArray(parameterResponse.data?.data) ? parameterResponse.data.data : []));
     } catch {
-      error.value = '无法确认该系列机型的技术参数，未执行删除。';
+      error.value = '鏃犳硶纭璇ョ郴鍒楁満鍨嬬殑鎶€鏈弬鏁帮紝鏈墽琛屽垹闄ゃ€?;
       return;
     }
   }
   const undeletableParameters = childParameters.filter((parameter) => !canDeleteContent(parameter));
   if (undeletableParameters.length) {
-    error.value = `该系列下有 ${undeletableParameters.length} 条已发布或审核中的参数，不能级联删除；请先在发布队列下线并退回草稿。`;
+    error.value = `璇ョ郴鍒椾笅鏈?${undeletableParameters.length} 鏉″凡鍙戝竷鎴栧鏍镐腑鐨勫弬鏁帮紝涓嶈兘绾ц仈鍒犻櫎锛涜鍏堝湪鍙戝竷闃熷垪涓嬬嚎骞堕€€鍥炶崏绋裤€俙;
     return;
   }
   const cascadeNote = childModels.length
-    ? `及其 ${childModels.length} 台机型${childParameters.length ? `、${childParameters.length} 条参数` : ''}`
+    ? `鍙婂叾 ${childModels.length} 鍙版満鍨?{childParameters.length ? `銆?{childParameters.length} 鏉″弬鏁癭 : ''}`
     : '';
-  if (!window.confirm(`确认删除系列「${record.name || record.series_code}」${cascadeNote}吗？删除后需要重新建立。`)) return;
+  if (!window.confirm(`纭鍒犻櫎绯诲垪銆?{record.name || record.series_code}銆?{cascadeNote}鍚楋紵鍒犻櫎鍚庨渶瑕侀噸鏂板缓绔嬨€俙)) return;
   try {
     for (const parameter of childParameters) {
       await api.delete(`/items/product_parameters/${encodeURIComponent(String(parameter.id))}`);
@@ -7066,13 +7070,13 @@ async function removeCanvasSeries(payload) {
       dropCachedProductDraft('product_models', model.id);
     }
     await api.delete(`/items/product_series/${encodeURIComponent(String(record.id))}`);
-    message.value = childModels.length ? '系列卡片及其机型、参数已删除。' : '系列卡片已删除。';
+    message.value = childModels.length ? '绯诲垪鍗＄墖鍙婂叾鏈哄瀷銆佸弬鏁板凡鍒犻櫎銆? : '绯诲垪鍗＄墖宸插垹闄ゃ€?;
     dropCachedProductDraft('product_series', record.id);
     await loadSeries();
     await loadModels();
     if (liveWebsitePreviewVisible.value) await startLiveWebsitePreview();
   } catch (reason) {
-    error.value = apiError(reason, '删除系列卡片失败。');
+    error.value = apiError(reason, '鍒犻櫎绯诲垪鍗＄墖澶辫触銆?);
   }
 }
 
@@ -7097,7 +7101,7 @@ async function pushSeriesCanvasModels(payload) {
 
 async function addCanvasModel(payload) {
   const seriesCode = String(payload?.seriesCode || '').trim();
-  if (!seriesCode) { error.value = '画布没有识别到所属系列，请先在左侧选中系列。'; return; }
+  if (!seriesCode) { error.value = '鐢诲竷娌℃湁璇嗗埆鍒版墍灞炵郴鍒楋紝璇峰厛鍦ㄥ乏渚ч€変腑绯诲垪銆?; return; }
   const siblings = models.value.filter((model) => String(model.series_code || '') === seriesCode);
   const slug = `new-model-${Date.now().toString(36)}`;
   // A brand-new series has no official template, so seeding it with the default
@@ -7107,11 +7111,11 @@ async function addCanvasModel(payload) {
   try {
     const created = await api.post('/items/product_models', {
       series_code: seriesCode,
-      model_code: `新机型-${siblings.length + 1}`,
+      model_code: `鏂版満鍨?${siblings.length + 1}`,
       slug,
       // Keep the visible chip unique from the start; the name is the canvas
-      // label, so a shared "新机型" made every new model look identical.
-      name: `新机型-${siblings.length + 1}`,
+      // label, so a shared "鏂版満鍨? made every new model look identical.
+      name: `鏂版満鍨?${siblings.length + 1}`,
       configuration: seeded || null,
       status: 'draft',
       publication_state: 'unpublished'
@@ -7127,18 +7131,18 @@ async function addCanvasModel(payload) {
     } else {
       await loadModels();
     }
-    message.value = '已新增一条机型草稿（名称与型号编码待填写），发布前需补来源与参数。';
+    message.value = '宸叉柊澧炰竴鏉℃満鍨嬭崏绋匡紙鍚嶇О涓庡瀷鍙风紪鐮佸緟濉啓锛夛紝鍙戝竷鍓嶉渶琛ユ潵婧愪笌鍙傛暟銆?;
   } catch (reason) {
-    error.value = apiError(reason, '新增机型失败。');
+    error.value = apiError(reason, '鏂板鏈哄瀷澶辫触銆?);
   }
 }
 
 async function removeCanvasModel(payload) {
   const id = String(payload?.modelId || '').trim();
   const record = models.value.find((model) => String(model.id) === id);
-  if (!record) { error.value = '画布没有识别到要删除的机型，请先在左侧选中机型。'; return; }
+  if (!record) { error.value = '鐢诲竷娌℃湁璇嗗埆鍒拌鍒犻櫎鐨勬満鍨嬶紝璇峰厛鍦ㄥ乏渚ч€変腑鏈哄瀷銆?; return; }
   if (!canDeleteContent(record)) {
-    error.value = '已发布或审核中的机型不能直接删除，请先在发布队列下线并退回草稿。';
+    error.value = '宸插彂甯冩垨瀹℃牳涓殑鏈哄瀷涓嶈兘鐩存帴鍒犻櫎锛岃鍏堝湪鍙戝竷闃熷垪涓嬬嚎骞堕€€鍥炶崏绋裤€?;
     return;
   }
   error.value = ''; message.value = '';
@@ -7147,14 +7151,14 @@ async function removeCanvasModel(payload) {
     const response = await api.get(`/items/product_parameters?fields=id&filter[model_code][_eq]=${encodeURIComponent(String(record.model_code || ''))}&limit=1`);
     const parameterRows = Array.isArray(response.data?.data) ? response.data.data : [];
     if (parameterRows.length) {
-      error.value = '该机型还有技术参数，请先删除参数后再删除机型。';
+      error.value = '璇ユ満鍨嬭繕鏈夋妧鏈弬鏁帮紝璇峰厛鍒犻櫎鍙傛暟鍚庡啀鍒犻櫎鏈哄瀷銆?;
       return;
     }
   } catch { /* the delete below still reports the real failure */ }
-  if (!window.confirm(`确认删除机型「${record.model_code || record.id}」吗？删除后需要重新建立。`)) return;
+  if (!window.confirm(`纭鍒犻櫎鏈哄瀷銆?{record.model_code || record.id}銆嶅悧锛熷垹闄ゅ悗闇€瑕侀噸鏂板缓绔嬨€俙)) return;
   try {
     await api.delete(`/items/product_models/${encodeURIComponent(String(record.id))}`);
-    message.value = '机型已删除。';
+    message.value = '鏈哄瀷宸插垹闄ゃ€?;
     // The canvas may still be targeted at the record that no longer exists; the
     // token for a deleted record fails and left the whole canvas inert (every
     // card then kept showing whichever detail panel was open last).
@@ -7168,7 +7172,7 @@ async function removeCanvasModel(payload) {
     await loadModels();
     if (liveWebsitePreviewVisible.value) await startLiveWebsitePreview();
   } catch (reason) {
-    error.value = apiError(reason, '删除机型失败。');
+    error.value = apiError(reason, '鍒犻櫎鏈哄瀷澶辫触銆?);
   }
 }
 
@@ -7177,15 +7181,15 @@ async function removeCanvasModel(payload) {
 // published rows out of reach.
 async function addCanvasParameter(payload) {
   const modelCode = String(payload?.modelCode || '').trim();
-  if (!modelCode) { error.value = '画布没有识别到当前型号，请先在左侧选中型号。'; return; }
+  if (!modelCode) { error.value = '鐢诲竷娌℃湁璇嗗埆鍒板綋鍓嶅瀷鍙凤紝璇峰厛鍦ㄥ乏渚ч€変腑鍨嬪彿銆?; return; }
   const rows = parameters.value.filter((parameter) => String(parameter.model_code || '') === modelCode);
   const sortOrder = rows.reduce((max, parameter) => Math.max(max, Number(parameter.sort_order) || 0), 0) + 1;
   error.value = ''; message.value = '';
   try {
     const created = await api.post('/items/product_parameters', {
       model_code: modelCode,
-      field_name: '新参数',
-      value: '待填写',
+      field_name: '鏂板弬鏁?,
+      value: '寰呭～鍐?,
       unit: null,
       test_conditions: null,
       sort_order: sortOrder,
@@ -7194,23 +7198,23 @@ async function addCanvasParameter(payload) {
     });
     const record = created?.data?.data;
     if (record) {
-      // Push the new row instead of reloading the canvas: repeated "新增参数"
+      // Push the new row instead of reloading the canvas: repeated "鏂板鍙傛暟"
       // used to reload after every click and lose the table's scroll/selection.
       postLivePreviewUpdate({ collection: 'product_parameters', record });
       queueLivePreviewUpdate({ collection: 'product_parameters', record });
     }
-    message.value = '已新增一条技术参数草稿，请填写名称与数值（发布前还需补充来源）。';
+    message.value = '宸叉柊澧炰竴鏉℃妧鏈弬鏁拌崏绋匡紝璇峰～鍐欏悕绉颁笌鏁板€硷紙鍙戝竷鍓嶈繕闇€琛ュ厖鏉ユ簮锛夈€?;
     if (record && modelDraft.value && String(modelDraft.value.model_code) === modelCode) upsertParameter(record);
     else if (!record) await loadParameters(modelCode);
     if (!record && liveWebsitePreviewVisible.value) await startLiveWebsitePreview();
   } catch (reason) {
-    error.value = apiError(reason, '新增技术参数失败。');
+    error.value = apiError(reason, '鏂板鎶€鏈弬鏁板け璐ャ€?);
   }
 }
 
 async function removeCanvasParameter(payload) {
   const id = String(payload?.parameterId || '').trim();
-  if (!id) { error.value = '没有识别到要删除的参数。'; return; }
+  if (!id) { error.value = '娌℃湁璇嗗埆鍒拌鍒犻櫎鐨勫弬鏁般€?; return; }
   const modelCode = String(payload?.modelCode || '').trim();
   let record = parameters.value.find((parameter) => String(parameter.id) === id);
   // The row may belong to a model whose parameter list is not loaded locally;
@@ -7220,20 +7224,20 @@ async function removeCanvasParameter(payload) {
       const response = await api.get(`/items/product_parameters/${encodeURIComponent(id)}`);
       record = response?.data?.data || null;
     } catch (reason) {
-      error.value = apiError(reason, '没有找到这条参数，可能已被删除。');
+      error.value = apiError(reason, '娌℃湁鎵惧埌杩欐潯鍙傛暟锛屽彲鑳藉凡琚垹闄ゃ€?);
       return;
     }
   }
-  if (!record) { error.value = '没有找到这条参数，可能已被删除。'; return; }
+  if (!record) { error.value = '娌℃湁鎵惧埌杩欐潯鍙傛暟锛屽彲鑳藉凡琚垹闄ゃ€?; return; }
   if (!canDeleteContent(record)) {
-    error.value = '已发布或审核中的参数不能直接删除，请先在发布队列下线并退回草稿。';
+    error.value = '宸插彂甯冩垨瀹℃牳涓殑鍙傛暟涓嶈兘鐩存帴鍒犻櫎锛岃鍏堝湪鍙戝竷闃熷垪涓嬬嚎骞堕€€鍥炶崏绋裤€?;
     return;
   }
-  if (!window.confirm(`确认删除参数「${record.field_name || record.id}」吗？删除后需要重新建立。`)) return;
+  if (!window.confirm(`纭鍒犻櫎鍙傛暟銆?{record.field_name || record.id}銆嶅悧锛熷垹闄ゅ悗闇€瑕侀噸鏂板缓绔嬨€俙)) return;
   error.value = ''; message.value = '';
   try {
     await api.delete(`/items/product_parameters/${encodeURIComponent(id)}`);
-    message.value = '技术参数已删除。';
+    message.value = '鎶€鏈弬鏁板凡鍒犻櫎銆?;
     const reloadCode = modelCode || String(record.model_code || '');
     if (modelDraft.value && String(modelDraft.value.model_code) === reloadCode) {
       parameters.value = parameters.value.filter((row) => String(row.id) !== String(id));
@@ -7241,21 +7245,21 @@ async function removeCanvasParameter(payload) {
     }
     if (liveWebsitePreviewVisible.value) await startLiveWebsitePreview();
   } catch (reason) {
-    error.value = apiError(reason, '删除技术参数失败。');
+    error.value = apiError(reason, '鍒犻櫎鎶€鏈弬鏁板け璐ャ€?);
   }
 }
 
 async function deleteCandidateMedia(payload) {  const id = String(payload?.mediaAssetId || '').trim();
   if (!id) return;
-  const label = String(payload?.label || '').replace(/^删除\s*/, '') || `#${id}`;
+  const label = String(payload?.label || '').replace(/^鍒犻櫎\s*/, '') || `#${id}`;
   error.value = ''; message.value = '';
   try {
     await api.post('/media-poster/asset/delete', { media_asset_id: id });
-    message.value = `素材「${label}」已删除。`;
+    message.value = `绱犳潗銆?{label}銆嶅凡鍒犻櫎銆俙;
     await Promise.all([loadMediaAssets(), loadMediaCandidates()]);
     if (liveWebsitePreviewVisible.value) await startLiveWebsitePreview();
   } catch (reason) {
-    error.value = apiError(reason, '素材仍被其他内容引用，未删除。');
+    error.value = apiError(reason, '绱犳潗浠嶈鍏朵粬鍐呭寮曠敤锛屾湭鍒犻櫎銆?);
   }
 }
 
@@ -7264,8 +7268,8 @@ async function deleteAllCandidateVideos() {
     String(asset.media_type || '').toLowerCase() === 'video'
     && String(asset.placement_key || '') === 'news.video_share.list'
   ));
-  if (!candidates.length) { message.value = '当前没有候选视频素材。'; return; }
-  if (!window.confirm(`删除 ${candidates.length} 个候选视频素材？仍被内容引用的会保留。`)) return;
+  if (!candidates.length) { message.value = '褰撳墠娌℃湁鍊欓€夎棰戠礌鏉愩€?; return; }
+  if (!window.confirm(`鍒犻櫎 ${candidates.length} 涓€欓€夎棰戠礌鏉愶紵浠嶈鍐呭寮曠敤鐨勪細淇濈暀銆俙)) return;
   error.value = ''; message.value = '';
   let deleted = 0;
   const blocked = [];
@@ -7279,8 +7283,8 @@ async function deleteAllCandidateVideos() {
   }
   await Promise.all([loadMediaAssets(), loadMediaCandidates()]);
   if (liveWebsitePreviewVisible.value) await startLiveWebsitePreview();
-  message.value = `已删除 ${deleted} 个候选视频${blocked.length ? `；${blocked.length} 个仍被引用而保留` : ''}。`;
-  if (blocked.length) error.value = `以下素材仍被内容引用，未删除：${blocked.join('、')}`;
+  message.value = `宸插垹闄?${deleted} 涓€欓€夎棰?{blocked.length ? `锛?{blocked.length} 涓粛琚紩鐢ㄨ€屼繚鐣檂 : ''}銆俙;
+  if (blocked.length) error.value = `浠ヤ笅绱犳潗浠嶈鍐呭寮曠敤锛屾湭鍒犻櫎锛?{blocked.join('銆?)}`;
 }
 
 async function deleteArticleFromCanvas(payload) {
@@ -7289,21 +7293,21 @@ async function deleteArticleFromCanvas(payload) {
   if (!id) return;
   const record = (editorial.value.articles || []).find((item) => String(item.id) === id)
     || (editorial.value.case_studies || []).find((item) => String(item.id) === id);
-  const title = record?.title || String(payload?.label || '').replace(/^删除\s*/, '') || `#${id}`;
+  const title = record?.title || String(payload?.label || '').replace(/^鍒犻櫎\s*/, '') || `#${id}`;
   const published = record?.status === 'published' || record?.publication_state === 'published';
   if (!technicalAccess.value && !canDeleteEditorialDraft(record)) {
-    error.value = '只有草稿、退回修改或已下线的内容可以直接删除；已发布/审核中的内容请先走流程。';
+    error.value = '鍙湁鑽夌銆侀€€鍥炰慨鏀规垨宸蹭笅绾跨殑鍐呭鍙互鐩存帴鍒犻櫎锛涘凡鍙戝竷/瀹℃牳涓殑鍐呭璇峰厛璧版祦绋嬨€?;
     return;
   }
-  if (!window.confirm(`确定删除「${title}」吗？${published ? '该内容已发布，删除后会立即从官网移除。' : '删除后不可恢复。'}`)) return;
+  if (!window.confirm(`纭畾鍒犻櫎銆?{title}銆嶅悧锛?{published ? '璇ュ唴瀹瑰凡鍙戝竷锛屽垹闄ゅ悗浼氱珛鍗充粠瀹樼綉绉婚櫎銆? : '鍒犻櫎鍚庝笉鍙仮澶嶃€?}`)) return;
   saving.value = true; error.value = ''; message.value = '';
   try {
     await api.delete(`/items/${encodeURIComponent(collection)}/${encodeURIComponent(id)}`);
     await loadEditorial();
     if (String(selectedEditorialId.value) === id) { selectedEditorialId.value = ''; editorialDraft.value = null; }
     if (collection === 'articles') {
-      // 删除文章后不要停留在 articles 列表卡片画布：该画布没有新增按钮，
-      // 且原文章 target 已失效。统一回到新闻页画布，保留“新增视频分享/动态新闻”。
+      // 鍒犻櫎鏂囩珷鍚庝笉瑕佸仠鐣欏湪 articles 鍒楄〃鍗＄墖鐢诲竷锛氳鐢诲竷娌℃湁鏂板鎸夐挳锛?
+      // 涓斿師鏂囩珷 target 宸插け鏁堛€傜粺涓€鍥炲埌鏂伴椈椤电敾甯冿紝淇濈暀鈥滄柊澧炶棰戝垎浜?鍔ㄦ€佹柊闂烩€濄€?
       articlePreviewSurface.value = 'list';
       activeTab.value = 'pages';
       const newsPage = pages.value.find((page) => String(page.slug) === 'news');
@@ -7316,9 +7320,9 @@ async function deleteArticleFromCanvas(payload) {
     }
     if (liveWebsitePreviewVisible.value) await startLiveWebsitePreview();
     invalidateSubmissionQueue();
-    message.value = `已删除「${title}」。`;
+    message.value = `宸插垹闄ゃ€?{title}銆嶃€俙;
   } catch (reason) {
-    error.value = apiError(reason, '删除文章失败。');
+    error.value = apiError(reason, '鍒犻櫎鏂囩珷澶辫触銆?);
   } finally { saving.value = false; }
 }
 
@@ -7328,7 +7332,7 @@ async function deleteEditorialDraft() {
   const collection = editorialMode.value;
   const id = String(record.id);
   const label = editorialLabel(record);
-  if (!window.confirm(`确定删除“${label}”草稿吗？删除后无法恢复。`)) return;
+  if (!window.confirm(`纭畾鍒犻櫎鈥?{label}鈥濊崏绋垮悧锛熷垹闄ゅ悗鏃犳硶鎭㈠銆俙)) return;
 
   saving.value = true;
   error.value = '';
@@ -7346,9 +7350,9 @@ async function deleteEditorialDraft() {
     editorialDraft.value = null;
     clearVisualSelection();
     await loadEditorial();
-    message.value = `已删除“${label}”草稿。`;
+    message.value = `宸插垹闄も€?{label}鈥濊崏绋裤€俙;
   } catch (reason) {
-    error.value = apiError(reason, '删除草稿失败，内容未删除。');
+    error.value = apiError(reason, '鍒犻櫎鑽夌澶辫触锛屽唴瀹规湭鍒犻櫎銆?);
   } finally {
     saving.value = false;
   }
@@ -7371,7 +7375,7 @@ async function uploadWordArticleImage({ contentType, base64, alt, index }) {
   form.append('title', alt || fileName);
   form.append('file', file, fileName);
   const uploaded = (await api.post('/files', form)).data?.data;
-  if (!uploaded?.id || !uploaded.filename_download || !uploaded.type) throw new Error('图片上传接口未返回完整文件信息');
+  if (!uploaded?.id || !uploaded.filename_download || !uploaded.type) throw new Error('鍥剧墖涓婁紶鎺ュ彛鏈繑鍥炲畬鏁存枃浠朵俊鎭?);
   const created = (await api.post('/items/media_assets', {
     file_id: String(uploaded.id),
     original_file_name: uploaded.filename_download,
@@ -7393,7 +7397,7 @@ async function uploadWordArticleImage({ contentType, base64, alt, index }) {
     status: 'published',
     publication_state: 'published'
   })).data?.data;
-  if (!created?.id) throw new Error('图片素材登记失败');
+  if (!created?.id) throw new Error('鍥剧墖绱犳潗鐧昏澶辫触');
   return {
     path: `/api/public/v1/media/asset/${encodeURIComponent(String(uploaded.id))}`,
     mediaAssetId: String(created.id)
@@ -7406,7 +7410,7 @@ async function importWordDocument(event) {
   if (input) input.value = '';
   if (!file || !editorialDraft.value || !canEdit(editorialDraft.value)) return;
   if (!/\.docx$/i.test(String(file.name || ''))) {
-    error.value = '请选择 .docx 格式的 Word 文档。';
+    error.value = '璇烽€夋嫨 .docx 鏍煎紡鐨?Word 鏂囨。銆?;
     return;
   }
   importingWord.value = true; error.value = ''; message.value = '';
@@ -7422,13 +7426,13 @@ async function importWordDocument(event) {
     if (!draft.source_document) draft.source_document = file.name;
     await Promise.all([loadMediaAssets(), loadMediaCandidates()]);
     const suffix = [
-      result.imageCount ? `已导入 ${result.imageCount} 张图片` : '',
-      result.imageFailed ? `${result.imageFailed} 张图片失败` : ''
-    ].filter(Boolean).join('，');
-    message.value = `已导入 Word 文档：${draft.title || '未命名'}${suffix ? `；${suffix}` : ''}。请检查排版后保存内容草稿。`;
-    if (result.warnings.length) error.value = result.warnings.join('；');
+      result.imageCount ? `宸插鍏?${result.imageCount} 寮犲浘鐗嘸 : '',
+      result.imageFailed ? `${result.imageFailed} 寮犲浘鐗囧け璐 : ''
+    ].filter(Boolean).join('锛?);
+    message.value = `宸插鍏?Word 鏂囨。锛?{draft.title || '鏈懡鍚?}${suffix ? `锛?{suffix}` : ''}銆傝妫€鏌ユ帓鐗堝悗淇濆瓨鍐呭鑽夌銆俙;
+    if (result.warnings.length) error.value = result.warnings.join('锛?);
   } catch (reason) {
-    error.value = apiError(reason, 'Word 文档导入失败，原有内容未修改。');
+    error.value = apiError(reason, 'Word 鏂囨。瀵煎叆澶辫触锛屽師鏈夊唴瀹规湭淇敼銆?);
   } finally {
     importingWord.value = false;
   }
@@ -7447,7 +7451,7 @@ async function saveEditorialRecord() {
       if (!seo.description) delete seo.description;
       const category = editorialDraft.value.category === 'video' ? 'video' : 'news';
       if (category === 'video' && !draftSubmissionName.value.trim()) {
-        error.value = '保存视频分享草稿前必须填写保存名称。';
+        error.value = '淇濆瓨瑙嗛鍒嗕韩鑽夌鍓嶅繀椤诲～鍐欎繚瀛樺悕绉般€?;
         return;
       }
       const media = normalizeMediaReferences(editorialDraft.value.mediaReferences);
@@ -7456,51 +7460,51 @@ async function saveEditorialRecord() {
         const parsedBodyMedia = JSON.parse(String(editorialDraft.value.body_media_text || '[]'));
         if (!Array.isArray(parsedBodyMedia)) throw new Error('not-array');
         bodyMedia = parsedBodyMedia.map((item) => ({ media_asset_id: String(item?.media_asset_id || '').trim(), caption: String(item?.caption || '').trim() })).filter((item) => item.media_asset_id);
-      } catch { error.value = '正文图片配置必须是合法的 JSON 数组。'; return; }
-      if (!editorialDraft.value.display_date) { error.value = '请填写官网显示日期。'; return; }
+      } catch { error.value = '姝ｆ枃鍥剧墖閰嶇疆蹇呴』鏄悎娉曠殑 JSON 鏁扮粍銆?; return; }
+      if (!editorialDraft.value.display_date) { error.value = '璇峰～鍐欏畼缃戞樉绀烘棩鏈熴€?; return; }
       const rawSortOrder = editorialDraft.value.sort_order;
       const hasSortOrder = rawSortOrder !== null && rawSortOrder !== undefined && String(rawSortOrder).trim() !== '';
       const sortOrder = normalizeOptionalSortOrder(editorialDraft.value.sort_order);
-      if (hasSortOrder && sortOrder === null) { error.value = '同日排序必须是大于或等于 0 的整数。'; return; }
-      if (category === 'video' && !media.length) { error.value = '视频分享至少需要关联一条视频素材。'; return; }
+      if (hasSortOrder && sortOrder === null) { error.value = '鍚屾棩鎺掑簭蹇呴』鏄ぇ浜庢垨绛変簬 0 鐨勬暣鏁般€?; return; }
+      if (category === 'video' && !media.length) { error.value = '瑙嗛鍒嗕韩鑷冲皯闇€瑕佸叧鑱斾竴鏉¤棰戠礌鏉愩€?; return; }
       const selectedVideoAssets = category === 'video' ? media.map((reference) => String(reference?.media_asset_id || '')).filter(Boolean) : [];
       if (category === 'video' && (selectedVideoAssets.length !== media.length || selectedVideoAssets.some((assetId) => !isEditorialMediaAssetAllowed(assetId, {
         category: 'video', publishedAssets: reviewedMediaAssets('article'), candidates: mediaCandidates.value
-      })))) { error.value = '视频分享素材不符合“文章与资讯 / 视频分享列表 / news / video-sharing”的使用范围，未保存。'; return; }
+      })))) { error.value = '瑙嗛鍒嗕韩绱犳潗涓嶇鍚堚€滄枃绔犱笌璧勮 / 瑙嗛鍒嗕韩鍒楄〃 / news / video-sharing鈥濈殑浣跨敤鑼冨洿锛屾湭淇濆瓨銆?; return; }
       const coverAssetId = String(editorialDraft.value.cover_asset || '').trim();
       if (category === 'news' && coverAssetId && !isEditorialMediaAssetAllowed(coverAssetId, {
         category: 'news', publishedAssets: reviewedMediaAssets('article'), candidates: mediaCandidates.value
-      })) { error.value = '动态新闻封面必须使用“文章与资讯 / 动态新闻封面 / news / dynamic-news”的图片，未保存。'; return; }
+      })) { error.value = '鍔ㄦ€佹柊闂诲皝闈㈠繀椤讳娇鐢ㄢ€滄枃绔犱笌璧勮 / 鍔ㄦ€佹柊闂诲皝闈?/ news / dynamic-news鈥濈殑鍥剧墖锛屾湭淇濆瓨銆?; return; }
       payload = { slug: editorialDraft.value.slug, category, title: editorialDraft.value.title, display_date: editorialDraft.value.display_date, sort_order: sortOrder, summary: editorialDraft.value.summary || null, body: editorialDraft.value.body || null, body_media: bodyMedia, transcript: editorialDraft.value.transcript || null, field_presentation: normalizeFieldPresentations(editorialDraft.value.field_presentation, ['category', 'title', 'display_date', 'summary', 'body', 'transcript']), media, cover_asset: editorialDraft.value.cover_asset || null, seo, published_at: editorialDraft.value.published_at || null, source_document: editorialDraft.value.source_document || null, source_url: editorialDraft.value.source_url || null, submission_name: draftSubmissionName.value.trim() || null };
     } else {
       payload = { slug: editorialDraft.value.slug, industry: editorialDraft.value.industry || null, material: editorialDraft.value.material || null, thickness: editorialDraft.value.thickness || null, model_code: editorialDraft.value.model_code || null, process: editorialDraft.value.process || null, result: editorialDraft.value.result || null, authorization_status: editorialDraft.value.authorization_status || 'review_required', source_document: editorialDraft.value.source_document || null, source_url: editorialDraft.value.source_url || null };
     }
     await api.patch(`/items/${encodeURIComponent(editorialMode.value)}/${encodeURIComponent(editorialDraft.value.id)}`, payload);
-    message.value = '内容草稿已保存，并已进入内容版本审计。';
+    message.value = '鍐呭鑽夌宸蹭繚瀛橈紝骞跺凡杩涘叆鍐呭鐗堟湰瀹¤銆?;
     markDraftSaved();
     invalidateSubmissionQueue();
     await refreshAfterSave([loadEditorial]);
   } catch (reason) {
-    setSaveError(reason, '保存内容草稿失败，内容没有更新。');
+    setSaveError(reason, '淇濆瓨鍐呭鑽夌澶辫触锛屽唴瀹规病鏈夋洿鏂般€?);
   } finally { saving.value = false; }
 }
 
 async function saveSettings() {
   if (!settingsDraft.value || !canEdit(settingsDraft.value)) return;
-  const navigationError = validateSettingLinks(settingsDraft.value.navigation, '主导航');
-  const footerError = validateSettingLinks(settingsDraft.value.footer.primary_links, '页脚链接');
+  const navigationError = validateSettingLinks(settingsDraft.value.navigation, '涓诲鑸?);
+  const footerError = validateSettingLinks(settingsDraft.value.footer.primary_links, '椤佃剼閾炬帴');
   const footerColumnsError = validateFooterColumns(settingsDraft.value.footer.columns);
   if (navigationError || footerError || footerColumnsError) { error.value = navigationError || footerError || footerColumnsError; return; }
   if (!String(settingsDraft.value.brand.display_name || '').trim() || !String(settingsDraft.value.brand.logo_asset || '').trim() || !String(settingsDraft.value.contacts.service_phone || '').trim()) {
-    error.value = '品牌名称、品牌标志素材引用和服务电话不能为空。';
+    error.value = '鍝佺墝鍚嶇О銆佸搧鐗屾爣蹇楃礌鏉愬紩鐢ㄥ拰鏈嶅姟鐢佃瘽涓嶈兘涓虹┖銆?;
     return;
   }
   if (!String(settingsDraft.value.contacts.header_cta.label || '').trim() || !isValidSiteLink(settingsDraft.value.contacts.header_cta.href)) {
-    error.value = '请填写 Header CTA 文案，并使用站内路径或 HTTPS 地址。';
+    error.value = '璇峰～鍐?Header CTA 鏂囨锛屽苟浣跨敤绔欏唴璺緞鎴?HTTPS 鍦板潃銆?;
     return;
   }
   const languages = fromTextList(settingsDraft.value.languagesText);
-  if (!languages.length) { error.value = '请至少保留一种可用语言。'; return; }
+  if (!languages.length) { error.value = '璇疯嚦灏戜繚鐣欎竴绉嶅彲鐢ㄨ瑷€銆?; return; }
   saving.value = true; error.value = ''; message.value = '';
   try {
     // Deliberately retain footer review metadata and all non-editorial configuration fields.
@@ -7508,13 +7512,13 @@ async function saveSettings() {
     const brand = { ...settingsDraft.value.brand, display_name: settingsDraft.value.brand.display_name.trim(), logo_asset: settingsDraft.value.brand.logo_asset.trim(), footer_logo_asset: settingsDraft.value.brand.footer_logo_asset.trim() };
     const contacts = { ...settingsDraft.value.contacts, service_phone: settingsDraft.value.contacts.service_phone.trim(), domestic_phone: settingsDraft.value.contacts.domestic_phone.trim(), export_phone: settingsDraft.value.contacts.export_phone.trim(), domestic_email: settingsDraft.value.contacts.domestic_email.trim(), export_email: settingsDraft.value.contacts.export_email.trim(), language_label: settingsDraft.value.contacts.language_label.trim(), addresses: fromTextList(settingsDraft.value.contacts.addressesText), header_cta: { ...settingsDraft.value.contacts.header_cta, label: settingsDraft.value.contacts.header_cta.label.trim(), href: settingsDraft.value.contacts.header_cta.href.trim() } };
     await api.patch(`/items/site_settings/${encodeURIComponent(settingsDraft.value.id)}`, { navigation: settingsDraft.value.navigation.map(normalizeLink), footer, brand, contacts, languages });
-    message.value = '全站设置草稿已保存，并已进入内容版本审计。';
+    message.value = '鍏ㄧ珯璁剧疆鑽夌宸蹭繚瀛橈紝骞跺凡杩涘叆鍐呭鐗堟湰瀹¤銆?;
     let reloaded = true;
-    try { await loadSettings(); } catch { reloaded = false; message.value += '（列表刷新失败，请重新加载页面查看）'; }
+    try { await loadSettings(); } catch { reloaded = false; message.value += '锛堝垪琛ㄥ埛鏂板け璐ワ紝璇烽噸鏂板姞杞介〉闈㈡煡鐪嬶級'; }
     if (reloaded) markDraftSaved();
     await refreshAfterSave([]);
   } catch (reason) {
-    error.value = apiError(reason, '保存全站设置失败，内容没有更新。');
+    error.value = apiError(reason, '淇濆瓨鍏ㄧ珯璁剧疆澶辫触锛屽唴瀹规病鏈夋洿鏂般€?);
   } finally { saving.value = false; }
 }
 
@@ -7524,19 +7528,19 @@ async function saveVisualSiteSettings() {
   if (!record || !canEdit(record)) return;
   const payload = visualSiteSettingsPayload(record, fieldPath);
   if (!payload) {
-    error.value = '该全站设置字段不支持在画布中保存。';
+    error.value = '璇ュ叏绔欒缃瓧娈典笉鏀寔鍦ㄧ敾甯冧腑淇濆瓨銆?;
     return;
   }
   saving.value = true; error.value = ''; message.value = '';
   try {
     await api.patch(`/items/site_settings/${encodeURIComponent(record.id)}`, payload);
-    message.value = '页脚草稿已保存，并已进入内容版本审计。';
+    message.value = '椤佃剼鑽夌宸蹭繚瀛橈紝骞跺凡杩涘叆鍐呭鐗堟湰瀹¤銆?;
     let reloaded = true;
-    try { await loadSettings(); } catch { reloaded = false; message.value += '（列表刷新失败，请重新加载页面查看）'; }
+    try { await loadSettings(); } catch { reloaded = false; message.value += '锛堝垪琛ㄥ埛鏂板け璐ワ紝璇烽噸鏂板姞杞介〉闈㈡煡鐪嬶級'; }
     if (reloaded) markDraftSaved();
     await refreshAfterSave([]);
   } catch (reason) {
-    error.value = apiError(reason, '保存页脚草稿失败，内容没有更新。');
+    error.value = apiError(reason, '淇濆瓨椤佃剼鑽夌澶辫触锛屽唴瀹规病鏈夋洿鏂般€?);
   } finally { saving.value = false; }
 }
 
@@ -7548,9 +7552,9 @@ async function saveModel() {
     const assetId = String(item.media_asset_id || '').trim();
     return !String(item.title || '').trim() || (!assetId && !isValidSiteLink(item.url));
   });
-  if (invalidFeature) { error.value = '每个产品特点都必须填写标题。'; return; }
-  if (invalidDrawing) { error.value = '每张尺寸图都必须选择产品图片。'; return; }
-  if (invalidResource) { error.value = '每条产品资料都必须填写标题，并选择已上传附件或填写站内路径、HTTPS 地址。'; return; }
+  if (invalidFeature) { error.value = '姣忎釜浜у搧鐗圭偣閮藉繀椤诲～鍐欐爣棰樸€?; return; }
+  if (invalidDrawing) { error.value = '姣忓紶灏哄鍥鹃兘蹇呴』閫夋嫨浜у搧鍥剧墖銆?; return; }
+  if (invalidResource) { error.value = '姣忔潯浜у搧璧勬枡閮藉繀椤诲～鍐欐爣棰橈紝骞堕€夋嫨宸蹭笂浼犻檮浠舵垨濉啓绔欏唴璺緞銆丠TTPS 鍦板潃銆?; return; }
   saving.value = true; error.value = ''; message.value = '';
   try {
     const modelBefore = JSON.stringify(modelDraft.value);
@@ -7584,27 +7588,27 @@ async function saveModel() {
     // replaces them with the server's old values.
     const parameterResult = await persistDirtyParameters();
     if (parameterResult.failed.length) {
-      error.value = `型号信息已保存，但有 ${parameterResult.failed.length} 条技术参数未保存（${parameterResult.failed.map((row) => row.field_name || row.id).join('、')}）。请修正后重试这些参数。`;
+      error.value = `鍨嬪彿淇℃伅宸蹭繚瀛橈紝浣嗘湁 ${parameterResult.failed.length} 鏉℃妧鏈弬鏁版湭淇濆瓨锛?{parameterResult.failed.map((row) => row.field_name || row.id).join('銆?)}锛夈€傝淇鍚庨噸璇曡繖浜涘弬鏁般€俙;
       message.value = '';
       await refreshAfterSave([]);
       return;
     }
     if (JSON.stringify(modelDraft.value) !== modelBefore) {
-      message.value = '型号草稿已保存；保存期间又有新的修改，尚未写入，请再次保存。';
+      message.value = '鍨嬪彿鑽夌宸蹭繚瀛橈紱淇濆瓨鏈熼棿鍙堟湁鏂扮殑淇敼锛屽皻鏈啓鍏ワ紝璇峰啀娆′繚瀛樸€?;
       await refreshAfterSave([]);
       return;
     }
-    message.value = '型号草稿已保存，并已进入内容版本审计。';
+    message.value = '鍨嬪彿鑽夌宸蹭繚瀛橈紝骞跺凡杩涘叆鍐呭鐗堟湰瀹¤銆?;
     markDraftSaved();
     await refreshAfterSave([loadModels]);
   } catch (reason) {
-    setSaveError(reason, '保存型号失败，内容没有更新。');
+    setSaveError(reason, '淇濆瓨鍨嬪彿澶辫触锛屽唴瀹规病鏈夋洿鏂般€?);
   } finally { saving.value = false; }
 }
 
 async function saveParameter(parameter) {
   if (!canEdit(parameter)) { error.value = saveBlockedMessage(parameter); return; }
-  if (!confirmPublishedRevision(parameter, '这条技术参数')) return;
+  if (!confirmPublishedRevision(parameter, '杩欐潯鎶€鏈弬鏁?)) return;
   const publishedRevision = isPublishedRecord(parameter);
   saving.value = true; error.value = ''; message.value = '';
   try {
@@ -7618,13 +7622,13 @@ async function saveParameter(parameter) {
       markDraftSaved();
     }
     message.value = unchanged
-      ? '技术参数已保存，并已进入内容版本审计。'
-      : '技术参数已保存；保存期间该行又有修改，请再次保存。';
-    if (publishedRevision) message.value = `${message.value}（已生成草稿修订，官网需重新审核发布后更新）`;
+      ? '鎶€鏈弬鏁板凡淇濆瓨锛屽苟宸茶繘鍏ュ唴瀹圭増鏈璁°€?
+      : '鎶€鏈弬鏁板凡淇濆瓨锛涗繚瀛樻湡闂磋琛屽張鏈変慨鏀癸紝璇峰啀娆′繚瀛樸€?;
+    if (publishedRevision) message.value = `${message.value}锛堝凡鐢熸垚鑽夌淇锛屽畼缃戦渶閲嶆柊瀹℃牳鍙戝竷鍚庢洿鏂帮級`;
     // Do not reload the whole table: it would discard edits in the other rows.
     await refreshAfterSave([]);
   } catch (reason) {
-    error.value = apiError(reason, '保存技术参数失败，内容没有更新。');
+    error.value = apiError(reason, '淇濆瓨鎶€鏈弬鏁板け璐ワ紝鍐呭娌℃湁鏇存柊銆?);
   } finally { saving.value = false; }
 }
 
@@ -7634,7 +7638,7 @@ async function createParameter() {
   try {
     const created = await api.post('/items/product_parameters', { model_code: modelDraft.value.model_code, field_name: newParameter.value.field_name, value: newParameter.value.value, unit: newParameter.value.unit || null, test_conditions: newParameter.value.test_conditions || null, sort_order: Number(newParameter.value.sort_order) || 0, status: 'draft', publication_state: 'unpublished' });
     const record = created?.data?.data;
-    message.value = '新的技术参数草稿已创建。';
+    message.value = '鏂扮殑鎶€鏈弬鏁拌崏绋垮凡鍒涘缓銆?;
     newParameter.value = { ...emptyParameter(), model_code: modelDraft.value.model_code };
     if (record) upsertParameter(record);
     else await loadParameters(modelDraft.value.model_code);
@@ -7647,7 +7651,7 @@ async function createParameter() {
     }
     await refreshAfterSave([]);
   } catch (reason) {
-    error.value = apiError(reason, '新增技术参数失败。');
+    error.value = apiError(reason, '鏂板鎶€鏈弬鏁板け璐ャ€?);
   } finally { saving.value = false; }
 }
 
@@ -7656,8 +7660,8 @@ watch(activeTab, (tab) => {
   message.value = '';
   closePreview();
   if (tab === 'media') loadMediaPreviews();
-  // 每次进入内容送审都重新读取。保存草稿后旧快照里的新文章不会自己出现，
-  // 只靠 submissionQueueLoaded 会让队列永久停留在第一次打开时的状态。
+  // 姣忔杩涘叆鍐呭閫佸閮介噸鏂拌鍙栥€備繚瀛樿崏绋垮悗鏃у揩鐓ч噷鐨勬柊鏂囩珷涓嶄細鑷繁鍑虹幇锛?
+  // 鍙潬 submissionQueueLoaded 浼氳闃熷垪姘镐箙鍋滅暀鍦ㄧ涓€娆℃墦寮€鏃剁殑鐘舵€併€?
   if (tab === 'submit') loadSubmissionQueue();
   if (tab === 'review' && !reviewQueueLoaded.value) loadReviewQueue();
 });
@@ -7686,9 +7690,9 @@ watch(activePageSectionKey, () => queueLivePreviewUpdate());
 // Keep the iframe's hit-testing mode in step with the desktop toolbar.
 watch(visualTool, () => postLivePreviewUpdate());
 watch(visualDevice, () => postLivePreviewUpdate());
-// Directus 的“跳转菜单”遮罩有时保持 active，并在 document 捕获阶段吞掉点击；
-// 仅禁用 pointer-events 只能让真实鼠标穿过，按钮的 click 仍可能被截断。工作台
-// 打开时以及每次指针/焦点进入前主动关闭它，右侧面板的保存、删除才可靠。
+// Directus 鐨勨€滆烦杞彍鍗曗€濋伄缃╂湁鏃朵繚鎸?active锛屽苟鍦?document 鎹曡幏闃舵鍚炴帀鐐瑰嚮锛?
+// 浠呯鐢?pointer-events 鍙兘璁╃湡瀹為紶鏍囩┛杩囷紝鎸夐挳鐨?click 浠嶅彲鑳借鎴柇銆傚伐浣滃彴
+// 鎵撳紑鏃朵互鍙婃瘡娆℃寚閽?鐒︾偣杩涘叆鍓嶄富鍔ㄥ叧闂畠锛屽彸渚ч潰鏉跨殑淇濆瓨銆佸垹闄ゆ墠鍙潬銆?
 function closeDirectusSkipMenu() {
   const overlay = document.querySelector('.container.left .v-overlay.active');
   if (overlay instanceof HTMLElement) overlay.click();
@@ -7711,8 +7715,8 @@ onMounted(() => {
   api.get('/users/me?fields=id,role.name').then((response) => {
     const user = response.data?.data || {};
     const roleName = String(user.role?.name || '');
-    technicalAccess.value = ['Administrator', '系统管理员'].includes(roleName);
-    workflowAccess.value = ['Administrator', '系统管理员', '内容编辑', '审核管理'].includes(roleName);
+    technicalAccess.value = ['Administrator', '绯荤粺绠＄悊鍛?].includes(roleName);
+    workflowAccess.value = ['Administrator', '绯荤粺绠＄悊鍛?, '鍐呭缂栬緫', '瀹℃牳绠＄悊'].includes(roleName);
   }).catch(() => {
     technicalAccess.value = false;
     workflowAccess.value = false;
