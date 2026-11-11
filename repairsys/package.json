@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "concurrently -n API,ADMIN -c cyan,magenta \"npm run dev:api\" \"npm run dev:admin\"",
+    "dev": "concurrently -n API,ADMIN,CLIENT -c cyan,magenta,green \"npm run dev:api\" \"npm run dev:admin\" \"npm run dev:client\"",
     "dev:api": "node server/index.js",
     "dev:web": "npm run dev:admin",
     "dev:client": "vite --config vite.client.config.js",

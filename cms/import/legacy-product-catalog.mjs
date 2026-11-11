@@ -2,14 +2,14 @@ const DRAFT = Object.freeze({ status: 'draft', publication_state: 'unpublished' 
 const CATALOG_SOURCE = 'demo/data/product-catalog.json';
 
 const PARAMETER_DEFINITIONS = Object.freeze({
-  xyTravelMm: Object.freeze({ group_name: '运动参数', field_name: 'XY 行程', unit: 'mm' }),
-  zAxisTravelMm: Object.freeze({ group_name: '运动参数', field_name: 'Z 轴行程', unit: 'mm' }),
-  maxWorkpieceMm: Object.freeze({ group_name: '工作范围', field_name: '最大工件尺寸', unit: 'mm' }),
-  maxWorkpieceWeightKg: Object.freeze({ group_name: '工作范围', field_name: '最大工件重量', unit: 'kg' }),
-  maxCuttingHeightMm: Object.freeze({ group_name: '工作范围', field_name: '最大切割厚度', unit: 'mm' }),
-  maxTaperDegrees: Object.freeze({ group_name: '切割能力', field_name: '最大锥度', unit: '°' }),
-  machineDimensionsMm: Object.freeze({ group_name: '设备尺寸', field_name: '机床外形尺寸', unit: 'mm' }),
-  machineWeightKg: Object.freeze({ group_name: '设备尺寸', field_name: '机床重量', unit: 'kg' })
+  xyTravelMm: Object.freeze({ field_name: 'XY 行程', unit: 'mm' }),
+  zAxisTravelMm: Object.freeze({ field_name: 'Z 轴行程', unit: 'mm' }),
+  maxWorkpieceMm: Object.freeze({ field_name: '最大工件尺寸', unit: 'mm' }),
+  maxWorkpieceWeightKg: Object.freeze({ field_name: '最大工件重量', unit: 'kg' }),
+  maxCuttingHeightMm: Object.freeze({ field_name: '最大切割厚度', unit: 'mm' }),
+  maxTaperDegrees: Object.freeze({ field_name: '最大锥度', unit: '°' }),
+  machineDimensionsMm: Object.freeze({ field_name: '机床外形尺寸', unit: 'mm' }),
+  machineWeightKg: Object.freeze({ field_name: '机床重量', unit: 'kg' })
 });
 
 function seriesReviewNote(series) {
@@ -60,14 +60,12 @@ function buildProductParameterDrafts(model, seriesByCode) {
     const value = parameterValue(rawValue);
     if (!value) return [];
     const definition = PARAMETER_DEFINITIONS[key] ?? {
-      group_name: '其他参数',
       field_name: key,
       unit: null
     };
     return [{
       ...DRAFT,
       model_code: model.code,
-      group_name: definition.group_name,
       field_name: definition.field_name,
       value,
       unit: definition.unit,

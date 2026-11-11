@@ -13,6 +13,9 @@ test('product release workbench uses the protected endpoint and never holds CMS 
   const manifest = JSON.parse(manifestText);
   assert.equal(manifest['directus:extension'].type, 'module');
   assert.match(index, /ruijun-product-release-workbench/);
+  assert.match(index, /name: '产品统一发布'/);
+  assert.match(module, /release-center-tabs/);
+  assert.match(module, /内容发布/);
   assert.match(module, /api.get\('\/product-release\/readiness'/);
   assert.match(module, /api.post\('\/product-release\/publish'/);
   assert.match(module, /api.get\('\/product-release\/history'/);

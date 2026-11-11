@@ -69,6 +69,25 @@ test('service download page exposes controlled visual bindings for copy, categor
   assert.match(download, /data-cms-preview-field-path="back_label"/);
 });
 
+test('service child page lists bind to their governed records for the canvas', async () => {
+  const [topic, download] = await Promise.all([
+    readFile(new URL('../pages/service/[topic].vue', import.meta.url), 'utf8'),
+    readFile(new URL('../pages/service/download.vue', import.meta.url), 'utf8')
+  ]);
+  // 视频教学卡片：绑定 service_resources 记录，标题/日期/封面可改。
+  assert.match(topic, /data-cms-preview-collection="card\.id \? 'service_resources' : undefined"/);
+  assert.match(topic, /data-cms-preview-item-id="card\.id \|\| undefined"/);
+  assert.match(topic, /"card\.id \? 'cover_asset' : undefined"/);
+  assert.match(topic, /"card\.id \? 'title' : undefined"/);
+  assert.match(topic, /"card\.id \? 'display_date' : undefined"/);
+  // 故障/知识条目：绑定 knowledge_items 记录。
+  assert.match(topic, /function stepPreviewCollection\(step: any\)/);
+  assert.match(topic, /stepFieldPath\(step, index, 'title'\)/);
+  assert.match(topic, /stepFieldPath\(step, index, 'copy'\)/);
+  // 下载清单依赖记录 id（reader 已输出 id）。
+  assert.match(download, /data-cms-preview-item-id="item\.id \|\| undefined"/);
+});
+
 test('the service landing follows the supplied 3840px PSD geometry', async () => {
   const service = await readFile(new URL('../pages/service.vue', import.meta.url), 'utf8');
   assert.match(service, /Desktop geometry measured from the 3840px/);

@@ -30,7 +30,7 @@ test('product technical review report prioritizes unresolved mappings and parame
     ],
     parameters: [
       {
-        id: 31, model_code: 'ft400s-pro', group_name: '工作范围', field_name: '最大工件尺寸', value: '500*650*220', unit: 'mm',
+        id: 31, model_code: 'ft400s-pro', field_name: '最大工件尺寸', value: '500*650*220', unit: 'mm',
         source_document: 'FAQ/FT（Pro）技术文件.pdf', import_evidence: { source_key: 'maxWorkpieceMm', parameter_conflict: true },
         review_note: '待技术审核', status: 'draft', publication_state: 'unpublished'
       }
@@ -58,7 +58,6 @@ test('product technical review report makes missing evidence explicit', () => {
 
   assert.match(report, /型号编码/);
   assert.match(report, /系列编码/);
-  assert.match(report, /来源文件或地址/);
   assert.match(report, /结构化参数/);
   assert.match(report, /参数字段/);
   assert.match(report, /参数值/);

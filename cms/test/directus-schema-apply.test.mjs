@@ -408,9 +408,15 @@ test('Directus schema applier grants the website BFF only published-content read
   assert.ok(permissionRequests.some((permission) => permission.collection === 'lead_notification_jobs' && permission.action === 'create'));
   const clickPermission = permissionRequests.find((permission) => permission.collection === 'service_entry_clicks');
   assert.deepEqual({ action: clickPermission.action, fields: clickPermission.fields }, { action: 'create', fields: ['entry_type', 'source_page'] });
-  const publicReads = permissionRequests.filter((permission) => permission.action === 'read' && !['lead_dedupe_keys', 'lead_upload_sessions'].includes(permission.collection));
+  const publicReads = permissionRequests.filter((permission) => permission.action === 'read' && !['lead_dedupe_keys', 'lead_upload_sessions', 'directus_files'].includes(permission.collection));
   assert.deepEqual(publicReads.map((permission) => permission.collection).sort(), ['articles', 'external_service_entries', 'homepage_sections', 'knowledge_items', 'manufacturing_evidence', 'media_assets', 'milestones', 'pages', 'product_models', 'product_parameters', 'product_release_snapshots', 'product_series', 'qualifications', 'repair_page_configs', 'service_locations', 'service_resources', 'site_settings']);
   assert.ok(publicReads.every((permission) => permission.permissions.status._eq === 'published' && permission.permissions.publication_state._eq === 'published'));
+  // The BFF reader asks for `id` and `presentation` on product_models. A missing
+  // field makes Directus answer 403, and the reader silently serves an empty
+  // catalog (the site then shows the static PSD fallback).
+  const modelRead = publicReads.find((permission) => permission.collection === 'product_models');
+  assert.ok(modelRead.fields.includes('id'));
+  assert.ok(modelRead.fields.includes('presentation'));
   assert.ok(publicReads.some((permission) => permission.collection === 'service_resources' && permission.fields.includes('asset')));
   assert.ok(publicReads.some((permission) => permission.collection === 'articles' && permission.fields.includes('field_presentation')));
   assert.ok(publicReads.some((permission) => permission.collection === 'knowledge_items' && permission.fields.includes('question_title')));
@@ -422,6 +428,10 @@ test('Directus schema applier grants the website BFF only published-content read
   const uploadSessionUpdate = permissionRequests.find((permission) => permission.collection === 'lead_upload_sessions' && permission.action === 'update');
   assert.deepEqual(uploadSessionUpdate.fields, ['file_id', 'lead_reference', 'status']);
   assert.ok(permissionRequests.some((permission) => permission.collection === 'directus_files' && permission.action === 'create'));
+  // The media proxy streams `/assets/<fileId>` with this token, which Directus
+  // rejects with 403 unless the BFF policy also has a directus_files read grant.
+  const fileRead = permissionRequests.find((permission) => permission.collection === 'directus_files' && permission.action === 'read');
+  assert.deepEqual(fileRead.fields, ['id', 'title', 'filename_download', 'type', 'filesize', 'storage']);
   assert.ok(!permissionRequests.some((permission) => permission.collection === 'media_assets' && permission.action !== 'read'));
 });
 

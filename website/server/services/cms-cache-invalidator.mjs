@@ -22,7 +22,7 @@ const cacheByCollection = Object.freeze({
   milestones: ['evidence'],
   qualifications: ['evidence'],
   manufacturing_evidence: ['evidence'],
-  media_assets: ['pages', 'products', 'evidence']
+  media_assets: ['pages', 'products', 'evidence', 'media-placements']
 });
 
 function validAuthorization(authorization, secret) {

@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import {
+  addVisualListItem,
+  appendVisualListItem,
   applyVisualMediaReplacement,
   getVisualMediaAssetId,
   getVisualFieldValue,
@@ -13,6 +15,7 @@ import {
   duplicateVisualListItem,
   moveVisualListItem,
   removeVisualListItem,
+  removeVisualListItemAt,
   shouldKeepVisualDraft,
   resolveVisualFieldTarget,
   setVisualFieldValue,
@@ -431,6 +434,58 @@ test('canvas list controls duplicate or remove only the selected bound card', ()
   assert.equal(duplicateVisualListItem({ items: [{ offices: [{ address: '嵌套门店' }] }] }, 'items.0.offices.0.address'), null);
 });
 
+test('canvas replaces an article media entry that has no materialized path', () => {
+  // Directus 草稿只存 media_asset_id；画布绑定是 media.N.path。
+  // 旧实现找不到 path 属性就静默放弃，视频替换看起来“没反应”。
+  const article = { media: [{ media_asset_id: '6' }], mediaReferences: [{ media_asset_id: '6' }] };
+  assert.equal(applyVisualMediaReplacement(article, 'media.0.path', '8'), true);
+  assert.equal(article.media[0].media_asset_id, '8');
+  assert.equal(Object.hasOwn(article.media[0], 'path'), false);
+  // 预览与保存都优先读 mediaReferences，必须同步更新。
+  assert.deepEqual(article.mediaReferences, [{ media_asset_id: '8' }]);
+
+  assert.equal(applyVisualMediaReplacement(article, 'media.0.path', '', { allowEmpty: true }), true);
+  assert.equal(article.media[0].media_asset_id, '');
+  assert.deepEqual(article.mediaReferences, []);
+});
+
+test('canvas resolves the current asset from a draft media entry without a path', () => {
+  // 草稿只存 media_asset_id，绑定是 media.N.path；解析不到素材 id 时，
+  // “删除素材/保存素材信息”会一直是禁用状态。
+  assert.equal(getVisualMediaAssetId({ media: [{ media_asset_id: '8' }] }, 'media.0.path'), '8');
+  assert.equal(getVisualMediaAssetId({ media: [{ media_asset_id: 8 }] }, 'media.0.media_asset_id'), '8');
+});
+
+test('canvas materializes the first media entry of an empty video article', () => {
+  // 空视频文章在画布上的落点是 media.0.media_asset_id；第一次选素材要建条目，
+  // 否则保存会因“视频分享至少需要关联一条视频素材”失败。
+  const article = { media: [], mediaReferences: [] };
+  assert.equal(applyVisualMediaReplacement(article, 'media.0.media_asset_id', '8'), true);
+  assert.deepEqual(article.media, [{ media_asset_id: '8' }]);
+  assert.deepEqual(article.mediaReferences, [{ media_asset_id: '8' }]);
+});
+
+test('canvas list controls can append a blank card instead of duplicating content', () => {
+  const section = {
+    items: [
+      { number: '01', title: '第一项', description: '说明', media_role: 'action-1', image: 'a.png', tags: ['x'], enabled: true }
+    ]
+  };
+  assert.deepEqual(addVisualListItem(section, 'items.0.title'), {
+    arrayPath: 'items', index: 1, length: 2, fieldPath: 'items.1.title'
+  });
+  assert.equal(section.items.length, 2);
+  assert.equal(section.items[1].title, '');
+  assert.equal(section.items[1].description, '');
+  assert.equal(section.items[1].image, '');
+  assert.deepEqual(section.items[1].tags, []);
+  assert.equal(section.items[1].number, '02');
+  assert.equal(section.items[1].media_role, 'action-2');
+  assert.equal(section.items[1].enabled, true);
+  assert.equal(addVisualListItem({ items: [] }, 'items.0.title'), null);
+  assert.equal(addVisualListItem({ media: [{}] }, 'media.0'), null);
+});
+
 test('duplicated service cards get independent number and media roles', () => {
   const section = {
     items: [
@@ -592,4 +647,36 @@ test('product proof drafts materialize the visible Nuxt fallback fields without 
   const legacyEmpty = { id: 'proof-efficiency', value: '', unit: '' };
   hydrateProductProofFields(legacyEmpty);
   assert.deepEqual(legacyEmpty, { id: 'proof-efficiency', value: 50, unit: '%', title: '50%', body: '产品效率性能提升' });
+});
+
+test('canvas list buttons append a blank row to the product detail arrays', () => {
+  const model = { configuration: { features: [{ label: '自动穿丝', detail: '说明', note: '', image: '', media_asset_id: '' }] } };
+  const modelResult = appendVisualListItem(model, 'configuration.features');
+  assert.deepEqual(modelResult, { arrayPath: 'configuration.features', index: 1, length: 2 });
+  assert.deepEqual(model.configuration.features[1], { label: '', detail: '', note: '', image: '', media_asset_id: '' });
+
+  const series = { detail: { intro: { title: '灵动切割工作站' }, features: [] } };
+  const seriesResult = appendVisualListItem(series, 'detail.features');
+  assert.deepEqual(seriesResult, { arrayPath: 'detail.features', index: 0, length: 1 });
+  assert.deepEqual(series.detail.features[0], { label: '', detail: '', note: '', media_asset_id: '' });
+});
+
+test('canvas list buttons refuse paths outside the product detail arrays', () => {
+  const record = { configuration: { features: [] }, media: [{ media_asset_id: 1 }], detail: { features: [] } };
+  assert.equal(appendVisualListItem(record, 'media'), null);
+  assert.equal(appendVisualListItem(record, 'configuration.features.__proto__'), null);
+  assert.equal(appendVisualListItem(record, 'configuration.drawings'), null);
+  assert.equal(appendVisualListItem({}, 'detail.features'), null);
+  assert.equal(appendVisualListItem(null, 'detail.features'), null);
+});
+
+test('canvas list buttons remove the requested row and report the new position', () => {
+  const record = { detail: { features: [{ label: 'A' }, { label: 'B' }, { label: 'C' }] } };
+  assert.deepEqual(removeVisualListItemAt(record, 'detail.features', 1), { arrayPath: 'detail.features', index: 1, length: 2 });
+  assert.deepEqual(record.detail.features.map((item) => item.label), ['A', 'C']);
+  // Removing the last row moves the reported index back inside the array.
+  assert.deepEqual(removeVisualListItemAt(record, 'detail.features', 1), { arrayPath: 'detail.features', index: 0, length: 1 });
+  assert.equal(removeVisualListItemAt(record, 'detail.features', 5), null);
+  assert.equal(removeVisualListItemAt(record, 'detail.features', -1), null);
+  assert.equal(removeVisualListItemAt(record, 'configuration.features', 0), null);
 });

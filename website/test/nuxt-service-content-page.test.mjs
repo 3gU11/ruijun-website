@@ -209,7 +209,9 @@ test('service support copy keeps independent field presentation controls on the 
 test('service online support copy is directly selectable from the same support-section canvas record', async () => {
   const source = await readFile(new URL('../pages/service.vue', import.meta.url), 'utf8');
 
-  assert.match(source, /<section class="online-service"[^>]*v-bind="sectionPresentationAttributes\(supportSection\)"/);
+  // The block needs the section root marker, not just the copy bindings: without
+  // it the canvas never decorates these elements and they cannot be selected.
+  assert.match(source, /<section class="online-service"[^>]*v-bind="cmsSectionAttrs\(supportSection\)" data-cms-preview-key="support"/);
   assert.match(source, /<h2[^>]*v-bind="fieldPresentationAttributes\(supportSection, 'content_online_title'\)"[^>]*data-cms-preview-field-path="content\.online_title"[^>]*data-cms-preview-position-field-path="field_presentation\.content_online_title"[^>]*>\{\{ supportCopy\('online_title', '在线售后服务'\) \}\}<\/h2>/);
   assert.match(source, /<p[^>]*v-bind="fieldPresentationAttributes\(supportSection, 'content_online_intro'\)"[^>]*data-cms-preview-field-path="content\.online_intro"[^>]*data-cms-preview-position-field-path="field_presentation\.content_online_intro"[^>]*>\{\{ supportCopy\('online_intro', '不需要预先判断应该进入哪个系统。先让 AI 确认设备情况和服务目标，再在需要提交或查询时打开对应页面。'\) \}\}<\/p>/);
 });

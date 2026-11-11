@@ -42,7 +42,7 @@ function collectNestedSectionReferences(value, references, depth = 0) {
   }
   if (!value || typeof value !== 'object') return;
   for (const [key, entry] of Object.entries(value)) {
-    if (['media_asset_id', 'image_asset_id', 'icon_asset_id', 'poster_asset_id'].includes(key)) {
+    if (['media_asset_id', 'image_asset_id', 'icon_asset_id'].includes(key)) {
       const id = assetIdText(entry);
       if (id) references.push(id);
       continue;
@@ -54,12 +54,12 @@ function collectNestedSectionReferences(value, references, depth = 0) {
 }
 
 export const mediaPlacementSpecs = Object.freeze({
-  'home.hero.video': { mediaType: 'video', minWidth: 1920, minHeight: 1080, aspectRatio: '16:9', maxBytes: 500 * mib, maxDurationSeconds: 180, posterRequired: true, autoplay: true, muted: true },
+  'home.hero.video': { mediaType: 'video', minWidth: 1920, minHeight: 1080, aspectRatio: '16:9', maxBytes: 500 * mib, maxDurationSeconds: 180, posterRecommended: true, autoplay: true, muted: true },
   'home.hero.poster': { mediaType: 'image', minWidth: 1920, minHeight: 1080, aspectRatio: '16:9', maxBytes: 25 * mib },
   'home.reason.background': { mediaType: 'image', minWidth: 1600, minHeight: 900, aspectRatio: '16:9', maxBytes: 25 * mib },
   'home.reason.machine': { mediaType: 'image', minWidth: 160, minHeight: 240, aspectRatio: '按原图比例', maxBytes: 25 * mib },
   'home.reason.icon': { mediaType: 'image', minWidth: 80, minHeight: 96, aspectRatio: '按原图比例', maxBytes: 5 * mib },
-  'news.hero.video': { mediaType: 'video', minWidth: 1920, minHeight: 1080, aspectRatio: '16:9', maxBytes: 500 * mib, posterRequired: true, autoplay: true, muted: true },
+  'news.hero.video': { mediaType: 'video', minWidth: 1920, minHeight: 1080, aspectRatio: '16:9', maxBytes: 500 * mib, posterRecommended: true, autoplay: true, muted: true },
   'news.dynamic_news.cover': { mediaType: 'image', minWidth: 1600, minHeight: 900, aspectRatio: '16:9', maxBytes: 25 * mib },
   'news.article.body': { mediaType: 'image', minWidth: 800, minHeight: 450, aspectRatio: '按原图比例', maxBytes: 25 * mib },
   // A video article's cover is edited separately from the video file, so it
@@ -67,8 +67,8 @@ export const mediaPlacementSpecs = Object.freeze({
   'news.article.poster': { mediaType: 'image', minWidth: 1280, minHeight: 720, aspectRatio: '16:9', maxBytes: 25 * mib },
   // Video shares use the video's first decoded frame when no custom poster is
   // supplied.  A transcript is useful, but is not a publishing prerequisite.
-  'news.video_share.list': { mediaType: 'video', minWidth: 1280, minHeight: 720, aspectRatio: '16:9', maxBytes: 500 * mib, maxDurationSeconds: 600, posterRequired: false, transcriptRequired: false },
-  'service.tutorial.video': { mediaType: 'video', minWidth: 1280, minHeight: 720, aspectRatio: '16:9', maxBytes: 500 * mib, posterRequired: true, transcriptRequired: true },
+  'news.video_share.list': { mediaType: 'video', minWidth: 1280, minHeight: 720, aspectRatio: '16:9', maxBytes: 500 * mib, maxDurationSeconds: 600, posterRecommended: false, transcriptRequired: false },
+  'service.tutorial.video': { mediaType: 'video', minWidth: 1280, minHeight: 720, aspectRatio: '16:9', maxBytes: 500 * mib, posterRecommended: true, transcriptRequired: true },
   'service.tutorial.poster': { mediaType: 'image', minWidth: 1280, minHeight: 720, aspectRatio: '16:9', maxBytes: 25 * mib },
   'brand.logo.image': { mediaType: 'image', minWidth: 400, minHeight: 120, maxBytes: 25 * mib },
   'footer.icon.image': { mediaType: 'image', minWidth: 64, minHeight: 64, aspectRatio: '1:1', maxBytes: 25 * mib },
@@ -111,9 +111,9 @@ export const mediaPlacementSpecs = Object.freeze({
   'service.action.icon': { mediaType: 'image', minWidth: 34, minHeight: 42, aspectRatio: '按原图标比例', maxBytes: 5 * mib },
   'manufacturing.hero.image': { mediaType: 'image', minWidth: 1920, minHeight: 900, aspectRatio: '21:10 或 16:9', maxBytes: 25 * mib },
   'manufacturing.process.image': { mediaType: 'image', minWidth: 1200, minHeight: 700, maxBytes: 25 * mib },
-  'manufacturing.hero.video': { mediaType: 'video', minWidth: 1920, minHeight: 900, aspectRatio: '16:9', maxBytes: 500 * mib, maxDurationSeconds: 600, posterRequired: true, transcriptRequired: true },
-  'manufacturing.process.video': { mediaType: 'video', minWidth: 1280, minHeight: 720, aspectRatio: '16:9', maxBytes: 500 * mib, maxDurationSeconds: 600, posterRequired: true, transcriptRequired: true },
-  'manufacturing.gallery.video': { mediaType: 'video', minWidth: 1280, minHeight: 720, aspectRatio: '16:9', maxBytes: 500 * mib, maxDurationSeconds: 600, posterRequired: true, transcriptRequired: true },
+  'manufacturing.hero.video': { mediaType: 'video', minWidth: 1920, minHeight: 900, aspectRatio: '16:9', maxBytes: 500 * mib, maxDurationSeconds: 600, posterRecommended: true, transcriptRequired: true },
+  'manufacturing.process.video': { mediaType: 'video', minWidth: 1280, minHeight: 720, aspectRatio: '16:9', maxBytes: 500 * mib, maxDurationSeconds: 600, posterRecommended: true, transcriptRequired: true },
+  'manufacturing.gallery.video': { mediaType: 'video', minWidth: 1280, minHeight: 720, aspectRatio: '16:9', maxBytes: 500 * mib, maxDurationSeconds: 600, posterRecommended: true, transcriptRequired: true },
   'default.image': { mediaType: 'image', minWidth: 1600, minHeight: 900, aspectRatio: '16:9', maxBytes: 25 * mib }
 });
 
@@ -127,7 +127,7 @@ export class MediaAssetGovernanceError extends Error {
 
 function requiredText(value, fieldName) {
   const text = typeof value === 'string' ? value.normalize('NFKC').trim() : '';
-  if (!text) throw new MediaAssetGovernanceError('MEDIA_METADATA_INVALID', `${fieldName} is required`);
+  if (!text) throw new MediaAssetGovernanceError('MEDIA_METADATA_INVALID', `缺少必填字段：${fieldName}`);
   return text;
 }
 
@@ -148,10 +148,10 @@ function asList(value, fieldName) {
     try {
       return asList(JSON.parse(value), fieldName);
     } catch {
-      throw new MediaAssetGovernanceError('MEDIA_REFERENCE_INVALID', `${fieldName} must be a JSON array`);
+      throw new MediaAssetGovernanceError('MEDIA_REFERENCE_INVALID', `字段 ${fieldName} 必须是 JSON 数组`);
     }
   }
-  if (!Array.isArray(value)) throw new MediaAssetGovernanceError('MEDIA_REFERENCE_INVALID', `${fieldName} must be an array`);
+  if (!Array.isArray(value)) throw new MediaAssetGovernanceError('MEDIA_REFERENCE_INVALID', `字段 ${fieldName} 必须是数组`);
   return value;
 }
 
@@ -161,11 +161,11 @@ function asObject(value, fieldName) {
     try {
       return asObject(JSON.parse(value), fieldName);
     } catch {
-      throw new MediaAssetGovernanceError('MEDIA_REFERENCE_INVALID', `${fieldName} must be a JSON object`);
+      throw new MediaAssetGovernanceError('MEDIA_REFERENCE_INVALID', `字段 ${fieldName} 必须是 JSON 对象`);
     }
   }
   if (!value || typeof value !== 'object' || Array.isArray(value)) {
-    throw new MediaAssetGovernanceError('MEDIA_REFERENCE_INVALID', `${fieldName} must be an object`);
+    throw new MediaAssetGovernanceError('MEDIA_REFERENCE_INVALID', `字段 ${fieldName} 必须是对象`);
   }
   return value;
 }
@@ -175,24 +175,24 @@ export function assertMediaAssetUpload(payload) {
   const mimeType = requiredText(payload?.type, 'type').toLowerCase();
   const byteSize = Number(payload?.filesize);
   const rule = uploadRules[mimeType];
-  if (!rule) throw new MediaAssetGovernanceError('MEDIA_TYPE_INVALID', 'This media MIME type is not permitted for public content');
-  if (!rule.extensions.includes(extensionOf(fileName))) throw new MediaAssetGovernanceError('MEDIA_EXTENSION_INVALID', 'The file extension does not match its declared MIME type');
-  if (!Number.isInteger(byteSize) || byteSize < 1) throw new MediaAssetGovernanceError('MEDIA_METADATA_INVALID', 'filesize must be a positive integer');
-  if (byteSize > rule.maxBytes) throw new MediaAssetGovernanceError('MEDIA_FILE_TOO_LARGE', 'The public media file exceeds its size limit');
+  if (!rule) throw new MediaAssetGovernanceError('MEDIA_TYPE_INVALID', '该 MIME 类型不允许用于公开内容');
+  if (!rule.extensions.includes(extensionOf(fileName))) throw new MediaAssetGovernanceError('MEDIA_EXTENSION_INVALID', '文件扩展名与声明的 MIME 类型不一致');
+  if (!Number.isInteger(byteSize) || byteSize < 1) throw new MediaAssetGovernanceError('MEDIA_METADATA_INVALID', '文件大小必须是正整数');
+  if (byteSize > rule.maxBytes) throw new MediaAssetGovernanceError('MEDIA_FILE_TOO_LARGE', '公开媒体文件超出大小限制');
   return payload;
 }
 
 export function reviewerRoleForMediaUsageScope(usageScope) {
   const normalized = typeof usageScope === 'string' ? usageScope.normalize('NFKC').trim().toLowerCase() : '';
   const role = reviewRolesByUsageScope[normalized];
-  if (!role) throw new MediaAssetGovernanceError('MEDIA_USAGE_SCOPE_INVALID', 'A supported media usage scope is required');
+  if (!role) throw new MediaAssetGovernanceError('MEDIA_USAGE_SCOPE_INVALID', '请选择有效的素材用途范围');
   return role;
 }
 
 export function assertMediaAssetRecord(input, file) {
   const fileId = requiredText(input?.file_id, 'file_id');
   if (!file || String(file.id || '') !== fileId) {
-    throw new MediaAssetGovernanceError('MEDIA_FILE_NOT_FOUND', 'The uploaded media file is unavailable');
+    throw new MediaAssetGovernanceError('MEDIA_FILE_NOT_FOUND', '上传的媒体文件不可用');
   }
   assertMediaAssetUpload(file);
   const originalFileName = requiredText(input?.original_file_name, 'original_file_name');
@@ -207,25 +207,21 @@ export function assertMediaAssetRecord(input, file) {
   const mimeType = requiredText(input?.mime_type, 'mime_type').toLowerCase();
   const byteSize = Number(input?.byte_size);
   if (originalFileName.toLowerCase() !== fileFileName || mimeType !== fileMimeType || byteSize !== Number(file.filesize)) {
-    throw new MediaAssetGovernanceError('MEDIA_FILE_METADATA_MISMATCH', 'Media asset metadata does not match the uploaded file');
+    throw new MediaAssetGovernanceError('MEDIA_FILE_METADATA_MISMATCH', '素材信息与上传的文件不一致');
   }
   reviewerRoleForMediaUsageScope(input?.usage_scope);
   const copyrightStatus = requiredText(input?.copyright_status, 'copyright_status').toLowerCase();
   if (!copyrightStatuses.has(copyrightStatus)) {
-    throw new MediaAssetGovernanceError('MEDIA_COPYRIGHT_STATUS_INVALID', 'A supported copyright status is required');
+    throw new MediaAssetGovernanceError('MEDIA_COPYRIGHT_STATUS_INVALID', '请选择有效的版权状态');
   }
   {
     const mediaType = requiredText(input?.media_type, 'media_type').toLowerCase();
-    if (!['image', 'video', 'document'].includes(mediaType)) throw new MediaAssetGovernanceError('MEDIA_TYPE_INVALID', 'media_type must be image, video or document');
+    if (!['image', 'video', 'document'].includes(mediaType)) throw new MediaAssetGovernanceError('MEDIA_TYPE_INVALID', '素材类型只能是 image、video 或 document');
     const expectedType = mimeType.startsWith('image/') ? 'image' : mimeType.startsWith('video/') ? 'video' : mimeType === 'application/pdf' ? 'document' : '';
-    if (mediaType !== expectedType) throw new MediaAssetGovernanceError('MEDIA_TYPE_INVALID', 'media_type does not match mime_type');
+    if (mediaType !== expectedType) throw new MediaAssetGovernanceError('MEDIA_TYPE_INVALID', '素材类型与 MIME 类型不匹配');
     const width = Number(input?.width); const height = Number(input?.height);
     if (mediaType !== 'document' && (!Number.isInteger(width) || width < 1 || !Number.isInteger(height) || height < 1)) {
-      throw new MediaAssetGovernanceError('MEDIA_DIMENSIONS_INVALID', 'width and height are required positive integers');
-    }
-    const placement = mediaPlacementSpecs[String(input?.placement_key || '').trim()];
-    if (mediaType === 'video' && placement?.posterRequired && !String(input?.poster_asset_id || '').trim()) {
-      throw new MediaAssetGovernanceError('MEDIA_POSTER_REQUIRED', 'video assets require a poster_asset_id');
+      throw new MediaAssetGovernanceError('MEDIA_DIMENSIONS_INVALID', '宽高必须是正整数');
     }
   }
   return input;
@@ -233,18 +229,18 @@ export function assertMediaAssetRecord(input, file) {
 
 export function assertMediaAssetPlacement(input, placementKey) {
   const spec = mediaPlacementSpecs[placementKey];
-  if (!spec) throw new MediaAssetGovernanceError('MEDIA_PLACEMENT_INVALID', 'A supported placement_key is required');
+  if (!spec) throw new MediaAssetGovernanceError('MEDIA_PLACEMENT_INVALID', '请选择有效的展示位置');
   const mediaType = String(input?.media_type || '').trim().toLowerCase();
-  if (mediaType !== spec.mediaType) throw new MediaAssetGovernanceError('MEDIA_PLACEMENT_TYPE_INVALID', `${placementKey} requires a ${spec.mediaType}`);
+  if (mediaType !== spec.mediaType) throw new MediaAssetGovernanceError('MEDIA_PLACEMENT_TYPE_INVALID', `${placementKey} 只接受 ${spec.mediaType} 类型的素材`);
   // 尺寸 / 体积 / 时长不再硬拦截。这三项原本是画质兜底，但会挡住运营手里唯一可用的
   // 素材（例如常见的 1080×1920 竖屏视频，宽 1080 < 1280）。画质提示改由
   // mediaPlacementQualityNotice() 以「提示」形式给出，不再阻断流程。
-  // 仍然保留的硬约束是「缺了页面就坏」的那些：位置合法、类型匹配、视频必须有封面、
+  // 仍然保留的硬约束是「缺了页面就坏」的那些：位置合法、类型匹配、
   // 需要文稿的位置要有文稿、播放行为（autoplay/muted）。
-  if (spec.posterRequired && !String(input?.poster_asset_id || '').trim()) throw new MediaAssetGovernanceError('MEDIA_POSTER_REQUIRED', `${placementKey} requires a poster asset`);
-  if (spec.transcriptRequired && !String(input?.transcript || '').trim()) throw new MediaAssetGovernanceError('MEDIA_TRANSCRIPT_REQUIRED', `${placementKey} requires a transcript`);
-  if (spec.autoplay && input?.autoplay !== true) throw new MediaAssetGovernanceError('MEDIA_PLAYBACK_INVALID', `${placementKey} requires autoplay`);
-  if (spec.muted && input?.muted !== true) throw new MediaAssetGovernanceError('MEDIA_PLAYBACK_INVALID', `${placementKey} autoplay must be muted`);
+  // 封面（poster）只是展示用的首帧图，缺失时官网回退到视频首帧，因此不再拦截。
+  if (spec.transcriptRequired && !String(input?.transcript || '').trim()) throw new MediaAssetGovernanceError('MEDIA_TRANSCRIPT_REQUIRED', `${placementKey}：该位置要求提供字幕或文字稿`);
+  if (spec.autoplay && input?.autoplay !== true) throw new MediaAssetGovernanceError('MEDIA_PLAYBACK_INVALID', `${placementKey}：该位置要求自动播放`);
+  if (spec.muted && input?.muted !== true) throw new MediaAssetGovernanceError('MEDIA_PLAYBACK_INVALID', `${placementKey}：自动播放时必须静音`);
   return spec;
 }
 
@@ -260,23 +256,31 @@ export function mediaPlacementQualityNotice(input, placementKey) {
   return `建议 ${spec.minWidth}×${spec.minHeight} 以上，当前 ${width}×${height}，显示时可能偏模糊。`;
 }
 
+// 封面（poster）是可选展示项：官网在封面缺失或尚未发布时回退到视频首帧，
+// 因此这里只给「提示」，不阻断送审或发布。返回 null 表示无需提示。
+export function mediaPlacementPosterNotice(input, placementKey) {
+  const spec = mediaPlacementSpecs[placementKey];
+  if (!spec?.posterRecommended) return null;
+  if (String(input?.poster_asset_id || '').trim()) return null;
+  return '暂未设置封面：官网会先显示视频首帧，之后可随时在「媒体资产」里补充或替换封面。';
+}
+
+// 只收集「缺了页面就坏」的素材引用。封面（poster_asset_id）不在其中：
+// 它是可选的展示图，官网解析时只接受已发布的封面，取不到就回退到视频首帧，
+// 所以封面未送审/未发布不应挡住视频或页面的送审与发布。
 export function collectMediaAssetReferenceIds(record) {
   const references = [];
   for (const field of directAssetFields) {
     if (record?.[field] == null || record[field] === '') continue;
     references.push(requiredText(record[field], field));
   }
-  if (record?.poster_asset_id != null && record.poster_asset_id !== '') {
-    const posterId = assetIdText(record.poster_asset_id);
-    if (posterId) references.push(posterId);
-  }
   for (const field of listAssetFields) {
     for (const entry of asList(record?.[field], field)) {
       if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
-        throw new MediaAssetGovernanceError('MEDIA_REFERENCE_INVALID', `${field} entries must be objects with media_asset_id`);
+        throw new MediaAssetGovernanceError('MEDIA_REFERENCE_INVALID', `${field} 的每一项必须是包含 media_asset_id 的对象`);
       }
       const mediaAssetId = assetIdText(entry.media_asset_id);
-      if (!mediaAssetId) throw new MediaAssetGovernanceError('MEDIA_REFERENCE_INVALID', `${field} entries must include media_asset_id`);
+      if (!mediaAssetId) throw new MediaAssetGovernanceError('MEDIA_REFERENCE_INVALID', `${field} 的每一项都必须包含 media_asset_id`);
       references.push(mediaAssetId);
     }
   }
@@ -286,14 +290,14 @@ export function collectMediaAssetReferenceIds(record) {
   for (const field of ['logo_asset', 'footer_logo_asset']) {
     if (brand[field] == null || brand[field] === '') continue;
     const logoAssetId = assetIdText(brand[field]);
-    if (!logoAssetId) throw new MediaAssetGovernanceError('MEDIA_REFERENCE_INVALID', `brand.${field} must be a media asset id`);
+    if (!logoAssetId) throw new MediaAssetGovernanceError('MEDIA_REFERENCE_INVALID', `brand.${field} 必须是媒体素材 ID`);
     references.push(logoAssetId);
   }
   const footer = asObject(record?.footer, 'footer');
   for (const field of ['address_icon_asset', 'phone_icon_asset', 'email_icon_asset']) {
     if (footer[field] == null || footer[field] === '') continue;
     const iconAssetId = assetIdText(footer[field]);
-    if (!iconAssetId) throw new MediaAssetGovernanceError('MEDIA_REFERENCE_INVALID', `footer.${field} must be a media asset id`);
+    if (!iconAssetId) throw new MediaAssetGovernanceError('MEDIA_REFERENCE_INVALID', `footer.${field} 必须是媒体素材 ID`);
     references.push(iconAssetId);
   }
   return [...new Set(references)];

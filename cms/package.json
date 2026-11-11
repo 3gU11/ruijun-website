@@ -6,6 +6,7 @@
     "bootstrap": "directus bootstrap",
     "start": "directus start",
     "schema:apply": "node ./scripts/apply-directus-schema.mjs",
+    "schema:drop-parameter-group": "node ./scripts/drop-product-parameter-group-field.mjs",
     "bff:provision": "node ./scripts/provision-bff-service-account.mjs",
     "audit:provision-reader": "node ./scripts/provision-content-audit-reader.mjs",
     "audit:initialize-local": "node ./scripts/initialize-local-content-audit-reader.mjs",
@@ -69,7 +70,7 @@
     "test": "node --test ./test/*.test.mjs"
   },
   "dependencies": {
-    "directus": "11.7.2",
-    "sqlite3": "5.1.7"
+    "directus": "^11.17.4",
+    "sqlite3": "^6.0.1"
   }
 }

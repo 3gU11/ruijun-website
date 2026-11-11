@@ -1,4 +1,3 @@
-README.md
 pyproject.toml
 app/__init__.py
 app/config.py
@@ -11,3 +10,4 @@ ruijun_faq_bff.egg-info/SOURCES.txt
 ruijun_faq_bff.egg-info/dependency_links.txt
 ruijun_faq_bff.egg-info/requires.txt
 ruijun_faq_bff.egg-info/top_level.txt
+tests/test_api.py

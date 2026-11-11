@@ -15,7 +15,7 @@ test('Nuxt BFF configuration uses a dedicated private service token rather than 
     'server/utils/cms-product-reader.ts'
   ].map((file) => readFile(new URL(file, root), 'utf8')));
 
-  assert.match(config, /cmsBffToken: process\.env\.CMS_BFF_TOKEN \|\| ''/);
+  assert.match(config, /cmsBffToken: process\.env\.CMS_BFF_TOKEN \|\| process\.env\.CMS_PUBLIC_API_TOKEN \|\| process\.env\.CMS_PREVIEW_ACCESS_TOKEN \|\| ''/);
   assert.match(config, /cmsMediaAssetsUrl: process\.env\.CMS_MEDIA_ASSETS_URL \|\| ''/);
   assert.match(config, /cmsPublicAssetBaseUrl: process\.env\.CMS_PUBLIC_ASSET_BASE_URL \|\| ''/);
   assert.doesNotMatch(config, /public:\s*\{[^}]*cmsMediaAssetsUrl/s);

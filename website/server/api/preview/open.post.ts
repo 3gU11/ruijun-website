@@ -13,7 +13,6 @@ export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event);
   const reader = createCmsPreviewReader({
     consumeEndpoint: String(config.cmsPreviewTokensUrl || ''),
-    accessToken: String(config.cmsBffToken || ''),
     sessionStore: useCmsPreviewSessionStore()
   });
   try {

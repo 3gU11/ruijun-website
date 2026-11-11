@@ -9,7 +9,9 @@ async function publisherActor(database, accountability) {
   if (!accountability?.user) return null;
   if (accountability.admin) return { id: accountability.user };
   const role = accountability.role ? await database('directus_roles').where({ id: accountability.role }).first() : null;
-  return role?.name === '发布人员' ? { id: accountability.user } : null;
+  // Editors need the same readiness report before submitting; otherwise the
+  // batch could enter review and only fail later at approval.
+  return ['发布人员', '内容编辑', '审核管理', '系统管理员'].includes(role?.name) ? { id: accountability.user } : null;
 }
 
 async function records(database, collection, fields) {

@@ -59,5 +59,5 @@ test('successful upload keeps its file and reports completion', async () => {
  const result = await uploadScenario();
  assert.deepEqual(result.deleted, []);
  assert.equal(result.error, '');
- assert.match(result.message, /已登记/);
+ assert.match(result.message, /已上传并发布/);
 });

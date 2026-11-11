@@ -1,5 +1,6 @@
 import { contentCollections } from '../schema/content-model.mjs';
 import { normalizeFieldPresentations } from '../extensions/content-editor-workbench/src/section-presentation.js';
+import { normalizeSeriesDetail } from '../../website/shared/product-series-details.mjs';
 import { getPageSectionDefinition, validatePageSectionInstance } from '../../website/shared/page-section-registry.mjs';
 
 // Draft previews are deliberately smaller than a Directus record.  The preview
@@ -11,9 +12,9 @@ const previewFields = Object.freeze({
   repair_page_configs: ['id', 'page_key', 'title', 'intro', 'hero_asset', 'model_cards', 'action_cards', 'process_steps', 'notices', 'faq_refs', 'seo', 'language', 'status', 'publication_state', 'published_at'],
   product_series: ['id', 'series_code', 'slug', 'name', 'positioning', 'presentation', 'scenarios', 'capabilities', 'cover_asset', 'sort_order', 'language', 'status', 'publication_state', 'published_at'],
   product_models: ['id', 'series_code', 'model_code', 'slug', 'name', 'parameters', 'parameter_groups', 'configuration', 'presentation', 'media', 'resources', 'case_studies', 'status', 'publication_state', 'published_at'],
-  product_parameters: ['id', 'model_code', 'group_name', 'field_name', 'value', 'unit', 'presentation', 'sort_order', 'test_conditions', 'status', 'publication_state', 'published_at'],
+  product_parameters: ['id', 'model_code', 'field_name', 'value', 'unit', 'presentation', 'sort_order', 'test_conditions', 'status', 'publication_state', 'published_at'],
   case_studies: ['id', 'slug', 'industry', 'material', 'thickness', 'model_code', 'process', 'result', 'authorization_status', 'status', 'publication_state', 'published_at'],
-  articles: ['id', 'slug', 'category', 'title', 'display_date', 'summary', 'body', 'body_media', 'transcript', 'field_presentation', 'media', 'video_url', 'cover_asset', 'seo', 'status', 'publication_state', 'published_at'],
+  articles: ['id', 'slug', 'category', 'title', 'display_date', 'sort_order', 'summary', 'body', 'body_media', 'transcript', 'field_presentation', 'media', 'video_url', 'cover_asset', 'seo', 'status', 'publication_state', 'published_at'],
   manufacturing_evidence: ['id', 'source_key', 'process', 'description', 'media', 'inspection_evidence', 'sort_order', 'status', 'publication_state', 'published_at'],
   qualifications: ['id', 'source_key', 'type', 'name', 'certificate_number', 'issuer', 'valid_until', 'assets', 'sort_order', 'authorization_status', 'status', 'publication_state', 'published_at'],
   milestones: ['id', 'source_key', 'year', 'event', 'evidence', 'media', 'icon_asset', 'sort_order', 'status', 'publication_state', 'published_at'],
@@ -166,7 +167,48 @@ function previewProductParameterPresentation(value) {
 function previewProductSeriesPresentation(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
   const fields = normalizeFieldPresentations(value.field_presentation, ['name', 'positioning']);
-  return Object.keys(fields).length ? { field_presentation: fields } : undefined;
+  const detail = previewSeriesDetail(value.detail);
+  if (!Object.keys(fields).length && !detail) return undefined;
+  return {
+    ...(Object.keys(fields).length ? { field_presentation: fields } : {}),
+    ...(detail ? { detail } : {})
+  };
+}
+
+// Series-level detail is rendered by the public product page. Keep the preview
+// contract as narrow as the public reader: known keys only, bounded text.
+function previewSeriesDetail(value) {
+  const normalized = normalizeSeriesDetail(value);
+  if (!normalized) return undefined;
+  const bounded = (text, limit) => (typeof text === 'string' ? text.slice(0, limit) : '');
+  const intro = normalized.intro
+    ? {
+      ...(bounded(normalized.intro.title, 160) ? { title: bounded(normalized.intro.title, 160) } : {}),
+      ...(bounded(normalized.intro.subtitle, 160) ? { subtitle: bounded(normalized.intro.subtitle, 160) } : {}),
+      ...(bounded(normalized.intro.scene, 240) ? { scene: bounded(normalized.intro.scene, 240) } : {}),
+      ...(bounded(normalized.intro.body, 4000) ? { body: bounded(normalized.intro.body, 4000) } : {})
+    }
+    : null;
+  const features = normalized.features.slice(0, 12).flatMap((feature) => {
+    const label = bounded(feature.label, 120);
+    if (!label) return [];
+    const image = typeof feature.image === 'string' && /^\/[^/]/.test(feature.image) ? feature.image.slice(0, 400) : '';
+    const mediaAssetId = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(String(feature.media_asset_id || '')) ? String(feature.media_asset_id) : '';
+    return [{
+      label,
+      ...(bounded(feature.detail, 1000) ? { detail: bounded(feature.detail, 1000) } : {}),
+      ...(bounded(feature.note, 300) ? { note: bounded(feature.note, 300) } : {}),
+      ...(image ? { image } : {}),
+      ...(mediaAssetId ? { media_asset_id: mediaAssetId } : {})
+    }];
+  });
+  if (!intro && !features.length) return undefined;
+  const machineAssetId = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(String(normalized.machine_asset_id || '')) ? String(normalized.machine_asset_id) : '';
+  return {
+    ...(intro ? { intro } : {}),
+    features,
+    ...(machineAssetId ? { machine_asset_id: machineAssetId } : {})
+  };
 }
 
 function previewProductModelPresentation(value) {

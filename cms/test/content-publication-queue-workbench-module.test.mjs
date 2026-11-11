@@ -15,6 +15,9 @@ test('content publication queue uses the authenticated Directus session for gene
   assert.equal(manifest['directus:extension'].type, 'module');
   assert.equal(manifest['directus:extension'].source, 'src/index.js');
   assert.match(index, /ruijun-content-publication-queue-workbench/);
+  assert.match(index, /name: '发布中心'/);
+  assert.match(module, /release-center-tabs/);
+  assert.match(module, /产品统一发布/);
   assert.match(module, /待发布/);
   assert.match(module, /已发布/);
   assert.match(module, /已下线/);
@@ -30,6 +33,9 @@ test('content publication queue uses the authenticated Directus session for gene
   assert.match(module, /review_note/);
   assert.match(module, /api\.patch\(`\/items\/\$\{encodeURIComponent\(record\.collection\)\}/);
   assert.match(module, /status: activeModeDefinition\.value\.target/);
+  assert.match(module, /content_submissions/);
+  assert.match(module, /api\.post\('\/product-release\/publish'/);
+  assert.match(module, /finalStatus/);
   assert.doesNotMatch(module, /CMS_BFF_TOKEN|CMS_WRITE_TOKEN|ADMIN_PASSWORD/);
-  assert.doesNotMatch(module, /api\.(post|put|delete)\(/);
+  assert.doesNotMatch(module, /api\.(put|delete)\(/);
 });

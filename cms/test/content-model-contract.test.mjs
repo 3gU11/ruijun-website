@@ -7,7 +7,7 @@ test('CMS content model covers every PRD object with an explicit publication sta
   const expected = [
     'homepage_sections', 'pages', 'repair_page_configs', 'product_series', 'product_models', 'product_parameters', 'case_studies',
     'articles', 'manufacturing_evidence', 'qualifications', 'milestones', 'service_resources',
-    'service_locations', 'knowledge_items', 'external_service_entries', 'service_entry_clicks', 'media_assets', 'leads', 'lead_dedupe_keys', 'lead_notification_jobs', 'lead_upload_sessions', 'content_versions', 'product_release_snapshots', 'site_settings', 'content_preview_tokens'
+    'service_locations', 'knowledge_items', 'external_service_entries', 'service_entry_clicks', 'media_assets', 'leads', 'lead_dedupe_keys', 'lead_notification_jobs', 'lead_upload_sessions', 'content_submissions', 'content_versions', 'product_release_snapshots', 'site_settings', 'content_preview_tokens'
   ];
 
   assert.deepEqual(contentCollections.map((collection) => collection.name), expected);

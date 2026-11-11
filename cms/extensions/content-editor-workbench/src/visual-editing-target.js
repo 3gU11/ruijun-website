@@ -1,7 +1,7 @@
 const supportedCollections = new Set([
   'pages', 'homepage_sections', 'product_series', 'product_models', 'product_parameters', 'articles', 'case_studies',
   'milestones', 'qualifications', 'manufacturing_evidence', 'service_resources',
-  'service_locations', 'external_service_entries', 'repair_page_configs', 'site_settings'
+  'service_locations', 'external_service_entries', 'knowledge_items', 'repair_page_configs', 'site_settings'
 ]);
 
 // Forms edit a detached draft while record lists retain their load snapshot.
@@ -23,6 +23,7 @@ function recordsFor(state, collection) {
   if (collection === 'articles' || collection === 'case_studies') return state.editorial?.[collection];
   if (['milestones', 'qualifications', 'manufacturing_evidence'].includes(collection)) return state.company?.[collection];
   if (['service_resources', 'service_locations', 'external_service_entries'].includes(collection)) return state.service?.[collection];
+  if (collection === 'knowledge_items') return state.knowledge?.knowledge_items;
   if (collection === 'repair_page_configs') return state.repairPages;
   if (collection === 'site_settings') return state.settings ? [state.settings] : [];
   return null;

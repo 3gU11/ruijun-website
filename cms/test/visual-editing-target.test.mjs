@@ -9,7 +9,8 @@ const state = {
   parameters: [{ id: 'parameter-1', model_code: 'fl1180', field_name: 'XY 行程', value: '1100*800' }],
   editorial: { articles: [{ id: 'article-1', slug: 'story-1', title: '新闻' }], case_studies: [] },
   company: { milestones: [{ id: 'mile-1', source_key: 'm-2024', year: '2024' }], qualifications: [], manufacturing_evidence: [] },
-  service: { service_resources: [], service_locations: [{ id: 'loc-1', source_key: 'suzhou', city: '苏州' }], external_service_entries: [] }
+  service: { service_resources: [], service_locations: [{ id: 'loc-1', source_key: 'suzhou', city: '苏州' }], external_service_entries: [] },
+  knowledge: { knowledge_items: [{ id: 'faq-1', source_key: 'faq', question_title: '容易断丝' }] }
 };
 
 test('visual selection resolves a cross-collection record without guessing field names', () => {
@@ -18,6 +19,8 @@ test('visual selection resolves a cross-collection record without guessing field
   assert.deepEqual(resolveVisualEditingRecord(state, { collection: 'product_parameters', itemId: 'parameter-1', fieldPath: 'value' }), { collection: 'product_parameters', record: state.parameters[0] });
   assert.deepEqual(resolveVisualEditingRecord(state, { collection: 'service_locations', itemId: 'loc-1' }), { collection: 'service_locations', record: state.service.service_locations[0] });
   assert.deepEqual(resolveVisualEditingRecord(state, { collection: 'homepage_sections', itemId: 'home-section-1' }), { collection: 'homepage_sections', record: state.homepageSections[0] });
+  // 服务支持子页面的知识/故障条目也要能在画布中选中编辑。
+  assert.deepEqual(resolveVisualEditingRecord(state, { collection: 'knowledge_items', itemId: 'faq-1' }), { collection: 'knowledge_items', record: state.knowledge.knowledge_items[0] });
 });
 
 test('visual selection resolves a read-only media target without inventing a writable field path', () => {

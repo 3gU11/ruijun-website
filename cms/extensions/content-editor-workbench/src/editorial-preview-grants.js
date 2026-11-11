@@ -11,7 +11,14 @@ export function livePreviewGrantIds(collection, preview) {
  if (collection === 'service_resources') return [...new Set([preview?.asset_media_asset_id, preview?.cover_media_asset_id].filter(Boolean).map(String))];
  if (collection === 'product_series') {
   const coverAssetId = String(preview?.cover_media_asset_id || preview?.cover_asset || '').trim();
-  return /^[1-9]\d*$/.test(coverAssetId) ? [coverAssetId] : [];
+  // Series-level detail owns a machine photo and per-feature thumbnails; without
+  // a grant the canvas would get 403 from /api/preview/media/<id>.
+  const detail = preview?.detail && typeof preview.detail === 'object' ? preview.detail : {};
+  const detailEntries = [...(Array.isArray(detail.features) ? detail.features : []), detail];
+  return [...new Set([
+   ...(/^[1-9]\d*$/.test(coverAssetId) ? [coverAssetId] : []),
+   ...detailEntries.flatMap(item => [item?.media_asset_id, item?.machine_asset_id]).filter(value => /^[1-9]\d*$/.test(String(value || ''))).map(String)
+  ])];
  }
  if (collection === 'product_models') {
   const configuration = preview?.configuration && typeof preview.configuration === 'object' ? preview.configuration : {};

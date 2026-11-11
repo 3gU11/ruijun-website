@@ -16,7 +16,8 @@ test('CMS cache invalidator authenticates the private webhook and clears only af
       navigation: () => cleared.push('navigation'),
       serviceEntries: () => cleared.push('serviceEntries'),
       serviceContent: () => cleared.push('serviceContent'),
-      evidence: () => cleared.push('evidence')
+      evidence: () => cleared.push('evidence'),
+      'media-placements': () => cleared.push('media-placements')
     }
   });
 
@@ -27,7 +28,7 @@ test('CMS cache invalidator authenticates the private webhook and clears only af
   assert.deepEqual(invalidator.invalidate({ authorization: 'Bearer test-webhook-secret', collection: 'pages' }), { invalidated: ['pages'] });
   assert.deepEqual(invalidator.invalidate({ authorization: 'Bearer test-webhook-secret', collection: 'service_resources' }), { invalidated: ['serviceContent'] });
   assert.deepEqual(invalidator.invalidate({ authorization: 'Bearer test-webhook-secret', collection: 'qualifications' }), { invalidated: ['evidence'] });
-  assert.deepEqual(invalidator.invalidate({ authorization: 'Bearer test-webhook-secret', collection: 'media_assets' }), { invalidated: ['pages', 'products', 'evidence'] });
+  assert.deepEqual(invalidator.invalidate({ authorization: 'Bearer test-webhook-secret', collection: 'media_assets' }), { invalidated: ['pages', 'products', 'evidence', 'media-placements'] });
 });
 
 test('CMS cache invalidator fails closed for missing credentials or unknown collections', () => {
@@ -68,10 +69,11 @@ test('every cached public-content route registers its cache for webhook invalida
     'server/api/public/v1/navigation.get.ts',
     'server/api/public/v1/service-entries.get.ts',
     'server/utils/cms-service-content-reader.ts',
-    'server/utils/cms-evidence-reader.ts'
+    'server/utils/cms-evidence-reader.ts',
+    'server/api/public/v1/media/[placement].get.ts'
   ].map((file) => readFile(new URL(file, root), 'utf8')));
 
-  for (const [source, name] of sources.map((source, index) => [source, ['pages', 'products', 'articles', 'navigation', 'serviceEntries', 'serviceContent', 'evidence'][index]])) {
+  for (const [source, name] of sources.map((source, index) => [source, ['pages', 'products', 'articles', 'navigation', 'serviceEntries', 'serviceContent', 'evidence', 'media-placements'][index]])) {
     assert.match(source, new RegExp(`registerCmsPublicCache\\('${name}'`));
   }
 });

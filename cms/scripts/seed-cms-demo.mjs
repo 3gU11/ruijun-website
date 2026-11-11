@@ -121,7 +121,7 @@ const demoRecords = [
   {
     collection: 'product_parameters', field: 'source_document', value: `${contentMarker}/product`,
     data: {
-      model_code: 'DEMO-CMS-MODEL', group_name: '演示参数', field_name: '演示参数', value: '仅供后台演示', unit: '', sort_order: 1,
+      model_code: 'DEMO-CMS-MODEL', field_name: '演示参数', value: '仅供后台演示', unit: '', sort_order: 1,
       import_evidence: { source: contentMarker }, status: 'draft', publication_state: 'unpublished',
       source_document: `${contentMarker}/product`, review_note: '演示数据：不允许发布到官网。'
     }

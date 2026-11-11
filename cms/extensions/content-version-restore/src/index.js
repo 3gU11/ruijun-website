@@ -19,10 +19,33 @@ function json(value, fallback) {
 }
 
 function databasePayload(value) {
-  return Object.fromEntries(Object.entries(value).map(([key, entry]) => [
-    key,
-    entry && typeof entry === 'object' ? JSON.stringify(entry) : entry
-  ]));
+  return Object.fromEntries(Object.entries(value).map(([key, entry]) => {
+    if (entry && typeof entry === 'object') return [key, JSON.stringify(entry)];
+    // Version snapshots keep ISO timestamps, while MySQL DATE/DATETIME columns
+    // reject values like 2026-11-04T16:00:00.000Z. Normalize before restore.
+    if (typeof entry === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(entry)) {
+      const date = new Date(entry);
+      if (!Number.isNaN(date.getTime())) {
+        const normalized = databaseDateTime(date);
+        return [key, key === 'display_date' ? normalized.slice(0, 10) : normalized];
+      }
+    }
+    return [key, entry];
+  }));
+}
+
+// Older snapshots can contain fields that were since removed from the content
+// model (for example `product_parameters.group_name`). Restoring them wholesale
+// would make the database UPDATE fail, so keep only columns the table still has.
+async function restorablePayload(database, collection, value) {
+  const payload = databasePayload(value);
+  try {
+    const columns = await database(collection).columnInfo();
+    if (!columns || typeof columns !== 'object') return payload;
+    return Object.fromEntries(Object.entries(payload).filter(([key]) => Object.hasOwn(columns, key)));
+  } catch {
+    return payload;
+  }
 }
 
 function versionView(version) {
@@ -111,7 +134,7 @@ export function registerContentVersionRestoreEndpoint(router, { database }) {
       }
 
       const restored = buildRestoredDraft({ snapshot: version.snapshot, current, actorId: actor.id, versionId: version.id, restoreNote: note });
-      await database(version.content_collection).where({ id: version.content_item_id }).update(databasePayload(restored));
+      await database(version.content_collection).where({ id: version.content_item_id }).update(await restorablePayload(database, version.content_collection, restored));
       await database('content_versions').where({ id: version.id }).update({ status: 'restored', restored_by: actor.id, restored_at: databaseDateTime(new Date()), restore_note: note.trim() });
       return res.status(200).json({ data: { content_collection: version.content_collection, content_item_id: String(version.content_item_id), status: 'draft', discardedNewerVersions: newerCount } });
     } catch (error) {

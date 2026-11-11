@@ -32,7 +32,10 @@ test('canvas-driven cross-record navigation cannot bypass the unsaved-draft conf
   const module = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
 
   assert.match(module, /requiresVisualDraftSwitchConfirmation/);
-  assert.match(module, /function activateVisualEditingTarget\(selection, \{ discardConfirmed = false \} = \{\}\) \{[\s\S]*if \(!discardConfirmed && requiresVisualDraftSwitchConfirmation\(\{[\s\S]*hasUnsavedChanges: hasUnsavedChanges\.value,[\s\S]*currentTarget,[\s\S]*nextTarget: \{ collection, itemId: resolved\.record\.id \}[\s\S]*\}\) && !confirmDiscardChanges\('切换画布编辑内容'\)\) return null;/);
+  // Collections that keep their drafts on switch skip the prompt (it made a plain
+  // card click look destructive); everything else still confirms.
+  assert.match(module, /const keepsDraftOnSwitch = new Set\(\['pages', 'homepage_sections', 'product_series', 'product_models'\]\);/);
+  assert.match(module, /if \(!discardConfirmed[\s\S]*?&& !keepsDraftOnSwitch\.has\(collection\)[\s\S]*?requiresVisualDraftSwitchConfirmation\(\{[\s\S]*?hasUnsavedChanges: hasUnsavedChanges\.value,[\s\S]*?nextTarget: \{ collection, itemId: resolved\.record\.id \}[\s\S]*?\}\) && !confirmDiscardChanges\('切换画布编辑内容'\)\) return null;/);
   assert.match(module, /function switchVisualPreviewRecord\(itemId\) \{[\s\S]*if \(!confirmDiscardChanges\('切换预览条目'\)\) return false;[\s\S]*activateVisualEditingTarget\([\s\S]*\{ discardConfirmed: true \}\);[\s\S]*return true;/);
 });
 

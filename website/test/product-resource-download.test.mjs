@@ -5,11 +5,12 @@ import { productResourceDownloadName } from '../shared/product-resource-download
 
 test('detail section record owners use the actual product binding attribute keys', () => {
  const source = readFileSync(new URL('../pages/product/[slug].vue', import.meta.url), 'utf8');
- assert.doesNotMatch(source, /productBinding\([^)]*\)\.(?:collection|itemId)/);
- for (const field of ['title', 'resources']) {
-  assert.ok(source.includes(`productBinding('${field}')['data-cms-preview-collection']`));
-  assert.ok(source.includes(`productBinding('${field}')['data-cms-preview-item-id']`));
- }
+ assert.doesNotMatch(source, /product(?:Record)?Binding\([^)]*\)\.(?:collection|itemId)/);
+ // The detail panel flexibly follows the displayed model or the series record,
+ // while resources keep following the route record they are read from.
+ assert.ok(source.includes('...detailOwnerAttributes()'));
+ assert.ok(source.includes(`productRecordBinding('resources')['data-cms-preview-collection']`));
+ assert.ok(source.includes(`productRecordBinding('resources')['data-cms-preview-item-id']`));
 });
 
 test('uploaded product documents download independently of their editable type label', () => {

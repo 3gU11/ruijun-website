@@ -229,8 +229,7 @@ function publicSection(section, mediaAssets, pageSlug = '') {
     ? section.media.flatMap((entry) => {
       const asset = mediaAssets.get(String(entry?.media_asset_id));
       return asset ? [{ ...asset, ...(typeof entry?.role === 'string' && entry.role.trim() ? { role: entry.role.trim().slice(0, 60) } : {}) }] : [];
-    })
-    : [];
+    })    : [];
   const content = publicContent(section?.content, mediaAssets);
   const pagination = publicPagination(section?.pagination);
   const presentation = hasSectionPresentation(section) ? normalizeSectionPresentation(section) : null;
@@ -257,6 +256,18 @@ function publicSection(section, mediaAssets, pageSlug = '') {
     if (!copy.icon) copy.icon = mediaByRole(['icon', 'thumbnail', 'tab-icon'], (entry) => entry.mediaType !== 'video')?.path;
     if (!copy.video) copy.video = mediaByRole(['video', 'hero-video'], (entry) => entry.mediaType === 'video')?.path;
   }
+  // The homepage hero stores its governed video as a scalar asset id, which the
+  // fixed field list above never copies. Without this the page only ever saw the
+  // built-in static video: a published CMS video could not reach the site even
+  // though the editor had picked it. Resolve the id to its public media path here.
+  if (String(section?.id || '') === 'hero') {
+    const heroVideoId = String(section?.hero_video_asset_id || '').trim();
+    if (/^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(heroVideoId)) {
+      copy.hero_video_asset_id = heroVideoId;
+      const heroVideo = mediaAssets.get(heroVideoId);
+      if (heroVideo?.path) copy.hero_video_asset_url = heroVideo.path;
+    }
+  }
   return { ...copy, ...(content ? { content } : {}), ...(pagination ? { pagination } : {}), ...(presentation ? presentation : {}), ...(Object.keys(fieldPresentation).length ? { field_presentation: fieldPresentation } : {}), ...(media.length ? { media } : {}), ...(repairModels.length ? { repairModels } : {}), ...(repairActions.length ? { repairActions } : {}) };
 }
 
@@ -265,7 +276,13 @@ async function publicPage(record, mediaAssetResolver) {
   const sections = record.sections.filter((section) => section && typeof section === 'object' && section.requires_claim_review !== true);
   const nestedMediaIds = [];
   sections.forEach((section) => collectNestedMediaAssetIds(section, nestedMediaIds));
-  const mediaAssetIds = [...new Set([...sections.flatMap((section) => collectMediaAssetIds(section.media)), ...nestedMediaIds])];
+  // The hero video is referenced by a scalar field, not by section.media, so it
+  // has to be requested explicitly or the resolver cannot return its path.
+  const heroVideoIds = sections
+    .filter((section) => String(section?.id || '') === 'hero')
+    .map((section) => String(section?.hero_video_asset_id || '').trim())
+    .filter((id) => /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/.test(id));
+  const mediaAssetIds = [...new Set([...sections.flatMap((section) => collectMediaAssetIds(section.media)), ...nestedMediaIds, ...heroVideoIds])];
   const mediaAssets = await mediaAssetResolver.resolve(mediaAssetIds);
   return {
     ...record,

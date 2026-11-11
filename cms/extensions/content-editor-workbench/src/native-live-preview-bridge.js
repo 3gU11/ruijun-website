@@ -7,7 +7,7 @@ const previewFields = Object.freeze({
   repair_page_configs: ['id', 'page_key', 'title', 'intro', 'hero_asset', 'model_cards', 'action_cards', 'process_steps', 'notices', 'faq_refs', 'seo', 'language', 'status', 'publication_state', 'published_at'],
   product_series: ['id', 'series_code', 'slug', 'name', 'positioning', 'scenarios', 'capabilities', 'cover_asset', 'sort_order', 'language', 'status', 'publication_state', 'published_at'],
   product_models: ['id', 'series_code', 'model_code', 'slug', 'name', 'parameters', 'configuration', 'presentation', 'media', 'resources', 'case_studies', 'status', 'publication_state', 'published_at'],
-  product_parameters: ['id', 'model_code', 'group_name', 'field_name', 'value', 'unit', 'sort_order', 'test_conditions', 'status', 'publication_state', 'published_at'],
+  product_parameters: ['id', 'model_code', 'field_name', 'value', 'unit', 'sort_order', 'test_conditions', 'status', 'publication_state', 'published_at'],
   case_studies: ['id', 'slug', 'industry', 'material', 'thickness', 'model_code', 'process', 'result', 'authorization_status', 'status', 'publication_state', 'published_at'],
   articles: ['id', 'slug', 'category', 'title', 'summary', 'body', 'body_media', 'transcript', 'display_date', 'sort_order', 'field_presentation', 'media', 'video_url', 'cover_asset', 'seo', 'status', 'publication_state', 'published_at'],
   manufacturing_evidence: ['id', 'source_key', 'process', 'description', 'media', 'inspection_evidence', 'sort_order', 'status', 'publication_state', 'published_at'],

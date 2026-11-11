@@ -55,6 +55,75 @@ test('Nuxt CMS product reader exposes only controlled series-card presentation f
   assert.doesNotMatch(JSON.stringify(result.data[0].presentation), /position:fixed/);
 });
 
+test('series detail is sanitized and bounded before it reaches the public page', async () => {
+  const reader = createCmsProductReader({
+    seriesEndpoint: 'https://cms.example.test/items/product_series', modelsEndpoint: '',
+    now: () => Date.parse('2026-08-01T00:00:00.000Z'),
+    fetchImpl: async () => Response.json({ data: [{
+      ...publishedSeries,
+      presentation: {
+        field_presentation: { name: { text_style: { enabled: true, size_desktop: 30 } } },
+        detail: {
+          intro: { title: '灵动切割工作站', subtitle: '无人化加工解决方案', scene: '批量切割', body: '正文', injected: 'x' },
+          features: [
+            { label: '自动穿丝系统', note: '多种方式可供选择' },
+            { label: '   ' },
+            { label: '六轴协作机器人', detail: 'x'.repeat(2000), image: 'javascript:alert(1)' },
+            { label: '精密中走丝机床', image: '/assets/psd/machine.png' }
+          ],
+          internal: 'drop me'
+        }
+      }
+    }] })
+  });
+
+  const result = await reader.listSeries();
+  const detail = result.data[0].presentation.detail;
+
+  assert.equal(detail.intro.title, '灵动切割工作站');
+  assert.equal(Object.hasOwn(detail.intro, 'injected'), false);
+  assert.equal(Object.hasOwn(detail, 'internal'), false);
+  assert.deepEqual(detail.features.map((feature) => feature.label), ['自动穿丝系统', '六轴协作机器人', '精密中走丝机床']);
+  assert.equal(detail.features[1].detail.length, 1000);
+  // Non-https / non-site-local image paths are dropped instead of rendered.
+  assert.equal(Object.hasOwn(detail.features[1], 'image'), false);
+  assert.equal(detail.features[2].image, '/assets/psd/machine.png');
+  // The series card presentation contract is untouched.
+  assert.equal(result.data[0].presentation.field_presentation.name.text_style.size_desktop, 30);
+});
+
+test('series detail resolves the machine photo and feature images from published assets', async () => {
+  const reader = createCmsProductReader({
+    seriesEndpoint: 'https://cms.example.test/items/product_series', modelsEndpoint: '',
+    mediaAssetsEndpoint: 'https://cms.example.test/items/media_assets',
+    now: () => Date.parse('2026-08-01T00:00:00.000Z'),
+    fetchImpl: async (url) => {
+      const request = new URL(url);
+      if (request.pathname.endsWith('/media_assets')) return Response.json({ data: [
+        { id: 7, file_id: 'bbbbbbbb-bbbb-4bbb-8bbb-000000000007', media_type: 'image', status: 'published', publication_state: 'published' },
+        { id: 8, file_id: 'bbbbbbbb-bbbb-4bbb-8bbb-000000000008', media_type: 'image', status: 'published', publication_state: 'published' }
+      ] });
+      return Response.json({ data: [{
+        ...publishedSeries,
+        presentation: { detail: {
+          intro: { title: '灵动切割工作站' },
+          features: [{ label: '自动穿丝系统', media_asset_id: 8 }],
+          machine_asset_id: 7
+        } }
+      }] });
+    }
+  });
+
+  const result = await reader.listSeries();
+  const detail = result.data[0].presentation.detail;
+
+  assert.equal(detail.machine_image, '/api/public/v1/media/asset/bbbbbbbb-bbbb-4bbb-8bbb-000000000007');
+  assert.equal(detail.features[0].image, '/api/public/v1/media/asset/bbbbbbbb-bbbb-4bbb-8bbb-000000000008');
+  // The governed asset id is an implementation detail of the CMS side.
+  assert.equal(Object.hasOwn(detail, 'machine_asset_id'), false);
+  assert.equal(Object.hasOwn(detail.features[0], 'media_asset_id'), false);
+});
+
 test('Nuxt CMS product reader exposes a public product list and optionally filters it by series', async () => {
   const requests = [];
   const reader = createCmsProductReader({
@@ -150,7 +219,7 @@ test('Nuxt CMS product reader keeps approved parameter units alongside values', 
     fetchImpl: async (url) => {
       const request = new URL(url);
       if (request.pathname.endsWith('/product_parameters')) return Response.json({ data: [
-        { model_code: 'fr400xs', group_name: '基础参数', field_name: 'XY 行程', value: '400*290', unit: 'mm', sort_order: 1, presentation: { field_presentation: { field_name: { text_style: { enabled: true, size_desktop: 20, color: '#123456' } }, internal: { text_style: { enabled: true, size_desktop: 120 } } } }, status: 'published', publication_state: 'published' }
+        { model_code: 'fr400xs', field_name: 'XY 行程', value: '400*290', unit: 'mm', sort_order: 1, presentation: { field_presentation: { field_name: { text_style: { enabled: true, size_desktop: 20, color: '#123456' } }, internal: { text_style: { enabled: true, size_desktop: 120 } } } }, status: 'published', publication_state: 'published' }
       ] });
       return Response.json({ data: [{ ...publishedModel, slug: 'fr400xs' }] });
     }
@@ -159,7 +228,7 @@ test('Nuxt CMS product reader keeps approved parameter units alongside values', 
   const result = await reader.getModel('fr400xs');
   assert.deepEqual(result.data?.parameters, { xyTravelMm: '400*290' });
   assert.deepEqual(result.data?.parameter_units, { xyTravelMm: 'mm' });
-  assert.deepEqual(result.data?.parameter_groups, [{ name: '基础参数', items: [{ label: 'XY 行程', key: 'xyTravelMm', value: '400*290', unit: 'mm', presentation: { field_presentation: { field_name: { layout: { enabled: false, template: 'default', align_x: 'left', align_y: 'top', width: 'normal', gap: 'medium', order: 0, z_index: 0, desktop: { offset_x: 0, offset_y: 0 }, mobile: { offset_x: 0, offset_y: 0 } }, text_style: { enabled: true, preset: 'inherit', weight: 400, size_desktop: 20, size_mobile: 0, line_height: 1.4, color: '#123456', max_width: 'normal' }, responsive: { enabled: false, desktop_visible: true, tablet_visible: true, mobile_visible: true, mobile_template: 'inherit' }, media_presentation: { enabled: false, fit: 'cover', focal_x: 50, focal_y: 50, overlay: 'none', poster_asset_id: '' } } } } }] }]);
+  assert.deepEqual(result.data?.parameter_groups, [{ name: '', items: [{ label: 'XY 行程', key: 'xyTravelMm', value: '400*290', unit: 'mm', presentation: { field_presentation: { field_name: { layout: { enabled: false, template: 'default', align_x: 'left', align_y: 'top', width: 'normal', gap: 'medium', order: 0, z_index: 0, desktop: { offset_x: 0, offset_y: 0 }, mobile: { offset_x: 0, offset_y: 0 } }, text_style: { enabled: true, preset: 'inherit', weight: 400, size_desktop: 20, size_mobile: 0, line_height: 1.4, color: '#123456', max_width: 'normal' }, responsive: { enabled: false, desktop_visible: true, tablet_visible: true, mobile_visible: true, mobile_template: 'inherit' }, media_presentation: { enabled: false, fit: 'cover', focal_x: 50, focal_y: 50, overlay: 'none', poster_asset_id: '' } } } } }] }]);
 });
 
 test('Nuxt CMS product reader exposes only safe, displayable resources, case studies, and media for a published model', async () => {

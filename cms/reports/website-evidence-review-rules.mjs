@@ -6,10 +6,6 @@ function text(value) {
   return typeof value === 'string' ? value.normalize('NFKC').trim() : '';
 }
 
-function hasSource(record) {
-  return Boolean(text(record?.source_document) || text(record?.source_url));
-}
-
 function hasControlledMedia(record) {
   try {
     return collectMediaAssetReferenceIds(record).length > 0;
@@ -30,7 +26,6 @@ export function assessManufacturingEvidence(record) {
   if (!text(record?.description)) issues.push('说明');
   if (!hasControlledMedia(record)) issues.push('受控媒体未关联');
   if (!text(record?.inspection_evidence)) issues.push('检测依据');
-  if (!hasSource(record)) issues.push('来源文件或地址');
   return issues;
 }
 
@@ -45,7 +40,6 @@ export function assessQualification(record) {
   if (type === 'certificate' && !text(record?.valid_until)) issues.push('有效期');
   if (!hasControlledMedia(record)) issues.push('受控媒体未关联');
   if (!isAuthorizationConfirmed(record?.authorization_status)) issues.push('授权状态待确认');
-  if (!hasSource(record)) issues.push('来源文件或地址');
   return issues;
 }
 
@@ -55,6 +49,5 @@ export function assessMilestone(record) {
   if (record?.year == null || record.year === '' || !Number.isSafeInteger(Number(record.year))) issues.push('年份');
   if (!text(record?.event)) issues.push('历程事件');
   if (!text(record?.evidence)) issues.push('佐证材料');
-  if (!hasSource(record)) issues.push('来源文件或地址');
   return issues;
 }

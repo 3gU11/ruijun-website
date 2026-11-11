@@ -6,7 +6,7 @@ const { buildDirectusSchemaPlan } = await import('../schema/directus-schema-plan
 test('Directus schema plan materializes every CMS collection and field from the content contract', () => {
   const plan = buildDirectusSchemaPlan();
 
-  assert.equal(plan.collections.length, 33);
+  assert.equal(plan.collections.length, 34);
   assert.equal(plan.collections.find((collection) => collection.collection === 'nav_website_home').schema, null);
   assert.deepEqual(plan.collections.find((collection) => collection.collection === 'nav_website_home').meta.translations, [{ language: 'zh-CN', translation: '网站主页' }]);
   assert.equal(plan.collections.find((collection) => collection.collection === 'product_series').meta.group, 'nav_product_showcase');

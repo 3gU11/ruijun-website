@@ -5,7 +5,9 @@ import { createCmsPreviewFramePolicy } from '../utils/cms-preview-frame-policy.m
 export default defineEventHandler((event) => {
   const query = getQuery(event);
   const pathname = getRequestURL(event).pathname;
-  const isPreview = String(query.cmsPreview || '') === '1' || pathname === '/cms-preview-handoff';
+  const isPreview = String(query.cmsPreview || '') === '1'
+    || pathname === '/cms-preview-handoff'
+    || pathname === '/api/preview/open';
   const config = useRuntimeConfig(event);
   const policy = createCmsPreviewFramePolicy({
     isPreview,
@@ -14,5 +16,5 @@ export default defineEventHandler((event) => {
 
   if (isPreview) removeResponseHeader(event, 'x-frame-options');
   if (isPreview) setResponseHeader(event, 'content-security-policy', policy['content-security-policy']);
-  else setResponseHeader(event, 'x-frame-options', policy['x-frame-options']);
+  else if (policy['x-frame-options']) setResponseHeader(event, 'x-frame-options', policy['x-frame-options']);
 });

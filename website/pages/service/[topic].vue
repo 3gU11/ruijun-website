@@ -125,11 +125,26 @@ const displaySteps = computed(() => {
   if (!['faults', 'knowledge'].includes(topicKey.value)) return topic.value.steps;
   const category = topicKey.value === 'faults' ? 'fault_analysis' : 'knowledge_share';
   return knowledgeItems.value.filter((item: any) => item.category === category).map((item: any) => ({
+    id: item.id,
     sourceKey: item.source_key,
     title: item.question_title || item.title,
     copy: item.summary || item.symptoms || (Array.isArray(item.troubleshooting_steps) ? item.troubleshooting_steps.join('；') : (Array.isArray(item.steps) ? item.steps.join('；') : ''))
   }));
 });
+
+// 画布绑定：列表项指向各自受控记录（service_resources / knowledge_items），
+// 只有拿到记录 id 时才写 collection/item-id，避免指向不存在的记录。
+function stepPreviewKey(step: any) {
+  if (step?.id) return String(step.id);
+  return step?.sourceKey ? String(step.sourceKey) : undefined;
+}
+function stepPreviewCollection(step: any) {
+  return step?.id ? 'knowledge_items' : undefined;
+}
+function stepFieldPath(step: any, index: number, field: 'title' | 'copy') {
+  if (step?.id) return field === 'title' ? 'question_title' : 'symptoms';
+  return Array.isArray(cmsTopic.value?.steps) ? `steps.${index}.${field}` : undefined;
+}
 
 useSeoMeta({ title: () => `${topic.value.title} | 瑞钧智科`, description: () => topic.value.description });
 </script>
@@ -137,12 +152,12 @@ useSeoMeta({ title: () => `${topic.value.title} | 瑞钧智科`, description: ()
 <template>
   <main class="service-child-page">
     <SiteHeader />
-    <section v-if="topicKey !== 'video'" class="service-child-hero">
+    <section v-if="topicKey !== 'video'" class="service-child-hero" :data-cms-preview-key="cmsTopic?.id || undefined">
       <div class="service-child-shell">
         <NuxtLink class="service-back" to="/service">服务支持 /</NuxtLink>
-        <p>{{ topic.eyebrow }}</p>
-        <h1>{{ topic.title }}</h1>
-        <span>{{ topic.description }}</span>
+        <p :data-cms-preview-field-path="cmsTopic ? 'eyebrow' : undefined">{{ topic.eyebrow }}</p>
+        <h1 :data-cms-preview-field-path="cmsTopic ? 'title' : undefined">{{ topic.title }}</h1>
+        <span :data-cms-preview-field-path="cmsTopic ? 'description' : undefined">{{ topic.description }}</span>
         <small v-if="selectedModel">当前机型：{{ selectedModel }}</small>
       </div>
     </section>
@@ -151,29 +166,29 @@ useSeoMeta({ title: () => `${topic.value.title} | 瑞钧智科`, description: ()
       <div class="service-child-shell">
         <h1 class="sr-only">{{ topic.title }}</h1>
         <div id="service-video-list" class="service-video-grid">
-          <article v-for="card in videoCards" :key="card.source_key || card.title" :data-cms-preview-key="card.source_key">
+          <article v-for="card in videoCards" :key="card.source_key || card.id" :data-cms-preview-key="card.source_key || (card.id ? String(card.id) : undefined)" :data-cms-preview-collection="card.id ? 'service_resources' : undefined" :data-cms-preview-item-id="card.id || undefined">
             <a class="service-video-thumb" :href="card.asset" target="_blank" rel="noopener">
-              <img v-if="card.cover_asset" :src="card.cover_asset" :alt="card.cover_alt || card.title"><span aria-hidden="true"></span>
+              <img v-if="card.cover_asset" :src="card.cover_asset" :alt="card.cover_alt || card.title" :data-cms-preview-field-path="card.id ? 'cover_asset' : undefined" :data-cms-preview-media-role="card.id ? 'cover' : undefined"><span aria-hidden="true"></span>
             </a>
-            <div><time>{{ card.display_date || '' }}</time><h2>{{ card.title }}</h2></div>
+            <div><time :data-cms-preview-field-path="card.id ? 'display_date' : undefined">{{ card.display_date || '' }}</time><h2 :data-cms-preview-field-path="card.id ? 'title' : undefined">{{ card.title }}</h2></div>
           </article>
         </div>
         <p v-if="!videoCards.length" class="service-empty">暂无已发布的视频教学。</p>
       </div>
     </section>
 
-    <section v-else class="service-topic-section">
+    <section v-else class="service-topic-section" :data-cms-preview-key="cmsTopic?.id || undefined">
       <div class="service-child-shell">
-        <p class="service-topic-intro">{{ topic.intro }}</p>
+        <p class="service-topic-intro" :data-cms-preview-field-path="cmsTopic ? 'intro' : undefined">{{ topic.intro }}</p>
         <ol id="service-knowledge-list" :class="{ 'is-fault-list': topicKey === 'faults' }">
-          <li v-for="(step, index) in displaySteps" :key="step.title" :data-cms-preview-key="step.sourceKey">
+          <li v-for="(step, index) in displaySteps" :key="step.id || step.sourceKey || step.title" :data-cms-preview-key="stepPreviewKey(step)" :data-cms-preview-collection="stepPreviewCollection(step)" :data-cms-preview-item-id="step.id || undefined">
             <b>{{ String(index + 1).padStart(2, '0') }}</b>
-            <div><h2>{{ step.title }}</h2><p>{{ step.copy }}</p></div>
+            <div><h2 :data-cms-preview-field-path="stepFieldPath(step, index, 'title')">{{ step.title }}</h2><p :data-cms-preview-field-path="stepFieldPath(step, index, 'copy')">{{ step.copy }}</p></div>
             <span aria-hidden="true">→</span>
           </li>
         </ol>
         <p v-if="!displaySteps.length && ['faults', 'knowledge'].includes(topicKey)" class="service-empty">暂无已发布内容。</p>
-        <a v-if="portalUrl" class="service-primary-action" :href="portalUrl" :target="/^https?:\/\//.test(portalUrl) ? '_blank' : undefined" rel="noopener noreferrer">{{ topic.actionLabel }}<span aria-hidden="true">→</span></a>
+        <a v-if="portalUrl" class="service-primary-action" :href="portalUrl" :target="/^https?:\/\//.test(portalUrl) ? '_blank' : undefined" rel="noopener noreferrer" :data-cms-preview-field-path="cmsTopic ? 'actionLabel' : undefined">{{ topic.actionLabel }}<span aria-hidden="true">→</span></a>
         <NuxtLink v-else class="service-primary-action" to="/service">返回服务支持<span aria-hidden="true">→</span></NuxtLink>
       </div>
     </section>

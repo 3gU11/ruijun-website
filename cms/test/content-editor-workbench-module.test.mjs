@@ -11,6 +11,9 @@ const readWorkbenchSource = async () => {
   const parts = await Promise.all([
     readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8'),
     readFile(new URL('../extensions/content-editor-workbench/src/draft-shapes.js', import.meta.url), 'utf8'),
+    readFile(new URL('../extensions/content-editor-workbench/src/content-navigation.js', import.meta.url), 'utf8'),
+    readFile(new URL('../extensions/content-editor-workbench/src/media-placement-catalog.js', import.meta.url), 'utf8'),
+    readFile(new URL('../extensions/content-editor-workbench/src/media-poster-editor.js', import.meta.url), 'utf8'),
     readFile(new URL('../extensions/content-editor-workbench/src/module.css', import.meta.url), 'utf8'),
     readFile(new URL('../extensions/content-editor-workbench/src/module-global.css', import.meta.url), 'utf8')
   ]);
@@ -19,17 +22,19 @@ const readWorkbenchSource = async () => {
 
 
 test('content editor workbench provides structured page and product edits through the current Directus session', async () => {
-  const [manifestText, index, moduleSource, nativeBridge, scopedStyles, globalStyles] = await Promise.all([
+  const [manifestText, index, moduleSource, nativeBridge, scopedStyles, globalStyles, navigationSource, placementSource] = await Promise.all([
     readFile(new URL('extensions/content-editor-workbench/package.json', root), 'utf8'),
     readFile(new URL('extensions/content-editor-workbench/src/index.js', root), 'utf8'),
     readFile(new URL('extensions/content-editor-workbench/src/module.vue', root), 'utf8'),
     readFile(new URL('extensions/content-editor-workbench/src/native-live-preview-bridge.js', root), 'utf8'),
     readFile(new URL('extensions/content-editor-workbench/src/module.css', root), 'utf8'),
-    readFile(new URL('extensions/content-editor-workbench/src/module-global.css', root), 'utf8')
+    readFile(new URL('extensions/content-editor-workbench/src/module-global.css', root), 'utf8'),
+    readFile(new URL('extensions/content-editor-workbench/src/content-navigation.js', root), 'utf8'),
+    readFile(new URL('extensions/content-editor-workbench/src/media-placement-catalog.js', root), 'utf8')
   ]);
-  // The workbench's source spans the SFC plus its extracted stylesheets; this
-  // test asserts what the extension provides, not which file holds it.
-  const module = [moduleSource, scopedStyles, globalStyles].join('\n');
+  // The workbench's source spans the SFC plus its extracted stylesheets and data
+  // catalogs; this test asserts what the extension provides, not which file holds it.
+  const module = [moduleSource, scopedStyles, globalStyles, navigationSource, placementSource].join('\n');
   const manifest = JSON.parse(manifestText);
 
   assert.equal(manifest['directus:extension'].type, 'module');
@@ -75,9 +80,6 @@ test('content editor workbench provides structured page and product edits throug
   assert.match(module, /展示模式/);
   assert.match(module, /shortTitle: '增效降损'/);
   assert.match(module, /产品系列/);
-  assert.match(module, /saveVisualParameterGroup/);
-  assert.match(module, /分组名称会同步更新当前型号中的/);
-  assert.match(module, /Promise\.all\(records\.map\(\(record\) => api\.patch\(`\/items\/product_parameters\/\$\{encodeURIComponent\(record\.id\)\}`/);
   assert.match(module, /normalizeFieldPresentations/);
   assert.match(module, /受控系列封面/);
   assert.match(module, /企业资料/);
@@ -89,8 +91,10 @@ test('content editor workbench provides structured page and product edits throug
   assert.match(module, /articles\?fields=id,slug,category,title,display_date,sort_order,summary,body,body_media,transcript,field_presentation,media/);
   assert.match(module, /field_presentation: normalizeFieldPresentations\(editorialDraft\.value\.field_presentation, \['category', 'title', 'display_date', 'summary', 'body', 'transcript'\]\)/);
   assert.match(module, /媒体资产/);
-  assert.match(module, /登记待审核媒体/);
-  assert.match(module, /上传并登记候选素材/);
+  assert.match(module, /上传媒体素材/);
+  assert.match(module, /上传并发布素材/);
+  assert.match(module, /deleteMediaAsset\(asset\)/);
+  assert.match(module, /api\.post\('\/media-poster\/asset\/delete'/);
   assert.match(module, /\{\{ asset\.title \|\| asset\.original_file_name \}\}/);
   assert.match(module, /\/users\/me\?fields=id,role\.name/);
   assert.match(module, /\['Administrator', '系统管理员'\]\.includes/);
@@ -162,7 +166,7 @@ test('content editor workbench provides structured page and product edits throug
   assert.match(module, /class="visual-property-source">\{\{ visualSelectionSource\(selectedVisualElement\) \}\}<\/p>/);
   assert.match(module, /shouldKeepVisualDraft/);
   assert.match(module, /setVisualPosition\(target, path, visualPosition\);\s+recordVisualHistory\(\);/);
-  assert.match(module, /const mediaSlot = selectedVisualElement\.value\?\.mediaSlot \|\| '';[\s\S]*if \(!applyVisualMediaReplacement\(target, path, assetId, \{ mediaSlot, allowEmpty: canRestoreDefault \}\)\) return;\s+recordVisualHistory\(\);/);
+  assert.match(module, /const mediaSlot = selectedVisualElement\.value\?\.mediaSlot \|\| '';[\s\S]*if \(!applyVisualMediaReplacement\(target, path, assetId, \{ mediaSlot, allowEmpty: canRestoreDefault \}\)\) \{ error\.value = '[^']*'; return; \}\s+if \(upgradingLegacyVideo\) target\.video_url = '';\s+recordVisualHistory\(\);/);
   assert.match(module, /\['left', 'center', 'right'\]\.includes\(normalizedMode\)/);
   assert.match(module, /setVisualAlignment\(target, path, normalizedMode\)/);
   assert.match(module, /positionFieldPath/);
@@ -172,10 +176,10 @@ test('content editor workbench provides structured page and product edits throug
   assert.match(module, /poster_asset_id: mediaDraft\.value\.poster_asset_id/);
   assert.match(module, /transcriptRequired/);
   assert.match(module, /eligibleEditorialMediaAssets/);
-  assert.match(module, /视频分享可选择已发布视频，或仅用于登录后台实时预览的草稿视频/);
+  assert.match(module, /动态新闻使用文章和图片；视频分享请在“视频分享内容”里单独维护/);
   assert.match(module, /视频分享素材不符合“文章与资讯 \/ 视频分享列表 \/ news \/ video-sharing”的使用范围/);
-  assert.match(module, /没有单独海报时，使用视频首帧/);
-  assert.match(module, /posterRequired: false/);
+  assert.match(module, /未填写时官网先显示视频首帧/);
+  assert.match(module, /posterRecommended: false/);
   assert.match(module, /normalizeSections/);
   assert.match(module, /normalizeSettings/);
   assert.match(module, /normalizeArticle/);
@@ -245,7 +249,8 @@ test('content editor workbench provides structured page and product edits throug
   assert.match(module, /api\.patch\(`\/items\/product_series/);
   assert.match(module, /name,positioning,presentation,scenarios/);
   assert.match(module, /product_series: \['id', 'series_code', 'slug', 'name', 'positioning', 'presentation', 'scenarios'/);
-  assert.match(module, /presentation: seriesDraft\.value\.presentation/);
+  assert.match(module, /const detail = normalizeSeriesDetail\(seriesDraft\.value\.detail\);/);
+  assert.match(module, /presentation: Object\.keys\(presentation\)\.length \? presentation : null/);
   assert.match(module, /cover_asset: seriesDraft\.value\.cover_asset/);
   assert.match(module, /api\.patch\(`\/items\/product_models/);
   assert.match(module, /api\.patch\(`\/items\/product_parameters/);
@@ -433,11 +438,17 @@ test('manufacturing PSD page layers use their own governed media placement in fo
   assert.match(module, /pageKey: slug === 'home' && String\(element\.sectionKey \|\| ''\)\.trim\(\) === 'history' \? '' : slug,\s*sectionKey: String\(element\.sectionKey \|\| ''\)\.trim\(\)/);
 });
 
-test('video share media form keeps poster and transcript optional while preserving required hero posters', async () => {
+test('video covers are optional on upload and can be supplied later from the media list', async () => {
   const module = await readWorkbenchSource();
-  assert.match(module, /:required="Boolean\(selectedMediaPlacement\?\.posterRequired\)"/);
-  assert.match(module, /未填写使用视频首帧/);
+  // 上传表单不再把封面设成必填，也不因未选封面而拦截。
+  assert.doesNotMatch(module, /:required="Boolean\(selectedMediaPlacement\?\.posterRequired\)"/);
+  assert.match(module, /暂不设置封面（之后可在素材清单补充）/);
+  assert.match(module, /未设置时官网先显示视频首帧/);
   assert.match(module, /视频分享可选；教学视频和首屏说明建议填写/);
+  // 已登记视频的封面补录：只改封面的端点 + 列表里的保存按钮。
+  assert.match(module, /api\.post\('\/media-poster', \{ media_asset_id: id, poster_asset_id: posterId \|\| null \}\)/);
+  assert.match(module, /async function saveMediaPoster\(asset\)/);
+  assert.match(module, /封面尚未发布：官网暂用视频首帧，封面发布后自动生效。/);
 });
 
 test('canvas selection keeps the current product preview when Directus serializes its id as text', async () => {
@@ -525,18 +536,18 @@ test('visual editing exposes a bound-element property panel and governed media r
 
 test('visual media slots show only matching approved media or private draft preview candidates', async () => {
   const module = await readWorkbenchSource();
-  assert.match(module, /selectedVisualIsMedia && visualMediaOptions\.length/);
+  assert.match(module, /selectedVisualIsMedia && visualMediaReplacementOptions\.length/);
   assert.match(module, /isVisualMediaSelection/);
   assert.match(module, /草稿素材，仅当前内部预览/);
   assert.match(module, /filterPreviewStagingMediaAssets/);
-  assert.match(module, /当前没有符合该展示位置的已审核媒体或内部预览草稿/);
+  assert.match(module, /当前系统里没有同类型的已发布媒体/);
   assert.match(module, /待媒体/);
   assert.match(module, /getVisualMediaAssetId\(fieldTarget, fieldPath, \{ mediaSlot:/);
 });
 
 test('visual property panel preserves the preview-provided reason for a read-only target', async () => {
   const module = await readWorkbenchSource();
-  assert.match(module, /readonlyReason: String\(event\.data\.readonlyReason \|\| '请先在媒体资产中导入、审核并发布后再替换。'\)/);
+  assert.match(module, /readonlyReason: String\(event\.data\.readonlyReason \|\| '请先在媒体资产中导入并发布后再替换。'\)/);
 });
 
 test('core equipment canvas images use their fixed-card media placement instead of the full gallery rule', async () => {
@@ -594,7 +605,10 @@ test('page drafts can attach matching private preview media without presenting i
   const module = await readWorkbenchSource();
   assert.match(module, /function pageMediaOptions\(scope\)/);
   assert.match(module, /filterPreviewStagingMediaAssets\(mediaCandidates\.value, \{ scope \}\)/);
-  assert.match(module, /function isPageMediaOption\(assetId, scope\)/);
+  // The candidate list is injected: draft-shapes.js is pure and cannot reach
+  // the workbench's live media list on its own.
+  assert.match(module, /isPageMediaOptionForSection\(assetId, scope, section, candidates\)/);
+  assert.match(module, /export function isPageMediaOptionForSection\(assetId, scope, section, options = \[\]\)/);
   assert.match(module, /草稿素材，仅当前内部预览/);
   assert.match(module, /内部预览草稿/);
 });
@@ -671,6 +685,128 @@ test('opening the visual property panel reserves canvas width instead of coverin
   assert.match(module, /--visual-property-panel-width:clamp\(200px,34%,300px\)/);
   assert.match(module, /\.live-website-preview\.visual-property-panel-open \.visual-canvas-viewport\{right:var\(--visual-property-panel-width\)\}/);
   assert.match(module, /\.visual-property-panel\{[^}]*width:var\(--visual-property-panel-width\)/);
+});
+
+test('published series, models and parameters cannot be deleted from the canvas', async () => {
+  const module = await readWorkbenchSource();
+  assert.match(module, /function canDeleteContent\(record\) \{/);
+  assert.match(module, /editableStatuses\.has\(record\.status\) && record\.publication_state !== 'published'/);
+  assert.match(module, /if \(!canDeleteContent\(record\)\) \{\s*error\.value = '已发布或审核中的系列不能直接删除/);
+  assert.match(module, /if \(!canDeleteContent\(record\)\) \{\s*error\.value = '已发布或审核中的机型不能直接删除/);
+  assert.match(module, /if \(!canDeleteContent\(record\)\) \{\s*error\.value = '已发布或审核中的参数不能直接删除/);
+  // Deleting a draft card cascades into its draft models and parameters, but
+  // never into published children.
+  assert.match(module, /const undeletableModels = childModels\.filter\(\(model\) => !canDeleteContent\(model\)\)/);
+  assert.match(module, /该系列下有 \$\{undeletableModels\.length\} 台已发布或审核中的机型/);
+  assert.match(module, /确认删除系列「\$\{record\.name \|\| record\.series_code\}」\$\{cascadeNote\}/);
+});
+
+test('selecting a series on the canvas keeps both sides in sync and renaming cascades to models', async () => {
+  const module = await readWorkbenchSource();
+  // Left-list selection / new-card creation must switch the iframe card too,
+  // otherwise "＋新增机型" keeps writing the previous `activeSeriesCode`.
+  assert.match(module, /kind: 'series-selected'/);
+  assert.match(module, /function notifyCanvasSeriesSelection\(record\)/);
+  assert.match(module, /selectSeries\(resolvedItemId, true, false\)/);
+  // A series rename is denormalized onto each model; save it explicitly.
+  assert.match(module, /const renamedModels = previousCode && previousCode !== nextCode/);
+  assert.match(module, /await api\.patch\(`\/items\/product_models\/\$\{encodeURIComponent\(model\.id\)\}`, \{ series_code: nextCode \}\)/);
+  assert.match(module, /同步更新 \$\{renamedModels\.length\} 个机型的所属系列编码/);
+});
+
+test('new series dialog suggests an editable series code and validates it', async () => {
+  const module = await readWorkbenchSource();
+  assert.match(module, /function suggestedSeriesCode\(name\)/);
+  assert.match(module, /function availableSeriesCode\(base\)/);
+  assert.match(module, /const seriesCodeTouched = ref\(false\)/);
+  assert.match(module, /@input="seriesCodeTouched = true"/);
+  assert.match(module, /系列编码只能使用小写字母、数字和连字符/);
+  assert.match(module, /系列编码「\$\{code\}」已被其他系列使用/);
+});
+
+test('the top save button flushes edited parameter rows instead of dropping them', async () => {
+  const module = await readWorkbenchSource();
+  assert.match(module, /const dirtyParameterIds = ref\(\[\]\)/);
+  assert.match(module, /async function persistDirtyParameters\(\)/);
+  assert.match(module, /@input="markParameterDirty\(parameter\)"/);
+  assert.match(module, /const parameterResult = await persistDirtyParameters\(\)/);
+  // Saving one row must not reload the whole table and discard other edits.
+  assert.match(module, /Do not reload the whole table: it would discard edits in the other rows/);
+});
+
+test('post-save list and preview failures do not overwrite a successful PATCH', async () => {
+  const module = await readWorkbenchSource();
+  assert.match(module, /async function refreshAfterSave\(loaders = \[\]\)/);
+  assert.match(module, /列表刷新失败，请重新加载页面查看/);
+  // A homepage-section save used to send controlled workflow fields and throw
+  // when the readback reload failed even though the PATCH had succeeded.
+  const moduleVue = await readFile(new URL('../extensions/content-editor-workbench/src/module.vue', import.meta.url), 'utf8');
+  assert.doesNotMatch(moduleVue, /status: record\.status,\s*publication_state: record\.publication_state/);
+  assert.doesNotMatch(moduleVue, /if \(!persisted\) throw new Error\('保存后未能回读首页区块'\)/);
+});
+
+test('a series or page edited while the save request is in flight stays dirty', async () => {
+  const module = await readWorkbenchSource();
+  assert.match(module, /JSON\.stringify\(pageDraft\.value\) !== pageBefore/);
+  assert.match(module, /JSON\.stringify\(seriesDraft\.value\) !== seriesBefore/);
+  assert.match(module, /JSON\.stringify\(modelDraft\.value\) !== modelBefore/);
+});
+
+test('submission batches are one queue row and keep legacy records visible', async () => {
+  const module = await readWorkbenchSource();
+  assert.match(module, /collection: 'content_submissions', label: '送审批次'/);
+  assert.match(module, /function hideBatchedMembers\(records\)/);
+  assert.match(module, /reviewQueue\.value = hideBatchedMembers\(await loadContentQueue\('review'\)\)/);
+  assert.match(module, /submissionQueue\.value = hideBatchedMembers\(await loadContentQueue/);
+  // Batch actions tolerate one bad member instead of aborting the whole loop.
+  assert.match(module, /批次未提交：/);
+  assert.match(module, /批次未完成审核：/);
+});
+
+test('approving product content points the reviewer at product release', async () => {
+  const module = await readWorkbenchSource();
+  assert.match(module, /const productReleaseHint = ref\(false\)/);
+  assert.match(module, /产品内容已批准进入待发布/);
+  assert.match(module, /href="\/admin\/ruijun-product-release-workbench"/);
+  assert.match(module, /hasProductItem/);
+});
+
+test('typing in the editor form does not drift the shared scroll container', async () => {
+  const module = await readWorkbenchSource();
+  assert.match(module, /@input\.capture="guardEditorInput"/);
+  assert.match(module, /@focusin\.capture="guardEditorFocus"/);
+  assert.match(module, /@pointerdown\.capture="captureEditorPointer"/);
+  assert.match(module, /@wheel\.capture="markEditorUserScroll"/);
+  assert.match(module, /function guardEditorInput\(event\)/);
+  assert.match(module, /delta > 0 && delta <= 160/);
+});
+
+test('clicking a model chip switches the form without reloading the canvas', async () => {
+  const module = await readWorkbenchSource();
+  // The series preview token already authorizes the related model drafts; the
+  // chip click must keep that session instead of re-issuing a token (which
+  // reloads the iframe and loses the open detail panel).
+  assert.match(module, /async function focusCanvasModel[\s\S]*?preserveLivePreviewSessionOnce = Boolean\([\s\S]*?websitePreviewTarget\.value\.collection\) !== 'product_models'/);
+  // A template-only chip is not a CMS record; selecting it must not create one.
+  assert.match(module, /该机型是官网原版名称，尚未建立 CMS 记录；请点画布上的「＋新增机型」建立后再编辑。/);
+  assert.doesNotMatch(module, /已为「\$\{code\}」建立机型草稿记录/);
+  // Opening a series card must also keep the iframe; the page opens the panel.
+  const focusSeries = module.match(/async function focusCanvasSeries[\s\S]*?\n\}/)?.[0] || '';
+  assert.ok(focusSeries);
+  assert.doesNotMatch(focusSeries, /startLiveWebsitePreview/);
+});
+
+test('product detail canvases use a long page and keep the zoom when the property panel opens', async () => {
+  const module = await readWorkbenchSource();
+  // The series panel starts below the 1080px fold, so product canvases need a
+  // long artboard and width-only fitting.
+  assert.match(module, /const productDetailCanvas = computed\(\(\) => \['product_series', 'product_models'\]/);
+  assert.match(module, /return '2800px';/);
+  assert.match(module, /const longPage = parseInt\(visualCanvasHeight\.value\) > 1400;/);
+  assert.match(module, /visualZoom\.value = Math\.max\(0\.05, Math\.min\(1, longPage \? widthFit/);
+  // Selecting a field must not shrink the canvas to ~16% when the panel opens.
+  assert.match(module, /if \(selectedVisualElement\.value && !force\) return;/);
+  assert.match(module, /new ResizeObserver\(\(\) => fitVisualCanvas\(\)\)/);
 });
 
 test('the visual editor toolbar uses stable rows inside the bounded preview column', async () => {
@@ -765,9 +901,10 @@ test('visual text property input supports text-bound command buttons', async () 
   assert.match(module, /selectedVisualElement\.elementType === 'text' \|\| selectedVisualElement\.elementType === 'button'/);
 });
 
-test('article category uses the controlled news or video selector in the canvas property panel', async () => {
+test('article category is fixed to dynamic news in the canvas property panel', async () => {
   const module = await readWorkbenchSource();
-  assert.match(module, /const selectedVisualFieldOptions = computed\(\(\) => \{[\s\S]*collection === 'articles'[\s\S]*fieldPath === 'category'[\s\S]*value: 'news'[\s\S]*value: 'video'/);
+  assert.match(module, /const selectedVisualFieldOptions = computed\(\(\) => \{[\s\S]*collection === 'articles'[\s\S]*fieldPath === 'category'[\s\S]*value: 'news'/);
+  assert.doesNotMatch(module, /value: 'video', label: '视频分享'/);
   assert.match(module, /v-if="selectedVisualFieldOptions\.length" class="visual-property-field">内容类型<select[^>]+@change="commitVisualField\(\$event\.target\.value\)"/);
   assert.match(module, /v-else-if="selectedVisualElement\.fieldPath && \(selectedVisualElement\.elementType === 'text' \|\| selectedVisualElement\.elementType === 'button'\)" class="visual-property-field">文字内容<textarea/);
 });
@@ -806,7 +943,7 @@ test('live preview materializes governed media for every supported record snapsh
   assert.match(module, /const media = previewMediaAsset\(reference\.media_asset_id\)/);
   assert.match(module, /return previewSafeRecord\(collection, materializeVisualMediaRecord\(record, previewMediaAsset\)\);/);
   assert.match(module, /posterPath: `\/api\/preview\/media\/\$\{encodeURIComponent\(String\(poster\.id\)\)\}`/);
-  assert.match(module, /product_parameters: \['id', 'model_code', 'group_name', 'field_name', 'value', 'unit', 'presentation', 'sort_order', 'status', 'publication_state'\]/);
+  assert.match(module, /product_parameters: \['id', 'model_code', 'field_name', 'value', 'unit', 'presentation', 'sort_order', 'status', 'publication_state'\]/);
 });
 
 test('live preview resolves a persisted private draft asset after the candidate list finishes loading', async () => {
@@ -824,8 +961,8 @@ test('homepage visual preview sends a transient resolved URL while retaining the
 test('video article media canvas inherits the governed news video placement', async () => {
   const module = await readWorkbenchSource();
   assert.match(module, /collection === 'articles'/);
-  assert.match(module, /media\\\.\\d\+\\\.path/);
-  assert.match(module, /collection === 'articles' && articleMediaField && String\(element\.elementType \|\| ''\) === 'video'/);
+  assert.match(module, /media\\\.\\d\+\\\.\(\?:path\|media_asset_id\)/);
+  assert.match(module, /collection === 'articles' && articleMediaField[\s\S]*String\(element\.fieldPath \|\| ''\)\.trim\(\) === 'video_url'/);
   assert.match(module, /news\.video_share\.list/);
   assert.match(module, /pageKey: 'news'/);
   assert.match(module, /sectionKey: 'video-sharing'/);
@@ -904,10 +1041,10 @@ test('article same-day order preserves an unset value instead of silently writin
   assert.match(module, /sort_order: sortOrder/);
 });
 
-test('editorial cleanup only exposes deletion for an unpublished draft and clears its canvas state', async () => {
+test('editorial cleanup only exposes deletion for unpublished draft/rejected content and clears its canvas state', async () => {
   const module = await readWorkbenchSource();
   assert.match(module, /v-if="canDeleteEditorialDraft\(editorialDraft\)"[\s\S]*@click="deleteEditorialDraft"/);
-  assert.match(module, /function canDeleteEditorialDraft\(record\) \{\s*return Boolean\(record\?\.id\) && record\.status === 'draft' && record\.publication_state === 'unpublished';\s*\}/);
+  assert.match(module, /function canDeleteEditorialDraft\(record\) \{\s*const deletableStatuses = new Set\(\['draft', 'rejected', 'unpublished'\]\);\s*return Boolean\(record\?\.id\) && deletableStatuses\.has\(record\.status\) && record\.publication_state === 'unpublished';\s*\}/);
   assert.match(module, /async function deleteEditorialDraft\(\) \{[\s\S]*const collection = editorialMode\.value;[\s\S]*await api\.delete\(`\/items\/\$\{encodeURIComponent\(collection\)\}\/\$\{encodeURIComponent\(id\)\}`\);[\s\S]*clearVisualSelection\(\);[\s\S]*await loadEditorial\(\);/);
   assert.match(module, /确定删除“\$\{label\}”草稿吗？删除后无法恢复。/);
 });
@@ -941,7 +1078,10 @@ test('visual editing routes cross-collection selections through an explicit targ
 
 test('unresolved canvas edit requests cannot retain the previous record as a write target', async () => {
   const module = await readWorkbenchSource();
-  assert.match(module, /if \(event\.data\?\.type === 'ruijun:cms-preview:edit-request' \|\| event\.data\?\.type === 'ruijun:cms-preview:edit-commit'\) \{\s*const resolved = activateVisualEditingTarget\(event\.data\);\s*if \(!resolved\) return;\s*selectedVisualElement\.value =/);
+  assert.match(module, /if \(event\.data\?\.type === 'ruijun:cms-preview:edit-request' \|\| event\.data\?\.type === 'ruijun:cms-preview:edit-commit'\) \{\s*const resolved = activateVisualEditingTarget\(event\.data\);\s*if \(!resolved\) return;[\s\S]{0,900}?selectedVisualElement\.value =/);
+  // A fallback-only product detail is seeded from the website original before the
+  // first edit lands, so one typed field cannot wipe the rest of the copy.
+  assert.match(module, /if \(needsSeed\) seedCanvasListDetail\(String\(resolved\.collection\), record\);/);
 });
 
 test('switching a preview record clears stale visual selection state', async () => {
@@ -980,13 +1120,110 @@ test('article visual preview can use an authorized list-card canvas without chan
 test('switching a site section clears the previous canvas selection before selecting another target', async () => {
   const module = await readWorkbenchSource();
   assert.match(module, /function clearVisualSelection\(\) \{\s*selectedVisualElement\.value = null;\s*visualMediaSelection\.value = '';\s*\}/);
-  assert.match(module, /function openSiteAreaEntry\(entry\) \{\s*if \(!confirmDiscardChanges\('切换官网内容模块'\)\) return;\s*clearVisualSelection\(\);/);
+  assert.match(module, /function openSiteAreaEntry\(entry\) \{[\s\S]*?const keepsDraft = productSections\.has\(String\(entry\.action\)\) && productSections\.has\(String\(activeTab\.value\)\);[\s\S]*?if \(!keepsDraft && !confirmDiscardChanges\('切换官网内容模块'\)\) return;\s*clearVisualSelection\(\);/);
   assert.match(module, /function selectSiteArea\(area\) \{[\s\S]*activePageSectionKey\.value = '';\s*clearVisualSelection\(\);/);
 });
 
 test('closing the live preview clears stale canvas selection state', async () => {
   const module = await readWorkbenchSource();
   assert.match(module, /function toggleLiveWebsitePreview\(\) \{\s*if \(liveWebsitePreviewVisible\.value\) \{\s*livePreviewRequestSequence \+= 1;\s*clearVisualSelection\(\);\s*liveWebsitePreviewVisible\.value = false;/);
+});
+
+test('every site area selects its own page and can open the live preview', async () => {
+  const module = await readWorkbenchSource();
+  // 不再只对 home 特判：按 slug 找到当前栏目的 pages 记录。
+  assert.match(module, /async function selectSiteArea\(area\) \{[\s\S]*const page = pages\.value\.find\(\(record\) => String\(record\.slug \|\| ''\) === String\(area\)\);/);
+  assert.match(module, /async function selectSiteArea\(area\) \{[\s\S]*activeTab\.value = 'pages';[\s\S]*if \(!liveWebsitePreviewVisible\.value\) await startLiveWebsitePreview\(\);/);
+  // 页面记录缺失时保留模块总览，并关闭残留的预览会话。
+  assert.match(module, /if \(!page\) \{[\s\S]*liveWebsitePreviewVisible\.value = false;[\s\S]*return;/);
+  // 没有预览目标时按钮显示“打开实时预览”，不会残留“关闭实时预览”。
+  assert.match(module, /\{\{ websitePreviewAvailable && liveWebsitePreviewVisible \? '关闭实时预览' : '打开实时预览' \}\}/);
+});
+
+test('canvas exposes upload, media attributes and toolbar create entry points', async () => {
+  const module = await readWorkbenchSource();
+  assert.match(module, /上传并替换/);
+  assert.match(module, /保存素材信息/);
+  assert.match(module, /api\.post\('\/media-poster\/asset'/);
+  assert.match(module, /导入 Word 文档/);
+  assert.match(module, /readWordArticle/);
+  assert.match(module, /livePreviewRootSlug === 'news'/);
+  // 顶部工具栏保留新增入口；列表底部的虚线和卡片红叉已移除。
+  assert.match(module, />新增视频分享</);
+  assert.match(module, />新建动态新闻</);
+  // 专注画布切换内容时必须退出，否则编辑区被隐藏，看起来像界面卡死。
+  assert.ok((module.match(/visualCanvasFocus\.value = false/g) || []).length >= 3);
+  assert.match(module, /addSelectedVisualListItem/);
+  assert.match(module, /版权状态/);
+  assert.match(module, /封面/);
+  // 文章 SEO 字段也集成进画布属性面板；摘要已从动态新闻编辑中移除。
+  assert.match(module, /文章信息（审核必填）/);
+  assert.match(module, /v-model\.trim="editorialDraft\.seo\.title"/);
+  // 画布媒体替换支持从系统选择已有媒体；移除/删除素材按钮已取消。
+  assert.match(module, /visualMediaReplacementOptions/);
+  // 模板必须使用已声明的 visualStagingMediaAssets，不能写成未声明的
+  // visualMediaStagingMediaAssets；后者会退化成 _ctx 并在选中媒体时抛 .length 错误。
+  assert.doesNotMatch(module, /visualMediaStagingMediaAssets/);
+  assert.match(module, /visualStagingMediaAssets/);
+  assert.match(module, /replaceVideoShareCardMedia/);
+  assert.match(module, /已选择系统媒体，保存页面草稿后官网生效/);
+  assert.match(module, /deleteSelectedVideoShareCard/);
+  assert.match(module, /删除这张视频分享卡片/);
+  assert.match(module, /replaceArticleBodyImage/);
+  assert.match(module, /selectedVisualIsArticleBodyImage/);
+  assert.match(module, /删除这篇正文图片/);
+  // 动态新闻封面必须写进 editorialDraft，而不是只改预览缓存。
+  assert.match(module, /editorialDraft\.value\.cover_asset = assetId/);
+  assert.match(module, /news\.dynamic_news\.cover/);
+  assert.match(module, /删除文章后不要停留在 articles 列表卡片画布/);
+  assert.match(module, /articlePreviewSurface\.value = 'list';/);
+  assert.doesNotMatch(module, /class="visual-media-actions"/);
+  assert.doesNotMatch(module, />从内容移除</);
+  assert.doesNotMatch(module, />删除素材</);
+  // 保存草稿时弹出命名对话框；默认名称可接受，也可修改后提交。
+  assert.match(module, /openSaveNameDialog/);
+  assert.match(module, /confirmSaveNameDialog/);
+  assert.match(module, /saveNameDialogOpen/);
+  // 保存后内容送审清单必须失效，不能停留在首次加载的快照。
+  assert.match(module, /function invalidateSubmissionQueue\(\)/);
+  assert.match(module, /invalidateSubmissionQueue\(\);/);
+  assert.match(module, /if \(tab === 'submit'\) loadSubmissionQueue\(\);/);
+  assert.doesNotMatch(module, /class="visual-draft-name"/);
+  assert.match(module, /submission_name: draftSubmissionName\.value\.trim\(\) \|\| null/);
+  // 视频分享新增入口切到媒体优先的卡片工作区，不再先建空文章。
+  assert.match(module, /videoShareWorkspace\.value\?\.openCreate\(\)/);
+  assert.match(module, /showVideoShareWorkspace/);
+  // 候选视频可在画布直接删除素材，也可一键清空。
+  assert.match(module, /deleteSelectedVisualArticle/);
+  assert.match(module, /删除当前条目/);
+  // 列表卡片换素材时必须落到 editorialDraft，否则保存草稿按钮一直是灰的。
+  assert.match(module, /String\(editorialDraft\.value\?\.id \|\| ''\) !== String\(record\.id \|\| ''\)/);
+  assert.match(module, /record = editorialDraft\.value \|\| activated\.record/);
+  // 媒体替换必须把本次选择的值显式传给处理函数：v-model 与 @change 的执行顺序
+  // 不保证，依赖 v-model 会读到旧值，表现就是“换了视频没反应”。
+  assert.match(module, /:value="visualMediaSelection" @change="replaceVisualMedia\(\$event\.target\.value\)"/);
+  assert.match(module, /function replaceVisualMedia\(selectedValue\)/);
+});
+
+test('canvas list create/delete actions route through workbench handlers', async () => {
+  const module = await readWorkbenchSource();
+  assert.match(module, /ruijun:cms-preview:create-article/);
+  assert.match(module, /ruijun:cms-preview:delete-article/);
+  assert.match(module, /function createArticleFromCanvas\(category\)/);
+  assert.match(module, /async function confirmCreateArticle\(\)/);
+  // 新增时可以选已有媒体，而不是只能稍后上传。
+  assert.match(module, /const createArticleMediaOptions = computed/);
+  assert.match(module, /稍后在详情画布补充/);
+  assert.match(module, /async function deleteArticleFromCanvas\(payload\)/);
+  // 管理员可删除已发布内容，其他角色仍只允许草稿。
+  assert.match(module, /!technicalAccess\.value && !canDeleteEditorialDraft\(record\)/);
+  assert.match(module, /window\.confirm\(`确定删除/);
+});
+
+test('service child page lists can move the canvas into resource and knowledge records', async () => {
+  const module = await readWorkbenchSource();
+  assert.match(module, /else if \(collection === 'knowledge_items'\) \{\s*activeTab\.value = 'knowledge';\s*selectKnowledge\(resolvedItemId, true\);/);
+  assert.match(module, /knowledge: \{\s*knowledge_items: activeTab\.value === 'knowledge' \? preferVisualDraftRecord\(knowledgeItems\.value, knowledgeDraft\.value\) : knowledgeItems\.value\s*\}/);
 });
 
 test('site-area cards reload the page list once instead of silently ignoring a missing in-memory page', async () => {
@@ -1027,7 +1264,7 @@ test('mobile and narrow workbench canvases remain preview-only and explicitly di
   assert.match(module, /const visualCanvasEditable = computed\(\(\) => canEditVisualCanvas\(\{ device: visualDevice\.value, viewportWidth: visualViewportWidth\.value \}\)\);/);
   assert.match(module, /function postLivePreviewUpdate\(forcedTarget = null\) \{[\s\S]*?const previewEditMode = visualCanvasEditable\.value && visualEditMode\.value;[\s\S]*?editMode: previewEditMode,/);
   assert.match(module, /function handleVisualViewportResize\(\) \{[\s\S]*?if \(!visualCanvasEditable\.value\) \{[\s\S]*?visualEditMode\.value = false;[\s\S]*?clearVisualSelection\(\);/);
-  assert.match(module, /:disabled="!visualCanvasEditable"[^>]*@click="visualTool = 'select'"/);
+  assert.match(module, /:disabled="!visualCanvasEditable"[^>]*@click="visualTool = 'select'/);
   assert.match(module, /:disabled="!visualCanvasEditable"[^>]*@click="toggleVisualEditMode"/);
 });
 
@@ -1049,7 +1286,7 @@ test('qualification media editor offers governed internal-preview drafts and mat
   assert.match(module, /function addCompanyMediaReference\(\) \{[\s\S]*isCompanyMediaSelectable/);
 });
 
-test('workbench uploads create explicitly unpublished draft media assets', async () => {
+test('workbench uploads publish media assets immediately without a review step', async () => {
   const module = await readWorkbenchSource();
   const start = module.indexOf('async function createMediaCandidate()');
   assert.ok(start >= 0, 'createMediaCandidate must remain available for media uploads');
@@ -1064,7 +1301,7 @@ test('workbench uploads create explicitly unpublished draft media assets', async
   const body = module.slice(start, end);
 
   assert.match(body, /await api\.post\('\/files', form\)/);
-  assert.match(body, /await api\.post\('\/items\/media_assets', \{[\s\S]*?status: 'draft',[\s\S]*?publication_state: 'unpublished',[\s\S]*?\}\);/);
+  assert.match(body, /await api\.post\('\/items\/media_assets', \{[\s\S]*?status: 'published',[\s\S]*?publication_state: 'published',[\s\S]*?\}\);/);
 });
 
 test('successful saves renew the live preview authorization for the current target', async () => {
@@ -1073,7 +1310,7 @@ test('successful saves renew the live preview authorization for the current targ
   assert.match(module, /let livePreviewRootTarget = null;/);
   assert.match(module, /async function startLiveWebsitePreview\(\{ automatic = false, targetOverride = null, preserveRoot = false \} = \{\}\)/);
   assert.match(module, /const target = targetOverride \|\| \(automatic && livePreviewRootTarget \? livePreviewRootTarget : websitePreviewTarget\.value\);/);
-  assert.match(module, /if \(!preserveRoot\) livePreviewRootTarget = \{ \.\.\.targetSnapshot, context: clone\(contextSnapshot\) \};/);
+  assert.match(module, /if \(!preserveRoot\) \{[\s\S]*?livePreviewRootTarget = \{ \.\.\.targetSnapshot, context: clone\(contextSnapshot\) \};[\s\S]*?livePreviewRootSlug\.value = /);
   assert.match(module, /async function renewLivePreviewAfterSuccessfulSave\(\) \{[\s\S]*livePreviewRootTarget[\s\S]*targetOverride: livePreviewRootTarget, preserveRoot: true/);
   const saveFunctions = [
     'savePage',
@@ -1086,15 +1323,14 @@ test('successful saves renew the live preview authorization for the current targ
     'saveSettings',
     'saveVisualSiteSettings',
     'saveModel',
-    'saveParameter',
-    'saveVisualParameterGroup'
+    'saveParameter'
   ];
   for (const name of saveFunctions) {
     const start = module.indexOf(`async function ${name}(`);
     assert.ok(start >= 0, `${name} must remain an async save function`);
     const next = module.indexOf('\nasync function ', start + 1);
     const body = module.slice(start, next >= 0 ? next : module.length);
-    assert.match(body, /await renewLivePreviewAfterSuccessfulSave\(\);/, `${name} must renew the live preview after success`);
+    assert.match(body, /(await renewLivePreviewAfterSuccessfulSave\(\);|await refreshAfterSave\()/, `${name} must renew the live preview after success`);
   }
 });
 
@@ -1102,7 +1338,7 @@ test('canvas media selections preserve the default-media flag and allow product 
   const module = await readWorkbenchSource();
   assert.match(module, /allowDefaultMedia: event\.data\.allowDefaultMedia === true/);
   assert.match(module, /function canRestoreVisualMediaDefault\([\s\S]*collection === 'product_series' && path === 'cover_asset'/);
-  assert.match(module, /selectedVisualCanRestoreDefault \? '沿用官网原图' : '选择媒体'/);
+  assert.match(module, /selectedVisualCanRestoreDefault \? \(selectedVisualElement\.elementType === 'video' \? '沿用官网原视频' : '沿用官网原图'\) : '选择系统中的媒体'/);
 });
 
 test('manual live-preview reconnect preserves the original page canvas after selecting a related record', async () => {
@@ -1124,8 +1360,12 @@ test('failed saves preserve the draft and show a specific expired-session recove
   // in one file, in that order; extracting apiStatus into a module made the
   // ordering accidental rather than meaningful.
   assert.match(module, /function apiStatus\(reason\)/);
-  assert.match(module, /status === 401 \|\| status === 403/);
-  assert.match(module, /登录会话已失效或当前账号没有保存权限。未保存内容仍保留在页面中，请先复制重要内容，再重新登录后保存。/);
+  assert.match(module, /if \(status === 401\)/);
+  assert.match(module, /登录会话已失效。未保存内容仍保留在页面中，请重新登录后保存。/);
+  assert.match(module, /if \(status === 403\)/);
+  assert.match(module, /当前内容不能保存：/);
+  assert.match(module, /当前账号没有该字段的保存权限/);
+  assert.match(module, /当前账号没有保存权限：/);
   assert.match(module, /function setSaveError\(reason, fallback\)[\s\S]*message\.value = '';/);
   assert.match(module, /async function savePage\(\)[\s\S]*catch \(reason\) \{[\s\S]*setSaveError\(reason, '保存页面失败，内容没有更新。'\);/);
   assert.match(module, /async function saveModel\(\)[\s\S]*catch \(reason\) \{[\s\S]*setSaveError\(reason, '保存型号失败，内容没有更新。'\);/);
@@ -1137,12 +1377,14 @@ test('adding a page media asset assigns a bindable role instead of an empty one'
   // An empty role matches no binding, which leaves the canvas element read-only
   // and made the homepage reason background impossible to replace.
   assert.doesNotMatch(module, /media_asset_id: assetId, role: ''/);
-  assert.match(module, /function defaultPageMediaRole\(section, assetId\)/);
+  // The role resolver belongs to the extracted pure layer; the component only
+  // hands it the live candidate list.
+  assert.match(module, /export function defaultPageMediaRole\(section, assetId, options = \[\]\)/);
   assert.match(module, /if \(tail === 'machine'\) return 'foreground';/);
   assert.match(module, /if \(pageMediaSlotRoles\.has\(tail\)\) return tail;/);
   assert.match(module, /if \(section\?\.mode === 'machine'\) return 'foreground';/);
   assert.match(module, /if \(section\?\.mode === 'photo'\) return 'background';/);
-  assert.match(module, /role: defaultPageMediaRole\(section, assetId\)/);
+  assert.match(module, /role: defaultPageMediaRole\(section, assetId, pageMediaOptions\(scope\)\)/);
   assert.match(module, /const pageMediaSlotRoles = new Set\(\[[\s\S]*'background'[\s\S]*'foreground'[\s\S]*\]\);/);
 });
 
@@ -1328,4 +1570,268 @@ test('savePage validates the persisted section shape, not the canvas draft', asy
 
   // The reverse order is the bug: validation must not run on the raw draft.
   assert.doesNotMatch(module, /validateSections\(pageDraft\.value\.sections\)/);
+});
+
+test('series and model details can be initialized from the original page defaults', async () => {
+  const module = await readWorkbenchSource();
+
+  // The seed copy lives in one shared module so the page and the workbench cannot
+  // drift apart.
+  assert.match(module, /from '\.\.\/\.\.\/\.\.\/\.\.\/website\/shared\/product-series-details\.mjs'/);
+  assert.match(module, /import \{ defaultModelConfiguration, defaultSeriesDetail, normalizeSeriesDetail, seriesDetailKey \}/);
+
+  assert.match(module, /id="series-detail-title"/);
+  // Only solution-type series own a series-level detail; machine families keep
+  // theirs on the model.
+  assert.match(module, /const seriesSupportsDetail = computed/);
+  assert.match(module, /<section v-if="seriesSupportsDetail" class="section-editor" aria-labelledby="series-detail-title">/);
+  assert.match(module, /@click="initializeSeriesDetail"/);
+  assert.match(module, /@click="initializeModelDetail"/);
+  assert.match(module, /function initializeSeriesDetail\(\) \{[\s\S]*?defaultSeriesDetail\(/);
+  assert.match(module, /function initializeModelDetail\(\) \{[\s\S]*?defaultModelConfiguration\(/);
+  assert.match(module, /function addSeriesDetailFeature\(\)/);
+  assert.match(module, /function removeSeriesDetailFeature\(index\)/);
+
+  // Unsaved detail must reach the canvas through the same shape the page reads,
+  // and the canvas edits `detail.*` on the draft.
+  assert.match(module, /record\.detail = detail;/);
+  assert.match(module, /presentation\.detail = \{/);
+});
+
+test('feature images bound on the canvas resolve to the authorized preview path', async () => {
+  const module = await readWorkbenchSource();
+
+  // The stored value is a media asset id; the page renders `image`.
+  assert.match(module, /configuration\.features = parseArray\(configuration\.features\)\.map\(\(item\) => \{[\s\S]*?previewMediaAsset\(item\.media_asset_id\)[\s\S]*?image: media\.path/);
+});
+
+test('product media placements cover the series card and the detail machine photo', async () => {
+  const catalog = await readFile(new URL('../extensions/content-editor-workbench/src/media-placement-catalog.js', import.meta.url), 'utf8');
+  const module = await readWorkbenchSource();
+
+  // Without this option the upload form cannot produce the asset the series
+  // cover select asks for, so the select stays empty forever.
+  assert.match(catalog, /\{ key: 'product\.series\.cover', label: '产品系列封面', mediaType: 'image', minWidth: 800, minHeight: 500/);
+  assert.match(catalog, /'product\.series\.cover': \{ pageKey: 'product' \}/);
+
+  // The series form can bind the machine photo and the per-feature thumbnails.
+  assert.match(module, /<label>设备主图<select v-model="seriesDraft\.detail\.machine_asset_id"/);
+  assert.match(module, /<label>图片<select v-model="feature\.media_asset_id"/);
+});
+
+test('canvas cover and feature images resolve to authorized preview URLs', async () => {
+  const module = await readWorkbenchSource();
+
+  assert.match(module, /const cover = previewMediaAsset\(coverAssetId\);\s*\n\s*if \(cover\) record\.cover_asset = cover\.path;/);
+  assert.match(module, /configuration\.features = parseArray\(configuration\.features\)\.map\(\(item\) => \{[\s\S]*?previewMediaAsset\(item\.media_asset_id\)[\s\S]*?image: media\.path/);
+});
+
+test('canvas list buttons add and remove detail rows through the workbench', async () => {
+  const module = await readWorkbenchSource();
+
+  // The page-owned action is forwarded as a workbench command…
+  assert.match(module, /if \(event\.data\?\.type === 'ruijun:cms-preview:list-add'\) \{/);
+  assert.match(module, /if \(event\.data\?\.type === 'ruijun:cms-preview:list-remove'\) \{/);
+  assert.match(module, /function applyCanvasListAction\(kind, payload\)/);
+  // …restricted to the two product-detail arrays.
+  assert.match(module, /const canvasListPaths = new Set\(\['configuration\.features', 'detail\.features'\]\);/);
+  assert.match(module, /if \(!canvasListPaths\.has\(requestedPath\)\) return;/);
+  // The owner comes from the series code: the page cannot see draft models.
+  assert.match(module, /function canvasListOwner\(payload\) \{/);
+  assert.match(module, /const model = models\.value\.find\(\(candidate\) => String\(candidate\.series_code \|\| ''\) === seriesCode\);/);
+  assert.match(module, /if \(!owner\) \{ error\.value = '画布没有识别到该详情所属的系列/);
+  assert.match(module, /const removed = removeVisualListItemAt\(record, path, index\);/);
+  assert.match(module, /const added = appendVisualListItem\(record, path\);/);
+  // Unsaved rows must reach the canvas: series detail keeps blank rows.
+  assert.match(module, /normalizeSeriesDetail\(record\.detail, \{ keepEmpty: true \}\)/);
+});
+
+test('canvas parameter buttons create and delete draft parameter records', async () => {
+  const module = await readWorkbenchSource();
+
+  assert.match(module, /if \(event\.data\?\.type === 'ruijun:cms-preview:parameter-add'\) \{/);
+  assert.match(module, /if \(event\.data\?\.type === 'ruijun:cms-preview:parameter-remove'\) \{/);
+  assert.match(module, /async function addCanvasParameter\(payload\) \{/);
+  assert.match(module, /async function removeCanvasParameter\(payload\) \{/);
+  // A new row is a draft record owned by the displayed model.
+  assert.match(module, /await api\.post\('\/items\/product_parameters', \{[\s\S]*?model_code: modelCode[\s\S]*?field_name: '新参数'[\s\S]*?status: 'draft'[\s\S]*?publication_state: 'unpublished'/);
+  // Deleting never touches a published or in-review row.
+  assert.match(module, /if \(!canDeleteContent\(record\)\) \{[\s\S]*?已发布或审核中的参数不能直接删除/);
+  assert.match(module, /await api\.delete\(`\/items\/product_parameters\/\$\{encodeURIComponent\(id\)\}`\)/);
+});
+
+test('the workbench reopens a canvas whose draft session was lost', async () => {
+  const module = await readWorkbenchSource();
+
+  assert.match(module, /if \(event\.data\?\.type === 'ruijun:cms-preview:session-missing'\) \{/);
+  assert.match(module, /let lastPreviewSessionRecoveryAt = 0;/);
+  assert.match(module, /if \(now - lastPreviewSessionRecoveryAt < 30000\) return;/);
+  assert.match(module, /预览会话已失效（超过 15 分钟未操作，或页面被导航到普通地址），正在自动恢复/);
+  assert.match(module, /void reconnectLiveWebsitePreview\(\);/);
+});
+
+test('canvas "＋" seeds the website original before appending a row', async () => {
+  const module = await readWorkbenchSource();
+
+  // Appending to an empty configuration would hide the fallback copy, so the
+  // command initializes the detail first and refuses when nothing can be seeded.
+  assert.match(module, /function seedCanvasListDetail\(collection, record\) \{/);
+  assert.match(module, /if \(collection === 'product_models'\) \{[\s\S]{0,400}initializeModelDetail\(\);[\s\S]{0,600}initializeSeriesDetail\(\);/);
+  assert.match(module, /该型号没有可初始化的官网原版详情/);
+  assert.match(module, /已写入官网原版详情并追加一条空白条目/);
+  // Removing a fallback row seeds first too, so "×" acts on real draft data.
+  assert.match(module, /if \(!seedCanvasListDetail\(collection, record\)\) return;\s*\n\s*const removed = removeVisualListItemAt\(record, path, index\);/);
+  assert.match(module, /listLabel/);
+});
+
+test('canvas model buttons create and delete model records with guards', async () => {
+  const module = await readWorkbenchSource();
+
+  assert.match(module, /if \(event\.data\?\.type === 'ruijun:cms-preview:model-add'\) \{/);
+  assert.match(module, /if \(event\.data\?\.type === 'ruijun:cms-preview:model-remove'\) \{/);
+  assert.match(module, /async function addCanvasModel\(payload\) \{/);
+  assert.match(module, /async function removeCanvasModel\(payload\) \{/);
+  // The canvas chip shows the name; a shared "新机型" made new models look
+  // identical until an editor renamed each one.
+  assert.match(module, /name: `新机型-\$\{siblings\.length \+ 1\}`/);
+  // A new model is a draft seeded from the website original.
+  assert.match(module, /await api\.post\('\/items\/product_models', \{[\s\S]{0,400}?status: 'draft',[\s\S]{0,120}?publication_state: 'unpublished'/);
+  // Published models and models that still own parameters cannot be deleted.
+  assert.match(module, /已发布或审核中的机型不能直接删除/);
+  assert.match(module, /该机型还有技术参数，请先删除参数后再删除机型/);
+  assert.match(module, /await api\.delete\(`\/items\/product_models\/\$\{encodeURIComponent\(String\(record\.id\)\)\}`\)/);
+});
+
+test('canvas series cards can be created and deleted with guards', async () => {
+  const module = await readWorkbenchSource();
+
+  assert.match(module, /if \(event\.data\?\.type === 'ruijun:cms-preview:series-add'\) \{/);
+  assert.match(module, /if \(event\.data\?\.type === 'ruijun:cms-preview:series-remove'\) \{/);
+  assert.match(module, /async function addCanvasSeries\(\) \{/);
+  assert.match(module, /async function removeCanvasSeries\(payload\) \{/);
+  assert.match(module, /await api\.post\('\/items\/product_series', \{[\s\S]{0,320}?status: 'draft',[\s\S]{0,120}?publication_state: 'unpublished'/);
+  // Draft models/parameters cascade; published children block the delete.
+  assert.match(module, /该系列下有 \$\{undeletableModels\.length\} 台已发布或审核中的机型/);
+  assert.match(module, /确认删除系列「\$\{record\.name \|\| record\.series_code\}」\$\{cascadeNote\}/);
+  assert.match(module, /已发布或审核中的系列不能直接删除/);
+});
+
+test('switching the canvas item re-opens the preview for the new record', async () => {
+  const module = await readWorkbenchSource();
+
+  assert.match(module, /const activated = activateVisualEditingTarget\(\{ collection, itemId: nextId, sectionKey: websitePreviewContext\.value\.sectionKey \}, \{ discardConfirmed: true \}\);/);
+  assert.match(module, /if \(!activated\?\.record\) return false;/);
+  // Without this the canvas stayed on the previous record's page and nothing was editable.
+  assert.match(module, /void startLiveWebsitePreview\(\{ targetOverride: \{ collection: activated\.collection, record: activated\.record \} \}\);/);
+  assert.match(module, /已切换条目，正在重新加载画布/);
+});
+
+test('the property panel saves in place instead of sending the operator to the toolbar', async () => {
+  const module = await readWorkbenchSource();
+
+  assert.match(module, /<div class="visual-property-save">/);
+  assert.match(module, /class="primary-action" title="只保存当前选中的这一条记录" :disabled="saving \|\| \(!hasUnsavedChanges && selectedVisualRecord\?\.collection !== 'articles'\)" @click="openSaveNameDialog">\{\{ saving \? '保存中\.\.\.' : '保存当前条目' \}\}/);
+  assert.match(module, /有未保存修改/);
+  // The item switcher only lists records of the page being edited.
+  assert.match(module, /function scopeVisualRecordChoices\(collection, records\) \{/);
+  assert.match(module, /if \(collection === 'product_models'\) \{/);
+});
+
+test('switching a series or model keeps its unsaved draft instead of discarding it', async () => {
+  const module = await readWorkbenchSource();
+
+  assert.match(module, /const productDraftCache = new Map\(\);/);
+  assert.match(module, /function stashProductDraft\(\) \{/);
+  assert.match(module, /productDraftCache\.set\(productDraftKey\('product_series', selectedSeriesId\.value\)/);
+  assert.match(module, /productDraftCache\.set\(productDraftKey\('product_models', selectedModelId\.value\)/);
+  // selectSeries/selectModel restore the cached draft and its saved baseline.
+  assert.match(module, /const cached = productDraftCache\.get\(productDraftKey\('product_series', id\)\);/);
+  assert.match(module, /const cached = productDraftCache\.get\(productDraftKey\('product_models', selectedModelId\.value\)\);/);
+  assert.match(module, /savedDraftFingerprint\.value = cached\.savedFingerprint;/);
+  // A saved draft refreshes the cache; a discarded one is removed from it.
+  assert.match(module, /stashProductDraft\(\);\s*\n\}/);
+  assert.match(module, /dropCachedProductDraft\('product_models', selectedModelId\.value\);/);
+});
+
+test('page and homepage-section drafts are cached, and the toolbar counts unsaved items', async () => {
+  const module = await readWorkbenchSource();
+
+  assert.match(module, /productDraftCache\.set\(productDraftKey\('pages', selectedPageId\.value\)/);
+  assert.match(module, /productDraftCache\.set\(productDraftKey\('homepage_sections', homepageSectionDraft\.value\.id\)/);
+  assert.match(module, /const cached = productDraftCache\.get\(productDraftKey\('pages', id\)\);/);
+  assert.match(module, /const cached = productDraftCache\.get\(productDraftKey\('homepage_sections', record\?\.id\)\);/);
+  assert.match(module, /const unsavedDraftCount = computed\(\(\) => \{/);
+  assert.match(module, /本页未保存 \$\{unsavedDraftCount\} 项/);
+});
+
+test('the unsaved badge renders no literal escape text in the toolbar', async () => {
+  const module = await readWorkbenchSource();
+  assert.doesNotMatch(module, /`r`n/);
+  assert.match(module, /<span v-if="unsavedDraftCount" class="visual-unsaved-count"/);
+});
+
+test('the toolbar saves every dirty draft of the page and reports the result', async () => {
+  const module = await readWorkbenchSource();
+
+  assert.match(module, /async function saveWholePage\(submissionName = ''\) \{/);
+  assert.match(module, /const pendingKeys = dirtyCachedDraftKeys\(\)/);
+  assert.match(module, /const activated = await activateCachedDraft\(key\);/);
+  assert.match(module, /已保存 \$\{savedCount\} 项记录/);
+  // The toolbar button drives the batch save; articles keep the naming dialog.
+  assert.match(module, /function handleToolbarSave\(\) \{/);
+  assert.match(module, /openBatchSubmissionDialog\(\);/);
+  assert.match(module, /await saveWholePage\(name\);/);
+  assert.match(module, /const toolbarSaveLabel = computed\(\(\) => \{/);
+});
+
+test('a freshly loaded draft is not reported as unsaved after hydration', async () => {
+  const module = await readWorkbenchSource();
+
+  // Draft hydration mutates the clone after the first render; without the second
+  // baseline every card click asked to discard changes the operator never made.
+  assert.match(module, /function markDraftSavedAfterHydration\(\) \{/);
+  assert.match(module, /let pendingHydrationBaseline = false;/);
+  assert.match(module, /pendingHydrationBaseline = true;\s*\n\s*nextTick\(\(\) => \{/);
+  assert.match(module, /markDraftSavedAfterHydration\(\);/);
+});
+
+test('switching canvas targets never asks to discard a kept draft', async () => {
+  const module = await readWorkbenchSource();
+
+  // These collections stash their drafts on switch, so the prompt is obsolete and
+  // made an ordinary card click look destructive.
+  assert.match(module, /const keepsDraftOnSwitch = new Set\(\['pages', 'homepage_sections', 'product_series', 'product_models'\]\);/);
+  assert.match(module, /&& !keepsDraftOnSwitch\.has\(collection\)/);
+});
+
+test('a batch save is submitted as one version and keeps the newest draft per record', async () => {
+  const module = await readWorkbenchSource();
+
+  assert.match(module, /const batchId = `batch-\$\{Date\.now\(\)\.toString\(36\)\}`;/);
+  // Newest wins: newer cached drafts are applied first and the active record is
+  // never taken from the cache.
+  assert.match(module, /\.sort\(\(left, right\) => \(productDraftCache\.get\(right\)\?\.savedAt \|\| 0\) - \(productDraftCache\.get\(left\)\?\.savedAt \|\| 0\)\)/);
+  assert.match(module, /const blocked = targets\.filter\(\(target\) => target\.record && !canEdit\(target\.record\)\)/);
+  assert.match(module, /批次未开始：/);
+  assert.match(module, /批次已停止：/);
+});
+
+test('a model spec row seeds the whole official table before the first edit', async () => {
+  const module = await readWorkbenchSource();
+
+  assert.match(module, /function seedCanvasParameterRows\(target, fieldPath, payload\) \{/);
+  assert.match(module, /const isModelTable = path\.startsWith\('configuration\.parameters\.'\);/);
+  assert.match(module, /const isSeriesTable = path\.startsWith\('presentation\.parameters\.'\);/);
+  assert.match(module, /if \(Array\.isArray\(target\.configuration\.parameters\) && target\.configuration\.parameters\.length\) return false;/);
+  assert.match(module, /target\.configuration\.parameters = rows\.map\(\(row\) => \(\{/);
+  assert.match(module, /target\.presentation\.parameters = rows\.map\(\(row\) => \(\{/);
+  assert.match(module, /seedCanvasParameterRows\(fieldTarget, fieldPath, event\.data\);/);
+});
+
+test('deleting a canvas parameter works even when its model list is not loaded', async () => {
+  const module = await readWorkbenchSource();
+  assert.match(module, /async function removeCanvasParameter\(payload\) \{/);
+  assert.match(module, /if \(!id\) \{ error\.value = '没有识别到要删除的参数。'; return; \}/);
+  assert.match(module, /const response = await api\.get\(`\/items\/product_parameters\/\$\{encodeURIComponent\(id\)\}`\);/);
+  assert.match(module, /if \(!record\) \{ error\.value = '没有找到这条参数，可能已被删除。'; return; \}/);
 });

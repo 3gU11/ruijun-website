@@ -99,7 +99,9 @@ export default {
     user?.admin_access
     || user?.role?.name === 'Administrator'
     || user?.role?.name === '系统管理员'
+    || user?.role?.name === '审核管理'
     || permissions?.pages?.create?.access !== 'none'
+    || permissions?.pages?.update?.access !== 'none'
   ),
   routes: [{ path: '', component: ModuleComponent }]
 };

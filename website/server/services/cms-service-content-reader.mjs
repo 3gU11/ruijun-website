@@ -30,6 +30,7 @@ function normalizeResource(record, assets) {
   if (!title || !type || !asset) return null;
   const coverAsset = assetPath(record.cover_asset, assets);
   return {
+    id: record.id,
     source_key: text(record.source_key), type, title, summary: text(record.summary), body: text(record.body),
     applicable_models: safeList(record.applicable_models), version: text(record.version), language: text(record.language),
     asset, ...(coverAsset ? { cover_asset: coverAsset, cover_alt: assets.get(String(record.cover_asset || ''))?.alt || title } : {}),
@@ -47,6 +48,7 @@ function normalizeKnowledge(record, assets) {
     return [{ path, alt: text(entry?.alt) || assets.get(String(entry?.media_asset_id || ''))?.alt || title }];
   }) : [];
   return {
+    id: record.id,
     source_key: text(record.source_key), category, title, summary: text(record.symptoms),
     applicable_models: safeList(record.applicable_models), error_codes: safeList(record.error_codes),
     steps: safeList(record.troubleshooting_steps), safety_preconditions: safeList(record.safety_preconditions),
@@ -90,9 +92,9 @@ export function createCmsServiceContentReader({ resourcesEndpoint, locationsEndp
 
   return {
     listResources: () => list({ cacheKey: 'resources', endpoint: resourcesEndpoint,
-      fields: 'source_key,type,title,summary,body,applicable_models,version,language,asset,cover_asset,display_date,sort_order,updated_at,status,publication_state,published_at', normalize: normalizeResource }),
+      fields: 'id,source_key,type,title,summary,body,applicable_models,version,language,asset,cover_asset,display_date,sort_order,updated_at,status,publication_state,published_at', normalize: normalizeResource }),
     listKnowledge: () => list({ cacheKey: 'knowledge', endpoint: knowledgeEndpoint,
-      fields: 'source_key,visibility,channel,category,question_title,applicable_models,error_codes,symptoms,troubleshooting_steps,risk_level,safety_preconditions,media,version,display_date,sort_order,status,publication_state,published_at',
+      fields: 'id,source_key,visibility,channel,category,question_title,applicable_models,error_codes,symptoms,troubleshooting_steps,risk_level,safety_preconditions,media,version,display_date,sort_order,status,publication_state,published_at',
       filters: { visibility: 'public' }, predicate: (record) => record.visibility === 'public' && ['website', 'both'].includes(record.channel), normalize: normalizeKnowledge }),
     listLocations: () => list({ cacheKey: 'locations', endpoint: locationsEndpoint,
       fields: 'source_key,region,city,service_scope,contact,business_status,valid_until,status,publication_state,published_at',

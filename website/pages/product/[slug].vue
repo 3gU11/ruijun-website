@@ -1,13 +1,22 @@
 <script setup lang="ts">
 import { filterProductModels } from '~/shared/product-model-filter.mjs';
 import { productResourceDownloadName } from '~/shared/product-resource-download.mjs';
-import { groupPreviewProductParameters, normalizePreviewParameterGroups } from '~/shared/product-preview-parameters.mjs';
+import { groupPreviewProductParameters, mergePreviewParameterRows, normalizePreviewParameterGroups } from '~/shared/product-preview-parameters.mjs';
 import { formatProductParameterValue, resolvePreviewProductSelection } from '~/shared/product-preview-state.mjs';
 import { resolvePageSection } from '~/shared/page-sections.mjs';
+import { mergeSeriesWithPreview, unpublishedSeriesSummary } from '~/shared/product-catalog-preview.mjs';
+import { normalizeSeriesDetail, productSeriesDetails, seriesDetailKey, seriesDetailKeyExact } from '~/shared/product-series-details.mjs';
 import { fieldPresentationAttributes, sectionPresentationAttributes } from '~/shared/section-presentation.mjs';
+import { CMS_LIVE_PREVIEW_NOTICE, CMS_LIVE_PREVIEW_PAGE_ACTION, CMS_LIVE_PREVIEW_REQUEST_SERIES_MODELS, CMS_LIVE_PREVIEW_SERIES_SELECT } from '~/utils/cms-live-preview.mjs';
 
 function normalizeModelLabel(value: unknown) {
-  return String(value || '').replace(/\((AUTO|Auto|PRO|Pro)\)/g, (_, variant: string) => `(${variant.toLowerCase()})`);
+  // Records are entered as "FR7055XS (Auto)" while the legacy template names
+  // are "FR7055XS(auto)". One canonical label keeps the selected chip, the
+  // record lookup and the visible text in sync.
+  return String(value || '')
+    .replace(/\s*\((AUTO|Auto|PRO|Pro)\)/g, (_, variant: string) => `(${variant.toLowerCase()})`)
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 type ProductRecord = {
@@ -49,9 +58,76 @@ const { data: seriesResponse } = await useFetch('/api/public/v1/product-series',
 const { data: productPageResponse } = await useFetch('/api/public/v1/pages/product', {
   default: () => ({ data: null as any })
 });
-const { overlayRecord, overlayList, recordFor, recordsFor, session: previewSession, visualEditMode: cmsVisualEditMode } = useCmsDraftPreview();
+const { overlayRecord, overlayList, recordFor, recordsFor, session: previewSession, enabled: previewEnabled, error: previewError, visualEditMode: cmsVisualEditMode, refreshVisualDecorations, insidePreviewFrame } = useCmsDraftPreview();
+// The canvas silently degrades to the public page when its draft session is gone
+// (no 详情/＋/× anywhere). Say it out loud instead of looking like an old build.
+const previewSessionLost = computed(() => Boolean(previewEnabled.value) && !previewSession.value && Boolean(previewError.value));
+// Canvas-only feedback: a new draft card lives in the strip below the grid, so the
+// workbench tells the page to highlight it and show a toast.
+const seriesNotice = ref('');
+const highlightedDraftId = ref('');
+let seriesNoticeTimer = 0;
+function handleCanvasNotice(event: MessageEvent) {
+  const data = (event as MessageEvent).data as { type?: string; kind?: string; itemId?: string; seriesCode?: string; slug?: string; label?: string } | undefined;
+  if (data?.type !== CMS_LIVE_PREVIEW_NOTICE) return;
+  // The workbench's left series list is a second selection surface. When it
+  // switches/creates a series, follow it here so `activeSeriesCode` (and the
+  // series code written by "＋ 新增机型") matches the card the operator sees.
+  if (data.kind === 'series-selected') {
+    applyCanvasSeriesSelection(data);
+    return;
+  }
+  if (data.kind !== 'series-added') return;
+  seriesNotice.value = `已新增草稿卡片：${String(data.label || '新系列')}`;
+  highlightedDraftId.value = String(data.itemId || '');
+  window.clearTimeout(seriesNoticeTimer);
+  seriesNoticeTimer = window.setTimeout(() => { seriesNotice.value = ''; highlightedDraftId.value = ''; }, 4000);
+  void nextTick(() => document.querySelector('.cms-draft-cards')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+}
 
-if (responseError.value?.statusCode === 410) {
+function applyCanvasSeriesSelection(data: { itemId?: string; seriesCode?: string; slug?: string }) {
+  const recordId = String(data.itemId || '');
+  const seriesCode = String(data.seriesCode || '');
+  const slug = String(data.slug || '');
+  const findCard = () => [...catalogCards.value, ...draftCatalogCards.value].find((card: any) => (
+    (recordId && String(card.recordId || '') === recordId)
+    || (slug && String(card.id || '') === slug)
+    || (seriesCode && String(card.seriesCode || '') === seriesCode)
+  ));
+  const apply = (card: any) => {
+    if (!card) return false;
+    selectedCard.value = card.id;
+    detailsOpen.value = true;
+    // Ask for the card's models without echoing a series-select back to the
+    // workbench (that message is reserved for user clicks).
+    requestSeriesModels(String(card.seriesCode || seriesCode || ''));
+    void nextTick(() => document.getElementById(card.id)?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+    return true;
+  };
+  const applyWhenReady = (attempt = 0) => {
+    if (apply(findCard())) return;
+    // A brand-new draft card can arrive in the same tick as this notice, and the
+    // live overlay may need another frame or two to materialize it.
+    if (attempt < 4) window.setTimeout(() => applyWhenReady(attempt + 1), 150);
+  };
+  applyWhenReady();
+}
+
+
+// `/product/<series-slug>` is a series landing page, not a model record. The
+// upstream model endpoint answers 410 for it (there is no model with that
+// slug), which must not turn every published series into "no longer published".
+// Only a slug that matches neither a series nor a model is a real 410.
+const routeSeriesExists = computed(() => {
+  const data = seriesResponse.value?.data;
+  const key = slug.value.trim().toLowerCase();
+  if (!key || !Array.isArray(data)) return false;
+  return data.some((record) => [record?.slug, record?.series_code].map((value) => String(value || '').toLowerCase()).includes(key));
+});
+// A canvas may legitimately target an unpublished model (the whole point of
+// editing a draft). Only public traffic gets the 410.
+const previewRoute = Boolean(route.query.cmsPreview) || previewEnabled.value;
+if (responseError.value?.statusCode === 410 && !routeSeriesExists.value && !previewRoute) {
   throw createError({ statusCode: 410, statusMessage: 'Product is no longer published', fatal: true });
 }
 
@@ -60,9 +136,30 @@ const product = computed<ProductRecord | null>(() => {
   const published = Array.isArray(data) ? data[0] || null : data || null;
   return overlayRecord('product_models', published, (draft) => previewSession.value?.collection === 'product_models' || !slug.value || [draft.slug, draft.model_code].map(String).includes(slug.value)) as ProductRecord | null;
 });
+// The detail panel renders the *selected* model's configuration, so every field
+// binding must name that record. Binding to `product` (the first published model
+// of the list endpoint) wrote edits onto another model as soon as the reader
+// switched families. `selectedModelRecord` is declared further down but this
+// helper only runs while rendering, after setup has completed.
+function boundProductRecord(): ProductRecord | null {
+  // `product` is the session's model record; only accept it when it belongs to
+  // the series on screen, otherwise a card without its own records would borrow
+  // another series' model (and every detail panel looked identical).
+  const fallback = product.value && String(product.value.series_code || '') === activeSeriesCode.value ? product.value : null;
+  return (selectedModelRecord.value as ProductRecord | null) || fallback;
+}
+// Published models are read-only: the delete guard in the workbench rejects
+// them, so the canvas must not offer the destructive control.
+const modelCanDelete = computed(() => {
+  const record = boundProductRecord();
+  if (!record?.id) return false;
+  return ['draft', 'rejected', 'unpublished'].includes(String(record.status || ''))
+    && String(record.publication_state || '') !== 'published';
+});
 function productBinding(fieldPath: string) {
-  const productItemId = product.value?.id != null
-    ? String(product.value.id)
+  const record = boundProductRecord();
+  const productItemId = record?.id != null
+    ? String(record.id)
     : previewSession.value?.collection === 'product_models' && previewSession.value?.itemId != null
       ? String(previewSession.value.itemId)
       : '';
@@ -72,8 +169,95 @@ function productBinding(fieldPath: string) {
     'data-cms-preview-field-path': fieldPath
   };
 }
-function productVisualBinding(fieldPath: string, presentationPath: string) {
-  return { ...productBinding(fieldPath), ...fieldPresentationAttributes(displayConfig.value, presentationPath) };
+// Resources are read from `product` (the route record), not from the model shown
+// in the detail panel, so their canvas binding must keep following `product`.
+function productRecordBinding(fieldPath: string) {
+  const itemId = product.value?.id != null ? String(product.value.id) : '';
+  return {
+    'data-cms-preview-collection': itemId ? 'product_models' : undefined,
+    'data-cms-preview-item-id': itemId || undefined,
+    'data-cms-preview-field-path': fieldPath
+  };
+}
+// Detail fields are owned either by the series (`presentation.detail`, used by
+// solution-type series) or by the displayed model (`configuration`). Both the
+// rendered values and the canvas binding follow the same owner, otherwise edits
+// would be written onto a record the panel is not showing.
+// A draft card (or a card whose models only exist as template names) has no model
+// record to write to, so its detail binds to the series record instead of turning
+// every field read-only.
+function detailSeriesRecordId(): string {
+  if (activeSeriesRecord.value?.id != null) return String(activeSeriesRecord.value.id);
+  const card = activeCard.value as { isDraft?: boolean; recordId?: string } | undefined;
+  if (card?.recordId) return String(card.recordId);
+  // The canvas may have been opened straight onto a series page.
+  const session = previewSession.value;
+  if (session?.collection === 'product_series' && session.itemId != null) return String(session.itemId);
+  return '';
+}
+function detailOwner(): { mode: 'series' | 'model'; collection: string; itemId: string; prefix: string } {
+  const seriesId = detailSeriesRecordId();
+  if (!boundProductRecord()?.id && seriesId) {
+    return { mode: 'series', collection: 'product_series', itemId: seriesId, prefix: 'detail' };
+  }
+  if (detailMode.value === 'series' && activeSeriesRecord.value?.id != null) {
+    // `detail` is the editable path inside the workbench draft; the series form
+    // persists it into `presentation.detail`.
+    return { mode: 'series', collection: 'product_series', itemId: String(activeSeriesRecord.value.id), prefix: 'detail' };
+  }
+  const record = boundProductRecord();
+  const itemId = record?.id != null
+    ? String(record.id)
+    : previewSession.value?.collection === 'product_models' && previewSession.value?.itemId != null
+      ? String(previewSession.value.itemId)
+      : '';
+  return { mode: 'model', collection: itemId ? 'product_models' : '', itemId, prefix: 'configuration' };
+}
+function detailOwnerAttributes() {
+  const owner = detailOwner();
+  return {
+    'data-cms-preview-collection': owner.collection || undefined,
+    'data-cms-preview-item-id': owner.itemId || undefined
+  };
+}
+// Shown on the panel and handed to the workbench when a fallback field is
+// clicked, so both paths tell the editor the same next step.
+const DETAIL_INITIALIZE_HINT = '当前详情来自官网原版兜底，尚未写入 CMS。点「＋ 新增一项」会自动把官网原版文案写入 CMS 再追加一行；也可以先在左侧「产品系列与型号」或「产品型号、参数与尺寸图」点击「从官网原版初始化详情」并保存。';
+function detailFieldAttributes(relativePath: string, presentationPath = '') {
+  const owner = detailOwner();
+  const attributes: Record<string, any> = {
+    'data-cms-preview-collection': owner.collection || undefined,
+    'data-cms-preview-item-id': owner.itemId || undefined,
+    'data-cms-preview-field-path': `${owner.prefix}.${relativePath}`
+  };
+  // Series-level detail has no per-field presentation contract yet; keep the
+  // styling attributes for the model owner only so the property panel never
+  // writes style keys into `presentation.detail`.
+  if (owner.mode === 'model' && presentationPath) {
+    Object.assign(attributes, fieldPresentationAttributes(displayConfig.value, presentationPath));
+    attributes['data-cms-preview-position-field-path'] = `configuration.field_presentation.${presentationPath}`;
+  }
+  // Nothing behind these fields yet: the visible copy is the template fallback.
+  // Mark them read-only so a click explains how to initialize instead of opening
+  // an editor that would write to the wrong record. A model chip that only exists
+  // as a template name has no CMS record either (`owner.itemId` empty), and the
+  // decorator would otherwise inherit the page's id from the panel root.
+  // Selectable as long as the record can be written; the workbench seeds the
+  // website original on the first edit (only a missing owner stays read-only).
+  if (!owner.itemId) {
+    attributes['data-cms-preview-readonly'] = 'uninitialized';
+    attributes['data-cms-preview-readonly-reason'] = DETAIL_INITIALIZE_HINT;
+  }
+  return attributes;
+}
+function machineImageAttributes() {
+  if (detailMode.value === 'series') {
+    return {
+      ...detailOwnerAttributes(),
+      'data-cms-preview-field-path': 'detail.machine_asset_id'
+    };
+  }
+  return productBinding(displayImageFieldPath.value);
 }
 const modelQuery = ref('');
 const publicModels = computed(() => {
@@ -81,7 +265,24 @@ const publicModels = computed(() => {
   return overlayList('product_models', Array.isArray(data) ? data : (Array.isArray(response.value?.data) ? response.value.data : []));
 });
 const filteredModels = computed(() => filterProductModels(publicModels.value, modelQuery.value));
-const previewSeries = computed(() => overlayList('product_series', Array.isArray(seriesResponse.value?.data) ? seriesResponse.value.data : []));
+const publishedSeries = computed(() => {
+  const data = seriesResponse.value?.data;
+  return Array.isArray(data) ? data.filter((record) => record && typeof record === 'object') : [];
+});
+const previewSeries = computed(() => overlayList('product_series', publishedSeries.value));
+// The card grid mirrors the public catalog exactly: a draft may change the copy
+// of a published card, but a series that has never been published must not add a
+// card or a page. Draft cards (including a card created in the canvas) are listed
+// in the separate "草稿卡片" strip below the grid, so they stay visible and
+// deletable without changing the site's count, numbering or pagination.
+const seriesCatalog = computed(() => mergeSeriesWithPreview(publishedSeries.value, previewSeries.value));
+// Newest first so a card created in the canvas is at hand.
+const seriesDraftCards = computed(() => [...seriesCatalog.value.unpublishedDrafts]
+  .sort((left: any, right: any) => Number(left.sort_order || 0) - Number(right.sort_order || 0)));
+const sortedCatalogSeries = computed(() => seriesCatalog.value.records
+  .filter((series: any) => series?.series_code || series?.slug)
+  .sort((left: any, right: any) => Number(left.sort_order || 0) - Number(right.sort_order || 0)));
+const unpublishedSeriesDraftSummary = computed(() => unpublishedSeriesSummary(seriesCatalog.value.unpublishedDrafts));
 // In authenticated visual preview, the page draft is the source of truth for
 // section copy and presentation. Public data remains the fallback outside the
 // preview session, while claim-review sections are rendered by the sanitized
@@ -167,155 +368,270 @@ function fallbackProductCardForSeries(series: any, index: number) {
     'ft-xs': 'ft',
     'fl-xs': 'fl'
   } as Record<string, string>)[key] || key;
-  return fallbackProductCards.find((card) => card.id === fallbackId) || fallbackProductCards[index];
+  // Identity, never position: an unknown/new series must not inherit the photo
+  // of whatever card happens to sit at the same index. FR-G previously showed
+  // the FR-Y machine for exactly this reason. `index` is kept for callers and
+  // future explicit mappings.
+  void index;
+  return fallbackProductCards.find((card) => card.id === fallbackId) || null;
 }
 const catalogCards = computed(() => {
-  const cmsCards = [...previewSeries.value]
-    .filter((series) => series?.series_code || series?.slug)
-    .sort((left, right) => Number(left.sort_order || 0) - Number(right.sort_order || 0))
-    .map((series, index) => ({
-      id: String(series.slug || series.series_code),
-      index: String(index + 1).padStart(2, '0'),
-      category: String(series.positioning || series.name || series.series_code),
-      name: String(series.name || series.series_code),
-      model: String(series.positioning || ''),
-      image: String(series.cover_asset || fallbackProductCardForSeries(series, index)?.image || ''),
-      capabilities: series.capabilities
-    }));
+  const cmsCards = sortedCatalogSeries.value.map((series: any, index: number) => ({
+    id: String(series.slug || series.series_code),
+    recordId: series.id != null ? String(series.id) : '',
+    seriesCode: String(series.series_code || ''),
+    index: String(index + 1).padStart(2, '0'),
+    category: String(series.positioning || series.name || series.series_code),
+    name: String(series.name || series.series_code),
+    model: String(series.positioning || ''),
+    image: String(series.cover_asset || fallbackProductCardForSeries(series, index)?.image || ''),
+    capabilities: series.capabilities,
+    status: String(series.status || ''),
+    publicationState: String(series.publication_state || '')
+  }));
   return cmsCards.length ? cmsCards : fallbackProductCards;
 });
 const catalogPageSize = computed(() => {
   const value = Number(paginationCopy.value?.pagination?.page_size);
   return Number.isInteger(value) ? Math.min(Math.max(value, 1), 6) : 6;
-});
-const catalogPage = ref(1);
+});const catalogPage = ref(1);
 const catalogPageCount = computed(() => Math.max(1, Math.ceil(catalogCards.value.length / catalogPageSize.value)));
 const visibleCatalogCards = computed(() => {
   const page = Math.min(Math.max(catalogPage.value, 1), catalogPageCount.value);
   const start = (page - 1) * catalogPageSize.value;
   return catalogCards.value.slice(start, start + catalogPageSize.value);
 });
-const sortedPreviewSeries = computed(() => [...previewSeries.value].sort((left, right) => Number(left.sort_order || 0) - Number(right.sort_order || 0)));
+// Draft series render in the grid after the published cards (canvas only) with a
+// 草稿 badge. They never change the page count or the numbering above, so the
+// public catalog still matches exactly.
+function sessionSeriesRecord(cardId: string) {
+  const key = String(cardId || '');
+  if (!key) return null;
+  return recordsFor('product_series').find((series: any) => String(series?.slug || '') === key || String(series?.id || '') === key) || null;
+}
+const draftCatalogCards = computed(() => seriesDraftCards.value.map((draft: any) => {
+  const cover = String(draft.cover_asset || '').trim();
+  const image = /^(https?:)?\//.test(cover)
+    ? cover
+    : cover && previewSession.value ? `/api/preview/media/${encodeURIComponent(cover)}` : '';
+  return {
+    id: String(draft.slug || draft.series_code || draft.id),
+    recordId: String(draft.id),
+    name: String(draft.name || draft.series_code || '新系列'),
+    positioning: String(draft.positioning || draft.series_code || '待填写'),
+    // The pushed draft record may omit series_code; resolve it from the session so
+    // the series' models are found (otherwise the card shows no chips).
+    seriesCode: String(draft.series_code || sessionSeriesRecord(String(draft.slug || draft.id))?.series_code || ''),
+    image
+  };
+}));
+const visibleDraftCards = computed(() => (catalogPage.value === catalogPageCount.value ? draftCatalogCards.value : []));
 function seriesCardValue(index: number, field: 'name' | 'positioning' | 'cover_asset' | 'series_code' | 'slug', fallback: string) {
-  return normalizeModelLabel(sortedPreviewSeries.value[index]?.[field] || fallback);
+  return normalizeModelLabel(sortedCatalogSeries.value[index]?.[field] || fallback);
 }
 function seriesCardPresentation(index: number) {
-  const presentation = sortedPreviewSeries.value[index]?.presentation;
+  const presentation = sortedCatalogSeries.value[index]?.presentation;
   return presentation && typeof presentation === 'object' && !Array.isArray(presentation) ? presentation : {};
 }
 function seriesCardItemId(index: number, _fallback: string) {
-  return String(sortedPreviewSeries.value[index]?.id || '').trim();
+  return String(sortedCatalogSeries.value[index]?.id || '').trim();
 }
-
-type PsdFeature = { label: string; detail?: string; note?: string; image?: string };
-type PsdSeriesDetail = {
-  models: readonly string[];
-  machine: string;
-  features: readonly PsdFeature[];
-  intro?: { title: string; subtitle: string; scene: string; body: string };
-};
-
-const psdSeriesDetails: Record<string, PsdSeriesDetail> = {
-  workstation: {
-    models: [],
-    machine: '/assets/psd/product-detail/workstation-machine.png',
-    intro: {
-      title: '灵动切割工作站',
-      subtitle: '无人化加工解决方案',
-      scene: '批量化精密零部件自动切割',
-      body: '灵动切割工作站搭载自动穿丝系统，与机器人高效协作，精密夹具快速定位，自动化上下料无缝衔接；实现切割流程全自动化，全程精准把控，开启智能制造新时代！'
-    },
-    features: [
-      { label: '自动穿丝系统' },
-      { label: '六轴协作机器人', note: '多种方式可供选择' },
-      { label: '多工位零点夹具', note: '多种夹具可供选择' },
-      { label: '精密中走丝机床', note: '多种机型可供选择' }
-    ]
-  },
-  auto: {
-    models: ['FR400XS(auto)', 'FR500XS(auto)', 'FR600XS(auto)', 'FR7055XS(auto)', 'FR8055XS(auto)', 'FR8060XS(auto)'],
-    machine: '/assets/psd/product-detail/auto-machine.png',
-    features: [
-      { label: '自动穿丝', detail: '全自动穿丝模式\n半自动穿丝模式\n带动态感知穿丝功能', image: '/assets/psd/product-detail/auto-threading.png' },
-      { label: '伺服张力控制', detail: '多组传感器和伺服驱动技术，实时感知并动态调整钼丝张力', image: '/assets/psd/product-detail/auto-tension.png' },
-      { label: '自适应切割功能', detail: '针对不同高度材料，自动调节放电参数，无需人工干涉', image: '/assets/psd/product-detail/auto-adaptive.png' }
-    ]
-  },
-  pro: {
-    models: ['FR400XS(pro)', 'FR500XS(pro)', 'FR600XS(pro)', 'FR7055XS(pro)', 'FR8055XS(pro)', 'FR8060XS(pro)'],
-    machine: '/assets/psd/product-detail/pro-machine.png',
-    features: [
-      { label: '自适应切割功能', image: '/assets/psd/product-detail/pro-adaptive.png' },
-      { label: '效率提升50%', image: '/assets/psd/product-detail/pro-efficiency.png' },
-      { label: '屏显手持单元', image: '/assets/psd/product-detail/pro-handheld.png' }
-    ]
-  },
-  ft: {
-    models: ['FT400XS(pro)', 'FT500XS(pro)', 'FT600XS(pro)', 'FT7055XS(pro)', 'FT8055XS(pro)', 'FT8060XS(pro)'],
-    machine: '/assets/psd/product-detail/ft-machine.png',
-    features: [
-      { label: '五轴数控' },
-      { label: '四轴螺距补偿' },
-      { label: '机电一体化设计' },
-      { label: '全新3.0控制系统' }
-    ]
-  },
-  'fr-y': {
-    models: ['FR-Y8060', 'FR-Y1080'],
-    machine: '/assets/psd/product-detail/fr-y-machine.png',
-    features: [
-      { label: '高精度摇摆装置', note: '获国家发明专利', image: '/assets/psd/product-detail/fr-y-swing.png' },
-      { label: '单边35度大锥度', image: '/assets/psd/product-detail/fr-y-taper.png' },
-      { label: '全新屏显手持单元', image: '/assets/psd/product-detail/fr-y-handheld.png' }
-    ]
-  },
-  fl: {
-    models: ['FL8060XS(pro)', 'FL1180XS(pro)', 'FL1390XS(pro)', 'FL1610XS(pro)', 'FL2160XS(pro)'],
-    machine: '/assets/psd/product-detail/fl-machine.png',
-    features: [
-      { label: '五轴数控' },
-      { label: '四轴螺距补偿' },
-      { label: '辅助上丝功能' },
-      { label: '全新3.0控制系统' }
-    ]
-  }
-};
+// Published cards are read-only in the canvas. Showing the red × on them used
+// to offer a confirm that called DELETE on live content (when the series had no
+// models) or a misleading "还有机型" error (when it did).
+function seriesCardCanDelete(index: number) {
+  const series = sortedCatalogSeries.value[index];
+  if (!series) return false;
+  return ['draft', 'rejected', 'unpublished'].includes(String(series.status || ''))
+    && String(series.publication_state || '') !== 'published';
+}
 const selectedCard = ref('auto');
 const selectedModel = ref(normalizeModelLabel(product.value?.model_code || 'FR7055XS(pro)'));
 const selectedReason = ref(0);
 const drawingPage = ref(0);
 const detailsOpen = ref(false);
-let proofFrame = 0;
 let overviewEntryFrame = 0;
 let productHashScrollFrame = 0;
 
-const activeCard = computed(() => catalogCards.value.find((card) => card.id === selectedCard.value) || catalogCards.value[0]);
-function psdDetailKey(card: any) {
-  const value = [card?.id, card?.name, card?.category].filter(Boolean).join(' ').toLowerCase();
-  if (value.includes('workstation') || value.includes('工作站') || value.includes('无人化')) return 'workstation';
-  if (value.includes('auto') || value.includes('自动穿丝')) return 'auto';
-  if (value.includes('fr-y') || value.includes('摇摆')) return 'fr-y';
-  if (value.includes('ft')) return 'ft';
-  if (value.includes('fl') || value.includes('重大型')) return 'fl';
-  return 'pro';
+const activeCard = computed(() => {
+  const wanted = String(selectedCard.value || '');
+  // The canvas may pass either the card slug or the record id for a draft card;
+  // match both so the panel always follows the card that was clicked.
+  return [...catalogCards.value, ...draftCatalogCards.value].find((card) => card.id === wanted || String((card as any).recordId || '') === wanted)
+    || catalogCards.value[0];
+});
+// A direct /product/<slug> visit (or a card click that navigates there) should
+// open that series instead of leaving the reader on the overview grid.
+// Apply once per route slug: reading `selectedCard` here made the effect a
+// dependency of its own assignment, so every canvas card switch was immediately
+// forced back to the URL's series (and "＋新增机型" kept the old series code).
+let lastRouteCardSlug = '';
+watchEffect(() => {
+  const key = slug.value.trim().toLowerCase();
+  if (!key || key === lastRouteCardSlug) return;
+  const index = catalogCards.value.findIndex((card) => String(card.id).toLowerCase() === key);
+  if (index < 0) return;
+  lastRouteCardSlug = key;
+  const card = catalogCards.value[index];
+  // Do not touch activeModelOptions here: it is declared further down and the
+  // immediate run of this effect would hit its temporal dead zone.
+  selectedCard.value = card.id;
+  catalogPage.value = Math.floor(index / catalogPageSize.value) + 1;
+  detailsOpen.value = true;
+  // A direct series URL must highlight a real chip. `activeModelOptions` is
+  // declared further down, so run after setup instead of touching it here
+  // (the immediate run would hit its temporal dead zone).
+  void nextTick(() => {
+    if (!activeModelOptions.value.includes(selectedModel.value)) {
+      selectedModel.value = activeModelOptions.value[0] || '';
+    }
+  });
+});
+// Map a chip label to its CMS record id so the workbench never guesses by name
+// (a name-based lookup used to land on another family's model).
+function modelRecordId(label: string): string {
+  // Chips use the normalized display label ("FR500XS(auto)") while records keep
+  // "FR500XS (Auto)" / "fr500xs-auto". Comparing raw strings left every chip
+  // without a record id, so the workbench resolved it as a template name and
+  // never opened the real model.
+  const key = normalizeModelLabel(label).toLowerCase();
+  if (!key) return '';
+  const record = activeModels.value.find((item: any) =>
+    normalizeModelLabel(item.name || item.model_code).toLowerCase() === key
+    || normalizeModelLabel(item.model_code).toLowerCase() === key
+  );
+  return record?.id != null ? String(record.id) : '';
 }
 const activeSeriesCode = computed(() => {
-  const previewModelSeries = previewSession.value?.collection === 'product_models'
-    ? String(product.value?.series_code || previewSession.value.preview?.series_code || '')
-    : '';
-  return previewModelSeries || String(previewSeries.value.find((series) => String(series.slug || series.series_code) === activeCard.value?.id)?.series_code || activeCard.value?.id || '');
+  // The displayed card is the only source of truth. Deriving this from the page's
+  // product or the preview target made a pushed model of another family leak its
+  // series into the panel (every detail then rendered that family's fallback).
+  const published = sortedCatalogSeries.value.find((series: any) => String(series.slug || series.series_code) === activeCard.value?.id);
+  if (published) return String(published.series_code || published.slug || '');
+  // Draft cards live outside the published list; their models must still reference
+  // the series_code, never the slug.
+  const card = activeCard.value as { isDraft?: boolean; seriesCode?: string; id?: string } | undefined;
+  if (card?.seriesCode) return String(card.seriesCode);
+  // The card id is a slug; resolve the real series_code from the pushed/session
+  // series records so draft-series models are found.
+  const cardId = String(card?.id || '');
+  const sessionSeries = recordsFor('product_series').find((series: any) => String(series?.slug || '') === cardId || String(series?.series_code || '') === cardId);
+  if (sessionSeries) return String(sessionSeries.series_code || sessionSeries.slug || cardId);
+  return cardId;
 });
-const activeSeriesDetail = computed(() => psdSeriesDetails[psdDetailKey({ ...activeCard.value, id: activeSeriesCode.value || activeCard.value?.id })] || psdSeriesDetails.pro);
+const activeSeriesRecord = computed(() => sortedCatalogSeries.value.find((series: any) => String(series.slug || series.series_code) === activeCard.value?.id) || null);
+// Series-level detail (`presentation.detail`) exists for solution-type series such
+// as the workstation, which has no product model record of its own. It only
+// becomes active once an editor materializes it in the CMS, so a site without
+// that data keeps rendering the model configuration exactly as before.
+const seriesDetail = computed(() => normalizeSeriesDetail(
+  activeSeriesRecord.value?.presentation?.detail,
+  // A canvas "＋" adds a blank row; keep it so the editor can fill it in. Public
+  // payloads never contain blank rows (the reader drops them).
+  { keepEmpty: Boolean(previewSession.value) }
+));
+const detailMode = computed<'series' | 'model'>(() => (seriesDetail.value ? 'series' : 'model'));
+// True while the panel is still rendering the template fallback: there is no CMS
+// record to write canvas edits to until the editor initializes the detail.
+const detailHasCmsData = computed(() => Boolean(seriesDetail.value)
+  || Boolean(String(displayConfig.value.intro?.title || '').trim())
+  || (Array.isArray(displayConfig.value.features) && displayConfig.value.features.length > 0));
+// The canvas always offers "＋/×"; the workbench resolves the owning record from
+// the series code (it sees every model record, including unpublished ones this
+// page cannot load), seeds the website original when needed, and reports why when
+// nothing can be seeded.
+// Parameter rows are records: only offer "＋" once the table is driven by them,
+// otherwise a new record would replace the visible fallback table.
+const specHasRecordRows = computed(() => parameterGroups.value.some((group) => (group.items || []).some((item: any) => item?.id)));
+const seriesDetailCard = computed(() => ({ ...activeCard.value, id: activeSeriesCode.value || activeCard.value?.id }));
+// Only an exact template match may be shown: the heuristic key maps unknown series
+// to the pro family, which is why a brand-new card used to render FL390 copy.
+const seriesDetailEntry = computed(() => productSeriesDetails[seriesDetailKeyExact(seriesDetailCard.value)] || null);
+// Model chips may only come from an exact template table hit: the heuristic key
+// maps an unknown series onto pro, which offered another family's models.
+const seriesModelCodes = computed(() => {
+  const key = seriesDetailKeyExact(seriesDetailCard.value);
+  return key ? [...(productSeriesDetails[key]?.models || [])] : [];
+});
+// pro stays as the visual fallback, but its model list belongs to another
+// family and must not be offered as chips for a series that has no template.
+// A series without its own template must not borrow another family's fallback:
+// that is what made every new card render the same FL390 photo and features.
+const emptySeriesDetail = { intro: {}, machine: '', features: [] };
+const activeSeriesDetail = computed(() => seriesDetailEntry.value || emptySeriesDetail);
 const activeModels = computed(() => {
-  const psdModels = activeSeriesDetail.value.models.map((model_code) => ({ model_code, name: model_code }));
   const previewModel = product.value && String(product.value.series_code || '') === activeSeriesCode.value ? product.value : null;
-  if (!slug.value || !publicModels.value.length) return previewModel ? [previewModel, ...psdModels.filter((model) => normalizeModelLabel(model.model_code) !== normalizeModelLabel(previewModel.model_code))] : psdModels;
-  const models = publicModels.value.filter((model) => String(model.series_code || '') === activeSeriesCode.value);
-  const visibleModels = models.length ? models : psdModels;
-  return previewModel ? [previewModel, ...visibleModels.filter((model) => normalizeModelLabel(model.model_code) !== normalizeModelLabel(previewModel.model_code))] : visibleModels;
+  // A canvas edit can push a model record that is still a draft (not in the public
+  // list); without it the panel keeps rendering the template fallback and every
+  // add/delete would look ignored.
+  const sessionModels = recordsFor('product_models').filter((model: any) => {
+    // Only records of the displayed series belong to this panel; matching the card
+    // id as well let another family's models leak in.
+    return String(model?.series_code || '') === activeSeriesCode.value;
+  });
+  const publishedModels = publicModels.value.filter((model) => String(model.series_code || '') === activeSeriesCode.value);
+  // `fr400xs-auto` and `FR400XS(auto)` are the same machine written two ways, so
+  // compare the base code; that lets a record hide its template twin while the
+  // series' other template models stay listed.
+  const modelKey = (model: any) => {
+    const code = String(model?.model_code || model?.name || '').trim().toLowerCase()
+      .replace(/\((auto|pro)\)$/i, '')
+      .replace(/[\s-]?(auto|pro)$/i, '');
+    return code || `id:${String(model?.id || '')}`;
+  };
+  const seen = new Set<string>();
+  const realModels = [...(previewModel ? [previewModel] : []), ...sessionModels, ...publishedModels].filter((model) => {
+    const key = modelKey(model);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  // Once a series has real records, they are the only chips: appending the
+  // legacy template list added unpublished names with no parameters and put
+  // FR400XS after FR8055. The template table remains the fallback for a series
+  // that has no records yet (e.g. FL-XS before its models are published).
+  const templateModels = seriesModelCodes.value
+    .map((model_code) => ({ model_code, name: model_code }))
+    .filter((model) => !seen.has(modelKey(model)));
+  return realModels.length ? realModels : templateModels;
 });
-const activeModelOptions = computed(() => activeModels.value.map((model) => normalizeModelLabel(model.model_code || model.name || '')));
-const selectedModelRecord = computed(() => activeModels.value.find((model) => normalizeModelLabel(model.model_code) === selectedModel.value) || activeModels.value[0] || product.value || null);
+// The visible chip follows the record name ("FR7055XS (Auto)"), not the
+// transport code ("fr7055xs-auto"). Template models have no name, so their
+// code is already the human-readable label.
+const activeModelOptions = computed(() => activeModels.value.map((model) => normalizeModelLabel(model.name || model.model_code || '')));
+const selectedModelRecord = computed(() => {
+  // The chip label comes from `model_code || name`, so match on the same source;
+  // otherwise a label that only matched a template fallback used to fall through
+  // to "the first record-backed model", and every chip then bound its images to
+  // that one record (replacing an image changed every model in the panel).
+  const wanted = String(selectedModel.value || '');
+  const byLabel = activeModels.value.find((model) => normalizeModelLabel((model as any).name || model.model_code || '') === wanted)
+    || activeModels.value.find((model) => String((model as any).model_code || '').toLowerCase() === wanted.toLowerCase());
+  if (byLabel) return byLabel as any;
+  // A template-only chip is a real, selectable name without a CMS record. Do not
+  // borrow another model's record: that made FL400XS show FR7055XS parameters.
+  // Only an unknown/stale label may fall back to a record-backed model.
+  if (wanted && activeModelOptions.value.includes(wanted)) return null;
+  // Nothing matched at all (e.g. a pushed record appeared after a switch): fall
+  // back to a record-backed model of THIS series so the panel still has an owner.
+  const recordBacked = activeModels.value.find((model: any) => model?.id != null && String(model.series_code || '') === activeSeriesCode.value);
+  // Never fall back to the session's product when it belongs to another series:
+  // that made every card whose series had no records render the same model.
+  return recordBacked || activeModels.value[0] || null;
+});
+// The workbench can switch the canvas card without a card click (new card or
+// left-list selection). Keep a valid model chip selected for the new series;
+// otherwise the panel kept the previous series' model and a new model inherited
+// the wrong context.
+watch([activeSeriesCode, activeModelOptions], () => {
+  if (selectedModel.value && activeModelOptions.value.includes(selectedModel.value)) return;
+  selectedModel.value = activeModelOptions.value[0] || '';
+  drawingPage.value = 0;
+});
+// Rebuild the detail panel when the displayed model changes: canvas decorations
+// are written onto DOM nodes, and reusing a node across two models would leave
+// the previous model's record id on it.
+const detailsRecordKey = computed(() => `product-details-${boundProductRecord()?.id ?? 'fallback'}`);
 function jsonObject(value: unknown) {
   if (value && typeof value === 'object' && !Array.isArray(value)) return value as Record<string, any>;
   if (typeof value !== 'string') return {};
@@ -324,12 +640,18 @@ function jsonObject(value: unknown) {
 const displayConfig = computed(() => jsonObject(selectedModelRecord.value?.configuration));
 const displayLabels = computed(() => jsonObject(displayConfig.value.labels));
 const activeIntro = computed(() => {
-  const fallback = activeSeriesDetail.value.intro;
+  if (seriesDetail.value?.intro) return { title: '', subtitle: '', scene: '', body: '', ...seriesDetail.value.intro };
+  const fallback = activeSeriesDetail.value.intro || {};
   const source = displayConfig.value.intro && typeof displayConfig.value.intro === 'object' ? displayConfig.value.intro : {};
-  if (!fallback && !Object.values(source).some((value) => String(value || '').trim())) return null;
+  const hasFallbackCopy = Object.values(fallback).some((value) => String(value || '').trim());
+  const hasRecordCopy = Object.values(source).some((value) => String(value || '').trim());
+  // An empty series template is still an object (`{}`), which used to count as
+  // "has intro" and rendered blank "适应场景 / 工作站设备组成" headings for any
+  // series without a template (e.g. FR-G).
+  if (!hasFallbackCopy && !hasRecordCopy) return null;
   return { ...(fallback || { title: '', subtitle: '', scene: '', body: '' }), ...Object.fromEntries(Object.entries(source).filter(([, value]) => String(value || '').trim())) };
 });
-const displayName = computed(() => normalizeModelLabel(selectedModelRecord.value?.name || activeCard.value?.name || selectedModel.value));
+const displayName = computed(() => normalizeModelLabel(selectedModelRecord.value?.name || selectedModel.value || activeCard.value?.name));
 const displayModel = computed(() => normalizeModelLabel(selectedModelRecord.value?.model_code || selectedModel.value));
 // The public reader intentionally strips `machine_asset_id` and also bakes the
 // legacy PSD path into `machineImage`. In an authorized preview the raw draft
@@ -341,11 +663,40 @@ const managedMachineAssetId = computed(() => {
   return assetId == null ? '' : String(assetId).trim();
 });
 const hasManagedMachineAsset = computed(() => managedMachineAssetId.value !== '');
+// Series-level machine photo: the draft stores a governed asset id, the public
+// payload carries the resolved path. The canvas resolves the id itself because
+// the preview media endpoint is token-authorized.
+const seriesMachineImage = computed(() => {
+  const detail = seriesDetail.value;
+  if (!detail) return '';
+  const assetId = String(detail.machine_asset_id || '').trim();
+  if (assetId && previewSession.value) return `/api/preview/media/${encodeURIComponent(assetId)}`;
+  return String(detail.machine_image || '').trim();
+});
 const displayImage = computed(() => {
+  if (detailMode.value === 'series') return seriesMachineImage.value || activeSeriesDetail.value.machine;
   if (hasManagedMachineAsset.value) return `/api/preview/media/${encodeURIComponent(managedMachineAssetId.value)}`;
   return displayConfig.value.machineImage || selectedModelRecord.value?.media?.[0]?.path || activeSeriesDetail.value.machine;
 });
-const displayImageAlt = computed(() => selectedModelRecord.value?.media?.[0]?.alt || `${displayName.value} 机床设备`);
+const displayImageAlt = computed(() => !displayImage.value
+  ? '设备图片准备中'
+  : (selectedModelRecord.value?.media?.[0]?.alt || `${displayName.value} 机床设备`));
+// A managed asset is served through the authorized preview proxy. When that
+// proxy fails (expired grant, storage hiccup, revoked file) the browser fires
+// `error` and the slot used to stay blank. Fall back to the static website
+// original and, in preview only, say why the selected photo is not shown.
+const machineImageFailed = ref(false);
+const machineImageFallback = computed(() => String(
+  displayConfig.value.machineImage
+  || selectedModelRecord.value?.media?.[0]?.path
+  || activeSeriesDetail.value.machine
+  || '/assets/psd/product-cover-placeholder.png'
+));
+const machineImageSrc = computed(() => (machineImageFailed.value ? machineImageFallback.value : displayImage.value) || '/assets/psd/product-cover-placeholder.png');
+watch(displayImage, () => { machineImageFailed.value = false; });
+function handleMachineImageError() {
+  machineImageFailed.value = true;
+}
 const displayImageFieldPath = computed(() => {
   if (hasManagedMachineAsset.value) return 'configuration.machine_asset_id';
   // A model whose image comes from the generic media array keeps that binding.
@@ -356,52 +707,109 @@ const displayImageFieldPath = computed(() => {
   // the static fallback.
   return 'configuration.machine_asset_id';
 });
-const featureReasons = computed(() => Array.isArray(displayConfig.value.features) && displayConfig.value.features.length ? displayConfig.value.features : activeSeriesDetail.value.features);
+const featureReasons = computed(() => {
+  if (seriesDetail.value?.features?.length) return seriesDetail.value.features;
+  return Array.isArray(displayConfig.value.features) && displayConfig.value.features.length ? displayConfig.value.features : activeSeriesDetail.value.features;
+});
+// The canvas "＋ / ×" buttons must name the same array the panel renders from.
+const featureListPath = computed(() => (detailMode.value === 'series' ? 'detail.features' : 'configuration.features'));
+// Spec rows that only exist as the website original bind to the model draft's own
+// array (configuration.parameters.<n>), so they stay editable without creating
+// product_parameters records.
+const parameterRowsJson = computed(() => JSON.stringify(parameterGroups.value.flatMap((group: any) => (group.items || []).map((item: any) => ({
+  field_name: String(item.label || ''),
+  value: item.value == null ? '' : String(item.value),
+  unit: String(item.unit || '')
+})))));
+function parameterRowOwner(): { collection: string; itemId: string; prefix: string } {
+  const owner = detailOwner();
+  if (owner.mode === 'model' && owner.itemId) {
+    return { collection: 'product_models', itemId: owner.itemId, prefix: 'configuration.parameters' };
+  }
+  const seriesId = detailSeriesRecordId();
+  // A template-only model has no record of its own; the series keeps the table.
+  if (seriesId) return { collection: 'product_series', itemId: seriesId, prefix: 'presentation.parameters' };
+  return { collection: '', itemId: '', prefix: '' };
+}
+function parameterRowOwnerId(): string {
+  return parameterRowOwner().itemId;
+}
+function parameterRowCollection(): string | undefined {
+  return parameterRowOwner().collection || undefined;
+}
+function parameterRowPath(groupIndex: number, rowIndex: number, field: 'field_name' | 'value' | 'unit'): string {
+  const owner = parameterRowOwner();
+  if (!owner.itemId) return '';
+  let offset = 0;
+  for (let index = 0; index < groupIndex; index += 1) offset += parameterGroups.value[index]?.items?.length || 0;
+  return `${owner.prefix}.${offset + rowIndex}.${field}`;
+}
 function featurePresentationPath(index: number, field: 'label' | 'detail' | 'note' | 'image') {
   return `features_${index}_${field}`;
 }
-const fallbackParameters = [
-  ['机床型号', 'FR7055XS'],
-  ['X,Y,Z轴行程', '700*550*400'],
-  ['U,V轴行程', '± 40'],
-  ['最佳表面粗糙度', 'Ra≤0.8~1.0 μm（多次切割）Multi-cutting'],
-  ['多次切割精度', '± 0.005mm（12mm*12mm*30mm 对边六角 Regular hexagon）'],
-  ['最大工件重量', '1000KG'],
-  ['机床重量', '≈ 3250KG'],
-  ['X,Y,U,V轴驱动', '四轴交流伺服 4axis Servo'],
-  ['储液箱容量', '≈ 180L'],
-  ['过滤方式', '双泵强压单滤循环系统 Double pump filtration'],
-  ['电源输入规格', '220V / 380V 50~60Hz'],
-  ['总电气功率', '3KVA']
-];
-const specificationRows = computed(() => {
+// The old PSD table was FR7055XS copy and was used for every model that had no
+// published parameters, so an FL-XS page could show "机床型号 FR7055XS". Keep
+// only the label mapping now: missing data is shown as missing, never as
+// another machine's specification sheet.
+const parameterLabels: Record<string, string> = {
+  xyTravelMm: '工作台行程（X×Y）',
+  zAxisTravelMm: 'Z 轴行程',
+  maxWorkpieceMm: '最大工件尺寸',
+  maxWorkpieceWeightKg: '最大工件重量',
+  maxCuttingHeightMm: '最大切割高度',
+  maxTaperDegrees: '最大锥度',
+  machineDimensionsMm: '机床外形尺寸',
+  machineWeightKg: '机床重量'
+};
+function parameterDisplayLabel(key: string) {
+  return parameterLabels[key] || key;
+}
+const specificationRows = computed<Array<[string, string]>>(() => {
   const current = selectedModelRecord.value;
-  const parameter = recordFor('product_parameters');
-  if (parameter && (!slug.value || String(parameter.model_code || '') === displayModel.value)) {
-    return fallbackParameters.map((row) => row[0] === parameter.field_name ? [row[0], [formatProductParameterValue(parameter.value), formatProductParameterValue(parameter.unit)].filter(Boolean).join(' ')] : row);
-  }
   const entries = current?.parameters && typeof current.parameters === 'object' ? Object.entries(current.parameters) : [];
   const parameterUnits = current?.parameter_units && typeof current.parameter_units === 'object' ? current.parameter_units : {};
   const configured = Array.isArray(displayConfig.value.parameters) ? displayConfig.value.parameters.flatMap((row: any) => {
     if (!row || typeof row !== 'object' || !String(row.label || row.name || '').trim()) return [];
     const value = [formatProductParameterValue(row.value), formatProductParameterValue(row.unit)].filter(Boolean).join(' ');
-    return value ? [[String(row.label || row.name), value]] : [];
+    return value ? [[String(row.label || row.name), value] as [string, string]] : [];
   }) : [];
   const normalizedEntries = entries.flatMap(([key, value]) => {
     const displayValue = [formatProductParameterValue(value), formatProductParameterValue(parameterUnits[key])].filter(Boolean).join(' ');
-    return displayValue ? [[key, displayValue]] : [];
+    return displayValue ? [[parameterDisplayLabel(key), displayValue] as [string, string]] : [];
   });
-  return configured.length ? configured : (normalizedEntries.length ? normalizedEntries : fallbackParameters);
+  const rows = configured.length ? configured : normalizedEntries;
+  // A parameter row selected in the canvas keeps its live value without
+  // replacing the rest of the table with static copy.
+  const parameter = recordFor('product_parameters');
+  if (!parameter || String(parameter.model_code || '') !== displayModel.value) return rows;
+  const targetLabel = parameterDisplayLabel(String(parameter.field_name || ''));
+  return rows.map(([label, value]) => label === targetLabel
+    ? [label, [formatProductParameterValue(parameter.value), formatProductParameterValue(parameter.unit)].filter(Boolean).join(' ')] as [string, string]
+    : [label, value] as [string, string]);
 });
 const parameterGroups = computed(() => {
-  const previewGroups = groupPreviewProductParameters(recordsFor('product_parameters'), displayModel.value);
-  if (previewGroups.length) return previewGroups;
+  const previewItems = groupPreviewProductParameters(recordsFor('product_parameters'), displayModel.value)
+    .flatMap((group: any) => group.items || []);
   const groups = selectedModelRecord.value?.parameter_groups;
-  if (Array.isArray(groups) && groups.length) {
-    const normalized = normalizePreviewParameterGroups(groups);
-    if (normalized.length) return normalized;
+  let baseGroups: Array<{ name: string; items: any[] }> = Array.isArray(groups) && groups.length
+    ? normalizePreviewParameterGroups(groups)
+    : [];
+  if (!baseGroups.length) {
+    // A series-level table edited from the canvas (presentation.parameters) wins over
+    // the static copy so the edits are visible before a reload.
+    const seriesRows = (activeSeriesRecord.value as any)?.presentation?.parameters
+      || (activeCard.value as any)?.presentation?.parameters;
+    if (Array.isArray(seriesRows) && seriesRows.length) {
+      baseGroups = [{ name: '', items: seriesRows.map((row: any) => ({ id: '', label: String(row.field_name || ''), value: row.value == null ? '' : String(row.value), unit: String(row.unit || '') })) }];
+    } else if (specificationRows.value.length) {
+      baseGroups = [{ name: '', items: specificationRows.value.map(([label, value]) => ({ id: '', label, value })) }];
+    }
   }
-  return [{ name: '', items: specificationRows.value.map(([label, value]) => ({ id: '', label, value })) }];
+  if (!previewItems.length) return baseGroups;
+  // Draft rows used to replace the whole published table, so adding one
+  // parameter made every other row disappear from the live preview. Merge the
+  // saved drafts over the published rows instead.
+  return [{ name: '', items: mergePreviewParameterRows(baseGroups.flatMap((group: any) => group.items || []), previewItems) }];
 });
 const drawingPages = computed(() => {
   const drawings = displayConfig.value.drawings;
@@ -419,9 +827,12 @@ const resources = computed(() => product.value?.resources || []);
 const caseStudies = computed(() => product.value?.case_studies || []);
 
 function openProduct(id: string) {
-  const index = catalogCards.value.findIndex((card) => card.id === id);
+  // Draft cards are opened by slug or record id; resolve the real card id first.
+  const draft = draftCatalogCards.value.find((card) => card.id === id || String(card.recordId) === String(id));
+  const cardId = draft ? draft.id : id;
+  const index = catalogCards.value.findIndex((card) => card.id === cardId);
   if (index >= 0) catalogPage.value = Math.floor(index / catalogPageSize.value) + 1;
-  selectedCard.value = id;
+  selectedCard.value = cardId;
   selectedModel.value = activeModelOptions.value[0] || '';
   selectedReason.value = 0;
   drawingPage.value = 0;
@@ -469,18 +880,112 @@ function openHashProduct() {
   });
 }
 
+// Inside the CMS canvas a click must open the detail panel and bring it into
+// view: the panel renders below the grid, so without scrolling the editor sees
+// nothing happen.
+let lastSeriesOpenId = '';
+let lastSeriesOpenAt = 0;
+function openSeriesDetails(id: string) {
+  // The canvas dispatches the page action and the button's own click handler:
+  // both run for one click, which used to send duplicate series-select /
+  // request-series-models messages and scroll twice.
+  const now = Date.now();
+  if (lastSeriesOpenId === id && now - lastSeriesOpenAt < 200) return;
+  lastSeriesOpenId = id;
+  lastSeriesOpenAt = now;
+  const cardSeriesCode = (catalogCards.value.find((card) => card.id === id) as any)?.seriesCode
+    || (draftCatalogCards.value.find((card) => card.id === id) as any)?.seriesCode
+    || '';
+  notifySeriesSelection(id);
+  requestSeriesModels(String(cardSeriesCode || ''));
+  openProduct(id);
+  scrollToDetails();
+}
+
+// Tell the workbench which series card was opened. Without this the left form
+// stayed on whatever series the page-level canvas started with, so the next
+// model chip had to cross series and re-targeted (reloaded) the iframe.
+function notifySeriesSelection(id: string) {
+  if (!previewSession.value) return;
+  const card = catalogCards.value.find((item) => item.id === id) || draftCatalogCards.value.find((item) => item.id === id);
+  const recordId = String((card as any)?.recordId || '');
+  if (!recordId) return;
+  window.parent?.postMessage({
+    type: CMS_LIVE_PREVIEW_SERIES_SELECT,
+    collection: 'product_series',
+    seriesRecordId: recordId
+  }, '*');
+}
+
+// Inside the CMS canvas the card must not navigate: a route change drops
+// ?cmsPreview=1 and with it the draft session, leaving a plain page that cannot
+// be edited. This also covers a frame whose session already lapsed, so a click
+// can never strand the operator on /product/<slug>.
+// Draft cards are canvas-only; clicking one opens its detail panel in place.
+// Draft series are not server-rendered, so their models are missing until the
+// workbench pushes them; ask for them when the card opens.
+function requestSeriesModels(seriesCodeOverride?: string) {
+  if (!previewSession.value) return;
+  const seriesCode = String(seriesCodeOverride || activeSeriesCode.value || '').trim();
+  if (!seriesCode) return;
+  window.parent?.postMessage({
+    type: CMS_LIVE_PREVIEW_REQUEST_SERIES_MODELS,
+    collection: 'product_series',
+    itemId: String(detailSeriesRecordId() || ''),
+    seriesCode
+  }, '*');
+}
+
+function handleDraftCardClick(event: MouseEvent, id: string) {
+  event.preventDefault();
+  openSeriesDetails(id);
+}
+
+function handleCatalogCardClick(event: MouseEvent, id: string) {
+  if (!previewSession.value && !insidePreviewFrame()) return;
+  event.preventDefault();
+  openSeriesDetails(id);
+}
+
+// Canvas affordances rendered by this page (see data-cms-preview-page-action)
+// are handed back here by the preview runtime instead of being treated as field
+// selections.
+function applyCanvasPageAction(event: Event) {
+  const detail = (event as CustomEvent)?.detail as { action?: string; dataset?: Record<string, string> } | undefined;
+  if (!detail?.action) return;
+  if (detail.action === 'open-product-series') openSeriesDetails(String(detail.dataset?.cmsSeriesId || ''));
+  else if (detail.action === 'select-product-model') chooseModel(String(detail.dataset?.cmsModel || ''));
+}
+
 function onDialogKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape') closeProduct();
 }
 
-onMounted(() => window.addEventListener('keydown', onDialogKeydown));
+onMounted(() => {
+  window.addEventListener('keydown', onDialogKeydown);
+  window.addEventListener(CMS_LIVE_PREVIEW_PAGE_ACTION, applyCanvasPageAction);
+  window.addEventListener('message', handleCanvasNotice);
+});
+onBeforeUnmount(() => {
+  window.removeEventListener(CMS_LIVE_PREVIEW_PAGE_ACTION, applyCanvasPageAction);
+  window.removeEventListener('message', handleCanvasNotice);
+  window.clearTimeout(seriesNoticeTimer);
+});
+// Opening the detail panel or switching the displayed model replaces DOM nodes
+// without an update message from the workbench, so re-decorate after the render
+// or the new fields stay inert until the next sync.
+watch([detailsOpen, selectedModel, catalogPage], () => { void refreshVisualDecorations(); }, { flush: 'post' });
 function syncPreviewProductSelection() {
-  const selection = resolvePreviewProductSelection(previewSession.value, catalogCards.value, previewSeries.value);
+  const selection = resolvePreviewProductSelection(previewSession.value, catalogCards.value, sortedCatalogSeries.value);
   if (!selection) return;
   detailsOpen.value = true;
   if (selection.selectedCard) selectedCard.value = selection.selectedCard;
   const activePreviewModel = previewSession.value?.collection === 'product_models' ? product.value?.model_code : '';
   if (activePreviewModel || selection.selectedModel) selectedModel.value = normalizeModelLabel(activePreviewModel || selection.selectedModel);
+  // A model canvas opens the detail record, not the page hero. Without this the
+  // panel renders ~1050px below the frame top and the editor sees only the
+  // product grid (the canvas looks like it ignored the selection).
+  if (previewSession.value?.collection === 'product_models') void nextTick(scrollToDetails);
 }
 watch(
   () => [
@@ -491,7 +996,7 @@ watch(
     product.value?.series_code || '',
     product.value?.model_code || '',
     catalogCards.value.map((card) => card.id).join('|'),
-    previewSeries.value.map((series) => `${series?.slug || ''}:${series?.series_code || ''}`).join('|')
+    sortedCatalogSeries.value.map((series: any) => `${series?.slug || ''}:${series?.series_code || ''}`).join('|')
   ],
   syncPreviewProductSelection,
   { immediate: true }
@@ -500,28 +1005,14 @@ onMounted(() => {
   proofDomReady.value = true;
   openHashProduct();
   const overview = document.querySelector<HTMLElement>('.product-overview');
-  const proofNumberNodes = [...document.querySelectorAll<HTMLElement>('[data-proof-target]')];
   overviewEntryFrame = requestAnimationFrame(() => {
     overviewEntryFrame = requestAnimationFrame(() => overview?.classList.add('is-entered'));
   });
-  const duration = 1500;
-  const startedAt = performance.now();
-  const animateProof = (now: number) => {
-    if (previewSession.value) {
-      syncPreviewProofNumbers();
-      return;
-    }
-    const elapsed = now - startedAt;
-    proofNumberNodes.forEach((node) => {
-      const target = Number(node.dataset.proofTarget || 0);
-      const progress = Math.min(1, elapsed / duration);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      node.textContent = String(Math.round(target * eased));
-    });
-    if (elapsed < duration) proofFrame = requestAnimationFrame(animateProof);
-  };
-  if (previewSession.value) syncPreviewProofNumbers();
-  else proofFrame = requestAnimationFrame(animateProof);
+  // The server already renders the published number. Never reset it to 0 just
+  // to replay a count-up: a slow or failed script used to leave "0 %" and
+  // "0 YEARS" next to copy claiming 50% and 30 years. The canvas still syncs
+  // edits immediately through syncPreviewProofNumbers.
+  syncPreviewProofNumbers();
 });
 watch(() => route.hash, () => nextTick(openHashProduct));
 watch(drawingPageCount, (count) => {
@@ -532,28 +1023,35 @@ watch(catalogPageCount, (count) => {
 });
 onBeforeUnmount(() => {
   window.removeEventListener('keydown', onDialogKeydown);
-  cancelAnimationFrame(proofFrame);
   cancelAnimationFrame(overviewEntryFrame);
   cancelAnimationFrame(productHashScrollFrame);
 });
+// A series URL must name the series, not whichever model happens to be selected
+// in the panel (the browser tab used to read "FR7055XS(auto) 产品详情" for
+// /product/fr-xs-auto).
+const seoDisplayName = computed(() => routeSeriesExists.value ? (activeCard.value?.name || displayName.value) : displayName.value);
 useSeoMeta({
-  title: () => slug.value ? `${displayName.value} 产品详情` : '产品中心',
-  description: () => slug.value ? `${displayName.value} 的产品配置、特点与公开技术参数。` : '瑞钧智科中走丝线切割机床产品中心、设备特点与技术参数。'
+  title: () => slug.value ? `${seoDisplayName.value} 产品详情` : '产品中心',
+  description: () => slug.value
+    ? (routeSeriesExists.value ? `${seoDisplayName.value}系列的产品配置、特点与公开技术参数。` : `${seoDisplayName.value} 的产品配置、特点与公开技术参数。`)
+    : '瑞钧智科中走丝线切割机床产品中心、设备特点与技术参数。'
 });
 </script>
 
 <template>
   <main class="product-detail-page">
+    <p v-if="seriesNotice" class="cms-canvas-toast" role="status">{{ seriesNotice }}（在下方「草稿卡片」区，发布后进入上方网格）</p>
+    <p v-if="previewSessionLost" class="cms-session-lost" role="alert">预览会话已失效，画布暂时回到普通页面（所以看不到「详情 / ＋ / ×」）。页面会自动重连；若一直停在这里，请点右上角 ↻ 重新连接。</p>
     <SiteHeader />
 
     <section class="product-overview" v-bind="sectionPresentationAttributes(overviewCopy)" data-cms-preview-key="hero" aria-labelledby="product-overview-title">
       <div class="overview-heading cms-positioned">
-        <h1 id="product-overview-title" class="cms-styled-text"><span v-bind="fieldPresentationAttributes(overviewCopy, 'title')" data-cms-preview-field-path="title" data-cms-preview-position-field-path="field_presentation.title">{{ overviewCopy.title }}</span> <span v-bind="fieldPresentationAttributes(overviewCopy, 'kicker')" data-cms-preview-field-path="kicker" data-cms-preview-position-field-path="field_presentation.kicker">{{ overviewCopy.kicker }}</span></h1>
+        <h1 id="product-overview-title" class="cms-styled-text"><span v-if="slug" class="sr-only">{{ seoDisplayName }}</span><span v-bind="fieldPresentationAttributes(overviewCopy, 'title')" data-cms-preview-field-path="title" data-cms-preview-position-field-path="field_presentation.title">{{ overviewCopy.title }}</span> <span v-bind="fieldPresentationAttributes(overviewCopy, 'kicker')" data-cms-preview-field-path="kicker" data-cms-preview-position-field-path="field_presentation.kicker">{{ overviewCopy.kicker }}</span></h1>
       </div>
       <div class="overview-kicker cms-positioned" v-bind="sectionPresentationAttributes(categoriesCopy)" data-cms-preview-key="categories" aria-hidden="true"><b v-bind="fieldPresentationAttributes(categoriesCopy, 'kicker')" data-cms-preview-field-path="kicker" data-cms-preview-position-field-path="field_presentation.kicker">{{ categoriesCopy.kicker || '3大' }}</b><span class="cms-styled-text" v-bind="fieldPresentationAttributes(categoriesCopy, 'title')" data-cms-preview-field-path="title" data-cms-preview-position-field-path="field_presentation.title">{{ categoriesCopy.title }}</span></div>
       <div class="proof-grid">
         <article v-for="proof in proofCopy" :key="proof.id" class="cms-positioned" v-bind="sectionPresentationAttributes(proof)" :data-cms-preview-key="proof.id">
-          <strong v-if="proof.value" class="cms-styled-text"><span :data-proof-target="proof.value" :data-cms-preview-field-path="proof.value ? 'value' : 'title'">0</span><em :data-cms-preview-field-path="proof.value ? 'unit' : 'body'">{{ proof.unit }}</em></strong>
+          <strong v-if="proof.value" class="cms-styled-text"><span :data-proof-target="proof.value" :data-cms-preview-field-path="proof.value ? 'value' : 'title'">{{ proof.value }}</span><em :data-cms-preview-field-path="proof.value ? 'unit' : 'body'">{{ proof.unit }}</em></strong>
           <strong v-else class="cms-styled-text" data-cms-preview-field-path="title">{{ proof.title }}</strong>
           <span class="cms-styled-text" data-cms-preview-field-path="body">{{ proof.body }}</span>
         </article>
@@ -562,48 +1060,106 @@ useSeoMeta({
 
     <section class="catalog-section" v-bind="sectionPresentationAttributes(modelListCopy)" data-cms-preview-key="model-list" aria-labelledby="catalog-title">
       <h2 id="catalog-title" class="sr-only">{{ modelListCopy.title }}</h2>
+      <p v-if="previewSession && unpublishedSeriesDraftSummary.count" class="catalog-draft-note" data-cms-preview-draft-note>未发布草稿：{{ unpublishedSeriesDraftSummary.text }} 不显示在官网，也不计入编号与分页；发布后会出现在这里。</p>
       <div class="product-grid cms-positioned" :class="{ 'has-selection': detailsOpen }">
         <div v-for="(family, pageIndex) in visibleCatalogCards" :key="family.id" class="product-card-wrap" data-cms-preview-collection="product_series" :data-cms-preview-item-id="seriesCardItemId((catalogPage - 1) * catalogPageSize + pageIndex, family.id)" :data-cms-preview-key="seriesCardItemId((catalogPage - 1) * catalogPageSize + pageIndex, family.id) ? seriesCardValue((catalogPage - 1) * catalogPageSize + pageIndex, 'series_code', seriesCardValue((catalogPage - 1) * catalogPageSize + pageIndex, 'slug', family.id)) : undefined">
-          <button :id="family.id" type="button" class="product-card" :class="{ 'is-selected': detailsOpen && selectedCard === family.id }" :aria-expanded="detailsOpen && selectedCard === family.id" data-cms-preview-field-path="name" @click="openProduct(family.id)">
-          <img :src="seriesCardValue((catalogPage - 1) * catalogPageSize + pageIndex, 'cover_asset', family.image)" data-cms-preview-field-path="cover_asset" data-cms-preview-placement-key="product.series.cover" data-cms-preview-media-role="cover" :alt="`${seriesCardValue((catalogPage - 1) * catalogPageSize + pageIndex, 'name', family.name)} 产品图`">
+          <button v-if="previewSession && seriesCardItemId((catalogPage - 1) * catalogPageSize + pageIndex, family.id)" type="button" class="cms-card-remove" :class="{ 'is-disabled': !seriesCardCanDelete((catalogPage - 1) * catalogPageSize + pageIndex) }" :disabled="!seriesCardCanDelete((catalogPage - 1) * catalogPageSize + pageIndex)" :title="seriesCardCanDelete((catalogPage - 1) * catalogPageSize + pageIndex) ? '删除卡片' : '已发布系列不能直接删除；请先在发布队列下线并退回草稿'" :data-cms-preview-action="seriesCardCanDelete((catalogPage - 1) * catalogPageSize + pageIndex) ? 'series-remove' : undefined" :data-cms-series-record-id="seriesCardItemId((catalogPage - 1) * catalogPageSize + pageIndex, family.id)" :aria-label="`${seriesCardCanDelete((catalogPage - 1) * catalogPageSize + pageIndex) ? '删除' : '已发布，不能删除'} ${family.name} 卡片`">×</button>
+          <NuxtLink :id="family.id" :to="`/product/${encodeURIComponent(family.id)}`" class="product-card" :class="{ 'is-selected': detailsOpen && selectedCard === family.id }" :aria-expanded="detailsOpen && selectedCard === family.id" data-cms-preview-field-path="name" @click="handleCatalogCardClick($event, family.id)">
+          <img :src="seriesCardValue((catalogPage - 1) * catalogPageSize + pageIndex, 'cover_asset', family.image) || '/assets/psd/product-cover-placeholder.png'" data-cms-preview-field-path="cover_asset" data-cms-preview-placement-key="product.series.cover" data-cms-preview-media-role="cover" :alt="`${seriesCardValue((catalogPage - 1) * catalogPageSize + pageIndex, 'name', family.name)} 产品图`">
           <span class="product-copy"><span class="product-kicker" v-bind="fieldPresentationAttributes(seriesCardPresentation((catalogPage - 1) * catalogPageSize + pageIndex), 'positioning')" data-cms-preview-field-path="positioning" data-cms-preview-position-field-path="presentation.field_presentation.positioning">{{ family.index.replace(/^0/, '') }}/{{ seriesCardValue((catalogPage - 1) * catalogPageSize + pageIndex, 'positioning', family.category) }}</span><span class="product-name" v-bind="fieldPresentationAttributes(seriesCardPresentation((catalogPage - 1) * catalogPageSize + pageIndex), 'name')" data-cms-preview-field-path="name" data-cms-preview-position-field-path="presentation.field_presentation.name">{{ seriesCardValue((catalogPage - 1) * catalogPageSize + pageIndex, 'name', family.name) }}</span></span>
-          </button>
+          </NuxtLink>
+          <button v-if="previewSession" type="button" class="series-detail-action" data-cms-preview-page-action="open-product-series" :data-cms-series-id="family.id" :aria-label="`打开 ${family.name} 详情`" @click.stop="openSeriesDetails(family.id)">详情</button>
           <button v-if="detailsOpen && selectedCard === family.id" class="details-jump" type="button" aria-label="向下查看系列详情" @click="scrollToDetails">&#8595;</button>
         </div>
+        <!-- With five published series the 3-column grid used to leave an empty
+             cell. Fill it with a conversion card instead of a hole. Hidden in the
+             canvas: it is not editable and would navigate the preview away. -->
+        <NuxtLink v-if="!previewSession && catalogPage === catalogPageCount && visibleCatalogCards.length % 3 !== 0" to="/contact" class="catalog-cta-card">
+          <span class="catalog-cta-kicker">SELECTION SUPPORT</span>
+          <strong>没有找到合适机型？</strong>
+          <span>告诉我们加工材料、行程和精度要求，工程师协助选型。</span>
+          <b>获取选型建议 →</b>
+        </NuxtLink>
+        <div v-for="draft in visibleDraftCards" :key="draft.id" class="product-card-wrap is-draft" data-cms-preview-collection="product_series" :data-cms-preview-item-id="draft.recordId">
+          <button type="button" class="cms-card-remove" data-cms-preview-action="series-remove" :data-cms-series-record-id="draft.recordId" :aria-label="`删除 ${draft.name} 卡片`">×</button>
+          <div class="product-card" :class="{ 'is-selected': detailsOpen && selectedCard === draft.id }" :aria-expanded="detailsOpen && selectedCard === draft.id" @click="handleDraftCardClick($event, draft.id)">
+            <img v-if="draft.image" :src="draft.image" :alt="`${draft.name} 产品图`" data-cms-preview-editable="true" data-cms-preview-field-path="cover_asset" data-cms-preview-collection="product_series" :data-cms-preview-item-id="draft.recordId" data-cms-preview-placement-key="product.series.cover" data-cms-preview-media-role="cover">
+            <img v-else src="/assets/psd/product-dimensions.png" alt="设置封面" class="cms-draft-cover-empty" data-cms-preview-editable="true" data-cms-preview-field-path="cover_asset" data-cms-preview-collection="product_series" :data-cms-preview-item-id="draft.recordId" data-cms-preview-placement-key="product.series.cover" data-cms-preview-media-role="cover">
+            <span class="product-copy">
+              <span class="product-kicker" data-cms-preview-editable="true" data-cms-preview-field-path="positioning" data-cms-preview-collection="product_series" :data-cms-preview-item-id="draft.recordId">草稿 · {{ draft.positioning }}</span>
+              <span class="product-name" data-cms-preview-editable="true" data-cms-preview-field-path="name" data-cms-preview-collection="product_series" :data-cms-preview-item-id="draft.recordId">{{ draft.name }}</span>
+            </span>
+          </div>
+          <!-- A draft card is opened through the workbench (canvas actions are the only ones the runtime reliably forwards inside the draw): the left panel switches to this series and its models get pushed back. -->
+          <button v-if="previewSession" type="button" class="series-detail-action" data-cms-preview-page-action="open-product-series" :data-cms-series-id="draft.id" :data-cms-series-record-id="String(draft.recordId)" :aria-label="`打开 ${draft.name} 详情`" @click.stop="openSeriesDetails(draft.id)">详情</button>
+        </div>
       </div>
+      <div v-if="previewSession" class="cms-series-actions">
+        <button type="button" class="cms-series-add" data-cms-preview-action="series-add" aria-label="新增产品系列卡片">＋ 新增系列卡片</button>
+      </div>
+      <section v-if="previewSession && seriesDraftCards.length" class="cms-draft-cards" aria-label="草稿卡片">
+        <p class="cms-draft-cards-title">草稿卡片（仅画布可见，发布后才进入上方网格与分页）</p>
+        <ul class="cms-draft-cards-list">
+          <li v-for="draft in seriesDraftCards" :key="draft.id" class="cms-draft-card" :class="{ 'is-new': String(draft.id) === highlightedDraftId }">
+            <span class="cms-draft-badge">草稿</span>
+            <button type="button" class="cms-draft-name" data-cms-preview-action="series-select" :data-cms-series-record-id="String(draft.id)" :title="`编辑草稿卡片 ${draft.name || draft.series_code}`">{{ draft.name || draft.series_code }}</button>
+            <span class="cms-draft-code">{{ draft.series_code }}</span>
+            <button type="button" class="cms-draft-remove" data-cms-preview-action="series-remove" :data-cms-series-record-id="String(draft.id)" :aria-label="`删除 ${draft.name || draft.series_code} 卡片`">×</button>
+          </li>
+        </ul>
+      </section>
       <nav v-if="catalogPageCount > 1" class="catalog-pager" :aria-label="paginationCopy.title" data-cms-preview-key="pagination">
           <button type="button" :disabled="catalogPage === 1" data-cms-preview-field-path="pagination.previous_label" @click="changeCatalogPage(-1)">{{ paginationCopy.pagination?.previous_label || '上一页' }}</button>
         <span>第 {{ catalogPage }} / {{ catalogPageCount }} 页</span>
           <button type="button" :disabled="catalogPage === catalogPageCount" data-cms-preview-field-path="pagination.next_label" @click="changeCatalogPage(1)">{{ paginationCopy.pagination?.next_label || '下一页' }}</button>
       </nav>
-      <section v-if="detailsOpen" id="product-details" class="product-series-panel" v-bind="sectionPresentationAttributes(parametersCopy)" data-cms-preview-key="parameters" :data-cms-preview-collection="productBinding('title')['data-cms-preview-collection']" :data-cms-preview-item-id="productBinding('title')['data-cms-preview-item-id']" :aria-label="`${activeCard.name} ${parametersCopy.title}`">
+      <section v-if="detailsOpen" :key="detailsRecordKey" id="product-details" class="product-series-panel" v-bind="{ ...sectionPresentationAttributes(parametersCopy), ...detailOwnerAttributes() }" data-cms-preview-key="parameters" :aria-label="`${activeCard.name} ${parametersCopy.title}`">
         <div class="series-feature-panel">
+          <h2 class="sr-only">{{ seoDisplayName }} 产品详情</h2>
           <button class="series-panel-close" type="button" aria-label="收起机型详情" @click="closeProduct">×</button>
+          <p v-if="previewSession && !detailHasCmsData" class="series-draft-note" data-cms-preview-draft-note>{{ DETAIL_INITIALIZE_HINT }}</p>
           <div class="series-panel-main" :class="{ 'is-workstation': activeIntro }">
             <div v-if="activeIntro" class="workstation-intro">
-              <h3 v-bind="fieldPresentationAttributes(displayConfig, 'intro_title')" data-cms-preview-field-path="configuration.intro.title">{{ activeIntro.title }}</h3>
-              <strong v-bind="fieldPresentationAttributes(displayConfig, 'intro_subtitle')" data-cms-preview-field-path="configuration.intro.subtitle">{{ activeIntro.subtitle }}</strong>
-              <p><b>适应场景：</b><span v-bind="fieldPresentationAttributes(displayConfig, 'intro_scene')" data-cms-preview-field-path="configuration.intro.scene">{{ activeIntro.scene }}</span></p>
-              <p v-bind="fieldPresentationAttributes(displayConfig, 'intro_body')" data-cms-preview-field-path="configuration.intro.body">{{ activeIntro.body }}</p>
+              <h2 v-bind="detailFieldAttributes('intro.title', 'intro_title')">{{ activeIntro.title }}</h2>
+              <strong v-bind="detailFieldAttributes('intro.subtitle', 'intro_subtitle')">{{ activeIntro.subtitle }}</strong>
+              <p><b>适应场景：</b><span v-bind="detailFieldAttributes('intro.scene', 'intro_scene')">{{ activeIntro.scene }}</span></p>
+              <p v-bind="detailFieldAttributes('intro.body', 'intro_body')">{{ activeIntro.body }}</p>
             </div>
             <nav v-else class="series-model-list" aria-label="该系列机型">
-              <button v-for="model in activeModelOptions" :key="model" type="button" :class="{ active: selectedModel === model }" @click="chooseModel(model)"><span v-bind="fieldPresentationAttributes(selectedModelRecord?.presentation, 'model_code')" data-cms-preview-field-path="model_code" data-cms-preview-position-field-path="presentation.field_presentation.model_code">{{ model }}</span></button>
+              <button v-for="model in activeModelOptions" :key="model" type="button" :class="{ active: selectedModel === model }" :data-cms-preview-page-action="previewSession ? 'select-product-model' : undefined" :data-cms-model="previewSession ? model : undefined" data-cms-preview-action="select-model-target" :data-cms-model-code="model" :data-cms-model-name="model" :data-cms-model-id="modelRecordId(model)" :data-cms-list-series="activeSeriesCode" @click="chooseModel(model)"><span v-bind="fieldPresentationAttributes(selectedModelRecord?.presentation, 'name')" data-cms-preview-field-path="name" data-cms-preview-label="型号名称" data-cms-preview-position-field-path="presentation.field_presentation.name">{{ model }}</span></button>
+              <div v-if="previewSession" class="cms-model-actions">
+                <button type="button" class="cms-model-add" data-cms-preview-action="model-add" :data-cms-list-series="activeSeriesCode" aria-label="新增机型">＋ 新增机型</button>
+                <!-- Only a CMS record can be deleted; a template-only model keeps the
+                     button visible but disabled so its absence is explained instead of
+                     looking like a missing feature. -->
+                <button type="button" class="cms-model-remove" :disabled="!modelCanDelete" :title="boundProductRecord()?.id == null ? '该机型只是官网原版名称，尚未建立 CMS 记录，无法删除；先点「＋ 新增机型」建立记录' : (!modelCanDelete ? '已发布或审核中的机型不能直接删除；请先在发布队列下线并退回草稿' : '删除当前机型')" :data-cms-preview-action="modelCanDelete ? 'model-remove' : undefined" :data-cms-list-series="activeSeriesCode" :data-cms-model-id="boundProductRecord()?.id != null ? String(boundProductRecord()?.id) : undefined" :data-cms-model-code="String(boundProductRecord()?.model_code || '')" aria-label="删除当前机型">× 删除当前机型</button>
+              </div>
             </nav>
-            <div class="series-machine-visual"><img :src="displayImage" :alt="displayImageAlt" v-bind="productBinding(displayImageFieldPath)" data-cms-preview-media-role="machine"></div>
+            <div class="series-machine-visual"><img :src="machineImageSrc" :alt="displayImageAlt" v-bind="machineImageAttributes()" data-cms-preview-placement-key="product.gallery.image" data-cms-preview-media-role="machine" @error="handleMachineImageError"><span v-if="previewSession && machineImageFailed" class="series-machine-media-error">所选素材读取失败，已回退到官网原图</span></div>
             <div class="series-capabilities" :class="{ 'is-text-only': featureReasons.every((reason) => !reason.image) }" aria-label="核心能力">
               <p v-if="activeIntro" class="capability-heading">{{ parametersCopy.label || '工作站设备组成：' }}</p>
-              <div v-for="(reason, index) in featureReasons" :key="reason.label" class="series-capability" :class="{ 'has-image': reason.image, 'has-detail': reason.detail }">
-                <img v-if="reason.image" :src="reason.image" :alt="reason.label" v-bind="productVisualBinding(`configuration.features.${index}.image`, featurePresentationPath(index, 'image'))" :data-cms-preview-position-field-path="`configuration.field_presentation.${featurePresentationPath(index, 'image')}`" data-cms-preview-placement-key="product.gallery.image" data-cms-preview-media-role="feature">
-                <span v-bind="fieldPresentationAttributes(displayConfig, featurePresentationPath(index, 'label'))" :data-cms-preview-field-path="`configuration.features.${index}.label`" :data-cms-preview-position-field-path="`configuration.field_presentation.${featurePresentationPath(index, 'label')}`">{{ reason.image ? `${index + 1}.` : '' }}{{ reason.label }}</span>
-                <small v-if="reason.detail" v-bind="fieldPresentationAttributes(displayConfig, featurePresentationPath(index, 'detail'))" :data-cms-preview-field-path="`configuration.features.${index}.detail`" :data-cms-preview-position-field-path="`configuration.field_presentation.${featurePresentationPath(index, 'detail')}`">{{ reason.detail }}</small>
-                <small v-if="reason.note" v-bind="fieldPresentationAttributes(displayConfig, featurePresentationPath(index, 'note'))" :data-cms-preview-field-path="`configuration.features.${index}.note`" :data-cms-preview-position-field-path="`configuration.field_presentation.${featurePresentationPath(index, 'note')}`">（{{ reason.note }}）</small>
+              <div v-for="(reason, index) in featureReasons" :key="`${index}-${reason.label}`" class="series-capability" :class="{ 'has-image': reason.image, 'has-detail': reason.detail }">
+                <button v-if="previewSession" type="button" class="cms-list-remove" data-cms-preview-action="list-remove" :data-cms-list-path="featureListPath" :data-cms-list-series="activeSeriesCode" :data-cms-list-index="String(index)" :data-cms-list-label="reason.label || `第 ${index + 1} 项`" :data-cms-list-collection="detailOwner().collection" :data-cms-list-item-id="detailOwner().itemId" :aria-label="`删除第 ${index + 1} 项`">×</button>
+                <img v-if="reason.image" :src="reason.image" :alt="reason.label" v-bind="detailFieldAttributes(`features.${index}.image`, featurePresentationPath(index, 'image'))" data-cms-preview-placement-key="product.gallery.image" data-cms-preview-media-role="feature">
+                <span v-bind="detailFieldAttributes(`features.${index}.label`, featurePresentationPath(index, 'label'))">{{ reason.image ? `${index + 1}.` : '' }}{{ reason.label }}</span>
+                <small v-if="reason.detail" v-bind="detailFieldAttributes(`features.${index}.detail`, featurePresentationPath(index, 'detail'))">{{ reason.detail }}</small>
+                <small v-if="reason.note" v-bind="detailFieldAttributes(`features.${index}.note`, featurePresentationPath(index, 'note'))">（{{ reason.note }}）</small>
               </div>
+              <button v-if="previewSession" type="button" class="cms-list-add" data-cms-preview-action="list-add" :data-cms-list-path="featureListPath" :data-cms-list-series="activeSeriesCode" :data-cms-list-collection="detailOwner().collection" :data-cms-list-item-id="detailOwner().itemId" aria-label="新增一项设备组成">＋ 新增一项</button>
+            </div>
+          </div>
+          <div class="series-panel-cta">
+            <div class="series-panel-cta-copy"><strong>需要选型建议？</strong><span>告诉我们加工材料、行程和精度要求，技术工程师协助选型。</span></div>
+            <div class="series-panel-cta-actions">
+              <NuxtLink class="series-cta-primary" to="/contact">获取选型建议 <span aria-hidden="true">→</span></NuxtLink>
+              <a v-if="resources.length" class="series-cta-secondary" :href="productResourceUrl(resources[0])" target="_blank" rel="noreferrer">下载产品资料</a>
+              <NuxtLink v-else class="series-cta-secondary" to="/service">服务支持</NuxtLink>
             </div>
           </div>
         </div>
-        <section id="specifications" class="series-specification" v-bind="{ ...sectionPresentationAttributes(dimensionsCopy), ...productBinding('configuration') }" data-cms-preview-key="dimensions" aria-labelledby="series-specification-title">
+        <section id="specifications" class="series-specification" :class="{ 'is-empty': !parameterGroups.length }" v-bind="{ ...sectionPresentationAttributes(dimensionsCopy), ...productBinding('configuration') }" data-cms-preview-key="dimensions" aria-labelledby="series-specification-title">
           <div class="specification-side-label"><span id="series-specification-title"><img :src="String(displayConfig.labels?.technicalImage || '/assets/psd/technical-label-psd.png')" :alt="String(displayLabels.technical || parametersCopy.title || '技术参数')" v-bind="productBinding('configuration.labels.technical_image_asset_id')" data-cms-preview-placement-key="product.gallery.image" data-cms-preview-media-role="technical"></span></div>
-          <div class="specification-table"><dl><template v-for="(group, groupIndex) in parameterGroups" :key="`${group.name}-${groupIndex}`"><dt v-if="group.name" class="parameter-group-title" :data-cms-preview-key="group.groupBinding?.itemId ? `parameter-${group.groupBinding.itemId}` : undefined" :data-cms-preview-collection="group.groupBinding?.collection" :data-cms-preview-item-id="group.groupBinding?.itemId" data-cms-preview-field-path="group_name" :data-cms-preview-group-record-ids="group.groupBinding?.recordIds?.join(',') || undefined">{{ group.name }}</dt><dd v-if="group.name" class="parameter-group-spacer" aria-hidden="true"></dd><template v-for="item in group.items" :key="`${group.name}-${item.id || item.label}`"><dt v-bind="fieldPresentationAttributes(item.presentation, 'field_name')" :data-cms-preview-key="item.id ? `parameter-${item.id}` : undefined" :data-cms-preview-collection="item.id ? 'product_parameters' : undefined" :data-cms-preview-item-id="item.id || undefined" :data-cms-preview-field-path="item.id ? 'field_name' : undefined">{{ item.label }}</dt><dd v-bind="fieldPresentationAttributes(item.presentation, 'value')" :data-cms-preview-key="item.id ? `parameter-${item.id}` : undefined" :data-cms-preview-collection="item.id ? 'product_parameters' : undefined" :data-cms-preview-item-id="item.id || undefined" :data-cms-preview-field-path="item.id ? 'value' : undefined">{{ item.value }}<span v-if="item.unit" v-bind="fieldPresentationAttributes(item.presentation, 'unit')" :data-cms-preview-key="item.id ? `parameter-${item.id}` : undefined" :data-cms-preview-collection="item.id ? 'product_parameters' : undefined" :data-cms-preview-item-id="item.id || undefined" :data-cms-preview-field-path="item.id ? 'unit' : undefined"> {{ item.unit }}</span></dd></template></template></dl><p v-bind="fieldPresentationAttributes(dimensionsCopy, 'body')" data-cms-preview-field-path="body" data-cms-preview-position-field-path="field_presentation.body">{{ dimensionsCopy.body || '注：1.表中所述加工性能参数是在本公司指定条件（材料、加工条件、环境、测量参数）下进行的实验结果　2.某些功能配置需要选装' }}</p></div>
+          <div class="specification-table"><div v-if="previewSession && modelCanDelete && boundProductRecord()?.id != null" class="spec-table-toolbar"><button type="button" class="spec-row-add" data-cms-preview-action="parameter-add" :data-cms-model-code="selectedModelRecord?.model_code || displayModel" aria-label="新增技术参数">＋ 新增参数</button></div><p v-if="!parameterGroups.length" class="specification-empty" data-cms-preview-key="parameters-empty">{{ previewSession ? '该机型还没有技术参数；点上方「＋ 新增参数」添加第一条。' : '该产品暂未发布结构化参数，请联系瑞钧获取选型资料。' }}</p><dl v-if="parameterGroups.length"><template v-for="(group, groupIndex) in parameterGroups" :key="groupIndex"><template v-for="(item, rowIndex) in group.items" :key="item.id || item.label"><dt v-bind="fieldPresentationAttributes(item.presentation, 'field_name')" :data-cms-preview-key="item.id ? `parameter-${item.id}` : undefined" :data-cms-preview-collection="item.id ? 'product_parameters' : parameterRowCollection()" :data-cms-preview-item-id="item.id || parameterRowOwnerId() || undefined" :data-cms-preview-field-path="item.id ? 'field_name' : parameterRowPath(groupIndex, rowIndex, 'field_name')" :data-cms-parameter-rows="parameterRowsJson">{{ item.label }}</dt><dd v-bind="fieldPresentationAttributes(item.presentation, 'value')" :data-cms-preview-key="item.id ? `parameter-${item.id}` : undefined" :data-cms-preview-collection="item.id ? 'product_parameters' : parameterRowCollection()" :data-cms-preview-item-id="item.id || parameterRowOwnerId() || undefined" :data-cms-preview-field-path="item.id ? 'value' : parameterRowPath(groupIndex, rowIndex, 'value')" :data-cms-parameter-rows="parameterRowsJson">{{ item.value }}<span v-if="item.unit" v-bind="fieldPresentationAttributes(item.presentation, 'unit')" :data-cms-preview-key="item.id ? `parameter-${item.id}` : undefined" :data-cms-preview-collection="item.id ? 'product_parameters' : parameterRowCollection()" :data-cms-preview-item-id="item.id || parameterRowOwnerId() || undefined" :data-cms-preview-field-path="item.id ? 'unit' : parameterRowPath(groupIndex, rowIndex, 'unit')"> {{ item.unit }}</span><button v-if="previewSession && item.id && modelCanDelete" type="button" class="spec-row-remove" data-cms-preview-action="parameter-remove" :data-cms-parameter-id="item.id" :data-cms-model-code="selectedModelRecord?.model_code || displayModel" :aria-label="`删除参数 ${item.label}`">×</button></dd></template></template><div v-if="previewSession && specHasRecordRows && modelCanDelete" class="spec-row-actions"><button type="button" class="spec-row-add" data-cms-preview-action="parameter-add" :data-cms-model-code="selectedModelRecord?.model_code || displayModel" aria-label="新增技术参数">＋ 新增参数</button></div></dl><p v-if="parameterGroups.length" v-bind="fieldPresentationAttributes(dimensionsCopy, 'body')" data-cms-preview-field-path="body" data-cms-preview-position-field-path="field_presentation.body">{{ dimensionsCopy.body || '注：1.表中所述加工性能参数是在本公司指定条件（材料、加工条件、环境、测量参数）下进行的实验结果　2.某些功能配置需要选装' }}</p></div>
           <div class="specification-drawings" aria-label="机型工程视图"><template v-if="activeDrawing"><img :src="activeDrawing.image" v-bind="productBinding(`configuration.drawings.${activeDrawing.sourceIndex}.media_asset_id`)" :data-cms-preview-placement-key="'product.gallery.image'" data-cms-preview-media-role="drawing" :alt="activeDrawing.caption || activeDrawing.title"><span v-if="activeDrawing.caption" :data-cms-preview-field-path="`configuration.drawings.${activeDrawing.sourceIndex}.caption`">{{ activeDrawing.caption }}</span></template><img v-else src="/assets/psd/product-dimensions.png" v-bind="productBinding('configuration.drawings.0.media_asset_id')" data-cms-preview-placement-key="product.gallery.image" data-cms-preview-media-role="drawing" :alt="String(displayLabels.drawing || '机型工程视图')"></div>
         </section>
            <nav v-if="drawingPageCount > 1" class="specification-pager" data-cms-preview-key="pagination" :aria-label="paginationCopy.title"><button type="button" :disabled="drawingPage === 0" @click="changeDrawingPage(-1)">‹ {{ paginationCopy.pagination?.previous_label || '上页' }}</button><span aria-live="polite">{{ drawingPage + 1 }} / {{ drawingPageCount }}</span><button type="button" :disabled="drawingPage === drawingPageCount - 1" @click="changeDrawingPage(1)">{{ paginationCopy.pagination?.next_label || '下页' }} ›</button></nav>
@@ -657,7 +1213,7 @@ useSeoMeta({
     </Teleport>
 
     <section v-if="resources.length || caseStudies.length" class="product-resources" :aria-label="resourcesCopy.title">
-      <article v-if="resources.length" v-bind="sectionPresentationAttributes(resourcesCopy)" data-cms-preview-key="resources" :data-cms-preview-collection="productBinding('resources')['data-cms-preview-collection']" :data-cms-preview-item-id="productBinding('resources')['data-cms-preview-item-id']"><p class="eyebrow">{{ resourcesCopy.kicker }}</p><a v-for="(resource, resourceIndex) in resources" :key="`${productResourceUrl(resource)}-${resourceIndex}`" :href="productResourceUrl(resource)" :data-cms-preview-field-path="`resources.${resourceIndex}.title`" :data-cms-preview-link-field-path="`resources.${resourceIndex}.url`" :download="productResourceDownloadName(resource)" :target="productResourceUrl(resource).startsWith('https://') ? '_blank' : undefined" :rel="productResourceUrl(resource).startsWith('https://') ? 'noreferrer' : undefined"><span :data-cms-preview-field-path="`resources.${resourceIndex}.type`">{{ resource.type || '资料' }}</span><strong :data-cms-preview-field-path="`resources.${resourceIndex}.title`">{{ resource.title }}</strong><b aria-hidden="true">-></b></a></article>
+      <article v-if="resources.length" v-bind="sectionPresentationAttributes(resourcesCopy)" data-cms-preview-key="resources" :data-cms-preview-collection="productRecordBinding('resources')['data-cms-preview-collection']" :data-cms-preview-item-id="productRecordBinding('resources')['data-cms-preview-item-id']"><p class="eyebrow">{{ resourcesCopy.kicker }}</p><a v-for="(resource, resourceIndex) in resources" :key="`${productResourceUrl(resource)}-${resourceIndex}`" :href="productResourceUrl(resource)" :data-cms-preview-field-path="`resources.${resourceIndex}.title`" :data-cms-preview-link-field-path="`resources.${resourceIndex}.url`" :download="productResourceDownloadName(resource)" :target="productResourceUrl(resource).startsWith('https://') ? '_blank' : undefined" :rel="productResourceUrl(resource).startsWith('https://') ? 'noreferrer' : undefined"><span :data-cms-preview-field-path="`resources.${resourceIndex}.type`">{{ resource.type || '资料' }}</span><strong :data-cms-preview-field-path="`resources.${resourceIndex}.title`">{{ resource.title }}</strong><b aria-hidden="true">-></b></a></article>
       <article v-if="caseStudies.length" v-bind="sectionPresentationAttributes(casesCopy)" data-cms-preview-key="cases"><p class="eyebrow" data-cms-preview-field-path="kicker">{{ casesCopy.kicker }}</p><a v-for="caseStudy in caseStudies" :key="caseStudy.url" :href="caseStudy.url" :target="caseStudy.url.startsWith('https://') ? '_blank' : undefined" :rel="caseStudy.url.startsWith('https://') ? 'noreferrer' : undefined"><strong>{{ caseStudy.title }}</strong><span v-if="caseStudy.summary">{{ caseStudy.summary }}</span><b aria-hidden="true">-></b></a></article>
     </section>
 
@@ -702,46 +1258,108 @@ useSeoMeta({
 .proof-metric>span { white-space: nowrap; }
 .proof-grid small { display: block; margin-top: 5px; color: #848282; font-size: .54em; }
 .catalog-section { padding: 0 max(6.2%, calc((100% - 1400px) / 2)) 76px; background: #f4f4f3; }
+.catalog-draft-note { max-width:1280px; margin:0 auto 16px; padding:10px 14px; color:#8a4b00; background:#fff6e6; border:1px dashed #e0b45c; font-size:13px; line-height:1.6; }
 .product-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; max-width: 1280px; margin: 0 auto; }
 .catalog-pager { display:flex; align-items:center; justify-content:center; gap:18px; max-width:1280px; margin:28px auto 0; color:#333; font-size:14px; }.catalog-pager button { min-width:92px; border:1px solid #1f1f1f; background:#fff; color:#1f1f1f; padding:9px 14px; font:inherit; cursor:pointer; }.catalog-pager button:hover:not(:disabled),.catalog-pager button:focus-visible { border-color:#ed1f2b; background:#ed1f2b; color:#fff; outline:0; }.catalog-pager button:disabled { cursor:not-allowed; opacity:.4; }
+.cms-session-lost { position: sticky; top: 0; z-index: 50; margin: 0; padding: 10px 16px; background: #b3261e; color: #fff; font-size: 13px; line-height: 1.5; text-align: center; }
 .product-card-wrap { position: relative; min-width: 0; }
-.product-card { position: relative; display: block; width: 100%; aspect-ratio: 420 / 259; min-height: 0; padding: 0; overflow: hidden; color: #fff; background: #dbe1e3; border: 0; border-radius: 0; cursor: pointer; text-align: left; transition: transform .35s cubic-bezier(.22,.8,.24,1), box-shadow .35s ease; }
+.catalog-cta-card { display:flex; flex-direction:column; justify-content:center; gap:10px; min-width:0; aspect-ratio:420/259; padding:30px; background:#17191b; color:#fff; text-decoration:none; }
+.catalog-cta-kicker { color:#ff9a9e; font-size:11px; font-weight:700; letter-spacing:.08em; }
+.catalog-cta-card strong { font-size:22px; font-weight:600; line-height:1.25; }
+.catalog-cta-card > span:not(.catalog-cta-kicker) { color:rgb(255 255 255 / 68%); font-size:13px; line-height:1.6; }
+.catalog-cta-card b { margin-top:6px; color:#fff; font-size:13px; font-weight:600; }
+.catalog-cta-card:hover b { color:#ff5252; }
+@media (max-width:1100px) { .catalog-cta-card { padding:20px; gap:6px; }.catalog-cta-card > span:not(.catalog-cta-kicker) { display:none; }.catalog-cta-card strong { font-size:18px; }.catalog-cta-card b { font-size:12px; } }
+.product-card-wrap.is-draft .product-card { outline: 2px dashed #c9a227; outline-offset: -2px; }
+.is-draft .product-kicker { color: #8a6d1b; font-weight: 700; }
+.cms-draft-cover-empty { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 6px; opacity: .55; filter: grayscale(.2); }
+/* Canvas-only card controls: create/delete a whole series card in place. */
+.cms-card-remove { position: absolute; z-index: 4; top: 8px; right: 8px; display: grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 2px solid #fff; border-radius: 50%; background: #e53935; box-shadow: 0 2px 8px rgba(0,0,0,.35); color: #fff; font-size: 16px; font-weight: 700; line-height: 1; cursor: pointer; }
+.cms-card-remove:hover,.cms-card-remove:focus-visible { background: #b71c1c; outline: 0; }
+.cms-card-remove:disabled { background: #8b9094; border-color: rgb(255 255 255 / 80%); cursor: not-allowed; opacity: .85; }
+.cms-card-remove:disabled:hover { background: #8b9094; }
+.cms-series-actions { display: flex; justify-content: center; margin: 18px 0 4px; }
+.cms-draft-cards { margin: 14px 0 0; padding: 14px 18px; border: 1px dashed #c9a227; border-radius: 10px; background: #fffaf0; }
+.cms-draft-cards-title { margin: 0 0 10px; color: #8a6d1b; font-size: 12px; }
+.cms-draft-cards-list { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.cms-draft-card { display: inline-flex; align-items: center; gap: 8px; padding: 6px 8px 6px 10px; border: 1px solid #e0cf9a; border-radius: 999px; background: #fff; font-size: 13px; }
+.cms-draft-badge { padding: 2px 8px; border-radius: 999px; background: #f0c050; color: #4a3600; font-size: 11px; font-weight: 700; }
+.cms-draft-name { padding: 0; border: 0; background: none; color: #11139a; font-size: 13px; font-weight: 700; line-height: 1.2; text-decoration: underline dotted; cursor: pointer; }
+.cms-draft-name:hover,.cms-draft-name:focus-visible { color: #b71c1c; outline: 0; }
+.cms-draft-code { color: #8b8b8b; font-size: 11px; }
+.cms-draft-remove { display: grid; place-items: center; width: 22px; height: 22px; padding: 0; border: 2px solid #fff; border-radius: 50%; background: #e53935; box-shadow: 0 1px 4px rgba(0,0,0,.3); color: #fff; font-size: 14px; font-weight: 700; line-height: 1; cursor: pointer; }
+.cms-draft-remove:hover,.cms-draft-remove:focus-visible { background: #b71c1c; outline: 0; }
+.cms-canvas-toast { position: fixed; left: 50%; bottom: 26px; z-index: 60; transform: translateX(-50%); max-width: min(560px, 90vw); margin: 0; padding: 10px 18px; border-radius: 999px; background: #11139a; box-shadow: 0 6px 24px rgba(0,0,0,.28); color: #fff; font-size: 13px; line-height: 1.5; text-align: center; }
+.cms-draft-card.is-new { border-color: #11139a; box-shadow: 0 0 0 3px rgba(17,19,154,.25); }
+.cms-series-add { padding: 10px 22px; border: 2px dashed #11139a; border-radius: 999px; background: #eef0ff; box-shadow: 0 2px 6px rgba(17,19,154,.12); color: #11139a; font-size: 14px; font-weight: 600; line-height: 1; cursor: pointer; }
+.cms-series-add:hover,.cms-series-add:focus-visible { background: #11139a; color: #fff; outline: 0; }
+/* Preview-only affordance: opens the series detail panel inside the canvas. */
+.series-detail-action { position:absolute; z-index:2; top:10px; left:10px; min-height:28px; padding:0 10px; border:1px solid rgb(255 255 255 / 72%); border-radius:3px; background:rgb(24 26 28 / 74%); color:#fff; font-size:12px; font-weight:600; line-height:26px; cursor:pointer; }
+.series-detail-action:hover,.series-detail-action:focus-visible { border-color:#ed1f2b; background:#ed1f2b; outline:0; }
+.product-card { position: relative; display: block; width: 100%; aspect-ratio: 420 / 259; min-height: 0; padding: 0; overflow: hidden; color: #fff; background: #dbe1e3; border: 0; border-radius: 0; text-decoration: none; cursor: pointer; text-align: left; transition: transform .35s cubic-bezier(.22,.8,.24,1), box-shadow .35s ease; }
 .product-card:hover { z-index: 1; transform:translateY(-5px); box-shadow:0 16px 30px rgb(24 32 34 / 16%); }
 .product-grid.has-selection .product-card { transition:transform .45s cubic-bezier(.22,.8,.24,1), box-shadow .35s ease; }
 .product-grid.has-selection .product-card.is-selected { z-index:2; transform:translateY(-18px); box-shadow:0 18px 32px rgb(24 32 34 / 20%); }
-.details-jump { position:absolute; z-index:3; top:100%; left:50%; display:grid; width:44px; height:44px; place-items:center; padding:0; color:#fff; background:#f1373b; border:0; border-radius:50%; cursor:pointer; font-size:25px; line-height:1; box-shadow:0 7px 16px rgb(24 32 34 / 20%); transform:translate(-50%, calc(-50% - 18px)); transition:transform .25s ease,background .25s ease; }
-.details-jump:hover { background:#d9272f; transform:translate(-50%, calc(-50% - 15px)); }
+.details-jump { position:absolute; z-index:3; top:100%; left:50%; display:grid; width:44px; height:44px; place-items:center; padding:0; color:#fff; background:#e51b23; border:0; border-radius:50%; cursor:pointer; font-size:25px; line-height:1; box-shadow:0 7px 16px rgb(24 32 34 / 20%); transform:translate(-50%, calc(-50% - 18px)); transition:transform .25s ease,background .25s ease; }
+.details-jump:hover { background:#b91920; transform:translate(-50%, calc(-50% - 15px)); }
 .product-card img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition:transform .7s cubic-bezier(.22,.8,.24,1); }
 .product-card:hover img { transform:scale(1.035); }
-.product-copy { position:absolute; z-index:1; top:50%; right:0; display:grid; align-content:center; gap:6px; width:36%; min-height:34%; box-sizing:border-box; padding:12px; color:#fff; background:rgb(63 65 66 / 74%); transform:translateY(-50%); }
-.product-kicker { overflow:hidden; color:#13c7e8; font-size:clamp(10px,.66vw,13px); line-height:1.2; text-overflow:ellipsis; white-space:nowrap; }
-.product-name { overflow:hidden; color:#fff; font-size:clamp(14px,1.02vw,20px); font-weight:500; line-height:1.18; text-overflow:ellipsis; white-space:nowrap; }
-.product-series-panel { position:relative; max-width:1280px; margin:54px auto 0; padding:0; background:transparent; }
+.product-copy { position:absolute; z-index:1; top:50%; right:0; display:grid; align-content:center; gap:6px; width:38%; min-height:34%; box-sizing:border-box; padding:12px; color:#fff; background:rgb(42 45 47 / 84%); transform:translateY(-50%); }
+.product-kicker { display:-webkit-box; overflow:hidden; color:rgb(255 255 255 / 82%); font-size:clamp(10px,.7vw,13px); font-weight:600; line-height:1.25; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
+.product-name { display:-webkit-box; overflow:hidden; color:#fff; font-size:clamp(15px,1.02vw,20px); font-weight:500; line-height:1.18; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
+.product-series-panel { position:relative; max-width:1280px; margin:54px auto 0; padding:0; background:transparent; scroll-margin-top:120px; }
 .series-feature-panel { position:relative; padding:64px 72px 48px; background:#e8e8e9; border-radius:26px; }
-.series-panel-close { position:absolute; top:-23px; left:50%; display:grid; width:46px; height:46px; place-items:center; padding:0; color:#fff; background:#f1373b; border:0; border-radius:50%; cursor:pointer; font-family:Arial,sans-serif; font-size:40px; line-height:1; transform:translateX(-50%); }
+.series-panel-cta { display:flex; align-items:center; justify-content:space-between; gap:24px; margin-top:32px; padding:20px 24px; background:#f7f8f7; border:1px solid #d5d8da; border-radius:14px; }
+.series-panel-cta-copy { display:grid; gap:4px; }
+.series-panel-cta-copy strong { color:#17191b; font-size:16px; font-weight:600; }
+.series-panel-cta-copy span { color:#62666a; font-size:12px; line-height:1.6; }
+.series-panel-cta-actions { display:flex; flex-shrink:0; gap:10px; }
+.series-cta-primary { display:inline-flex; align-items:center; gap:8px; padding:10px 18px; color:#fff; background:#e51b23; border-radius:2px; font-size:13px; font-weight:600; text-decoration:none; }
+.series-cta-primary:hover { background:#b91920; }
+.series-cta-secondary { display:inline-flex; align-items:center; padding:10px 16px; color:#17191b; background:#fff; border:1px solid #c7cacc; border-radius:2px; font-size:13px; text-decoration:none; }
+.series-cta-secondary:hover { color:#e51b23; border-color:#e51b23; }
+.series-draft-note { margin:0 0 24px; padding:10px 14px; color:#8a4b00; background:#fff6e6; border:1px dashed #e0b45c; border-radius:4px; font-size:13px; line-height:1.6; }
+.series-panel-close { position:absolute; top:-23px; left:50%; display:grid; width:46px; height:46px; place-items:center; padding:0; color:#fff; background:#1f2224; border:0; border-radius:50%; cursor:pointer; font-family:Arial,sans-serif; font-size:40px; line-height:1; transform:translateX(-50%); }
+.series-panel-close:hover,.series-panel-close:focus-visible { background:#000; outline:0; }
 .series-panel-main { display:grid; grid-template-columns:190px minmax(0,1fr) minmax(250px,300px); min-height:408px; gap:42px; align-items:stretch; }
 .series-model-list { display:grid; align-content:center; gap:18px; }
 .series-model-list button { min-height:48px; padding:0 16px; color:#f0eeee; background:#4d4e4e; border:0; border-radius:6px; cursor:pointer; font-family:Arial,var(--ruijun-font-latin),sans-serif; font-size:17px; text-align:left; transition:background .2s ease,color .2s ease; }
-.series-model-list button:hover,.series-model-list button.active { color:#2a2929; background:#7e7e7e; }
+.series-model-list button:hover { color:#fff; background:#5c5f61; }
+.series-model-list button.active { color:#fff; background:#e51b23; }
+.cms-model-actions { display:grid; gap:8px; }
+.cms-model-add { min-height:34px; padding:0 14px; color:#11139a; background:#eef0ff; border:2px dashed #11139a; border-radius:8px; font-size:13px; font-weight:600; line-height:1; cursor:pointer; }
+.cms-model-add:hover,.cms-model-add:focus-visible { background:#11139a; color:#fff; outline:0; }
+.cms-model-remove { min-height:30px; padding:0 12px; color:#fff; background:#e53935; border:2px solid #fff; border-radius:8px; box-shadow:0 1px 4px rgba(0,0,0,.25); font-size:12px; font-weight:600; line-height:1; cursor:pointer; }
+.cms-model-remove:hover,.cms-model-remove:focus-visible { background:#b71c1c; outline:0; }
+.cms-model-remove:disabled { background:#f6d9d7; color:#a5332c; box-shadow:none; cursor:not-allowed; }
+.cms-model-remove:disabled:hover { background:#f6d9d7; }
 .workstation-intro { align-self:center; color:#3e4144; }
-.workstation-intro h3 { margin:0 0 12px; font-size:24px; font-weight:500; line-height:1.15; }
+.workstation-intro h2 { margin:0 0 12px; font-size:24px; font-weight:500; line-height:1.15; }
 .workstation-intro > strong { display:block; margin-bottom:32px; color:#404347; font-size:18px; font-weight:400; }
 .workstation-intro p { margin:0 0 15px; font-size:13px; line-height:1.75; }
 .workstation-intro p b { display:block; margin-bottom:5px; font-size:14px; font-weight:500; }
 .series-machine-visual { position:relative; display:grid; min-width:0; min-height:370px; align-items:end; justify-items:center; }
+.series-machine-media-error { position:absolute; left:0; bottom:0; padding:4px 8px; border-radius:6px; background:rgb(211 34 34 / 8%); color:#b3261e; font-size:12px; line-height:1.5; }
 .series-machine-visual img { width:min(100%,680px); max-height:390px; object-fit:contain; }
 .series-capabilities { display:grid; align-content:center; gap:18px; min-width:0; }
 .capability-heading { margin:0 0 2px; color:#44484b; font-size:14px; font-weight:500; }
-.series-capability { position:relative; display:grid; justify-items:center; gap:7px; color:#11139a; font-size:13px; line-height:1.35; text-align:center; }
+.series-capability { position:relative; display:grid; justify-items:center; gap:7px; color:#17191b; font-size:13px; line-height:1.35; text-align:center; }
 .series-capability img { width:108px; height:108px; object-fit:cover; border-radius:17px; }
 .series-capability small { color:#4f5357; font-size:11px; font-weight:400; line-height:1.6; white-space:pre-line; }
+/* Canvas-only list controls: they render inside the preview document, never on
+   the public page, and are excluded from text selection by the capture handler.
+   Deliberately high contrast so they cannot be mistaken for design copy. */
+.cms-list-remove { position:absolute; z-index:3; top:-8px; right:-8px; display:grid; place-items:center; width:24px; height:24px; padding:0; border:2px solid #fff; border-radius:50%; background:#e53935; box-shadow:0 2px 6px rgba(0,0,0,.3); color:#fff; font-size:15px; font-weight:700; line-height:1; cursor:pointer; }
+.cms-list-remove:hover,.cms-list-remove:focus-visible { background:#b71c1c; outline:0; }
+.cms-list-add { display:inline-flex; align-items:center; gap:6px; justify-self:start; margin-top:14px; padding:9px 18px; border:2px dashed #11139a; border-radius:999px; background:#eef0ff; box-shadow:0 2px 6px rgba(17,19,154,.12); color:#11139a; font-size:14px; font-weight:600; line-height:1; cursor:pointer; }
+.cms-list-add:hover,.cms-list-add:focus-visible { background:#11139a; color:#fff; outline:0; }
 .series-capability.has-detail { grid-template-columns:92px minmax(0,1fr); justify-items:start; gap:3px 16px; text-align:left; }
 .series-capability.has-detail img { grid-row:1 / span 3; width:92px; height:92px; }
 .series-capability.has-detail span { align-self:end; font-weight:500; }
 .series-capability.has-detail small { align-self:start; }
 .series-capabilities.is-text-only { justify-items:stretch; gap:26px; }
-.series-capabilities.is-text-only .series-capability { grid-template-columns:14px minmax(0,1fr); justify-items:start; gap:3px 14px; color:#070192; font-size:20px; text-align:left; }
-.series-capabilities.is-text-only .series-capability::before { width:13px; height:13px; margin-top:5px; background:#070192; border-radius:50%; content:""; }
+.series-capabilities.is-text-only .series-capability { grid-template-columns:14px minmax(0,1fr); justify-items:start; gap:3px 14px; color:#17191b; font-size:20px; text-align:left; }
+.series-capabilities.is-text-only .series-capability::before { width:13px; height:13px; margin-top:5px; background:#e51b23; border-radius:50%; content:""; }
 .series-capabilities.is-text-only .series-capability small { grid-column:2; color:#55595d; }
 .series-specification { display:grid; grid-template-columns:52px minmax(0,1fr) clamp(260px, 15.625vw, 300px); gap:34px; align-items:start; margin-top:36px; padding:44px 46px 36px; background:#dedfe1; border:0; border-radius:26px; }
 .specification-side-label { display:flex; justify-content:flex-start; padding-top:14px; padding-left:26px; }
@@ -752,12 +1370,19 @@ useSeoMeta({
 .specification-table dl { display:grid; grid-template-columns:minmax(122px,.78fr) minmax(0,1.55fr); gap:11px 24px; margin:0; }
 .specification-table dt { color:#4e5154; font-size:12px; line-height:1.25; text-align:right; }
 .specification-table dd { margin:0; color:#4c4f53; font-family:var(--ruijun-font-latin); font-size:12px; line-height:1.25; }
+.specification-empty { max-width:560px; margin:6px 0 0; padding:26px 0; color:#62666a; font-size:14px; line-height:1.8; }
+.specification-empty + .spec-row-add { margin-top:14px; }
 .specification-table p { margin:24px 0 0; color:#6a6c70; font-size:8px; line-height:1.45; }
 .specification-drawings { align-self:end; min-width:0; padding-top:2px; }
-.specification-table .parameter-group-title { grid-column: 1 / -1; margin-top: 10px; padding-top: 10px; color: #686c70; border-top: 1px solid var(--ruijun-line); font-weight: 600; }
-.specification-table .parameter-group-spacer { display: none; }
+/* Canvas-only parameter row controls (preview document only). */
+.spec-row-remove { margin-left:10px; width:20px; height:20px; padding:0; border:2px solid #fff; border-radius:50%; background:#e53935; box-shadow:0 1px 4px rgba(0,0,0,.28); color:#fff; font-size:13px; font-weight:700; line-height:1; vertical-align:middle; cursor:pointer; }
+.spec-row-remove:hover,.spec-row-remove:focus-visible { background:#b71c1c; outline:0; }
+.spec-row-actions { margin-top:18px; }
+.spec-table-toolbar { display:flex; justify-content:flex-start; margin:0 0 10px; }
+.spec-row-add { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; border:2px dashed #11139a; border-radius:999px; background:#eef0ff; color:#11139a; font-size:13px; font-weight:600; line-height:1; cursor:pointer; }
+.spec-row-add:hover,.spec-row-add:focus-visible { background:#11139a; color:#fff; outline:0; }
 .specification-drawings img { display:block; width:100%; height:auto; }
-.specification-pager { display:flex; justify-content:center; align-items:center; gap:18px; margin:0; padding:28px 0 30px; color:#5a5d60; background:#f4f4f3; font-family:var(--ruijun-font-latin); font-size:13px; }.specification-pager button { min-width:76px; padding:9px 13px; color:#fff; background:#225da8; border:0; border-radius:3px; cursor:pointer; font-size:14px; line-height:1; }.specification-pager button:disabled { cursor:default; opacity:1; }
+.specification-pager { display:flex; justify-content:center; align-items:center; gap:18px; margin:0; padding:28px 0 30px; color:#5a5d60; background:#f4f4f3; font-family:var(--ruijun-font-latin); font-size:13px; }.specification-pager button { min-width:76px; padding:9px 13px; color:#fff; background:#17191b; border:0; border-radius:3px; cursor:pointer; font-size:14px; line-height:1; }.specification-pager button:hover:not(:disabled) { background:#e51b23; }.specification-pager button:disabled { cursor:not-allowed; opacity:.35; }
 .machine-showcase { display: grid; grid-template-columns: 190px minmax(0, 1fr) 205px; gap: 36px; max-width: 1400px; min-height: 575px; margin: 0 auto; padding: 65px 52px; background: #e7e7e9; border-radius: 8px; }
 .model-list { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 13px; }
 .model-list button { min-width: 136px; padding: 10px 14px; color: #f0eeee; background: #565656; border: 0; border-radius: 4px; cursor: pointer; font-family: var(--ruijun-font-latin); font-size: 13px; text-align: left; transition: background .2s ease, color .2s ease; }
@@ -870,6 +1495,7 @@ useSeoMeta({
     min-height: 650px;
     align-items: stretch;
   }
+  .series-specification.is-empty { min-height: 0; }
   .specification-table {
     align-self: stretch;
     justify-content: stretch;
@@ -915,5 +1541,11 @@ useSeoMeta({
     height: auto;
     grid-auto-rows: auto;
   }
+}
+@media (max-width: 620px) {
+  .series-panel-cta { flex-direction: column; align-items: stretch; gap: 14px; padding: 18px; }
+  .series-panel-cta-actions { flex-wrap: wrap; }
+  .catalog-cta-card { aspect-ratio: auto; min-height: 220px; padding: 24px; }
+  .catalog-cta-card > span:not(.catalog-cta-kicker) { display: block; }
 }
 </style>

@@ -20,7 +20,6 @@ export function assessProductModel(model) {
   const issues = [];
   if (!text(model?.model_code, '')) issues.push('型号编码');
   if (!text(model?.series_code, '')) issues.push('系列编码');
-  if (!text(model?.source_document, '') && !text(model?.source_url, '')) issues.push('来源文件或地址');
   if (!hasParameters(model?.parameters)) issues.push('结构化参数');
   if (text(evidence.series_mapping_status, '') === 'needs_product_owner_confirmation') issues.push('系列归属待产品负责人确认');
   const conflicts = values(evidence.parameter_conflicts);
@@ -35,7 +34,6 @@ export function assessProductSeries(series) {
   const issues = [];
   if (!text(series?.series_code, '')) issues.push('系列编码');
   if (!text(series?.name, '')) issues.push('系列名称');
-  if (!text(series?.source_document, '') && !text(series?.source_url, '')) issues.push('来源文件或地址');
   const aliases = values(evidence.aliases_pending_review);
   if (aliases.length) issues.push(`待确认系列别名：${aliases.join('、')}`);
   return issues;
@@ -47,7 +45,6 @@ export function assessProductParameter(parameter) {
   if (!text(parameter?.model_code, '')) issues.push('型号编码');
   if (!text(parameter?.field_name, '')) issues.push('参数字段');
   if (!text(parameter?.value, '')) issues.push('参数值');
-  if (!text(parameter?.source_document, '') && !text(parameter?.source_url, '')) issues.push('来源文件或地址');
   if (!text(evidence.source_key, '')) issues.push('原始参数键');
   if (evidence.parameter_conflict === true) issues.push('参数来源冲突待技术确认');
   return issues;

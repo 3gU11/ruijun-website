@@ -16,6 +16,7 @@ test('media placement reader returns only published enabled assets and resolves 
   });
   const result = await reader.get('home.hero.video');
   assert.equal(result.source, 'cms');
+  assert.equal(result.data[0].id, '1');
   assert.equal(result.data[0].path, '/api/public/v1/media/asset/aaaaaaaa-aaaa-4aaa-8aaa-000000000002');
   assert.equal(result.data[0].posterPath, '/api/public/v1/media/asset/aaaaaaaa-aaaa-4aaa-8aaa-000000000001');
   assert.match(requests[0], /filter%5Bplacement_key%5D%5B_eq%5D=home\.hero\.video/);

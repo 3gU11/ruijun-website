@@ -24,6 +24,9 @@ function publicAsset(record, posterFileId = '') {
   const posterPath = publicMediaAssetPath(posterFileId) || null;
   const alt = typeof record.alt_text === 'string' ? record.alt_text.trim() : '';
   return [id, {
+    // The public media card needs its asset id so the canvas red × and the
+    // edit-time media picker can address the exact record.
+    id,
     path,
     managed: true,
     ...(alt ? { alt } : {}),

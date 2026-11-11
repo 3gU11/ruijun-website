@@ -28,7 +28,7 @@ test('product release snapshot contains one consistent public product version', 
   assert.deepEqual(parseProductReleaseSnapshot(JSON.stringify(result.snapshot)), result.snapshot);
 });
 
-test('product release snapshot rejects models without a published series and parameters without a model', () => {
+test('product release snapshot keeps orphan parameters out of the release without blocking it', () => {
   const result = buildProductReleaseSnapshot({
     series: [],
     models: [{ ...published, series_code: 'missing', model_code: 'fr400xs', name: 'FR400XS' }],
@@ -36,7 +36,8 @@ test('product release snapshot rejects models without a published series and par
   });
 
   assert.ok(result.issues.includes('MODEL_SERIES_MISSING:fr400xs'));
-  assert.ok(result.issues.includes('PARAMETER_MODEL_MISSING:missing-model'));
+  assert.equal(result.issues.includes('PARAMETER_MODEL_MISSING:missing-model'), false);
+  assert.equal(result.snapshot.counts.parameters, 0);
 });
 
 test('product release snapshot parser fails closed for malformed records', () => {

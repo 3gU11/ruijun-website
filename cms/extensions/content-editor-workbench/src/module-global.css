@@ -5,6 +5,8 @@
  * Moved verbatim out of module.vue. Loaded through the SFC's <style src> so the
  * scoped/global semantics are unchanged.
  */
+html.ruijun-workbench-active .scrolling-container{scroll-padding-top:72px;overflow-anchor:none}
+html.ruijun-workbench-active .live-website-preview iframe,html.ruijun-workbench-active .visual-canvas-viewport iframe{overscroll-behavior:contain}
 html.ruijun-workbench-active .live-website-preview .visual-canvas-viewport > iframe{height:var(--canvas-height)!important;min-height:0!important;position:absolute!important;top:20px!important;left:max(20px,calc((100% - var(--canvas-width) * var(--visual-zoom)) / 2))!important}
 
 /* Final canvas sizing overrides keep the zoom controlled by the toolbar. */
@@ -114,3 +116,16 @@ html.ruijun-workbench-active .live-website-preview .visual-canvas-viewport > ifr
     transform:none!important;
   }
 }
+
+/* Directus 的可访问性“跳转菜单”遮罩在部分 Chromium/焦点切换后会保持 active，
+ * 以透明全屏 .overlay 盖住工作台和实时预览，导致红叉、双击、导航全部点击被吞。
+ * 遮罩本身不可见；禁用它的命中即可，跳转菜单面板（.panel）仍保持可操作。 */
+.container.left,
+.container.left > .v-overlay,
+.container.left > .v-overlay .overlay{
+  pointer-events:none!important;
+}
+/* 跳转菜单本体仍可用键盘/点击操作。 */
+.container.left > .panel{
+  pointer-events:auto!important;
+}.visual-property-save{position:sticky;bottom:0;display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:14px -14px -14px;padding:12px 14px;border-top:1px solid var(--theme--border-color);background:var(--theme--background)}.visual-property-save .primary-action,.visual-property-save .secondary-action{min-height:32px}.visual-property-save-state{margin-left:auto;color:var(--theme--foreground-subdued);font-size:12px}.visual-property-save-state.pending{color:#b26a00;font-weight:600}.visual-unsaved-count{padding:2px 8px;border-radius:999px;background:#fdf1d8;color:#8a5a00;font-size:12px;font-weight:600;white-space:nowrap}

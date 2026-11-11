@@ -106,6 +106,23 @@ test('article draft preview preserves Directus Date display_date values', () => 
   assert.equal(preview.display_date, '2026-08-24T00:00:00.000Z');
 });
 
+test('article draft preview keeps same-day sort_order for canvas list ordering', () => {
+  // 列表按 日期 → sort_order → id 排序；关联草稿若丢 sort_order 会被当成
+  // Infinity，导致选中/重连时卡片在同一天内来回换位。
+  const preview = previewContentRecord('articles', {
+    id: 7,
+    slug: 'ordering-regression',
+    title: '排序回归测试',
+    display_date: '2026-11-03',
+    sort_order: 0,
+    category: 'video',
+    status: 'draft',
+    publication_state: 'unpublished'
+  });
+  assert.equal(preview.sort_order, 0);
+  assert.equal(preview.display_date, '2026-11-03');
+});
+
 test('article draft preview carries only supported card field presentations on initial canvas load', () => {
   const preview = previewContentRecord('articles', {
     id: 10,
@@ -372,4 +389,47 @@ test('draft preview keeps select and number fields but drops off-catalogue sourc
     id: 'custom-data-list-feed1', type: 'data-list', version: 1, enabled: true,
     title: '最新动态', source: 'articles', limit: 4, columns: 2, variant: 'compact'
   }]);
+});
+
+test('series detail preview keeps controlled copy and drops unknown keys', () => {
+  const preview = previewContentRecord('product_series', {
+    id: 1,
+    series_code: 'workstation',
+    slug: 'workstation',
+    name: '灵动切割工作站',
+    positioning: '无人化加工解决方案',
+    presentation: {
+      field_presentation: { name: { text_style: { size_desktop: 24 } } },
+      detail: {
+        intro: { title: '灵动切割工作站', subtitle: '无人化加工解决方案', scene: '批量切割', body: '正文', private_note: '不要下发' },
+        features: [
+          { label: '自动穿丝系统', note: '多种方式可供选择', media_asset_id: '12', internal: 'x' },
+          { label: '   ' },
+          { label: '六轴协作机器人', detail: '协作', image: '/assets/psd/robot.png' }
+        ],
+        evidence: 'internal'
+      }
+    },
+    status: 'draft',
+    publication_state: 'unpublished'
+  });
+
+  assert.equal(preview.presentation.detail.intro.title, '灵动切割工作站');
+  assert.equal(Object.hasOwn(preview.presentation.detail.intro, 'private_note'), false);
+  assert.equal(Object.hasOwn(preview.presentation.detail, 'evidence'), false);
+  assert.deepEqual(preview.presentation.detail.features.map((feature) => feature.label), ['自动穿丝系统', '六轴协作机器人']);
+  assert.equal(preview.presentation.detail.features[0].media_asset_id, '12');
+  assert.equal(Object.hasOwn(preview.presentation.detail.features[0], 'internal'), false);
+  assert.equal(preview.presentation.field_presentation.name.text_style.size_desktop, 24);
+});
+
+test('series without detail keeps its previous presentation contract', () => {
+  const preview = previewContentRecord('product_series', {
+    id: 2, series_code: 'fr-pro', slug: 'fr-pro', name: 'FR (pro)',
+    presentation: { field_presentation: { positioning: { text_style: { size_desktop: 18 } } } },
+    status: 'draft', publication_state: 'unpublished'
+  });
+
+  assert.equal(Object.hasOwn(preview.presentation, 'detail'), false);
+  assert.ok(preview.presentation.field_presentation.positioning);
 });

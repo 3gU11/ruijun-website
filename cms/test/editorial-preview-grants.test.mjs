@@ -36,6 +36,17 @@ test('resource previews authorize selected attachments, not arbitrary URLs', () 
  assert.deepEqual(livePreviewGrantIds('service_resources',{asset:'/api/preview/media/61'}),[]);
 });
 
+test('series detail authorizes its machine photo and feature thumbnails', () => {
+ const detail = {
+  intro: { title: '灵动切割工作站' },
+  features: [{ media_asset_id: '81' }, { media_asset_id: 82 }, { media_asset_id: '/api/preview/media/83' }],
+  machine_asset_id: 80
+ };
+ assert.deepEqual(livePreviewGrantIds('product_series', { detail, cover_asset: '39' }).sort(), ['39', '80', '81', '82']);
+ assert.deepEqual(livePreviewGrantIds('product_series', { detail: { intro: { title: 'x' } }, cover_asset: null }), []);
+ assert.deepEqual(livePreviewGrantIds('product_series', { presentation: { detail } }), []);
+});
+
 test('all six page previews request section media grants without reading arbitrary URLs', () => {
  for(const slug of ['home','product','manufacturing','news','about','service']) {
   assert.deepEqual(livePreviewGrantIds('pages',{slug,sections:[{id:'hero',media:[{media_asset_id:88},{media_asset_id:'88'},{path:'/api/preview/media/99'}]}]}),['88']);

@@ -58,7 +58,7 @@ const loading = ref(false);
 const error = ref('');
 const seriesFields = ['id', 'series_code', 'name', 'source_url', 'source_document', 'import_evidence', 'status', 'publication_state'].join(',');
 const modelFields = ['id', 'series_code', 'model_code', 'name', 'source_url', 'source_document', 'parameters', 'import_evidence', 'status', 'publication_state'].join(',');
-const parameterFields = ['id', 'model_code', 'group_name', 'field_name', 'value', 'unit', 'source_url', 'source_document', 'import_evidence', 'status', 'publication_state'].join(',');
+const parameterFields = ['id', 'model_code', 'field_name', 'value', 'unit', 'source_url', 'source_document', 'import_evidence', 'status', 'publication_state'].join(',');
 const flaggedSeries = computed(() => sortProductRecords(series.value.map((item) => ({ ...item, issues: assessProductSeries(item) })).filter((item) => item.issues.length), (item) => item.issues, (item) => item.name || item.series_code || ''));
 const flaggedModels = computed(() => sortProductRecords(models.value.map((item) => ({ ...item, issues: assessProductModel(item) })).filter((item) => item.issues.length), (item) => item.issues, (item) => item.name || item.model_code || ''));
 const flaggedParameters = computed(() => sortProductRecords(parameters.value.map((item) => ({ ...item, issues: assessProductParameter(item) })).filter((item) => item.issues.length), (item) => item.issues, (item) => `${item.model_code || ''}/${item.field_name || ''}`));

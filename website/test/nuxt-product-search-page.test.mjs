@@ -1,4 +1,4 @@
-import assert from 'node:assert/strict';
+﻿import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import test from 'node:test';
 
@@ -22,8 +22,9 @@ test('product detail proof metrics enter from a rotated lower-right origin', asy
   assert.match(page, /transform:translate3d\(0,0,0\) rotate\(0\)/);
   assert.match(page, /transform \.96s cubic-bezier\(\.22,\.8,\.24,1\)/);
   assert.match(page, /data-proof-target/);
-  assert.match(page, /const duration = 1500/);
-  assert.match(page, /node\.textContent = String\(Math\.round\(target \* eased\)\)/);
+  // SSR renders the published value; the old 0 -> 50 count-up is gone.
+  assert.match(page, /:data-cms-preview-field-path="proof\.value \? 'value' : 'title'">\{\{ proof\.value \}\}<\/span>/);
+  assert.doesNotMatch(page, /const duration = 1500|Math\.round\(target \* eased\)/);
   assert.match(page, /proofCopy/);
   assert.match(page, /title: '50%', body: '产品效率性能提升', value: 50, unit: '%'/);
   assert.match(page, /value: 30, unit: 'YEARS'/);
@@ -36,9 +37,12 @@ test('product detail proof metrics enter from a rotated lower-right origin', asy
   assert.match(page, /v-if="drawingPageCount > 1" class="specification-pager"/);
   assert.match(page, /:disabled="drawingPage === 0" @click="changeDrawingPage\(-1\)"/);
   assert.match(page, /:disabled="drawingPage === drawingPageCount - 1" @click="changeDrawingPage\(1\)"/);
-  assert.match(page, /多次切割精度/);
-  assert.match(page, /四轴交流伺服 4axis Servo/);
-  assert.match(page, /总电气功率/);
+  // The static FR7055XS table was removed; missing model data must not render
+  // another machine's specification sheet.
+  assert.doesNotMatch(page, /const fallbackParameters/);
+  assert.match(page, /maxWorkpieceWeightKg: '最大工件重量'/);
+  assert.match(page, /machineDimensionsMm: '机床外形尺寸'/);
+  assert.match(page, /该产品暂未发布结构化参数/);
   assert.match(page, /const catalogPageCount = computed\(\(\) => Math\.max\(1, Math\.ceil\(catalogCards\.value\.length \/ catalogPageSize\.value\)\)\)/);
   assert.match(page, /selectedModel\.value = model/);
   assert.match(page, /changeCatalogPage\(-1\)/);
@@ -46,10 +50,12 @@ test('product detail proof metrics enter from a rotated lower-right origin', asy
   assert.match(page, /class="specification-side-label"/);
   assert.match(page, /class="specification-drawings"/);
   assert.match(page, /product-dimensions\.png/);
-  assert.match(page, /自适应切割功能/);
-  assert.match(page, /效率提升50%/);
-  assert.match(page, /屏显手持单元/);
+  const detailDefaults = await readFile(new URL('../shared/product-series-details.mjs', import.meta.url), 'utf8');
+  assert.match(detailDefaults, /自适应切割功能/);
+  assert.match(detailDefaults, /效率提升50%/);
+  assert.match(detailDefaults, /屏显手持单元/);
   assert.match(page, /v-for="\(family, pageIndex\) in visibleCatalogCards"/);
   assert.match(page, /class="product-copy"/);
   assert.match(page, /aspect-ratio: 420 \/ 259/);
 });
+

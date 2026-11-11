@@ -64,7 +64,7 @@ export const contentCollections = Object.freeze([
     field('import_evidence', 'json')
   ]),
   content('product_parameters', [
-    field('model_code', 'string', { required: true }), field('group_name', 'string'), field('field_name', 'string', { required: true }),
+    field('model_code', 'string', { required: true }), field('field_name', 'string', { required: true }),
     field('value', 'string', { required: true }), field('unit', 'string'), field('presentation', 'json'), field('sort_order', 'integer'), field('test_conditions', 'text'),
     field('import_evidence', 'json')
   ]),
@@ -144,8 +144,29 @@ export const contentCollections = Object.freeze([
     field('mime_type', 'string', { required: true }), field('byte_size', 'integer', { required: true }), field('file_id', 'string'),
     field('expires_at', 'datetime', { required: true }), field('lead_reference', 'string')
   ], { status: 'pending', publication_state: 'private' }),
-  content('content_versions', [
-    field('content_collection', 'string', { required: true }), field('content_item_id', 'string', { required: true }),
+  // One save = one submission batch. Members keep their own lifecycle; the
+  // batch is the row operators submit, review and publish as a unit.
+  {
+    name: 'content_submissions',
+    fields: [
+      field('submission_name', 'string', { required: true }),
+      field('batch_key', 'string', { required: true, unique: true }),
+      field('items', 'json', { required: true }),
+      field('status', 'string', { required: true }),
+      field('publication_state', 'string', { required: true }),
+      field('note', 'text'),
+      field('review_note', 'text'),
+      field('publication_log', 'json'),
+      field('submitted_at', 'datetime'),
+      field('reviewed_at', 'datetime'),
+      field('published_at', 'datetime'),
+      field('created_by', 'string'),
+      field('date_created', 'datetime', { special: 'date-created', readonly: true }),
+      field('date_updated', 'datetime', { special: 'date-updated', readonly: true })
+    ],
+    defaultValues: { status: 'draft', publication_state: 'unpublished' }
+  },
+  content('content_versions', [    field('content_collection', 'string', { required: true }), field('content_item_id', 'string', { required: true }),
     field('source_status', 'string', { required: true }), field('source_publication_state', 'string', { required: true }),
     field('snapshot', 'json', { required: true }), field('changed_fields', 'json', { required: true }), field('action', 'string', { required: true }),
     field('actor', 'string', { required: true }), field('created_at', 'datetime', { required: true }), field('restore_note', 'text'), field('restored_by', 'string'), field('restored_at', 'datetime')

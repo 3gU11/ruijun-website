@@ -75,6 +75,38 @@ test('homepage product fallback images follow the series identity instead of rec
   });
 });
 
+test('an unknown series without a cover gets the placeholder, never another card photo', () => {
+  const matchingFallbacks = [
+    { id: 'workstation', image: '/assets/workstation.png' },
+    { id: 'fr-y', image: '/assets/fr-y.png' }
+  ];
+  const products = resolveHomepageProducts([], [{ id: 7, slug: 'fr-g', series_code: 'fr-g', name: 'FR-G', cover_asset: null }], matchingFallbacks);
+
+  assert.equal(products[0].image, '/assets/psd/product-cover-placeholder.png');
+  assert.equal(products[0].imageFieldPath, 'cover_asset');
+});
+
+test('a preview-only series never takes a card away from a published homepage series', () => {
+  const published = [{ id: 1, slug: 'published', name: '已发布', positioning: '旧定位', cover_asset: '/assets/published.png' }];
+  const preview = [
+    { id: 1, slug: 'published', name: '已发布', positioning: '旧定位', cover_asset: '/assets/published.png' },
+    { id: 9, slug: 'new-draft', name: '未发布系列', positioning: '新定位', cover_asset: null }
+  ];
+
+  const products = resolveHomepageProducts(published, preview, fallback);
+
+  assert.equal(products.length, 1);
+  assert.equal(products[0].name, '已发布');
+});
+
+test('homepage fills an incomplete product grid with a conversion card outside the canvas', async () => {
+  const page = await readFile(new URL('../pages/index.vue', import.meta.url), 'utf8');
+  assert.match(page, /!cmsPreviewEnabled && products\.length % 3 !== 0/);
+  assert.match(page, /class="product-card product-cta-card"/);
+  assert.match(page, /没有找到合适机型/);
+  assert.match(page, /\.product-cta-card\{[^}]*aspect-ratio/s);
+});
+
 test('homepage product covers expose an explicit restore-default action to the CMS canvas', async () => {
   const page = await readFile(new URL('../pages/index.vue', import.meta.url), 'utf8');
   assert.match(page, /data-cms-preview-media-role="cover"[^>]+data-cms-preview-allow-default="true"/);

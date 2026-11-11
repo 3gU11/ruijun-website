@@ -1,11 +1,15 @@
 <template>
-  <private-view title="内容发布队列">
+  <private-view title="发布中心">
     <div class="publication-page">
+      <nav class="release-center-tabs" aria-label="发布中心">
+        <a class="active" href="/admin/ruijun-content-publication-queue-workbench" aria-current="page">内容发布</a>
+        <a href="/admin/ruijun-product-release-workbench">产品统一发布</a>
+      </nav>
       <header class="toolbar">
         <div>
-          <p class="eyebrow">内容发布</p>
-          <h2>内容发布队列</h2>
-          <p>仅处理已经通过审核的非产品快照内容。产品系列、型号和参数必须通过<a href="/admin/ruijun-product-release-workbench">产品统一发布</a>生成同一份公开版本；发布、下线和归档均由服务端状态机复核，不能在流转时修改内容字段。</p>
+          <p class="eyebrow">发布中心</p>
+          <h2>内容发布</h2>
+          <p>仅处理已经通过审核的非产品快照内容。产品系列、型号和参数请切换到<a href="/admin/ruijun-product-release-workbench">产品统一发布</a>生成同一份公开版本；发布、下线和归档均由服务端状态机复核，不能在流转时修改内容字段。</p>
         </div>
         <button type="button" :disabled="loading || saving" @click="loadQueue">{{ loading ? '正在刷新...' : '刷新队列' }}</button>
       </header>
@@ -42,9 +46,14 @@
           <label class="note-field">{{ activeModeDefinition.noteLabel }}<textarea v-model.trim="actionNote" rows="5" maxlength="2000" :placeholder="activeModeDefinition.placeholder" /></label>
           <div class="actions">
             <a :href="nativeItemPath(selectedRecord.collection, selectedRecord.id)">打开原始内容</a>
-            <button type="button" class="primary-action" :class="{ danger: activeMode !== 'scheduled' }" :disabled="saving" @click="runTransition">
-              {{ saving ? '正在处理...' : activeModeDefinition.action }}
-            </button>
+            <div class="action-buttons">
+              <button v-if="activeMode === 'scheduled'" type="button" class="secondary-action" :disabled="saving" @click="returnForRevision">
+                {{ saving ? '正在处理...' : '退回修改' }}
+              </button>
+              <button type="button" class="primary-action" :class="{ danger: activeMode !== 'scheduled' }" :disabled="saving" @click="runTransition">
+                {{ saving ? '正在处理...' : activeModeDefinition.action }}
+              </button>
+            </div>
           </div>
         </section>
         <div v-else class="empty detail-empty">请从左侧选择一条内容。</div>
@@ -59,6 +68,7 @@ import { useApi } from '@directus/extensions-sdk';
 
 const api = useApi();
 const definitions = Object.freeze([
+  { collection: 'content_submissions', label: '送审批次', fields: ['submission_name', 'batch_key', 'items'] },
   { collection: 'pages', label: '页面文案', fields: ['title', 'slug'] },
   { collection: 'case_studies', label: '客户案例', fields: ['slug', 'model_code'] },
   { collection: 'articles', label: '新闻与文章', fields: ['title', 'slug'] },
@@ -69,7 +79,6 @@ const definitions = Object.freeze([
   { collection: 'service_locations', label: '服务网点', fields: ['city', 'region'] },
   { collection: 'knowledge_items', label: '常见问题知识', fields: ['question_title', 'source_key'] },
   { collection: 'external_service_entries', label: '售后入口', fields: ['entry_type', 'url'] },
-  { collection: 'media_assets', label: '媒体资产', fields: ['original_file_name', 'usage_scope'] },
   { collection: 'site_settings', label: '全站设置', fields: ['setting_key'] }
 ]);
 const modes = Object.freeze([
@@ -102,7 +111,8 @@ function normalizeRecord(definition, record) {
     label: String(record[primary] || record[secondary] || `${definition.label} ${record.id}`),
     secondary: String(record[secondary] || ''),
     status: String(record.status || ''),
-    review_note: String(record.review_note || '')
+    review_note: String(record.review_note || ''),
+    items: Array.isArray(record.items) ? record.items : []
   };
 }
 async function loadRecords(status) {
@@ -131,6 +141,14 @@ async function loadQueue() {
   try {
     const [scheduled, published, unpublished] = await Promise.all(modes.map((mode) => loadRecords(mode.status)));
     queues.value = { scheduled, published, unpublished };
+    for (const mode of modes) {
+      const batched = new Set();
+      for (const record of queues.value[mode.id]) {
+        if (record.collection !== 'content_submissions') continue;
+        for (const item of record.items) batched.add(`${item.collection}:${item.id}`);
+      }
+      queues.value[mode.id] = queues.value[mode.id].filter((record) => record.collection === 'content_submissions' || !batched.has(recordKey(record)));
+    }
     if (!activeQueue.value.some((record) => recordKey(record) === selectedKey.value)) selectedKey.value = activeQueue.value[0] ? recordKey(activeQueue.value[0]) : '';
   } catch (reason) {
     queues.value = { scheduled: [], published: [], unpublished: [] };
@@ -149,8 +167,35 @@ async function runTransition() {
   try {
     const payload = { status: activeModeDefinition.value.target };
     if (actionNote.value) payload.review_note = actionNote.value;
-    await api.patch(`/items/${encodeURIComponent(record.collection)}/${encodeURIComponent(record.id)}`, payload);
-    message.value = `${record.label} 已${activeModeDefinition.value.action}。`;
+    if (record.collection === 'content_submissions') {
+      const failures = [];
+      const productItems = record.items.filter((item) => ['product_models', 'product_series', 'product_parameters'].includes(item.collection));
+      for (const item of record.items) {
+        try {
+          await api.patch(`/items/${encodeURIComponent(item.collection)}/${encodeURIComponent(item.id)}`, payload);
+        } catch {
+          failures.push(item.label || `${item.collection}:${item.id}`);
+        }
+      }
+      let releaseFailure = '';
+      if (activeModeDefinition.value.target === 'published' && productItems.length) {
+        try {
+          await api.post('/product-release/publish', { releaseNote: actionNote.value || '' });
+        } catch (reason) {
+          releaseFailure = reason?.response?.data?.errors?.[0]?.message || '产品统一发布失败';
+        }
+      }
+      const finalStatus = (failures.length || releaseFailure) ? 'scheduled' : activeModeDefinition.value.target;
+      await api.patch(`/items/content_submissions/${encodeURIComponent(record.id)}`, { status: finalStatus, note: actionNote.value || null });
+      message.value = failures.length
+        ? `批次已处理 ${record.items.length - failures.length} 项，失败 ${failures.length} 项：${failures.join('、')}；批次保持待发布。`
+        : `批次「${record.label}」已${activeModeDefinition.value.action}，共 ${record.items.length} 项。`;
+      if (releaseFailure) message.value += `产品统一发布未完成：${releaseFailure}；批次保持待发布。`;
+      else if (productItems.length) message.value += '（已生成最新产品发布快照）';
+    } else {
+      await api.patch(`/items/${encodeURIComponent(record.collection)}/${encodeURIComponent(record.id)}`, payload);
+      message.value = `${record.label} 已${activeModeDefinition.value.action}。`;
+    }
     actionNote.value = '';
     await loadQueue();
   } catch (reason) {
@@ -160,9 +205,50 @@ async function runTransition() {
   }
 }
 
-onMounted(loadQueue);
+// Approved-but-not-yet-published content can still turn out to be wrong. The
+// state machine used to make `scheduled` a dead end (publish or nothing), so the
+// only way back to an editable draft was to publish first — exactly what a
+// reviewer wants to avoid. This sends it back to `rejected` instead.
+async function returnForRevision() {
+  const record = selectedRecord.value;
+  if (!record) return;
+  if (!actionNote.value) {
+    error.value = '请先填写退回原因，内容编辑会看到这段说明。';
+    return;
+  }
+  saving.value = true;
+  error.value = '';
+  message.value = '';
+  try {
+    if (record.collection === 'content_submissions') {
+      for (const item of record.items) {
+        await api.patch(`/items/${encodeURIComponent(item.collection)}/${encodeURIComponent(item.id)}`, { status: 'rejected', review_note: actionNote.value });
+      }
+      await api.patch(`/items/content_submissions/${encodeURIComponent(record.id)}`, { status: 'rejected', note: actionNote.value });
+    } else {
+      await api.patch(`/items/${encodeURIComponent(record.collection)}/${encodeURIComponent(record.id)}`, {
+        status: 'rejected',
+        review_note: actionNote.value
+      });
+    }
+    message.value = `${record.label} 已退回修改。`;
+    actionNote.value = '';
+    await loadQueue();
+  } catch (reason) {
+    error.value = reason?.response?.data?.errors?.[0]?.message || '退回失败，内容没有被修改。';
+  } finally {
+    saving.value = false;
+  }
+}
+
+onMounted(() => {
+  window.requestAnimationFrame(() => document.querySelector('.scrolling-container')?.scrollTo({ top: 0 }));
+  loadQueue();
+});
 </script>
 
 <style scoped>
 .publication-page{display:grid;gap:18px;max-width:1280px;padding:4px 0 32px}.toolbar{display:flex;align-items:end;justify-content:space-between;gap:16px;flex-wrap:wrap}.toolbar p,.toolbar h2{margin:0}.toolbar h2{margin:6px 0;font-size:25px}.toolbar>div>p:last-child{max-width:720px;margin-top:8px;color:var(--theme--foreground-subdued)}.toolbar button,.primary-action{padding:9px 13px;border:1px solid var(--theme--border-color);border-radius:4px;background:var(--theme--background);color:var(--theme--foreground);font:inherit;cursor:pointer}.toolbar button:disabled,.primary-action:disabled{cursor:not-allowed;opacity:.55}.eyebrow{margin:0;color:var(--theme--primary);font:600 12px ui-monospace,monospace;letter-spacing:.08em}.message{margin:0;padding:12px 14px;border:1px solid var(--theme--border-color);border-radius:5px;background:var(--theme--background)}.message.error{border-color:var(--theme--danger);color:var(--theme--danger)}.message.success{border-color:var(--theme--success);color:var(--theme--success)}.mode-tabs{display:flex;gap:8px;border-bottom:1px solid var(--theme--border-color)}.mode-tabs button{display:flex;gap:8px;padding:10px 13px;color:var(--theme--foreground-subdued);background:transparent;border:0;border-bottom:2px solid transparent;font:inherit;cursor:pointer}.mode-tabs button.active{color:var(--theme--foreground);border-bottom-color:var(--theme--primary)}.mode-tabs strong{display:grid;min-width:20px;height:20px;place-items:center;border-radius:10px;background:var(--theme--background-accent);font-size:12px}.workspace{display:grid;grid-template-columns:minmax(260px,350px) minmax(0,1fr);min-height:530px;border:1px solid var(--theme--border-color);border-radius:6px;overflow:hidden;background:var(--theme--background)}.record-list{display:grid;align-content:start;gap:7px;padding:14px;border-right:1px solid var(--theme--border-color);background:var(--theme--background-accent);overflow:auto}.list-help{margin:0 0 5px;color:var(--theme--foreground-subdued);font-size:13px;line-height:1.55}.record-choice{position:relative;display:grid;gap:4px;width:100%;padding:11px 13px;text-align:left;color:var(--theme--foreground);background:var(--theme--background);border:1px solid var(--theme--border-color);border-radius:4px;cursor:pointer}.record-choice.active{border-color:var(--theme--primary);box-shadow:inset 3px 0 0 var(--theme--primary)}.record-choice span{overflow:hidden;font-weight:600;text-overflow:ellipsis;white-space:nowrap}.record-choice small{overflow:hidden;color:var(--theme--foreground-subdued);text-overflow:ellipsis;white-space:nowrap}.record-choice i{position:absolute;top:10px;right:10px;padding:2px 5px;border-radius:3px;background:var(--theme--background-accent);color:var(--theme--foreground-subdued);font-size:11px;font-style:normal}.record-choice span{padding-right:58px}.record-choice i[data-status='published']{color:var(--theme--success)}.record-choice i[data-status='unpublished']{color:var(--theme--danger)}.empty{align-self:center;margin:0;color:var(--theme--foreground-subdued);text-align:center}.publication-detail{display:grid;align-content:start;gap:16px;padding:24px}.detail-heading{display:flex;align-items:start;justify-content:space-between;gap:14px}.detail-heading h3{margin:6px 0 0;font-size:23px;overflow-wrap:anywhere}.status{padding:4px 8px;border-radius:3px;background:var(--theme--background-accent);font-size:12px;white-space:nowrap}.status[data-status='published']{color:var(--theme--success)}.status[data-status='unpublished']{color:var(--theme--danger)}.metadata{display:flex;flex-wrap:wrap;gap:7px}.metadata span{padding:4px 8px;border-radius:999px;background:var(--theme--background-accent);color:var(--theme--foreground-subdued);font-size:12px}.note-display{display:grid;gap:6px;margin:0;border-left:3px solid var(--theme--primary);padding:10px 12px;background:var(--theme--background-accent);color:var(--theme--foreground-subdued);font-size:13px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}.note-display strong{color:var(--theme--foreground)}.detail-copy{max-width:680px;margin:0;color:var(--theme--foreground-subdued);line-height:1.6}.note-field{display:grid;gap:7px;color:var(--theme--foreground-subdued);font-size:13px}.note-field textarea{box-sizing:border-box;width:100%;max-width:680px;resize:vertical;padding:9px 10px;border:1px solid var(--theme--border-color);border-radius:4px;background:var(--theme--background);color:var(--theme--foreground);font:inherit;line-height:1.5}.actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.actions a{color:var(--theme--primary);font-size:13px}.primary-action{border-color:var(--theme--primary);background:var(--theme--primary);color:var(--theme--primary-foreground)}.primary-action.danger{border-color:var(--theme--danger);background:var(--theme--danger);color:var(--theme--danger-foreground,#fff)}.detail-empty{display:grid;place-items:center}@media(max-width:760px){.workspace{grid-template-columns:1fr}.record-list{max-height:300px;border-right:0;border-bottom:1px solid var(--theme--border-color)}.publication-detail{padding:18px}.detail-heading{display:grid}.actions{align-items:stretch;flex-direction:column}.primary-action{width:100%}.mode-tabs{overflow-x:auto}.mode-tabs button{flex:0 0 auto}}
+.action-buttons{display:flex;gap:8px;flex-wrap:wrap}.secondary-action{padding:9px 13px;border:1px solid var(--theme--border-color);border-radius:4px;background:var(--theme--background);color:var(--theme--foreground);font:inherit;cursor:pointer}.secondary-action:disabled{cursor:not-allowed;opacity:.55}
+.release-center-tabs{display:flex;gap:6px;border-bottom:1px solid var(--theme--border-color)}.release-center-tabs a{padding:10px 14px;border-bottom:2px solid transparent;color:var(--theme--foreground-subdued);text-decoration:none;font:inherit;font-size:14px}.release-center-tabs a.active{border-bottom-color:var(--theme--primary);color:var(--theme--foreground);font-weight:600}
 </style>

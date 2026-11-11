@@ -25,7 +25,7 @@ test('CMS media asset resolver maps only published asset metadata to the site-ma
     // A site-relative path, not a Directus URL: the public Directus policy has no
     // read permission on directus_files, so a Directus-origin URL 403s and the
     // browser refuses the cross-origin media load (ERR_BLOCKED_BY_ORB).
-    path: `/api/public/v1/media/asset/${FILE_7}`, managed: true, alt: '已审核机床', mediaType: 'image', posterPath: null,
+    id: '7', path: `/api/public/v1/media/asset/${FILE_7}`, managed: true, alt: '已审核机床', mediaType: 'image', posterPath: null,
     title: '', description: '', durationSeconds: null, width: null, height: null,
     autoplay: false, muted: true, loop: false, published_at: '2026-07-31T00:00:00.000Z'
   });

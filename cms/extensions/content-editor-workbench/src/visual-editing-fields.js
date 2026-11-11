@@ -237,6 +237,17 @@ function findGovernedMediaEntry(target, mediaSlot) {
 export function getVisualMediaAssetId(target, fieldPath, { mediaSlot = '' } = {}) {
   const governed = findGovernedMediaEntry(target, mediaSlot);
   if (governed) return String(governed.entry.media_asset_id || '').trim();
+  // 草稿里的文章媒体只存 media_asset_id，没有 path 属性；画布绑定却是
+  // media.N.path。只按 path 取会得不到当前素材，删除/素材信息按钮都会失效。
+  // 旧视频文章只有 video_url；当前素材应取受管 media[0]，而不是 URL 字符串。
+  if (String(fieldPath || '').trim() === 'video_url' && Array.isArray(target?.media)) {
+    return String(target.media[0]?.media_asset_id || '').trim();
+  }
+  const mediaEntryMatch = String(fieldPath || '').trim().match(/^media\.(\d+)(?:\.(?:path|media_asset_id))?$/);
+  if (mediaEntryMatch && Array.isArray(target?.media)) {
+    const mediaAssetId = String(target.media[Number(mediaEntryMatch[1])]?.media_asset_id || '').trim();
+    if (mediaAssetId) return mediaAssetId;
+  }
   const resolved = resolveParent(target, fieldPath);
   if (!resolved || !Object.hasOwn(resolved.cursor, resolved.key)) return '';
   const value = resolved.cursor[resolved.key];
@@ -408,6 +419,34 @@ export function duplicateVisualListItem(target, fieldPath) {
   return visualListResult(reorder, fieldPath, nextIndex, items.length);
 }
 
+// 新增列表项：以当前项的字段结构为模板，但清空文案与媒体引用，
+// 让运营在画布里从“空卡片”开始填，而不是复制出一份重复内容。
+export function addVisualListItem(target, fieldPath) {
+  const reorder = getVisualListReorder(target, fieldPath);
+  if (!reorder) return null;
+  const items = resolveVisualReorderArray(target, reorder.arrayPath);
+  const current = items?.[reorder.index];
+  if (!items || !current || typeof current !== 'object' || Array.isArray(current)) return null;
+  let blank;
+  try {
+    blank = JSON.parse(JSON.stringify(current));
+  } catch {
+    return null;
+  }
+  const identityFields = new Set(['id', 'number', 'role', 'media_role', 'map_media_role', 'sort_order']);
+  assignDuplicateVisualListIdentities(items, blank);
+  for (const [key, value] of Object.entries(blank)) {
+    if (identityFields.has(key)) continue;
+    if (typeof value === 'string') blank[key] = '';
+    else if (Array.isArray(value)) blank[key] = [];
+    else if (value && typeof value === 'object') blank[key] = {};
+  }
+  const nextIndex = reorder.index + 1;
+  items.splice(nextIndex, 0, blank);
+  normalizeVisualListSortOrder(items);
+  return visualListResult(reorder, fieldPath, nextIndex, items.length);
+}
+
 // A canvas deletion must never leave a template array empty. Editors can use
 // the structured form when a section itself is intentionally being removed.
 export function removeVisualListItem(target, fieldPath) {
@@ -418,6 +457,46 @@ export function removeVisualListItem(target, fieldPath) {
   items.splice(reorder.index, 1);
   normalizeVisualListSortOrder(items);
   return visualListResult(reorder, fieldPath, Math.min(reorder.index, items.length - 1), items.length);
+}
+
+// The canvas "＋ / ×" buttons act on a whole list, not on one selected field, so
+// they name the array directly. Only the product-detail arrays are exposed:
+// they are plain JSON arrays owned by the record, so adding or removing an entry
+// never mutates a separate collection.
+const canvasListTemplates = Object.freeze({
+  'configuration.features': Object.freeze({ label: '', detail: '', note: '', image: '', media_asset_id: '' }),
+  'detail.features': Object.freeze({ label: '', detail: '', note: '', media_asset_id: '' })
+});
+
+function canvasListArray(target, arrayPath) {
+  const path = String(arrayPath || '').trim();
+  if (!target || typeof target !== 'object' || !Object.hasOwn(canvasListTemplates, path)) return null;
+  let cursor = target;
+  for (const part of path.split('.')) {
+    if (blockedPathParts.has(part)) return null;
+    if (cursor == null || typeof cursor !== 'object' || !Object.hasOwn(cursor, part)) return null;
+    cursor = cursor[part];
+  }
+  return Array.isArray(cursor) ? cursor : null;
+}
+
+export function appendVisualListItem(target, arrayPath) {
+  const path = String(arrayPath || '').trim();
+  const items = canvasListArray(target, path);
+  if (!items) return null;
+  items.push({ ...canvasListTemplates[path] });
+  normalizeVisualListSortOrder(items);
+  return { arrayPath: path, index: items.length - 1, length: items.length };
+}
+
+export function removeVisualListItemAt(target, arrayPath, index) {
+  const path = String(arrayPath || '').trim();
+  const items = canvasListArray(target, path);
+  const position = Number(index);
+  if (!items || !Number.isSafeInteger(position) || position < 0 || position >= items.length) return null;
+  items.splice(position, 1);
+  normalizeVisualListSortOrder(items);
+  return { arrayPath: path, index: Math.min(position, items.length - 1), length: items.length };
 }
 
 export function setVisualFieldValue(target, fieldPath, value) {
@@ -490,6 +569,30 @@ export function applyVisualMediaReplacement(target, fieldPath, assetId, { mediaS
   }
   const parts = pathParts(fieldPath);
   const replacementFieldName = parts?.at(-1);
+  // 文章/视频卡的画布绑定是 media.N.path，但 Directus 草稿里只存 media_asset_id。
+  // 旧逻辑要求 path 属性存在，找不到就静默放弃——表现出来就是下拉换了视频但画面不变。
+  if (parts?.length === 3 && parts[0] === 'media' && /^\d+$/.test(parts[1]) && parts[2] === 'path' && Array.isArray(target?.media)) {
+    const entry = target.media[Number(parts[1])];
+    if (entry && typeof entry === 'object' && !Array.isArray(entry)) {
+      if (!/^[1-9]\d*$/.test(id) && !allowEmpty) return false;
+      entry.media_asset_id = id || '';
+      delete entry.path;
+      // 文章草稿同时维护 media 与 mediaReferences；预览和保存都优先读
+      // mediaReferences，只改 media 会让“换了视频”既不显示也不落库。
+      if (Array.isArray(target.mediaReferences)) {
+        const seen = new Set();
+        target.mediaReferences = target.media.flatMap((item) => {
+          const mediaAssetId = typeof item?.media_asset_id === 'string' || Number.isSafeInteger(item?.media_asset_id)
+            ? String(item.media_asset_id).trim()
+            : '';
+          if (!mediaAssetId || seen.has(mediaAssetId)) return [];
+          seen.add(mediaAssetId);
+          return [{ media_asset_id: mediaAssetId }];
+        });
+      }
+      return true;
+    }
+  }
   // The article form persists its JSON editor, not the resolved preview array.
   // Read the current editor value so a canvas replacement retains unsaved captions.
   if (parts?.length === 3 && parts[0] === 'body_media' && /^\d+$/.test(parts[1]) && parts[2] === 'media_asset_id') {
@@ -525,6 +628,28 @@ export function applyVisualMediaReplacement(target, fieldPath, assetId, { mediaS
   if (parts?.length === 2 && parts[0] === 'configuration' && parts[1] === 'machine_asset_id' && target && typeof target.configuration === 'object' && target.configuration !== null && !Array.isArray(target.configuration)) {
     if (!/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(id)) return false;
     target.configuration.machine_asset_id = id;
+    return true;
+  }
+  // 空视频文章的画布落点是 media.0.media_asset_id（还没有 media[0]）。
+  // 第一次选择素材时把这一条真正建出来，否则保存会因“至少一条视频”失败。
+  if (parts?.length === 3 && parts[0] === 'media' && /^\d+$/.test(parts[1]) && parts[2] === 'media_asset_id' && Array.isArray(target?.media)) {
+    const index = Number(parts[1]);
+    if (!/^[1-9]\d*$/.test(id) && !allowEmpty) return false;
+    const entry = target.media[index];
+    if (entry && typeof entry === 'object' && !Array.isArray(entry)) entry.media_asset_id = id || '';
+    else target.media[index] = { media_asset_id: id || '' };
+    delete target.media[index].path;
+    if (Array.isArray(target.mediaReferences)) {
+      const seen = new Set();
+      target.mediaReferences = target.media.flatMap((item) => {
+        const mediaAssetId = typeof item?.media_asset_id === 'string' || Number.isSafeInteger(item?.media_asset_id)
+          ? String(item.media_asset_id).trim()
+          : '';
+        if (!mediaAssetId || seen.has(mediaAssetId)) return [];
+        seen.add(mediaAssetId);
+        return [{ media_asset_id: mediaAssetId }];
+      });
+    }
     return true;
   }
   if (!(/^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/.test(id) || (!id && (allowEmpty || restorableMediaFields.has(replacementFieldName))))) return false;

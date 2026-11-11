@@ -19,7 +19,7 @@ export default defineNuxtConfig({
   },
   runtimeConfig: {
     cmsHomepageSectionsUrl: process.env.CMS_HOMEPAGE_SECTIONS_URL || '',
-    cmsPagesUrl: process.env.CMS_PAGES_URL || '',
+    cmsPagesUrl: process.env.NUXT_CMS_PAGES_URL || process.env.CMS_PAGES_URL || '',
     cmsRepairPageConfigsUrl: process.env.CMS_REPAIR_PAGE_CONFIGS_URL || '',
     cmsSiteSettingsUrl: process.env.CMS_SITE_SETTINGS_URL || '',
     cmsProductSeriesUrl: process.env.CMS_PRODUCT_SERIES_URL || '',
@@ -43,7 +43,7 @@ export default defineNuxtConfig({
     cmsLeadUploadSessionsUrl: process.env.CMS_LEAD_UPLOAD_SESSIONS_URL || '',
     cmsFilesUrl: process.env.CMS_FILES_URL || '',
     cmsPreviewTokensUrl: process.env.CMS_PREVIEW_TOKENS_URL || '',
-    cmsBffToken: process.env.CMS_BFF_TOKEN || '',
+      cmsBffToken: process.env.CMS_BFF_TOKEN || process.env.CMS_PUBLIC_API_TOKEN || process.env.CMS_PREVIEW_ACCESS_TOKEN || '',
     cmsWebhookSecret: process.env.CMS_WEBHOOK_SECRET || '',
     leadDedupeSecret: process.env.LEAD_DEDUPE_SECRET || '',
     leadAttachmentSigningSecret: process.env.LEAD_ATTACHMENT_SIGNING_SECRET || '',

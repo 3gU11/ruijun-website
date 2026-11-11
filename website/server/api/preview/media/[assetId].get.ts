@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
   const session = useCmsPreviewSessionStore().get(getCookie(event, CMS_PREVIEW_SESSION_COOKIE));
   if (!session) throw createError({ statusCode: 401, statusMessage: '草稿预览会话不存在或已过期' });
   const assetId = String(getRouterParam(event, 'assetId') || '').trim();
-  if (!collectPreviewMediaAssetIds(session.data.preview).has(assetId)) throw createError({ statusCode: 404, statusMessage: '预览素材不存在' });
+  if (!/^[1-9]\d*$/.test(assetId)) throw createError({ statusCode: 404, statusMessage: '预览素材不存在' });
 
   const config = useRuntimeConfig(event);
   const endpoint = String(config.cmsMediaAssetsUrl || '').trim();
@@ -30,6 +30,14 @@ export default defineEventHandler(async (event) => {
     item = body?.data || null;
   } catch { /* converted to the same non-revealing response below */ }
   if (!isPreviewAsset(item)) throw createError({ statusCode: 404, statusMessage: '预览素材不存在' });
+
+  // A published asset is already public, so a preview may show it even when it
+  // was selected after the session snapshot was taken (for example replacing the
+  // machine photo on a published series). Unpublished draft assets still need an
+  // explicit grant that the workbench redeems before touching the DOM.
+  const publishedAsset = item.status === 'published' && item.publication_state === 'published';
+  const authorized = publishedAsset || collectPreviewMediaAssetIds(session.data.preview).has(assetId);
+  if (!authorized) throw createError({ statusCode: 404, statusMessage: '预览素材不存在' });
 
   const cmsOrigin = new URL(endpoint).origin;
   const response = await fetch(`${cmsOrigin}/assets/${encodeURIComponent(item.file_id)}`, { headers: { Authorization: `Bearer ${token}` } });

@@ -109,7 +109,7 @@ test('six visual editing pages expose explicit field paths and media roles for r
   const [news, about, service, manufacturing, product] = files;
   assert.match(news, /data-cms-preview-field-path="title"/);
   assert.match(news, /articleBinding\(article, 'display_date'\)/);
-  assert.match(news, /articleBinding\(item, 'display_date'\)/);
+  assert.match(news, /data-cms-preview-media-asset-id="item\.mediaAssetId"/);
   assert.match(news, /articleBinding\(article, 'title'\)/);
   assert.match(news, /articleBinding\(article/);
   assert.match(news, /data-cms-preview-collection="article\.cmsBinding\.collection"/);

@@ -2,7 +2,7 @@
 import { resolvePageSection } from '~/shared/page-sections.mjs';
 import { fieldPresentationAttributes, sectionPresentationAttributes } from '~/shared/section-presentation.mjs';
 import { managedPageSectionMediaBinding } from '~/shared/visual-binding-paths.mjs';
-import { formatNewsDisplayDate, normalizeNewsPageSize, paginateNews, resolveNewsMediaPoster, sortNewsByDisplayDate, splitNewsArticles } from '~/shared/news-listing.mjs';
+import { formatNewsDisplayDate, normalizeNewsPageSize, paginateNews, sortNewsByDisplayDate, splitNewsArticles } from '~/shared/news-listing.mjs';
 const route = useRoute();
 const { data: response } = await useFetch('/api/public/v1/articles', {
   default: () => ({
@@ -28,7 +28,6 @@ const fallbackVideoNews = {
   video: '',
 };
 const fallbackNews: Array<Record<string, any>> = [];
-const fallbackVideoShares: Array<Record<string, any>> = [];
 const cmsArticles = computed(() => overlayList('articles', Array.isArray(response.value?.data) ? response.value.data : []));
 const newsPage = computed(() => overlayRecord('pages', newsPageResponse.value?.data || null, (draft) => draft.slug === 'news'));
 const newsHero = computed(() =>
@@ -74,6 +73,59 @@ const videoNews = computed(() => ({
 }));
 const publishedArticles = computed(() => (cmsArticles.value.length ? cmsArticles.value : []));
 const articleDate = (article: Record<string, any>) => String(article.display_date || article.published_at || '');
+// A published media asset with no matching video article has no detail route.
+// Those cards used to point at a same-page anchor, so clicking a video did
+// nothing at all — send them to the video file instead.
+// 预览会话来自工作台的 ?cmsPreview=1。从列表点进详情时必须把这个参数带过去：
+// 详情页只在预览参数存在时才允许“空壳 + 预览覆盖层”，否则按公开访问返回 410。
+const previewQuery = computed(() => String(route.query.cmsPreview || '') === '1' ? { cmsPreview: '1' } : {});
+const articleDetailHref = (article: Record<string, any>) => article?.slug
+  ? { path: `/news/${encodeURIComponent(String(article.slug))}`, query: previewQuery.value }
+  : '#dynamic-news-title';
+const videoShareHref = (item: Record<string, any>) => item.slug
+  ? { path: `/news/${encodeURIComponent(item.slug)}`, query: previewQuery.value }
+  : '#video-share';
+const activeVideoShare = ref<Record<string, any> | null>(null);
+
+function openVideoShare(item: Record<string, any>) {
+  if (cmsVisualEditMode.value || !item?.video) return;
+  activeVideoShare.value = item;
+  if (typeof document !== 'undefined') document.body.classList.add('video-viewer-open');
+  if (typeof window !== 'undefined' && !window.history.state?.videoShareViewer) {
+    window.history.pushState({ ...(window.history.state || {}), videoShareViewer: true }, '', window.location.href);
+  }
+}
+function closeVideoShare(fromHistory = false) {
+  if (!activeVideoShare.value) return;
+  activeVideoShare.value = null;
+  if (typeof document !== 'undefined') document.body.classList.remove('video-viewer-open');
+  if (!fromHistory && typeof window !== 'undefined' && window.history.state?.videoShareViewer) {
+    window.history.back();
+  }
+}
+function handleVideoShareClick(event: MouseEvent, item: Record<string, any>) {
+  // Article-backed cards still use the normal detail route. Media-only cards
+  // open the in-page viewer so the visitor can always use the 返回 button
+  // instead of being stranded on the browser's raw video tab.
+  if (item.slug) return;
+  event.preventDefault();
+  openVideoShare(item);
+}
+function handleVideoSharePopState() {
+  if (activeVideoShare.value) closeVideoShare(true);
+}
+function handleVideoViewerKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape' && activeVideoShare.value) closeVideoShare();
+}
+onMounted(() => {
+  window.addEventListener('popstate', handleVideoSharePopState);
+  window.addEventListener('keydown', handleVideoViewerKeydown);
+});
+onBeforeUnmount(() => {
+  window.removeEventListener('popstate', handleVideoSharePopState);
+  window.removeEventListener('keydown', handleVideoViewerKeydown);
+  if (typeof document !== 'undefined') document.body.classList.remove('video-viewer-open');
+});
 function articleBinding(article: Record<string, any>, fieldPath: string) {
   return {
     collection: article?.id != null ? 'articles' : '',
@@ -81,13 +133,23 @@ function articleBinding(article: Record<string, any>, fieldPath: string) {
     fieldPath,
   };
 }
-function articleVideoMediaBinding(article: Record<string, any>) {
+// 预览会话里的草稿媒体只带 path（decoratePreviewMedia 不查素材表），
+// 没有 mediaType/mimeType。视频分类的文章必须把首个带 path 的媒体当视频，
+// 否则未选中的草稿卡会显示“未设置媒体”。
+function articleVideoMediaIndex(article: Record<string, any>) {
   const media = Array.isArray(article?.media) ? article.media : [];
-  const index = media.findIndex((entry: any) => {
+  let index = media.findIndex((entry: any) => {
     const mediaType = String(entry?.mediaType || entry?.media_type || '').trim().toLowerCase();
     const mimeType = String(entry?.mimeType || entry?.mime_type || '').trim().toLowerCase();
     return mediaType === 'video' || mimeType.startsWith('video/');
   });
+  if (index < 0 && String(article?.category || '').trim().toLowerCase() === 'video') {
+    index = media.findIndex((entry: any) => String(entry?.path || '').trim());
+  }
+  return index;
+}
+function articleVideoMediaBinding(article: Record<string, any>) {
+  const index = articleVideoMediaIndex(article);
   // New governed video shares persist their file in media[]. Older imports can
   // still fall back to the legacy video_url field without inventing a slot.
   return index >= 0 ? articleBinding(article, `media.${index}.path`) : articleBinding(article, 'video_url');
@@ -103,11 +165,8 @@ function articleImageMediaBinding(article: Record<string, any>) {
 }
 function articleVideoPath(article: Record<string, any>) {
   const media = Array.isArray(article?.media) ? article.media : [];
-  const videoMedia = media.find((entry: any) => {
-    const mediaType = String(entry?.mediaType || entry?.media_type || '').trim().toLowerCase();
-    const mimeType = String(entry?.mimeType || entry?.mime_type || '').trim().toLowerCase();
-    return mediaType === 'video' || mimeType.startsWith('video/');
-  });
+  const index = articleVideoMediaIndex(article);
+  const videoMedia = index >= 0 ? media[index] : null;
   return String(videoMedia?.path || article.video_url || article.video || '');
 }
 function articleCoverPath(article: Record<string, any>) {
@@ -121,9 +180,6 @@ function articleCoverPath(article: Record<string, any>) {
   // that exact rendered source and only fall back to legacy cover_asset data.
   return String(imageMedia?.path || article.cover_asset || '');
 }
-function hasArticleBinding(item: Record<string, any>) {
-  return item?.cmsBinding?.collection === 'articles' && Boolean(item.cmsBinding?.itemId);
-}
 const splitArticles = computed(() => splitNewsArticles(publishedArticles.value));
 const articles = computed(() =>
   splitArticles.value.articles.map((article) => ({
@@ -133,33 +189,23 @@ const articles = computed(() =>
     mediaBinding: articleImageMediaBinding(article),
   })),
 );
-const videoShares = computed(() =>
-  splitArticles.value.videoShares.length
-    ? splitArticles.value.videoShares.map((item: any) => ({
-        ...item,
-        title: item.title || '视频分享',
-        date: articleDate(item),
-        video: articleVideoPath(item),
-        image: articleCoverPath(item),
-        poster: resolveNewsMediaPoster(item),
-        slug: item.slug || '',
-        id: item.id,
-        cmsBinding: articleBinding(item, 'title'),
-        mediaBinding: articleVideoMediaBinding(item),
-        dateBinding: articleBinding(item, 'display_date'),
-      }))
-    : Array.isArray(videoShareResponse.value?.data) && videoShareResponse.value.data.length
-      ? sortNewsByDisplayDate(videoShareResponse.value?.data).map((item) => ({
-          title: item.title || '视频分享',
-          date: item.display_date || item.published_at || '',
-          video: item.mediaType === 'video' ? item.path : '',
-          image: item.mediaType === 'image' ? item.path : '',
-          poster: item.posterPath || '',
-          id: item.id,
-          sort_order: item.sort_order,
-        }))
-      : fallbackVideoShares,
-);
+const videoShares = computed(() => {
+  // 视频分享只有视频：每条已发布的“视频分享列表”素材就是一张卡片。
+  // 动态新闻是另一条独立的内容线，文章不会生成视频分享卡片。
+  const assets = Array.isArray(videoShareResponse.value?.data) ? videoShareResponse.value.data : [];
+  return sortNewsByDisplayDate(assets).map((item: any) => ({
+    mediaOnly: true,
+    title: item.title || item.original_file_name || '视频分享',
+    date: item.display_date || item.published_at || '',
+    video: String(item.mediaType || '').toLowerCase() === 'video' ? item.path : '',
+    image: String(item.mediaType || '').toLowerCase() === 'image' ? item.path : '',
+    poster: item.posterPath || '',
+    id: item.id,
+    mediaAssetId: String(item.id),
+    sort_order: item.sort_order,
+    slug: '',
+  }));
+});
 function boundedNewsPageSize(section: Record<string, any>) {
   const value = Number(section?.pagination?.page_size);
   return normalizeNewsPageSize(value);
@@ -231,8 +277,9 @@ function markVideoPreviewError(event: Event, key = 'video') {
   <main v-else class="news-page">
     <section class="news-hero" v-bind="sectionPresentationAttributes(newsHero)" data-cms-preview-key="hero">
       <SiteHeader />
-      <video id="video-news" class="news-hero-image" :src="videoNews.video" :poster="videoNews.poster || '/assets/news-hero.jpg'" :data-cms-preview-field-path="newsSectionMediaBinding(newsHero, 'video')?.fieldPath || (newsHero.video ? 'video' : undefined)" data-cms-preview-media-role="video" autoplay muted playsinline preload="auto" :aria-label="videoNews.title" @ended="resetVideoToFirstFrame" @error="markVideoPreviewError($event, 'hero')"></video>
-      <p v-if="videoPreviewErrors.hero" class="video-fallback-message">视频暂时无法播放，已显示备用海报。</p>
+      <video v-if="videoNews.video" id="video-news" class="news-hero-image" :src="videoNews.video" :poster="videoNews.poster || '/assets/news-hero.jpg'" :data-cms-preview-field-path="newsSectionMediaBinding(newsHero, 'video')?.fieldPath || (newsHero.video ? 'video' : undefined)" data-cms-preview-media-role="video" autoplay muted playsinline preload="auto" :aria-label="videoNews.title" @ended="resetVideoToFirstFrame" @error="markVideoPreviewError($event, 'hero')"></video>
+      <img v-else class="news-hero-image" :src="videoNews.poster || '/assets/news-hero.jpg'" :alt="videoNews.title || '视频新闻'">
+      <p v-if="videoNews.video && videoPreviewErrors.hero" class="video-fallback-message">视频暂时无法播放，已显示备用海报。</p>
       <div class="hero-overlay"></div>
       <div class="hero-caption cms-positioned">
         <p class="cms-styled-text" v-bind="fieldPresentationAttributes(newsHero, 'body')" data-cms-preview-field-path="body" data-cms-preview-position-field-path="field_presentation.body">
@@ -249,13 +296,13 @@ function markVideoPreviewError(event: Event, key = 'video') {
       </div>
       <div v-if="pagedArticles.length" class="news-grid">
         <article v-for="(article, index) in pagedArticles" :key="String(article.slug || article.title)" class="news-card" :data-cms-preview-key="article.slug || article.title" :data-cms-preview-collection="article.cmsBinding.collection" :data-cms-preview-item-id="article.cmsBinding.itemId" data-cms-preview-editable="true">
-          <NuxtLink v-if="articleVideoPath(article)" to="#video-news" class="card-image" @mouseenter="startVideoPreview" @mouseleave="stopVideoPreview"><video :src="articleVideoPath(article)" :data-cms-preview-field-path="articleVideoMediaBinding(article).fieldPath" data-cms-preview-media-role="video" muted playsinline preload="metadata" @loadeddata="resetVideoToFirstFrame" @ended="holdVideoLastFrame" @error="markVideoPreviewError($event, `article-${article.id}`)"></video><span v-if="videoPreviewErrors[`article-${article.id}`]" class="video-fallback-message">视频暂时无法播放</span></NuxtLink><NuxtLink v-else class="card-image" :to="article.slug ? `/news/${encodeURIComponent(String(article.slug))}` : '#dynamic-news-title'"><img :src="String(article.image || article.cover_asset || '')" :data-cms-preview-field-path="article.mediaBinding.fieldPath" data-cms-preview-media-role="cover" :alt="String(article.title)" /></NuxtLink>
+          <NuxtLink v-if="articleVideoPath(article)" to="#video-news" class="card-image" @mouseenter="startVideoPreview" @mouseleave="stopVideoPreview"><video :src="articleVideoPath(article)" :data-cms-preview-field-path="articleVideoMediaBinding(article).fieldPath" data-cms-preview-media-role="video" muted playsinline preload="metadata" @loadeddata="resetVideoToFirstFrame" @ended="holdVideoLastFrame" @error="markVideoPreviewError($event, `article-${article.id}`)"></video><span v-if="videoPreviewErrors[`article-${article.id}`]" class="video-fallback-message">视频暂时无法播放</span></NuxtLink><NuxtLink v-else class="card-image" :to="articleDetailHref(article)"><img :src="String(article.image || article.cover_asset || '')" :data-cms-preview-field-path="article.mediaBinding.fieldPath" data-cms-preview-media-role="cover" :alt="String(article.title)" /></NuxtLink>
           <div class="card-copy">
             <p v-bind="fieldPresentationAttributes(article, 'category')" :data-cms-preview-field-path="articleBinding(article, 'category').fieldPath" data-cms-preview-position-field-path="field_presentation.category">
               {{ article.category || '动态新闻' }}
             </p>
             <h2 v-bind="fieldPresentationAttributes(article, 'title')" :data-cms-preview-field-path="articleBinding(article, 'title').fieldPath" data-cms-preview-position-field-path="field_presentation.title">
-              <NuxtLink :to="articleVideoPath(article) ? '#video-news' : article.slug ? `/news/${encodeURIComponent(String(article.slug))}` : '#dynamic-news-title'">{{ article.title }}</NuxtLink>
+              <NuxtLink :to="articleVideoPath(article) ? '#video-news' : articleDetailHref(article)">{{ article.title }}</NuxtLink>
             </h2>
             <time v-bind="fieldPresentationAttributes(article, 'display_date')" :data-cms-preview-field-path="articleBinding(article, 'display_date').fieldPath" data-cms-preview-position-field-path="field_presentation.display_date">{{ formatNewsDisplayDate(articleDate(article)) }}</time>
           </div>
@@ -278,13 +325,13 @@ function markVideoPreviewError(event: Event, key = 'video') {
         </h1>
       </div>
       <div v-if="pagedVideoShares.length" class="news-grid">
-        <article v-for="(item, index) in pagedVideoShares" :key="item.slug || item.title" class="news-card video-card" :data-cms-preview-key="item.slug || item.title" :data-cms-preview-collection="item.cmsBinding?.collection" :data-cms-preview-item-id="item.cmsBinding?.itemId" :data-cms-preview-editable="hasArticleBinding(item) ? 'true' : undefined" :data-cms-preview-readonly="hasArticleBinding(item) ? undefined : 'article-pending'" :data-cms-preview-readonly-reason="hasArticleBinding(item) ? undefined : '该候选视频尚未建立“视频分享”文章，不能直接改写页面。请先新建视频分享内容并关联此媒体。'">
-          <NuxtLink class="card-image" :to="item.slug ? `/news/${encodeURIComponent(item.slug)}` : item.video ? '#video-news' : '#video-share'" @mouseenter="startVideoPreview" @mouseleave="stopVideoPreview"><video v-if="item.video" :src="item.video" :poster="item.poster || undefined" :data-cms-preview-field-path="item.mediaBinding?.fieldPath || undefined" :data-cms-preview-media-role="hasArticleBinding(item) ? 'video' : undefined" muted playsinline preload="metadata" @loadedmetadata="resetVideoToFirstFrame" @ended="holdVideoLastFrame" @error="markVideoPreviewError($event, `share-${item.id}`)"></video><span v-if="videoPreviewErrors[`share-${item.id}`]" class="video-fallback-message">视频暂时无法播放</span><img v-else-if="!item.video" :src="item.image" :data-cms-preview-field-path="item.mediaBinding?.fieldPath || undefined" :data-cms-preview-media-role="hasArticleBinding(item) ? 'cover' : undefined" :alt="item.title" /><span class="play-mark">▶</span></NuxtLink>
+        <article v-for="item in pagedVideoShares" :key="item.id || item.title" class="news-card video-card" :class="{ 'cms-preview-edit-mode': cmsVisualEditMode }">
+          <NuxtLink class="card-image" :to="videoShareHref(item)" :style="cmsVisualEditMode && item.video ? { pointerEvents: 'none' } : undefined" @click="handleVideoShareClick($event, item)" @mouseenter="startVideoPreview" @mouseleave="stopVideoPreview"><video v-if="item.video" :src="item.video" :poster="item.poster || undefined" :style="cmsVisualEditMode ? { pointerEvents: 'auto' } : undefined" data-cms-preview-media-role="video" data-cms-preview-editable="true" data-cms-preview-field-path="media" :data-cms-preview-label="item.title" :data-cms-preview-media-asset-id="item.mediaAssetId" muted playsinline preload="metadata" @loadedmetadata="resetVideoToFirstFrame" @ended="holdVideoLastFrame" @error="markVideoPreviewError($event, `share-${item.id}`)"></video><span v-if="videoPreviewErrors[`share-${item.id}`]" class="video-fallback-message">视频暂时无法播放</span><img v-else-if="!item.video" :src="item.image" :alt="item.title" /><span class="play-mark" v-if="item.video || item.image" :style="cmsVisualEditMode ? { pointerEvents: 'none' } : undefined">▶</span><span v-else class="cms-media-empty">未设置媒体</span></NuxtLink>
           <div class="card-copy">
-            <h2 v-bind="fieldPresentationAttributes(item, 'title')" :data-cms-preview-field-path="item.cmsBinding?.fieldPath || undefined" data-cms-preview-position-field-path="field_presentation.title">
-              <NuxtLink :to="item.slug ? `/news/${encodeURIComponent(item.slug)}` : item.video ? '#video-news' : '#video-share'">{{ item.title }}</NuxtLink>
+            <h2>
+              <NuxtLink :to="videoShareHref(item)" @click="handleVideoShareClick($event, item)">{{ item.title }}</NuxtLink>
             </h2>
-            <time v-bind="fieldPresentationAttributes(item, 'display_date')" :data-cms-preview-field-path="item.dateBinding?.fieldPath || undefined" data-cms-preview-position-field-path="field_presentation.display_date">{{ item.date }}</time>
+            <time>{{ formatNewsDisplayDate(item.date) }}</time>
           </div>
         </article>
       </div>
@@ -299,6 +346,29 @@ function markVideoPreviewError(event: Event, key = 'video') {
       </nav>
     </section>
     <CmsCustomSections :page="newsPage" page-slug="news" :visual-edit-mode="cmsVisualEditMode" />
+
+    <div v-if="activeVideoShare" class="video-viewer" role="dialog" aria-modal="true" aria-label="视频播放" @click.self="closeVideoShare()">
+      <div class="video-viewer-panel">
+        <header class="video-viewer-header">
+          <button type="button" class="video-viewer-back" @click="closeVideoShare()">← 返回视频分享</button>
+          <div class="video-viewer-title">
+            <strong>{{ activeVideoShare.title }}</strong>
+            <span>{{ formatNewsDisplayDate(activeVideoShare.date) }}</span>
+          </div>
+          <button type="button" class="video-viewer-close" aria-label="关闭视频" @click="closeVideoShare()">×</button>
+        </header>
+        <div class="video-viewer-stage">
+          <video
+            :src="activeVideoShare.video"
+            :poster="activeVideoShare.poster || undefined"
+            controls
+            autoplay
+            playsinline
+            preload="metadata"
+          ></video>
+        </div>
+      </div>
+    </div>
   </main>
 </template>
 
@@ -365,6 +435,7 @@ function markVideoPreviewError(event: Event, key = 'video') {
   gap: clamp(20px, 1.72vw, 33px);
 }
 .news-card {
+  position: relative;
   overflow: hidden;
   background: transparent;
   border: 0;
@@ -481,6 +552,14 @@ function markVideoPreviewError(event: Event, key = 'video') {
   color: #fff;
   font-size: 21px;
 }
+/* 画布编辑时播放按钮和卡片链接不能挡住视频：否则点击命中卡片，选不中 <video>。 */
+.cms-preview-edit-mode .video-card .card-image:has(video),
+.cms-preview-edit-mode .video-card .play-mark {
+  pointer-events: none;
+}
+.cms-preview-edit-mode .video-card .card-image:has(video) video {
+  pointer-events: auto;
+}
 @media (max-width: 760px) {
   .news-hero {
     height: 65svh;
@@ -550,5 +629,103 @@ function markVideoPreviewError(event: Event, key = 'video') {
   background: #f52222;
   font-size: 29px;
   line-height: 20px;
+}
+.cms-media-empty{position:absolute;inset:0;display:grid;place-items:center;color:#8a8d90;font-size:14px;letter-spacing:.02em}
+.video-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  background: rgb(4 6 9 / 97%);
+  color: #fff;
+  overflow: auto;
+}
+.video-viewer-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 100%;
+}
+.video-viewer-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  border-bottom: 1px solid rgb(255 255 255 / 14%);
+  background: rgb(10 12 16 / 92%);
+  padding: 14px clamp(14px, 3vw, 34px);
+}
+.video-viewer-back,
+.video-viewer-close {
+  border: 1px solid rgb(255 255 255 / 28%);
+  border-radius: 4px;
+  background: rgb(255 255 255 / 8%);
+  color: #fff;
+  padding: 9px 14px;
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.2;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.video-viewer-back:hover,
+.video-viewer-close:hover {
+  border-color: #fff;
+  background: rgb(255 255 255 / 16%);
+}
+.video-viewer-close {
+  margin-left: auto;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  font-size: 22px;
+}
+.video-viewer-title {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.video-viewer-title strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 16px;
+}
+.video-viewer-title span {
+  color: rgb(255 255 255 / 64%);
+  font-size: 12px;
+}
+.video-viewer-stage {
+  display: grid;
+  flex: 1;
+  place-items: center;
+  padding: clamp(14px, 3vw, 36px);
+}
+.video-viewer-stage video {
+  display: block;
+  width: min(100%, 1500px);
+  max-height: calc(100svh - 150px);
+  border-radius: 4px;
+  background: #000;
+  object-fit: contain;
+}
+:global(body.video-viewer-open) {
+  overflow: hidden;
+}
+@media (max-width: 760px) {
+  .video-viewer-header {
+    gap: 10px;
+    flex-wrap: wrap;
+    padding: 11px 13px;
+  }
+  .video-viewer-title {
+    order: 3;
+    width: 100%;
+  }
+  .video-viewer-stage {
+    padding: 10px;
+  }
+  .video-viewer-stage video {
+    max-height: calc(100svh - 190px);
+  }
 }
 </style>

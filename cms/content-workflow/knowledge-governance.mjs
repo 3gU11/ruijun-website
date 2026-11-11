@@ -51,20 +51,20 @@ export function assertKnowledgeLifecycleReadiness({ current, input, target }) {
   if (assessment.missing.length) {
     throw new KnowledgeGovernanceError(
       'KNOWLEDGE_REVIEW_REQUIRED_FIELDS',
-      `Knowledge review requires: ${assessment.missing.join(', ')}`,
+      `知识条目送审前还需补齐：${assessment.missing.join('、')}`,
       { missing: assessment.missing }
     );
   }
   if (assessment.requiresHighRiskSafety) {
     throw new KnowledgeGovernanceError(
       'KNOWLEDGE_HIGH_RISK_SAFETY',
-      'High-risk knowledge requires explicit safety preconditions and escalation guidance'
+      '高风险知识必须填写明确的安全前置条件与人工升级说明'
     );
   }
   if (assessment.requiresPublicVisibility) {
     throw new KnowledgeGovernanceError(
       'KNOWLEDGE_PUBLIC_VISIBILITY_REQUIRED',
-      'Only knowledge marked public may be published'
+      '只有标记为「公开」的知识条目才能发布'
     );
   }
 }

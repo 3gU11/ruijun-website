@@ -9,7 +9,10 @@
   "directus:extension": {
     "host": "^11.0.0",
     "type": "module",
-    "path": "dist/index.js",
+    "path": "dist/workbench-20261104q.js",
     "source": "src/index.js"
+  },
+  "dependencies": {
+    "mammoth": "^1.13.0"
   }
 }

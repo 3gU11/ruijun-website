@@ -1,3 +1,9 @@
+// This reader is a public boundary and deliberately has no imports outside the
+// server tree: Nitro dev externalizes such modules and resolves them against the
+// generated entry, which broke the route with "Cannot find module". The series
+// detail normalizer below is therefore kept self-contained instead of importing
+// the client-side helper.
+
 function isPublished(record, now) {
   if (record?.status !== 'published' || record?.publication_state !== 'published') return false;
   if (!record.published_at) return true;
@@ -51,7 +57,7 @@ function publicParameterKey(record) {
 function mergePublishedParameters(records, parameterRecords) {
   const grouped = new Map();
   const units = new Map();
-  const parameterGroups = new Map();
+  const rows = new Map();
   for (const parameter of Array.isArray(parameterRecords) ? parameterRecords : []) {
     const modelCode = safeText(parameter?.model_code);
     const key = publicParameterKey(parameter);
@@ -65,24 +71,23 @@ function mergePublishedParameters(records, parameterRecords) {
       if (!units.has(modelCode)) units.set(modelCode, {});
       units.get(modelCode)[key] = unit;
     }
-    if (!parameterGroups.has(modelCode)) parameterGroups.set(modelCode, new Map());
-    const groupName = safeText(parameter?.group_name) || '未分组';
-    const groups = parameterGroups.get(modelCode);
-    if (!groups.has(groupName)) groups.set(groupName, []);
+    if (!rows.has(modelCode)) rows.set(modelCode, []);
     const presentation = safeParameterPresentation(parameter?.presentation);
-    groups.get(groupName).push({ label: fieldName, key, value, ...(unit ? { unit } : {}), ...(presentation ? { presentation } : {}) });
+    rows.get(modelCode).push({ label: fieldName, key, value, ...(unit ? { unit } : {}), ...(presentation ? { presentation } : {}) });
   }
   return records.map((record) => {
     const modelCode = safeText(record?.model_code);
     const parameters = grouped.get(modelCode);
     const modelUnits = units.get(modelCode);
-    const groups = parameterGroups.get(modelCode);
+    const modelRows = rows.get(modelCode);
+    // Rows stay in one anonymous group: `group_name` was removed from the
+    // content model, so the product page renders a single flat table.
     return parameters && Object.keys(parameters).length
       ? {
         ...record,
         parameters,
         ...(modelUnits && Object.keys(modelUnits).length ? { parameter_units: modelUnits } : {}),
-        ...(groups?.size ? { parameter_groups: [...groups.entries()].map(([name, items]) => ({ name, items })) } : {})
+        ...(modelRows?.length ? { parameter_groups: [{ name: '', items: modelRows }] } : {})
       }
       : record;
   });
@@ -148,16 +153,59 @@ function safeParameterPresentation(value) {
   return Object.keys(fields).length ? { field_presentation: fields } : undefined;
 }
 
-function safeSeriesPresentation(value) {
+function safeSeriesPresentation(value, assets = new Map()) {
   const source = value && typeof value === 'object' && !Array.isArray(value) ? value.field_presentation : null;
-  if (!source || typeof source !== 'object' || Array.isArray(source)) return undefined;
-  const fields = Object.fromEntries(['name', 'positioning'].flatMap((field) => {
-    const presentation = source[field];
-    return presentation && typeof presentation === 'object' && !Array.isArray(presentation)
-      ? [[field, safeProductFeaturePresentation(presentation)]]
-      : [];
-  }));
-  return Object.keys(fields).length ? { field_presentation: fields } : undefined;
+  const detail = safeSeriesDetail(value && typeof value === 'object' && !Array.isArray(value) ? value.detail : null, assets);
+  const fields = source && typeof source === 'object' && !Array.isArray(source)
+    ? Object.fromEntries(['name', 'positioning'].flatMap((field) => {
+      const presentation = source[field];
+      return presentation && typeof presentation === 'object' && !Array.isArray(presentation)
+        ? [[field, safeProductFeaturePresentation(presentation)]]
+        : [];
+    }))
+    : {};
+  if (!Object.keys(fields).length && !detail) return undefined;
+  return {
+    ...(Object.keys(fields).length ? { field_presentation: fields } : {}),
+    ...(detail ? { detail } : {})
+  };
+}
+
+// Series-level detail is rendered on the public product page, so the same
+// boundary rules as model configuration apply: only known keys, bounded text,
+// and site-local/HTTPS image paths. The normalizer is duplicated here on purpose
+// (see the note at the top of this file) so the reader stays self-contained.
+function safeSeriesDetail(value, assets = new Map()) {
+  const source = value && typeof value === 'object' && !Array.isArray(value) ? value : null;
+  if (!source) return undefined;
+  const introSource = source.intro && typeof source.intro === 'object' && !Array.isArray(source.intro) ? source.intro : {};
+  const intro = {
+    ...(safeText(introSource.title) ? { title: safeText(introSource.title).slice(0, 160) } : {}),
+    ...(safeText(introSource.subtitle) ? { subtitle: safeText(introSource.subtitle).slice(0, 160) } : {}),
+    ...(safeText(introSource.scene) ? { scene: safeText(introSource.scene).slice(0, 240) } : {}),
+    ...(safeText(introSource.body) ? { body: safeText(introSource.body).slice(0, 4000) } : {})
+  };
+  const features = (Array.isArray(source.features) ? source.features : []).slice(0, 12).flatMap((feature) => {
+    if (!feature || typeof feature !== 'object' || Array.isArray(feature)) return [];
+    const label = safeText(feature.label).slice(0, 120);
+    if (!label) return [];
+    const image = assets.get(safeText(feature.media_asset_id))?.path || safePublicUrl(feature.image);
+    return [{
+      label,
+      ...(safeText(feature.detail) ? { detail: safeText(feature.detail).slice(0, 1000) } : {}),
+      ...(safeText(feature.note) ? { note: safeText(feature.note).slice(0, 300) } : {}),
+      ...(image ? { image } : {})
+    }];
+  });
+  // The machine photo is stored as a governed asset id and exposed as a path,
+  // matching how model configuration exposes `machineImage`.
+  const machineImage = assets.get(safeText(source.machine_asset_id))?.path || safePublicUrl(source.machine_image);
+  if (!Object.keys(intro).length && !features.length && !machineImage) return undefined;
+  return {
+    ...(Object.keys(intro).length ? { intro } : {}),
+    features,
+    ...(machineImage ? { machine_image: machineImage } : {})
+  };
 }
 
 function safeModelPresentation(value) {
@@ -219,6 +267,14 @@ function resourceAssetIds(value) {
   return [...new Set(value.map((entry) => safeText(entry?.media_asset_id)).filter(Boolean))];
 }
 
+function seriesDetailAssetIds(value) {
+  const detail = parseSnapshot(value) || {};
+  return [...new Set([
+    safeText(detail.machine_asset_id),
+    ...(Array.isArray(detail.features) ? detail.features.map((item) => safeText(item?.media_asset_id)) : [])
+  ].filter(Boolean))];
+}
+
 function safeConfiguration(value, assets) {
   const source = parseSnapshot(value) || {};
   const labels = source.labels && typeof source.labels === 'object' && !Array.isArray(source.labels) ? source.labels : {};
@@ -228,7 +284,10 @@ function safeConfiguration(value, assets) {
   const features = Array.isArray(source.features) ? source.features.flatMap((item) => {
     const label = safeText(item?.label);
     if (!label) return [];
-    const image = safePublicUrl(item.image || item.path) || assets.get(safeText(item.media_asset_id))?.path || '';
+    // A managed asset wins over the legacy static path: initializing a detail
+    // seeds the PSD thumbnail, and binding a real product image later must take
+    // effect without leaving the old path in the record.
+    const image = assets.get(safeText(item.media_asset_id))?.path || safePublicUrl(item.image || item.path) || '';
     return [{ label, detail: safeText(item.detail), note: safeText(item.note), ...(image ? { image } : {}) }];
   }) : [];
   const drawings = Array.isArray(source.drawings) ? source.drawings.flatMap((item, index) => {
@@ -280,7 +339,7 @@ function sanitizeModelRecord(record, assets = new Map()) {
 
 function sanitizeSeriesRecord(record, assets = new Map()) {
   const series = sanitizeProductRecord(record, assets);
-  if (Object.hasOwn(series, 'presentation')) series.presentation = safeSeriesPresentation(series.presentation);
+  if (Object.hasOwn(series, 'presentation')) series.presentation = safeSeriesPresentation(series.presentation, assets);
   return series;
 }
 
@@ -320,8 +379,11 @@ export function createCmsProductReader({ seriesEndpoint, modelsEndpoint, paramet
     const models = Array.isArray(snapshot?.models) ? snapshot.models : [];
     const series = Array.isArray(snapshot?.series) ? snapshot.series : [];
     const assetIds = [
-      ...series.flatMap((record) => collectMediaAssetIds(typeof record?.cover_asset === 'string' && !safePublicUrl(record.cover_asset)
-        ? [{ media_asset_id: record.cover_asset }] : [])),
+      ...series.flatMap((record) => [
+        ...seriesDetailAssetIds(record?.presentation?.detail),
+        ...collectMediaAssetIds(typeof record?.cover_asset === 'string' && !safePublicUrl(record.cover_asset)
+          ? [{ media_asset_id: record.cover_asset }] : [])
+      ]),
       ...models.flatMap((record) => [
       ...collectMediaAssetIds(record.media),
       ...configurationAssetIds(record.configuration),
@@ -366,6 +428,7 @@ export function createCmsProductReader({ seriesEndpoint, modelsEndpoint, paramet
         ...collectMediaAssetIds(record.media),
         ...configurationAssetIds(record.configuration),
         ...resourceAssetIds(record.resources),
+        ...seriesDetailAssetIds(record.presentation?.detail),
         ...collectMediaAssetIds(typeof record.cover_asset === 'string' && !safePublicUrl(record.cover_asset) ? [{ media_asset_id: record.cover_asset }] : [])
       ]);
       const assets = await mediaAssets.resolve(assetIds);
@@ -381,7 +444,7 @@ export function createCmsProductReader({ seriesEndpoint, modelsEndpoint, paramet
   async function listPublishedParameters() {
     return list({
       cacheKey: 'parameters', endpoint: parametersEndpoint,
-      fields: 'model_code,group_name,field_name,value,unit,presentation,sort_order,status,publication_state,published_at',
+      fields: 'model_code,field_name,value,unit,presentation,sort_order,status,publication_state,published_at',
       sort: 'model_code,sort_order'
     });
   }

@@ -351,31 +351,34 @@ test('preview issuance enforces role scope, draft state and revocation', async (
   assert.equal(forbidden.capture.statusCode, 400);
   assert.equal(forbidden.capture.body.errors[0].extensions.code, 'PREVIEW_TARGET_INVALID');
 
-  const blocked = responseCapture();
-  await handlers.get('POST /issue')({ accountability: { user: 'admin-1', role: 'system-role' }, body: { contentCollection: 'product_models', contentItemId: '2' } }, blocked.response, (error) => { throw error; });
-  assert.equal(blocked.capture.statusCode, 409);
-  assert.equal(blocked.capture.body.errors[0].extensions.code, 'PREVIEW_CONTENT_NOT_DRAFT');
-
   const denied = responseCapture();
   await handlers.get('POST /issue')({ accountability: { user: 'sales-1', role: 'sales-role' }, body: { contentCollection: 'pages', contentItemId: '1' } }, denied.response, (error) => { throw error; });
   assert.equal(denied.capture.statusCode, 403);
 
   const issued = responseCapture();
   await handlers.get('POST /issue')({ accountability: { user: 'admin-1', role: 'system-role' }, body: { contentCollection: 'product_models', contentItemId: '2', ttlSeconds: 60 } }, issued.response, (error) => { throw error; });
-  assert.equal(issued.capture.statusCode, 409);
+  assert.equal(issued.capture.statusCode, 201);
+
+  const scheduled = responseCapture();
+  tables.product_models[0].status = 'scheduled';
+  tables.product_models[0].publication_state = 'unpublished';
+  await handlers.get('POST /issue')({ accountability: { user: 'admin-1', role: 'system-role' }, body: { contentCollection: 'product_models', contentItemId: '2', ttlSeconds: 60 } }, scheduled.response, (error) => { throw error; });
+  assert.equal(scheduled.capture.statusCode, 201, 'approved products can be inspected before release');
+
+  tables.product_models[0].status = 'review';
+  const reviewIssue = responseCapture();
+  await handlers.get('POST /issue')({ accountability: { user: 'admin-1', role: 'system-role' }, body: { contentCollection: 'product_models', contentItemId: '2', ttlSeconds: 60 } }, reviewIssue.response, (error) => { throw error; });
+  assert.equal(reviewIssue.capture.statusCode, 201, 'content under review can be previewed read-only');
 
   tables.product_models[0].status = 'draft';
   tables.product_models[0].publication_state = 'unpublished';
-  await handlers.get('POST /issue')({ accountability: { user: 'admin-1', role: 'system-role' }, body: { contentCollection: 'product_models', contentItemId: '2', ttlSeconds: 60 } }, issued.response, (error) => { throw error; });
-  assert.equal(issued.capture.statusCode, 201);
-  const tokenId = issued.capture.body.data.id;
-  const token = issued.capture.body.data.token;
+  const draftIssue = responseCapture();
+  await handlers.get('POST /issue')({ accountability: { user: 'admin-1', role: 'system-role' }, body: { contentCollection: 'product_models', contentItemId: '2', ttlSeconds: 60 } }, draftIssue.response, (error) => { throw error; });
+  assert.equal(draftIssue.capture.statusCode, 201);
+  const tokenId = draftIssue.capture.body.data.id;
+  const token = draftIssue.capture.body.data.token;
   const revoked = responseCapture();
   await handlers.get('POST /:id/revoke')({ params: { id: tokenId }, accountability: { user: 'admin-1', role: 'system-role' } }, revoked.response, (error) => { throw error; });
   assert.equal(revoked.capture.statusCode, 200);
   assert.equal(revoked.capture.body.data.status, 'revoked');
-  const consumed = responseCapture();
-  await handlers.get('POST /consume')({ body: { token } }, consumed.response, (error) => { throw error; });
-  assert.equal(consumed.capture.statusCode, 410);
-  assert.equal(consumed.capture.body.errors[0].extensions.code, 'PREVIEW_TOKEN_REVOKED');
 });

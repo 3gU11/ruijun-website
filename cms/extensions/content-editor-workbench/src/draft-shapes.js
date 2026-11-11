@@ -10,6 +10,7 @@ import { normalizeFieldPresentations, normalizeSectionPresentation } from './sec
 import { cloneVisualSnapshot } from './visual-editing-history.js';
 import { mergeVisualSiteSettingsDefaults } from './site-settings-visual-defaults.js';
 import { normalizeProductModelFeaturePresentation } from './product-model-presentation.js';
+import { normalizeSeriesDetail } from '../../../../website/shared/product-series-details.mjs';
 
 export function cloneVisualState(value) {
   return cloneVisualSnapshot(value);
@@ -105,11 +106,26 @@ export function normalizePagination(value) {
 export function normalizeSeries(record) {
   const presentationSource = parseObject(record.presentation);
   const fieldPresentation = normalizeFieldPresentations(presentationSource.field_presentation, ['name', 'positioning']);
+  // Series-level detail belongs to solution-type series (see
+  // website/shared/product-series-details.mjs). Preserve it so saving the series
+  // form never drops content written by another editor or the canvas.
+  const detail = normalizeSeriesDetail(presentationSource.detail);
   return {
     ...clone(record),
-    presentation: Object.keys(fieldPresentation).length ? { field_presentation: fieldPresentation } : {},
+    presentation: {
+      ...(Object.keys(fieldPresentation).length ? { field_presentation: fieldPresentation } : {}),
+      ...(detail ? { detail } : {})
+    },
+    detail: detail || emptySeriesDetail(),
     scenariosText: textList(record.scenarios), capabilitiesText: textList(record.capabilities),
     sort_order: Number.isFinite(Number(record.sort_order)) ? Number(record.sort_order) : 0
+  };
+}
+
+export function emptySeriesDetail() {
+  return {
+    intro: { title: '', subtitle: '', scene: '', body: '' },
+    features: []
   };
 }
 
@@ -154,7 +170,7 @@ export function normalizeModel(record) {
 }
 
 export function emptyParameter() {
-  return { group_name: '', field_name: '', value: '', unit: '', sort_order: 0, test_conditions: '' };
+  return { field_name: '', value: '', unit: '', sort_order: 0, test_conditions: '' };
 }
 
 export function emptyMediaDraft() {
@@ -173,9 +189,18 @@ export function greatestCommonDivisor(left, right) {
 }
 
 export function mediaTypeForFile(file) {
-  if (String(file?.type || '').startsWith('image/')) return 'image';
-  if (String(file?.type || '').startsWith('video/')) return 'video';
-  if (file?.type === 'application/pdf') return 'document';
+    const mime = String(file?.type || '').toLowerCase().trim();
+    if (mime.startsWith('image/')) return 'image';
+    if (mime.startsWith('video/')) return 'video';
+    if (mime === 'application/pdf') return 'document';
+    // Some browsers and file providers leave File.type empty (or use an
+    // application/* value for MP4/MOV). Use the extension as a classification
+    // fallback so the upload flow can still perform server-side validation.
+    const name = String(file?.name || '').toLowerCase();
+    const extension = name.includes('.') ? name.slice(name.lastIndexOf('.') + 1) : '';
+    if (['jpg', 'jpeg', 'png', 'webp', 'avif'].includes(extension)) return 'image';
+    if (['mp4', 'webm', 'mov', 'm4v'].includes(extension)) return 'video';
+    if (extension === 'pdf') return 'document';
   return '';
 }
 
@@ -256,13 +281,16 @@ export function normalizeKnowledge(record) {
   };
 }
 
-export function isPageMediaOption(assetId, scope) {
-  return pageMediaOptions(scope).some((asset) => String(asset.id) === String(assetId));
+// These helpers used to call `pageMediaOptions` / `pageMediaOptionsForSection`,
+// which only exist inside the workbench component. Calling them from here threw
+// a ReferenceError at runtime, so the candidate list is now passed in and this
+// module stays pure.
+export function isPageMediaOption(assetId, scope, options = []) {
+  return options.some((asset) => String(asset.id) === String(assetId));
 }
 
-export function isPageMediaOptionForSection(assetId, scope, section) {
-  return isPageMediaOption(assetId, scope)
-    && pageMediaOptionsForSection(scope, section).some((asset) => String(asset.id) === String(assetId));
+export function isPageMediaOptionForSection(assetId, scope, section, options = []) {
+  return isPageMediaOption(assetId, scope, options);
 }
 
 export function reviewedMediaAssetsForPlacement(scope, placementKey) {
@@ -275,20 +303,31 @@ export function apiStatus(reason) {
 
 export function normalizeReviewRecord(definition, record) {
   const [primaryField, secondaryField] = definition.fields;
+  // 提交名称由提交人在画布保存草稿时填写，存进 publication_log；队列优先显示它。
+  const log = Array.isArray(record.publication_log) ? record.publication_log : [];
+  const named = [...log].reverse().find((entry) => String(entry?.submission_name || '').trim());
+  const submissionName = String(named?.submission_name || '').trim();
   return {
     id: record.id,
     collection: definition.collection,
     collectionLabel: definition.label,
-    label: String(record[primaryField] || record[secondaryField] || `${definition.label} ${record.id}`),
+    label: submissionName || String(record[primaryField] || record[secondaryField] || `${definition.label} ${record.id}`),
+    submission_name: submissionName,
     secondary: String(record[secondaryField] || ''),
     status: record.status,
     publication_state: record.publication_state,
-    review_note: String(record.review_note || '')
+    review_note: String(record.review_note || ''),
+    items: Array.isArray(record.items) ? record.items : []
   };
 }
 
-export function defaultPageMediaRole(section, assetId) {
-  const asset = pageMediaOptions(pageMediaScope()).find((candidate) => String(candidate.id) === String(assetId));
+const pageMediaSlotRoles = new Set([
+  'image', 'video', 'background', 'cover', 'poster', 'icon', 'gallery', 'asset',
+  'technical', 'drawing', 'equipment', 'feature', 'map', 'foreground', 'logo'
+]);
+
+export function defaultPageMediaRole(section, assetId, options = []) {
+  const asset = options.find((candidate) => String(candidate.id) === String(assetId));
   const placement = String(asset?.placement_key || '').trim().toLowerCase();
   const tail = placement ? placement.split('.').pop() : '';
   // The homepage machine slot is registered as `…machine` but bound as
@@ -339,8 +378,29 @@ export function queueCollectionOptions(records) {
   return [...counts.values()].sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, 'zh'));
 }
 
+function fuzzyQueueText(value) {
+  return String(value ?? '')
+    .normalize('NFKC')
+    .toLowerCase()
+    .replace(/[\s\u3000·•・\-_/\\|,，。.;；:：、（）()【】[\]{}]+/g, '');
+}
+
+function fuzzyQueueMatch(value, needle) {
+  const text = fuzzyQueueText(value);
+  if (!text || !needle) return false;
+  if (text.includes(needle)) return true;
+  // 模糊搜索：允许字符按顺序出现，且忽略空格、标点和大小写。
+  // 例如“领导实际”可以命中“市领导…调研 实际内容”。
+  let cursor = 0;
+  for (const character of text) {
+    if (character === needle[cursor]) cursor += 1;
+    if (cursor === needle.length) return true;
+  }
+  return false;
+}
+
 export function filterQueueRecords(records, { query = '', collection = '' } = {}) {
-  const needle = String(query ?? '').trim().toLowerCase();
+  const needle = fuzzyQueueText(query);
   const wanted = String(collection ?? '').trim();
   return (Array.isArray(records) ? records : []).filter((record) => {
     if (wanted && String(record?.collection || '') !== wanted) return false;
@@ -348,7 +408,7 @@ export function filterQueueRecords(records, { query = '', collection = '' } = {}
     // Match how an operator would refer to a record: its visible name, its
     // secondary identifier, or the content type it belongs to.
     return [record?.label, record?.secondary, record?.collectionLabel]
-      .some((field) => String(field ?? '').toLowerCase().includes(needle));
+      .some((field) => fuzzyQueueMatch(field, needle));
   });
 }
 

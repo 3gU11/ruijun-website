@@ -4,9 +4,11 @@ const normalizeOrigins = (value) => String(value || '')
   .filter((origin) => /^https?:\/\/[^\s/]+(?::\d+)?$/.test(origin));
 
 export const createCmsPreviewFramePolicy = ({ isPreview, allowedOrigins }) => {
-  if (!isPreview) return Object.freeze({ 'x-frame-options': 'SAMEORIGIN' });
-
   const origins = normalizeOrigins(allowedOrigins);
+  // The CMS canvas can reach the website through a LAN host or localhost.
+  // X-Frame-Options cannot express that allow-list and causes Firefox to
+  // reject the iframe before the preview session is established.
+  if (!isPreview && !origins.length) return Object.freeze({ 'x-frame-options': 'SAMEORIGIN' });
   return Object.freeze({
     'content-security-policy': origins.length ? `frame-ancestors ${origins.join(' ')}` : "frame-ancestors 'none'"
   });

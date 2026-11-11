@@ -8,6 +8,7 @@ const {
   assertMediaAssetRecord,
   assertMediaAssetPlacement,
   mediaPlacementQualityNotice,
+  mediaPlacementPosterNotice,
   reviewerRoleForMediaUsageScope,
   collectMediaAssetReferenceIds,
   assertPublishedMediaReferences
@@ -77,8 +78,9 @@ test('media placement keeps the checks whose absence breaks a page, and drops th
   // 以下这些缺了页面会直接坏掉，必须继续拦截。
   assert.throws(() => assertMediaAssetPlacement({ media_type: 'image', width: 1920, height: 1080 }, 'home.hero.video'),
     (error) => error instanceof MediaAssetGovernanceError && error.code === 'MEDIA_PLACEMENT_TYPE_INVALID');
-  assert.throws(() => assertMediaAssetPlacement({ media_type: 'video', width: 1920, height: 1080 }, 'news.hero.video'),
-    (error) => error instanceof MediaAssetGovernanceError && error.code === 'MEDIA_POSTER_REQUIRED');
+  // 封面不再是必填：首页首屏视频没有海报也能保存/送审，播放行为仍必须满足。
+  assert.doesNotThrow(() => assertMediaAssetPlacement(
+    { media_type: 'video', width: 1920, height: 1080, autoplay: true, muted: true }, 'news.hero.video'));
   assert.throws(() => assertMediaAssetPlacement(
     { media_type: 'video', width: 1920, height: 1080, poster_asset_id: 'poster-1', autoplay: true }, 'home.hero.video'),
     (error) => error instanceof MediaAssetGovernanceError && error.code === 'MEDIA_PLAYBACK_INVALID');
@@ -102,7 +104,7 @@ test('an undersized asset produces a quality notice instead of a rejection', () 
   assert.equal(mediaPlacementQualityNotice({}, 'news.video_share.list'), null);
 });
 
-test('video media records only require a poster for placements that need one', () => {
+test('video media records accept a missing poster and only get an advisory notice', () => {
   const file = { id: 'video-1', filename_download: 'share.mp4', type: 'video/mp4', filesize: 10_000 };
   const base = {
     file_id: 'video-1', original_file_name: 'share.mp4', mime_type: 'video/mp4', byte_size: 10_000,
@@ -110,8 +112,15 @@ test('video media records only require a poster for placements that need one', (
     placement_key: 'news.video_share.list'
   };
   assert.doesNotThrow(() => assertMediaAssetRecord(base, file));
-  assert.throws(() => assertMediaAssetRecord({ ...base, placement_key: 'news.hero.video' }, file),
-    (error) => error instanceof MediaAssetGovernanceError && error.code === 'MEDIA_POSTER_REQUIRED');
+  // 首页/新闻首屏、教学视频、制造视频都不再强制封面。
+  assert.doesNotThrow(() => assertMediaAssetRecord({ ...base, usage_scope: 'homepage', placement_key: 'home.hero.video', autoplay: true, muted: true }, file));
+  assert.doesNotThrow(() => assertMediaAssetRecord({ ...base, placement_key: 'news.hero.video' }, file));
+
+  assert.match(mediaPlacementPosterNotice({ ...base, placement_key: 'home.hero.video' }, 'home.hero.video'), /视频首帧/);
+  // 视频分享列表本身不建议封面 → 无提示；已设置封面 → 无提示。
+  assert.equal(mediaPlacementPosterNotice(base, 'news.video_share.list'), null);
+  assert.equal(mediaPlacementPosterNotice({ ...base, placement_key: 'home.hero.video', poster_asset_id: '9' }, 'home.hero.video'), null);
+  assert.equal(mediaPlacementPosterNotice(base, 'home.hero.poster'), null);
 });
 
 test('media asset records must match the server-side uploaded file and declare an eligible review scope', () => {
@@ -179,7 +188,7 @@ test('media asset references support Directus numeric primary keys without weake
   ));
 });
 
-test('page section media and presentation poster references are included in publication governance', () => {
+test('page section media references are governed while optional posters are not a publish dependency', () => {
   assert.deepEqual(collectMediaAssetReferenceIds({
     sections: [{
       id: 'hero',
@@ -187,11 +196,20 @@ test('page section media and presentation poster references are included in publ
       media_presentation: { poster_asset_id: 'section-poster' },
       content: { items: [{ media_asset_id: 42 }] }
     }]
-  }), ['hero-video', 'hero-poster', 'section-poster', '42']);
+  }), ['hero-video', '42']);
   assert.throws(() => assertPublishedMediaReferences({
     status: 'review', sections: [{ id: 'hero', media: [{ media_asset_id: 'draft-hero' }] }]
   }, new Map([['draft-hero', { id: 'draft-hero', status: 'draft', publication_state: 'unpublished' }]])),
   (error) => error instanceof MediaAssetGovernanceError && error.code === 'MEDIA_NOT_PUBLISHED');
+  // 草稿封面不阻断送审/发布：官网在封面未发布时回退到视频首帧。
+  assert.doesNotThrow(() => assertPublishedMediaReferences({
+    status: 'review',
+    poster_asset_id: 'draft-poster',
+    media: [{ media_asset_id: 'video-1', poster_asset_id: 'draft-poster' }]
+  }, new Map([
+    ['video-1', { id: 'video-1', status: 'published', publication_state: 'published' }],
+    ['draft-poster', { id: 'draft-poster', status: 'draft', publication_state: 'unpublished' }]
+  ])));
   assert.deepEqual(collectMediaAssetReferenceIds({
     sections: JSON.stringify([{ id: 'hero', content: JSON.stringify({ media: [{ media_asset_id: 'string-media' }] }) }])
   }), ['string-media']);

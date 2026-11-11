@@ -14,7 +14,7 @@ const EXTRACTED = [
   'normalizeSeries', 'normalizeModel', 'normalizeSettings', 'normalizeKnowledge', 'normalizeArticle',
   'normalizeRepairPage', 'normalizeReviewRecord', 'normalizeFooterTextStyles', 'normalizeOptionalSortOrder',
   'normalizeLink', 'boundedFooterStyleNumber', 'emptyMediaDraft', 'emptyParameter', 'nextServiceKey',
-  'nextDraftSlug', 'mediaTypeForFile', 'greatestCommonDivisor', 'defaultPageMediaRole',
+  'nextDraftSlug', 'mediaTypeForFile', 'greatestCommonDivisor', 'defaultPageMediaRole', 'emptySeriesDetail',
   'remapVisualListPath', 'cloneVisualState', 'apiStatus', 'registeredSectionList',
   'reviewedMediaAssetsForPlacement', 'isPageMediaOption', 'isPageMediaOptionForSection'
 ];
@@ -71,6 +71,8 @@ test('extracted normalizers keep their behaviour', async () => {
   assert.notEqual(normalizeOptionalSortOrder(undefined), 0);
 
   assert.equal(mediaTypeForFile({ type: 'video/mp4', name: 'a.mp4' }), 'video');
+  assert.equal(mediaTypeForFile({ type: '', name: 'a.mp4' }), 'video');
+  assert.equal(mediaTypeForFile({ type: 'application/octet-stream', name: 'a.mov' }), 'video');
   assert.equal(mediaTypeForFile({ type: 'image/png', name: 'a.png' }), 'image');
   assert.equal(greatestCommonDivisor(12, 18), 6);
 
@@ -114,6 +116,16 @@ test('queue filters narrow a 600-item list down to what the operator is looking 
   // Type filter, and the two filters combine.
   assert.equal(filterQueueRecords(queue, { collection: 'articles' }).length, 2);
   assert.deepEqual(filterQueueRecords(queue, { collection: 'articles', query: '测试2' }).map((r) => r.label), ['测试2']);
+
+  // 模糊搜索：名称中的空格、全半角与标点不应影响命中。
+  const spaced = [{
+    collection: 'articles', collectionLabel: '文章资讯',
+    label: '市领导赴苏州瑞钧智能科技有限公司考察调研 实际内容',
+    secondary: 'cms-editor-article-1793847758613', status: 'draft'
+  }];
+  assert.equal(filterQueueRecords(spaced, { query: '市领导赴苏州瑞钧智能科技有限公司考察调研实际内容' }).length, 1);
+  assert.equal(filterQueueRecords(spaced, { query: '领导实际' }).length, 1);
+  assert.equal(filterQueueRecords(spaced, { query: '  实际内容  ' }).length, 1);
 
   // A query that matches nothing yields an empty list, which the panel reports
   // distinctly from an empty queue — these must not be conflated.
@@ -189,4 +201,32 @@ test('every exported normalizer actually runs, so a missing dependency cannot hi
     'queueCollectionOptions', 'normalizeFooterTextStyles']) {
     assert.equal(typeof shapes[name], 'function', `${name} should be exported`);
   }
+});
+
+test('series draft keeps its presentation detail and persists it back into presentation', async () => {
+  const shapes = await import('../extensions/content-editor-workbench/src/draft-shapes.js');
+
+  const withDetail = shapes.normalizeSeries({
+    id: 1,
+    series_code: 'workstation',
+    slug: 'workstation',
+    presentation: {
+      field_presentation: { name: { text_style: { size_desktop: 24 } } },
+      detail: {
+        intro: { title: '灵动切割工作站', subtitle: '', scene: '', body: '正文' },
+        features: [{ label: '自动穿丝系统', media_asset_id: '12' }]
+      }
+    }
+  });
+
+  // The canvas edits `detail.*`, so it must survive opening the draft…
+  assert.equal(withDetail.detail.intro.title, '灵动切割工作站');
+  assert.equal(withDetail.detail.features[0].media_asset_id, '12');
+  // …and the persisted shape must keep both the field presentation and the detail.
+  assert.equal(withDetail.presentation.detail.features[0].label, '自动穿丝系统');
+  assert.equal(withDetail.presentation.field_presentation.name.text_style.size_desktop, 24);
+
+  const withoutDetail = shapes.normalizeSeries({ id: 2, series_code: 'fr-pro', slug: 'fr-pro', presentation: {} });
+  assert.deepEqual(withoutDetail.detail, { intro: { title: '', subtitle: '', scene: '', body: '' }, features: [] });
+  assert.equal(Object.hasOwn(withoutDetail.presentation, 'detail'), false);
 });

@@ -5,12 +5,12 @@ const { createCmsServiceContentReader } = await import('../server/services/cms-s
 
 const publication = { status: 'published', publication_state: 'published', published_at: '2026-07-30T00:00:00.000Z' };
 const publishedResource = {
-  source_key: 'manual-fr-xs', type: 'machine_manual', title: 'FR-XS 说明书', summary: '设备说明书', applicable_models: ['FR400XS'],
+  id: 11, source_key: 'manual-fr-xs', type: 'machine_manual', title: 'FR-XS 说明书', summary: '设备说明书', applicable_models: ['FR400XS'],
   version: 'v1', language: 'zh-CN', asset: 'https://assets.example.test/manual-fr-xs.pdf', display_date: '2026-07-30', sort_order: 2,
   updated_at: '2026-07-30T00:00:00.000Z', ...publication
 };
 const publicKnowledge = {
-  source_key: 'fault-wire', visibility: 'public', channel: 'website', category: 'fault_analysis', question_title: '容易断丝',
+  id: 21, source_key: 'fault-wire', visibility: 'public', channel: 'website', category: 'fault_analysis', question_title: '容易断丝',
   applicable_models: ['FR400XS'], error_codes: ['E01'], symptoms: '加工时频繁断丝',
   troubleshooting_steps: [{ type: 'manual_step', content: '检查张力' }], safety_preconditions: ['关闭高频'], risk_level: 'medium',
   version: 'v1', sort_order: 1, ...publication
@@ -33,13 +33,15 @@ test('Nuxt service content reader exposes only published website content and str
   const resources = await reader.listResources();
   assert.equal(resources.data.length, 1);
   assert.deepEqual(resources.data[0], {
-    source_key: 'manual-fr-xs', type: 'machine_manual', title: 'FR-XS 说明书', summary: '设备说明书', body: '', applicable_models: ['FR400XS'],
+    id: 11, source_key: 'manual-fr-xs', type: 'machine_manual', title: 'FR-XS 说明书', summary: '设备说明书', body: '', applicable_models: ['FR400XS'],
     version: 'v1', language: 'zh-CN', asset: 'https://assets.example.test/manual-fr-xs.pdf', display_date: '2026-07-30', sort_order: 2,
     updated_at: '2026-07-30T00:00:00.000Z'
   });
   const knowledge = await reader.listKnowledge();
   assert.equal(knowledge.data.length, 1);
+  assert.equal(knowledge.data[0].id, 21, '画布绑定需要记录 id');
   assert.equal(knowledge.data[0].title, '容易断丝');
+  assert.match(requests.find((item) => item.request.pathname.endsWith('service_resources')).request.searchParams.get('fields'), /^id,/);
   assert.deepEqual(knowledge.data[0].steps, ['检查张力']);
   assert.equal('technical_reviewer' in knowledge.data[0], false);
   assert.deepEqual((await reader.listLocations()).data, [activeLocation]);

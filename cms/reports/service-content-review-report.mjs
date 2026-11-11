@@ -15,7 +15,6 @@ export function assessServiceResource(resource) {
   const issues = [];
   if (!text(resource.source_key, '')) issues.push('来源键');
   if (!text(resource.type, '')) issues.push('资料类型');
-  if (!text(resource.source_document, '') && !text(resource.source_url, '')) issues.push('来源文件或地址');
   if (!text(resource.asset, '')) issues.push('受控文件未上传');
   if (!text(resource.version, '')) issues.push('版本待确认');
   if (!text(resource.updated_at, '')) issues.push('更新时间待确认');

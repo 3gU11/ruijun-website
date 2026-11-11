@@ -1,9 +1,13 @@
 <template>
-  <private-view title="产品统一发布">
+  <private-view title="发布中心">
     <div class="release-page">
+      <nav class="release-center-tabs" aria-label="发布中心">
+        <a href="/admin/ruijun-content-publication-queue-workbench">内容发布</a>
+        <a class="active" href="/admin/ruijun-product-release-workbench" aria-current="page">产品统一发布</a>
+      </nav>
       <header class="toolbar">
         <div>
-          <p class="eyebrow">产品发布</p>
+          <p class="eyebrow">发布中心</p>
           <h2>产品统一发布</h2>
           <p>将产品系列、型号和独立参数固定为同一份公开快照，避免列表、详情和对比出现版本混用。</p>
         </div>
@@ -206,9 +210,13 @@ async function restoreSelected() {
   }
 }
 
-onMounted(load);
+onMounted(() => {
+  window.requestAnimationFrame(() => document.querySelector('.scrolling-container')?.scrollTo({ top: 0 }));
+  load();
+});
 </script>
 
 <style scoped>
 .release-page{display:grid;gap:18px;max-width:1180px;padding:4px 0 32px}.toolbar{display:flex;justify-content:space-between;align-items:end;gap:16px;flex-wrap:wrap}.toolbar p,.toolbar h2{margin:0}.toolbar h2{margin:6px 0;font-size:25px}.toolbar>div>p:last-child{margin-top:8px;color:var(--theme--foreground-subdued)}.eyebrow{margin:0;color:var(--theme--primary);font:600 12px ui-monospace,monospace;letter-spacing:.08em}.toolbar button,.publish-button,.cache-state button,.history-card button{padding:9px 13px;border:1px solid var(--theme--border-color);border-radius:4px;background:var(--theme--background);color:var(--theme--foreground);cursor:pointer}.toolbar button:disabled,.publish-button:disabled,.cache-state button:disabled,.history-card button:disabled{cursor:not-allowed;opacity:.55}.message,.summary>div,.release-card,.active-card,.history-card{border:1px solid var(--theme--border-color);border-radius:6px;background:var(--theme--background);padding:16px}.error{border-color:var(--theme--danger);color:var(--theme--danger)}.success{border-color:var(--theme--success);color:var(--theme--success)}.summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.summary span{display:block;color:var(--theme--foreground-subdued);font-size:13px}.summary strong{display:block;margin-top:8px;font-size:28px}.release-card,.active-card,.history-card{display:grid;gap:16px}.card-heading{display:flex;justify-content:space-between;align-items:start;gap:12px}.card-heading h3{margin:6px 0 0;font-size:19px}.card-heading>span,.hash,time{color:var(--theme--foreground-subdued);font:12px ui-monospace,monospace}.blocked{margin:0;color:var(--theme--danger)}.ready{margin:0;color:var(--theme--success)}.note-field{display:grid;gap:7px;color:var(--theme--foreground-subdued);font-size:13px}.note-field textarea{width:100%;resize:vertical;box-sizing:border-box;padding:9px 10px;border:1px solid var(--theme--border-color);border-radius:4px;background:var(--theme--background);color:var(--theme--foreground);font:inherit}.publish-button,.restore-button{justify-self:start;background:var(--theme--primary)!important;border-color:var(--theme--primary)!important;color:var(--theme--primary-foreground)!important}.cache-state{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 14px;border:1px solid var(--theme--border-color);border-radius:4px}.cache-state span,.cache-state small{display:block;color:var(--theme--foreground-subdued);font-size:12px}.cache-state strong{display:block;margin:4px 0}.cache-state.is-succeeded strong,.cache-label.is-succeeded{color:var(--theme--success)}.cache-state.is-failed strong,.cache-state.is-not_configured strong,.cache-label.is-failed,.cache-label.is-not_configured{color:var(--theme--danger)}dl{display:grid;gap:10px;margin:0}dl>div{display:grid;grid-template-columns:130px 1fr;gap:12px;border-top:1px solid var(--theme--border-color);padding-top:10px}dt{color:var(--theme--foreground-subdued);font-size:13px}dd{margin:0;overflow-wrap:anywhere}.history-table-wrap{overflow:auto}.history-card table{width:100%;border-collapse:collapse;text-align:left}.history-card th,.history-card td{padding:11px 10px;border-bottom:1px solid var(--theme--border-color);vertical-align:top;white-space:nowrap}.history-card th{color:var(--theme--foreground-subdued);font-size:12px;font-weight:500}.history-card td small{display:block;max-width:240px;margin-top:4px;color:var(--theme--foreground-subdued);font-size:11px;overflow:hidden;text-overflow:ellipsis}.history-card tbody tr:last-child td{border-bottom:0}.active-label{display:inline-block;margin-left:7px;padding:2px 5px;border-radius:3px;background:var(--theme--primary-background);color:var(--theme--primary);font-size:11px}.empty{margin:0;color:var(--theme--foreground-subdued)}.restore-panel{display:grid;gap:14px;padding:16px;border:1px solid var(--theme--primary);border-radius:4px;background:var(--theme--primary-background)}.restore-panel h4,.restore-panel p{margin:0}.restore-panel h4{margin-top:5px;font-size:17px}.restore-panel>div>p:last-child{margin-top:7px;color:var(--theme--foreground-subdued)}.restore-actions{display:flex;gap:9px;flex-wrap:wrap}@media(max-width:700px){.summary{grid-template-columns:repeat(2,1fr)}.toolbar{align-items:stretch}.toolbar button,.cache-state button{width:100%}.publish-button{width:100%}.cache-state{align-items:stretch;flex-direction:column}dl>div{grid-template-columns:1fr;gap:5px}.history-card{padding:12px}.restore-actions{display:grid}.restore-actions button{width:100%}}@media(max-width:430px){.summary{grid-template-columns:1fr}}
+.release-center-tabs{display:flex;gap:6px;border-bottom:1px solid var(--theme--border-color)}.release-center-tabs a{padding:10px 14px;border-bottom:2px solid transparent;color:var(--theme--foreground-subdued);text-decoration:none;font:inherit;font-size:14px}.release-center-tabs a.active{border-bottom-color:var(--theme--primary);color:var(--theme--foreground);font-weight:600}
 </style>

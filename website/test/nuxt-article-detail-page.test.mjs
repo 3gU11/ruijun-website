@@ -14,18 +14,35 @@ test('news list links only to the public article detail route and the detail pag
   assert.doesNotMatch(detail, /CMS_BFF_TOKEN|CMS_WRITE_TOKEN|\/items\/articles/);
 });
 
+test('news list keeps the preview query when opening an article detail', async () => {
+  const [list, detail] = await Promise.all([
+    readFile(new URL('../pages/news.vue', import.meta.url), 'utf8'),
+    readFile(new URL('../pages/news/[slug].vue', import.meta.url), 'utf8')
+  ]);
+  // 从 ?cmsPreview=1 的列表点进详情时必须继续带参数，否则详情页按公开访问返回 410。
+  assert.match(list, /const previewQuery = computed\(\(\) => String\(route\.query\.cmsPreview \|\| ''\) === '1'/);
+  assert.match(list, /const articleDetailHref = \(article: Record<string, any>\)/);
+  assert.match(list, /const videoShareHref = \(item: Record<string, any>\)/);
+  assert.match(list, /:to="articleDetailHref\(article\)"/);
+  assert.match(list, /:to="videoShareHref\(item\)"/);
+  // 列表预览的会话目标是 pages；详情页要按 slug 从 related.articles 里精确取草稿。
+  assert.match(detail, /overlayList\('articles', \[\]\)\.find\(\(item: any\) => item\?\.slug === slug\.value\)/);
+});
+
 test('news hero consumes governed CMS video and stays empty without published content', async () => {
   const list = await readFile(new URL('../pages/news.vue', import.meta.url), 'utf8');
 
   assert.doesNotMatch(list, /exhibition-flash-opening\.mp4/);
   assert.match(list, /useFetch\('\/api\/public\/v1\/media\/news\.hero\.video'/);
-  assert.match(list, /<video id="video-news" class="news-hero-image"/);
+  assert.match(list, /<video v-if="videoNews\.video" id="video-news" class="news-hero-image"/);
+  assert.match(list, /<img v-else class="news-hero-image"/);
   assert.match(list, /:src="videoNews\.video"/);
   assert.match(list, /autoplay muted playsinline/);
   assert.match(list, /#video-news/);
   assert.match(list, /heroMedia\.value\?\.path \|\| fallbackVideoNews\.video/);
   assert.match(list, /const fallbackNews: Array<Record<string, any>> = \[\];/);
-  assert.match(list, /const fallbackVideoShares: Array<Record<string, any>> = \[\];/);
+  assert.match(list, /videoShareResponse\.value\?\.data/);
+  assert.match(list, /mediaOnly: true/);
 });
 
 test('article detail exposes a real article visual binding for title, body, date, and media', async () => {
@@ -35,7 +52,6 @@ test('article detail exposes a real article visual binding for title, body, date
   assert.match(detail, /:data-cms-preview-item-id="article\?\.id"/);
   assert.match(detail, /data-cms-preview-field-path="title"/);
   assert.match(detail, /data-cms-preview-field-path="display_date"/);
-  assert.match(detail, /data-cms-preview-field-path="summary"/);
   assert.match(detail, /data-cms-preview-field-path="body"/);
   assert.match(detail, /data-cms-preview-field-path="media"/);
 });
@@ -53,4 +69,10 @@ test('article detail recognizes governed video media regardless of Directus key 
   assert.ok(detail.includes('media?.mimeType || media?.mime_type'));
   assert.ok(detail.includes("mimeType.startsWith('video/')"));
   assert.ok(detail.includes('media?.posterPath || media?.poster_path'));
+});
+
+test('article SEO meta prefers the edited seo title and description', async () => {
+  const detail = await readFile(new URL('../pages/news/[slug].vue', import.meta.url), 'utf8');
+  assert.match(detail, /title: \(\) => String\(article\.value\?\.seo\?\.title \|\| article\.value\?\.title \|\| '文章详情'\)/);
+  assert.match(detail, /description: \(\) =>\s*String\(article\.value\?\.seo\?\.description \|\| article\.value\?\.summary \|\| '瑞钧智科新闻与技术媒体信息。'\)/);
 });

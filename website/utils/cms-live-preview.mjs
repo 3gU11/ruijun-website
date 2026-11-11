@@ -10,11 +10,37 @@ export const CMS_LIVE_PREVIEW_EDIT_COMMIT = 'ruijun:cms-preview:edit-commit';
 export const CMS_LIVE_PREVIEW_MEDIA_REPLACE = 'ruijun:cms-preview:media-replace';
 export const CMS_LIVE_PREVIEW_COMMAND = 'ruijun:cms-preview:command';
 export const CMS_LIVE_PREVIEW_READONLY = 'ruijun:cms-preview:readonly';
+export const CMS_LIVE_PREVIEW_PAGE_ACTION = 'ruijun:cms-preview:page-action';
+// The canvas frame loaded without a usable draft session (expired, or the URL
+// lost ?cmsPreview=1 through a navigation). The workbench re-issues a token.
+export const CMS_LIVE_PREVIEW_SESSION_MISSING = 'ruijun:cms-preview:session-missing';
+// The frame asks for the current update when the handshake message was lost.
+export const CMS_LIVE_PREVIEW_REQUEST_UPDATE = 'ruijun:cms-preview:request-update';
+// Canvas-only toast/notice from the workbench (for example "a draft card was created").
+export const CMS_LIVE_PREVIEW_NOTICE = 'ruijun:cms-preview:notice';
+// The canvas asks the workbench for the models of a draft series (they are not
+// server-rendered on the public page).
+export const CMS_LIVE_PREVIEW_REQUEST_SERIES_MODELS = 'ruijun:cms-preview:request-series-models';
+// Opening a series card moves the workbench form to that series without
+// re-targeting/reloading the iframe.
+export const CMS_LIVE_PREVIEW_SERIES_SELECT = 'ruijun:cms-preview:series-select';
 
 export function cmsPreviewSectionSelector(value) {
   const key = String(value || '').trim();
   if (!/^[a-z0-9][a-z0-9_-]{0,79}$/i.test(key)) return '';
   return `[data-cms-preview-key="${key}"]`;
+}
+
+// Some canvas affordances belong to the page rather than to the workbench:
+// opening a product series detail panel or switching the model it shows must
+// run inside the preview document. Otherwise the iframe navigates, drops
+// ?cmsPreview=1 and with it the draft session. Marking the element lets the
+// capture-phase canvas handler step aside and hand that click back to the page.
+export function cmsPageActionFor(node) {
+  const element = node?.closest?.('[data-cms-preview-page-action]');
+  const action = String(element?.dataset?.cmsPreviewPageAction || '').trim();
+  if (!element || !action) return null;
+  return { action, dataset: { ...element.dataset } };
 }
 
 // Editing targets stay below the workbench toolbar. Ordinary preview retains
@@ -81,7 +107,11 @@ export function resolveCmsVisualElementBinding({ elementCollection = '', element
 }
 
 export function normalizeCmsLivePreviewOrigins(value) {
-  const candidates = Array.isArray(value) ? value : String(value || '').split(',');
+  // Accept both comma and whitespace separators. The CSP helper that guards the
+  // same allowlist already splits on /[\s,]+/, and a space-separated value used
+  // to parse to an empty list here: the canvas then rendered, but the website
+  // dropped every selection event because no parent origin could be resolved.
+  const candidates = Array.isArray(value) ? value : String(value || '').split(/[\s,]+/);
   const origins = [];
   for (const candidate of candidates) {
     try {
@@ -148,7 +178,7 @@ export function applyCmsLivePreviewMediaElement(element, replacement) {
 }
 
 const controlledMediaRoles = new Set([
-  'image', 'video', 'background', 'cover', 'poster', 'icon', 'gallery', 'asset',
+  'image', 'video', 'background', 'cover', 'poster', 'end-frame', 'icon', 'gallery', 'asset',
   'technical', 'drawing', 'equipment', 'feature', 'machine', 'map', 'foreground', 'logo'
 ]);
 const controlledPreviewCommands = new Set(['align']);
@@ -189,11 +219,9 @@ export function createCmsVisualEditRequest({ editMode = false, device = 'desktop
   const elementType = String(meta.elementType || '').trim();
   const mediaRole = String(meta.mediaRole || '').trim();
   const mediaSlot = String(meta.mediaSlot || '').trim().toLowerCase();
+  const mediaAssetId = String(meta.mediaAssetId || '').trim();
   const positionFieldPath = String(meta.positionFieldPath || '').trim();
   const linkFieldPath = String(meta.linkFieldPath || '').trim();
-  const groupRecordIds = Array.isArray(meta.groupRecordIds)
-    ? meta.groupRecordIds.map((value) => String(value || '').trim())
-    : [];
   if (!['select', 'text', 'media'].includes(normalizedTool)) return null;
   if (!/^[a-z0-9][a-z0-9_-]{0,79}$/i.test(normalizedSectionKey)) return null;
   if (!/^[a-z][a-z0-9_]{0,79}$/i.test(collection) || !isSafeControlledId(itemId) || !isSafePreviewFieldPath(fieldPath)) return null;
@@ -202,10 +230,10 @@ export function createCmsVisualEditRequest({ editMode = false, device = 'desktop
   const isMedia = ['image', 'video'].includes(elementType) || controlledMediaRoles.has(mediaRole);
   if ((normalizedTool === 'text' && !isText) || (normalizedTool === 'media' && !isMedia)) return null;
   if (mediaRole && !controlledMediaRoles.has(mediaRole)) return null;
+  if (mediaAssetId && !isSafeControlledId(mediaAssetId)) return null;
   if (mediaSlot && !/^[a-z0-9][a-z0-9-]{0,79}$/.test(mediaSlot)) return null;
   if (positionFieldPath && !isSafePreviewFieldPath(positionFieldPath)) return null;
   if (linkFieldPath && (elementType !== 'button' || !isSafePreviewFieldPath(linkFieldPath))) return null;
-  if (groupRecordIds.length && (groupRecordIds.length > 32 || groupRecordIds.some((value) => !isSafeControlledId(value)))) return null;
   const placementKey = String(meta.placementKey || '').trim();
   if (placementKey && !isSafePlacementKey(placementKey)) return null;
   const request = {
@@ -218,9 +246,9 @@ export function createCmsVisualEditRequest({ editMode = false, device = 'desktop
     itemId,
     ...(positionFieldPath ? { positionFieldPath } : {}),
     ...(linkFieldPath ? { linkFieldPath } : {}),
-    ...(groupRecordIds.length ? { groupRecordIds } : {}),
     elementType,
     ...(mediaRole ? { mediaRole } : {}),
+    ...(mediaAssetId ? { mediaAssetId } : {}),
     ...(mediaSlot ? { mediaSlot } : {}),
     ...(meta.allowDefaultMedia === true ? { allowDefaultMedia: true } : {}),
     ...(placementKey ? { placementKey } : {})
@@ -265,9 +293,9 @@ const previewFields = Object.freeze({
   repair_page_configs: ['id', 'page_key', 'title', 'intro', 'hero_asset', 'model_cards', 'action_cards', 'process_steps', 'notices', 'faq_refs', 'seo', 'language', 'status', 'publication_state', 'published_at'],
   product_series: ['id', 'series_code', 'slug', 'name', 'positioning', 'presentation', 'scenarios', 'capabilities', 'cover_asset', 'sort_order', 'language', 'status', 'publication_state', 'published_at'],
   product_models: ['id', 'series_code', 'model_code', 'slug', 'name', 'parameters', 'parameter_groups', 'configuration', 'media', 'resources', 'case_studies', 'status', 'publication_state', 'published_at'],
-  product_parameters: ['id', 'model_code', 'group_name', 'field_name', 'value', 'unit', 'sort_order', 'test_conditions', 'status', 'publication_state', 'published_at'],
+  product_parameters: ['id', 'model_code', 'field_name', 'value', 'unit', 'sort_order', 'test_conditions', 'status', 'publication_state', 'published_at'],
   case_studies: ['id', 'slug', 'industry', 'material', 'thickness', 'model_code', 'process', 'result', 'authorization_status', 'status', 'publication_state', 'published_at'],
-  articles: ['id', 'slug', 'category', 'title', 'display_date', 'summary', 'body', 'body_media', 'transcript', 'field_presentation', 'media', 'video_url', 'cover_asset', 'cover_media_asset_id', 'seo', 'status', 'publication_state', 'published_at'],
+  articles: ['id', 'slug', 'category', 'title', 'display_date', 'sort_order', 'summary', 'body', 'body_media', 'transcript', 'field_presentation', 'media', 'video_url', 'cover_asset', 'cover_media_asset_id', 'seo', 'status', 'publication_state', 'published_at'],
   manufacturing_evidence: ['id', 'source_key', 'process', 'description', 'media', 'inspection_evidence', 'sort_order', 'status', 'publication_state', 'published_at'],
   qualifications: ['id', 'source_key', 'type', 'name', 'certificate_number', 'issuer', 'valid_until', 'assets', 'sort_order', 'authorization_status', 'status', 'publication_state', 'published_at'],
   milestones: ['id', 'source_key', 'year', 'event', 'evidence', 'sort_order', 'status', 'publication_state', 'published_at'],
@@ -373,8 +401,11 @@ export function acceptCmsLivePreviewMessage({ event, allowedOrigin, session, now
   const messageCollection = String(event.data.collection || '');
   const messageItemId = String(event.data.itemId ?? '');
   const primary = messageCollection === String(session.collection) && messageItemId === String(session.itemId);
-  const related = Array.isArray(session?.preview?.related?.[messageCollection])
-    && session.preview.related[messageCollection].some((record) => String(record?.id ?? '') === messageItemId);
-  if (!primary && !related) return null;
+  // 关联集合内的记录不再要求逐条出现在 related 草稿列表里：列表画布会编辑
+  // 已发布文章，而会话的 related 只含草稿。只要集合本身由本会话公开过
+  // （例如新闻页的 articles），就允许该集合的记录进入预览；消息仍受来源、
+  // 会话有效期与字段净化约束。
+  const relatedCollection = Array.isArray(session?.preview?.related?.[messageCollection]);
+  if (!primary && !relatedCollection) return null;
   return sanitizeCmsLivePreviewRecord(messageCollection, event.data.preview);
 }

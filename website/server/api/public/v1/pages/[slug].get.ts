@@ -7,11 +7,21 @@ registerCmsPublicCache('pages', () => readers.clear());
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig(event);
-  const endpoint = String(config.cmsPagesUrl || '');
+  const endpoint = String(config.cmsPagesUrl || process.env.NUXT_CMS_PAGES_URL || process.env.CMS_PAGES_URL || '');
   const homepageSectionsEndpoint = String(config.cmsHomepageSectionsUrl || '');
   const mediaAssetsEndpoint = String(config.cmsMediaAssetsUrl || '');
   const publicAssetBaseUrl = String(config.cmsPublicAssetBaseUrl || '');
-  const accessToken = String(config.cmsBffToken || '');
+  // Keep the public reader aligned with the token names used by local setup.
+  // Nuxt runtime config may be stale when the dev server was started before
+  // .env.local was updated, so prefer the explicit current-process token.
+  const accessToken = String(
+    process.env.CMS_PUBLIC_API_TOKEN ||
+    process.env.CMS_PREVIEW_ACCESS_TOKEN ||
+    config.cmsBffToken ||
+    process.env.NUXT_CMS_BFF_TOKEN ||
+    process.env.CMS_BFF_TOKEN ||
+    ''
+  ).trim();
   const cacheTtlMs = Number(config.cmsPublicContentCacheTtlMs || 30_000);
   const key = `${endpoint}:${homepageSectionsEndpoint}:${mediaAssetsEndpoint}:${publicAssetBaseUrl}:${Boolean(accessToken)}:${cacheTtlMs}`;
   let reader = readers.get(key);

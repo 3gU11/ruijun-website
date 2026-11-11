@@ -2,6 +2,7 @@
 import { getHeroState } from '~/shared/home-hero-state.mjs';
 import { overlayHomepageSectionDrafts } from '~/shared/homepage-preview-sections.mjs';
 import { resolveHomepageProducts } from '~/shared/home-product-catalog.mjs';
+import { mergeSeriesWithPreview, unpublishedSeriesSummary } from '~/shared/product-catalog-preview.mjs';
 import { resolvePageSection } from '~/shared/page-sections.mjs';
 import { fieldPresentationAttributes, sectionPresentationAttributes } from '~/shared/section-presentation.mjs';
 import { homepageFieldPresentationPath, homepageReasonBinding, homepageSectionItemBinding, selectSectionMediaEntry, managedPageSectionMediaBinding } from '~/shared/visual-binding-paths.mjs';
@@ -54,7 +55,15 @@ function rebuildHomepageDerivedContent(currentPage: Record<string, any> | null) 
       introTitle: section.introTitle || section.title || fallback.introTitle,
       introDetail: section.introDetail || section.description || section.body || fallback.introDetail,
       body: section.body || section.introDetail || fallback.body,
-      cmsBinding: homepageReasonBinding(section, sourceSection)
+      // Public page snapshots can contain inline sections without a separate
+      // homepage_sections record. Bind those sections to the page record so
+      // the canvas can still identify and select the rendered element.
+      cmsBinding: homepageReasonBinding(sourceSection || {
+        ...section,
+        cms_collection: 'pages',
+        cms_item_id: currentPage?.id,
+        id: fallback.id
+      })
     };
   });
   const extraReasons = (Array.isArray(currentPage?.sections) ? currentPage.sections : [])
@@ -80,7 +89,12 @@ function rebuildHomepageDerivedContent(currentPage: Record<string, any> | null) 
       introTitle: resolved.introTitle || resolved.title || fallback.introTitle,
       introDetail: resolved.introDetail || resolved.description || resolved.body || fallback.introDetail,
       body: resolved.body || resolved.introDetail || fallback.body,
-      cmsBinding: homepageReasonBinding(resolved, section)
+      cmsBinding: homepageReasonBinding(section || {
+        ...resolved,
+        cms_collection: 'pages',
+        cms_item_id: currentPage?.id,
+        id: fallback.id
+      })
     };
     });
   const resolvedReasons = [...fixedReasons, ...extraReasons];
@@ -165,6 +179,14 @@ const products = computed(() => {
   const previewRecords = cmsPreviewEnabled.value ? cmsPreviewRecords('product_series') : [];
   return resolveHomepageProducts(publishedRecords, previewRecords, fallbackProducts);
 });
+// The grid mirrors the published catalog, so a series that has not been released
+// yet must not take a card away from a published one. Tell the editor where its
+// draft went instead of silently hiding it.
+const unpublishedProductDrafts = computed(() => {
+  const publishedRecords = Array.isArray(cmsProductSeriesResponse.value?.data) ? cmsProductSeriesResponse.value.data : [];
+  const previewRecords = cmsPreviewEnabled.value ? cmsPreviewRecords('product_series') : [];
+  return unpublishedSeriesSummary(mergeSeriesWithPreview(publishedRecords, previewRecords).unpublishedDrafts);
+});
 const fallbackMilestones = [
   ['1997', '成立丰华数控', '公司始创'], ['2003', '创新中走丝', '初代研发'], ['2006', '成立瑞钧机械', '迁址昆山'],
   ['2014', '启用新建厂房', '规模化生产'], ['2016', '扩建流水线车间', '标准化生产'], ['2025', '启用瑞钧智科', '常熟基地']
@@ -214,19 +236,37 @@ const heroMedia = computed(() => Array.isArray(heroMediaResponse.value?.data) ? 
 // placement asset as the fallback so legacy media records remain compatible.
 const previewHeroVideoSource = computed(() => {
   const previewUrl = String(heroContent.value?.hero_video_asset_url || '').trim();
-  if (/^(?:\/api\/preview\/media\/[1-9]\d*|\/assets\/|https?:\/\/)/i.test(previewUrl)) return previewUrl;
+  // The preview session serves /api/preview/media/<id>; the public BFF resolves
+  // the same asset to /api/public/v1/media/asset/<file>. Both are governed paths.
+  if (/^(?:\/api\/preview\/media\/[1-9]\d*|\/api\/public\/v1\/media\/asset\/[A-Za-z0-9-]+|\/assets\/|https?:\/\/)/i.test(previewUrl)) return previewUrl;
   const value = String(heroContent.value?.hero_video_asset_id || '').trim();
   return /^(?:\/assets\/|https?:\/\/)/.test(value) ? value : '';
 });
-const heroVideoSource = computed(() => previewHeroVideoSource.value || heroContent.value.video || heroMedia.value?.path || '/assets/home-intro-raw.mp4');
+// The section field is authoritative: a value selects a governed asset, an empty
+// value means "use the website's own video". The placement lookup
+// (/api/public/v1/media/home.hero.video) used to sit between the two, so
+// clearing the field could never bring the built-in video back — the registered
+// asset always won and the default became unreachable. The placement record is
+// still read below for muted/loop/poster metadata, never for the source.
+const heroVideoSource = computed(() => previewHeroVideoSource.value || heroContent.value.video || '/assets/home-intro-raw.mp4');
 const heroImageSlot = (role: string) => {
   const selected = selectSectionMediaEntry(heroContent.value.media, role);
   return selected ? { ...selected.entry, fieldPath: managedPageSectionMediaBinding(selected.entry, selected.index)?.fieldPath } : null;
 };
 const heroPoster = computed(() => heroImageSlot('poster'));
 const heroStill = computed(() => heroImageSlot('end-frame'));
-const heroEndFrame = computed(() => heroStill.value?.path || heroContent.value.image || heroMedia.value?.posterPath || '/assets/home-intro-end-video-sharpened.png?v=1');
-const heroPosterSource = computed(() => heroPoster.value?.path || heroEndFrame.value);
+// The poster and end-frame slots are appended to section.media by role. An
+// unbound slot still needs a writable path, otherwise the canvas can only show a
+// read-only placeholder and the operator has to go through the form first.
+const heroMediaSlotPath = (role: string) => {
+  const entries = Array.isArray(heroContent.value?.media) ? heroContent.value.media : [];
+  const index = entries.findIndex((entry: any) => String(entry?.role || '').trim().toLowerCase() === role);
+  return `media.${index >= 0 ? index : entries.length}`;
+};
+const heroEndFrame = computed(() => heroStill.value?.path || heroContent.value.image || '/assets/home-intro-end-video-sharpened.png?v=1');
+// A video's own cover is a sensible stand-in for the poster slot, but it is not
+// the end frame: using it there made the cart cover show up as "结束静帧".
+const heroPosterSource = computed(() => heroPoster.value?.path || heroMedia.value?.posterPath || heroEndFrame.value);
 const historyBackground = computed(() => historySection.value.media?.find((media: any) => media?.role === 'background' && media?.mediaType !== 'video')?.path || '');
 const historyBackgroundFieldPath = computed(() => {
   const media = Array.isArray(historySection.value.media) ? historySection.value.media : [];
@@ -312,8 +352,8 @@ useHead({ title: '中走丝线切割机床' });
     <HomeImmersiveMotion />
     <section id="home" class="hero lifecycle-panel" v-bind="sectionPresentationAttributes(heroContent)" :class="{ 'hero-ended': heroState.stageVisible }" data-cms-preview-key="hero" data-panel-label="首页" aria-label="首页视频">
       <div v-if="cmsVisualEditMode" class="cms-hero-image-slots">
-        <figure><figcaption>视频海报</figcaption><img :src="heroPosterSource" :data-cms-preview-field-path="heroPoster?.fieldPath" data-cms-preview-placement-key="home.hero.poster" data-cms-preview-media-role="poster" data-cms-preview-readonly-reason="尚未绑定视频海报，请在首页首屏图片与背景中添加 home.hero.poster 素材，展示位置填写 poster。" alt="视频海报"></figure>
-        <figure><figcaption>结束静帧</figcaption><img :src="heroEndFrame" :data-cms-preview-field-path="heroStill?.fieldPath" data-cms-preview-placement-key="home.hero.poster" data-cms-preview-media-role="background" data-cms-preview-readonly-reason="尚未绑定结束静帧，请在首页首屏图片与背景中添加 home.hero.poster 素材，展示位置填写 end-frame。" alt="结束静帧"></figure>
+        <figure><figcaption>视频海报</figcaption><img :src="heroPosterSource" :data-cms-preview-field-path="heroPoster?.fieldPath || heroMediaSlotPath('poster')" data-cms-preview-placement-key="home.hero.poster" data-cms-preview-media-role="poster" data-cms-preview-media-slot="poster" data-cms-preview-allow-default="true" data-cms-preview-readonly-reason="尚未绑定视频海报，请在首页首屏图片与背景中添加 home.hero.poster 素材，展示位置填写 poster。" alt="视频海报"></figure>
+        <figure><figcaption>结束静帧</figcaption><img :src="heroEndFrame" :data-cms-preview-field-path="heroStill?.fieldPath || heroMediaSlotPath('end-frame')" data-cms-preview-placement-key="home.hero.poster" data-cms-preview-media-role="end-frame" data-cms-preview-media-slot="end-frame" data-cms-preview-allow-default="true" data-cms-preview-readonly-reason="尚未绑定结束静帧，请在首页首屏图片与背景中添加 home.hero.poster 素材，展示位置填写 end-frame。" alt="结束静帧"></figure>
       </div>
       <img class="hero-end-frame cms-media" :src="heroEndFrame" alt="" :data-cms-preview-field-path="heroStill?.fieldPath" data-cms-preview-placement-key="home.hero.poster" data-cms-preview-media-role="background">
       <video v-if="heroState.videoVisible && (!videoCompleted || videoFading) || cmsVisualEditMode" :key="heroVideoSource" ref="heroVideo" class="hero-video cms-media" :src="heroVideoSource" autoplay playsinline :muted="heroMedia?.muted !== false" :loop="heroMedia?.loop === true || cmsVisualEditMode" :poster="heroPosterSource" data-cms-preview-field-path="hero_video_asset_id" data-cms-preview-placement-key="home.hero.video" data-cms-preview-media-role="video" data-cms-preview-allow-default="true" @ended="finishHeroVideo" @error="handleHeroVideoError"></video>
@@ -325,17 +365,17 @@ useHead({ title: '中走丝线切割机床' });
 
     <section id="reasons" class="reason-intro lifecycle-panel" v-bind="sectionPresentationAttributes(reasonsHeading)" data-cms-preview-key="why-ruijun" data-panel-label="选择瑞钧" aria-labelledby="reasons-title">
       <div class="intro-machine-wrap" aria-hidden="true"><div class="intro-machine-glow"></div><img src="/assets/psd/hero-machine.png" alt="" data-cms-preview-readonly="decoration" data-cms-preview-readonly-reason="固定首页装饰机器图，不属于 CMS 媒体字段。"></div>
-<div class="intro-copy cms-positioned"><h2 id="reasons-title" class="cms-styled-text" v-bind="fieldPresentationAttributes(reasonsHeading, 'title')" data-cms-preview-field="title" data-cms-preview-field-path="title" data-cms-preview-position-field-path="field_presentation.title">{{ reasonsHeadingLines[0] }}<span v-if="reasonsHeadingLines[1]">{{ reasonsHeadingLines.slice(1).join(' ') }}</span></h2><ol class="reason-list"><li v-for="reason in reasons" :key="reason.id" :data-cms-preview-key="reason.id" :data-cms-preview-collection="reason.cmsBinding?.collection" :data-cms-preview-item-id="reason.cmsBinding?.itemId"><b v-bind="fieldPresentationAttributes(reason, 'introTitle')" :data-cms-preview-field-path="reason.cmsBinding?.fields.introTitle" :data-cms-preview-position-field-path="homepageFieldPresentationPath(reason.cmsBinding, 'introTitle')">{{ reason.introTitle }}</b><span v-bind="fieldPresentationAttributes(reason, 'introDetail')" :data-cms-preview-field-path="reason.cmsBinding?.fields.introDetail" :data-cms-preview-position-field-path="homepageFieldPresentationPath(reason.cmsBinding, 'introDetail')">{{ reason.introDetail }}</span></li></ol></div>
+<div class="intro-copy cms-positioned"><h2 id="reasons-title" class="cms-styled-text" v-bind="fieldPresentationAttributes(reasonsHeading, 'title')" data-cms-preview-editable="true" data-cms-preview-text="true" data-cms-preview-field="title" data-cms-preview-field-path="title" data-cms-preview-position-field-path="field_presentation.title">{{ reasonsHeadingLines[0] }}<span v-if="reasonsHeadingLines[1]">{{ reasonsHeadingLines.slice(1).join(' ') }}</span></h2><ol class="reason-list"><li v-for="reason in reasons" :key="reason.id" :data-cms-preview-key="reason.id" :data-cms-preview-collection="reason.cmsBinding?.collection" :data-cms-preview-item-id="reason.cmsBinding?.itemId"><b v-bind="fieldPresentationAttributes(reason, 'introTitle')" data-cms-preview-editable="true" data-cms-preview-text="true" :data-cms-preview-field-path="reason.cmsBinding?.fields.introTitle || 'introTitle'" :data-cms-preview-position-field-path="homepageFieldPresentationPath(reason.cmsBinding, 'introTitle')">{{ reason.introTitle }}</b><span v-bind="fieldPresentationAttributes(reason, 'introDetail')" data-cms-preview-editable="true" data-cms-preview-text="true" :data-cms-preview-field-path="reason.cmsBinding?.fields.introDetail || 'introDetail'" :data-cms-preview-position-field-path="homepageFieldPresentationPath(reason.cmsBinding, 'introDetail')">{{ reason.introDetail }}</span></li></ol></div>
     </section>
 
     <section id="reason-showcase" class="reason-showcase lifecycle-panel" data-panel-label="三大理由" aria-label="选择瑞钧的三大理由">
       <div class="reason-tabs" aria-label="首页横移图文"><a v-for="tab in marqueeItems" :key="tab.id" :href="reasonAnchor(tab.id)" :data-cms-preview-key="tab.id" :data-cms-preview-collection="tab.cmsBinding?.collection" :data-cms-preview-item-id="tab.cmsBinding?.itemId"><img class="reason-tab-icon" :src="tab.icon" alt="" data-cms-preview-placement-key="home.reason.icon" :data-cms-preview-media-role="tab.cmsBinding?.fields.icon ? 'icon' : undefined" :data-cms-preview-field-path="tab.cmsBinding?.fields.icon"><span class="reason-tab-label" v-bind="fieldPresentationAttributes(tab, 'shortTitle')" :data-cms-preview-field-path="tab.cmsBinding?.fields.shortTitle" :data-cms-preview-position-field-path="homepageFieldPresentationPath(tab.cmsBinding, 'shortTitle')">{{ tab.shortTitle }}</span></a></div>
       <div class="reason-horizontal-track">
         <article v-for="(reason, index) in marqueeItems" :id="reasonAnchor(reason.id).slice(1)" :key="reason.id" class="reason-scene" v-bind="sectionPresentationAttributes(reason)" :class="reason.mode === 'machine' ? 'reason-performance' : 'photo-scene'" :data-cms-preview-key="reason.id" :data-cms-preview-collection="reason.cmsBinding?.collection" :data-cms-preview-item-id="reason.cmsBinding?.itemId" :data-reason-slide="index">
-          <img v-if="reason.mode === 'photo'" class="scene-photo cms-media" :src="reason.image" :alt="reason.shortTitle" :data-cms-preview-placement-key="reason.mode === 'machine' ? 'home.reason.machine' : 'home.reason.background'" data-cms-preview-media-role="background" :data-cms-preview-field-path="reason.cmsBinding?.fields.image" :data-cms-preview-readonly="reason.cmsBinding?.fields.image ? undefined : 'media-pending'" :data-cms-preview-readonly-reason="reason.cmsBinding?.fields.image ? undefined : '当前显示静态回退图片，尚未绑定受管媒体。请在该理由的图片与背景中添加对应素材，填写 background（背景）或 foreground（设备前景），保存后重新预览。'">
+          <img v-if="reason.mode === 'photo'" class="scene-photo cms-media" :src="reason.image" :alt="reason.shortTitle" :data-cms-preview-placement-key="reason.mode === 'machine' ? 'home.reason.machine' : 'home.reason.background'" data-cms-preview-media-role="background" data-cms-preview-editable="true" :data-cms-preview-field-path="reason.cmsBinding?.fields.image || 'image'" :data-cms-preview-readonly="undefined" :data-cms-preview-readonly-reason="undefined">
           <div v-if="reason.mode === 'photo'" class="scene-shade" :class="{ 'scene-shade-strong': index === 2 }"></div>
-          <div v-if="reason.mode === 'machine'" class="performance-group"><div class="performance-content cms-positioned"><p class="performance-statement cms-styled-text" v-bind="fieldPresentationAttributes(reason, 'body')" :data-cms-preview-field-path="reason.cmsBinding?.fields.body" :data-cms-preview-position-field-path="homepageFieldPresentationPath(reason.cmsBinding, 'body')">{{ reason.body || reason.introDetail }}</p></div><img class="performance-machine cms-media" :src="reason.image" alt="瑞钧中走丝线切割机床" @error="(event) => { const image = event.currentTarget as HTMLImageElement; if (image.dataset.fallbackApplied !== 'true') { image.dataset.fallbackApplied = 'true'; image.src = '/assets/psd/reason-efficiency-machine.png'; } }" :data-cms-preview-placement-key="'home.reason.machine'" data-cms-preview-media-role="foreground" :data-cms-preview-field-path="reason.cmsBinding?.fields.image" :data-cms-preview-readonly="reason.cmsBinding?.fields.image ? undefined : 'media-pending'" :data-cms-preview-readonly-reason="reason.cmsBinding?.fields.image ? undefined : '当前显示静态回退图片，尚未绑定受管媒体。请在该理由的图片与背景中添加对应素材，填写 background（背景）或 foreground（设备前景），保存后重新预览。'"></div>
-          <div v-else class="cms-positioned photo-copy" :class="{ 'photo-copy-center': index === 2 }"><h2 class="cms-styled-text" v-bind="fieldPresentationAttributes(reason, 'title')" :data-cms-preview-field-path="reason.cmsBinding?.fields.title" :data-cms-preview-position-field-path="homepageFieldPresentationPath(reason.cmsBinding, 'title')">{{ reason.title }}</h2></div>
+          <div v-if="reason.mode === 'machine'" class="performance-group"><div class="performance-content cms-positioned"><p class="performance-statement cms-styled-text" v-bind="fieldPresentationAttributes(reason, 'body')" data-cms-preview-editable="true" data-cms-preview-text="true" :data-cms-preview-field-path="reason.cmsBinding?.fields.body || 'body'" :data-cms-preview-position-field-path="homepageFieldPresentationPath(reason.cmsBinding, 'body')">{{ reason.body || reason.introDetail }}</p></div><img class="performance-machine cms-media" :src="reason.image" alt="瑞钧中走丝线切割机床" @error="(event) => { const image = event.currentTarget as HTMLImageElement; if (image.dataset.fallbackApplied !== 'true') { image.dataset.fallbackApplied = 'true'; image.src = '/assets/psd/reason-efficiency-machine.png'; } }" :data-cms-preview-placement-key="'home.reason.machine'" data-cms-preview-media-role="foreground" data-cms-preview-editable="true" :data-cms-preview-field-path="reason.cmsBinding?.fields.image || 'image'" :data-cms-preview-readonly="undefined" :data-cms-preview-readonly-reason="undefined"></div>
+          <div v-else class="cms-positioned photo-copy" :class="{ 'photo-copy-center': index === 2 }"><h2 class="cms-styled-text" v-bind="fieldPresentationAttributes(reason, 'title')" data-cms-preview-editable="true" data-cms-preview-text="true" :data-cms-preview-field-path="reason.cmsBinding?.fields.title || 'title'" :data-cms-preview-position-field-path="homepageFieldPresentationPath(reason.cmsBinding, 'title')">{{ reason.title }}</h2></div>
         </article>
       </div>
       <div class="reason-progress" aria-hidden="true"><i v-for="reason in marqueeItems" :key="`progress-${reason.id}`"></i></div>
@@ -344,10 +384,20 @@ useHead({ title: '中走丝线切割机床' });
     <section id="products" class="products lifecycle-panel" v-bind="sectionPresentationAttributes(productsSection)" data-cms-preview-key="products" data-panel-label="产品中心" aria-labelledby="products-title">
       <div class="product-shell">
 <div class="product-heading"><p class="product-heading-en" v-bind="fieldPresentationAttributes(productsSection, 'kicker')" data-cms-preview-field="kicker" data-cms-preview-field-path="kicker" data-cms-preview-position-field-path="field_presentation.kicker">{{ productsSection.kicker || 'Our product' }}</p><h2 id="products-title" class="product-heading-cn" v-bind="fieldPresentationAttributes(productsSection, 'title')" data-cms-preview-field="title" data-cms-preview-field-path="title" data-cms-preview-position-field-path="field_presentation.title"><template v-if="(productsSection.title || '我们的产品') === '我们的产品'"><span>我们的</span><em>产品</em></template><template v-else>{{ productsSection.title }}</template></h2></div>
+        <p v-if="unpublishedProductDrafts.count" class="product-draft-note" data-cms-preview-draft-note>未发布草稿：{{ unpublishedProductDrafts.text }} 不显示在官网，也不占用首页卡片数量；发布后会出现在这里。</p>
         <div class="product-grid">
           <NuxtLink v-for="(product, index) in products" :key="product.id" :to="`/product/${product.slug || product.id}`" class="product-card" :data-cms-preview-key="product.id" :data-cms-preview-collection="product.cmsBinding.collection" :data-cms-preview-item-id="product.cmsBinding.itemId">
             <img :src="product.image" :alt="`${product.name} 设备`" data-cms-preview-media-role="cover" data-cms-preview-placement-key="product.gallery.image" data-cms-preview-allow-default="true" :data-cms-preview-field-path="product.imageFieldPath">
             <div><small data-cms-preview-field="series_code" :data-cms-preview-field-path="`series_code`">{{ index + 1 }} / {{ product.series }}</small><h3 data-cms-preview-field="title" :data-cms-preview-field-path="`name`">{{ product.name }}</h3></div>
+          </NuxtLink>
+          <!-- Five published series leave one empty cell in the 3-column grid.
+               Fill it with a conversion card; hidden in the canvas because it is
+               not editable and would navigate the preview away. -->
+          <NuxtLink v-if="!cmsPreviewEnabled && products.length % 3 !== 0" to="/contact" class="product-card product-cta-card">
+            <span class="product-cta-kicker">SELECTION SUPPORT</span>
+            <strong>没有找到合适机型？</strong>
+            <span>告诉我们加工材料、行程和精度要求，工程师协助选型。</span>
+            <b>获取选型建议 →</b>
           </NuxtLink>
         </div>
       </div>
@@ -369,7 +419,10 @@ useHead({ title: '中走丝线切割机床' });
 .hero-cms-copy{position:absolute;z-index:5;top:23%;left:7%;max-width:min(620px,72vw);padding:18px 22px;color:#fff;text-shadow:0 2px 14px rgb(0 0 0/70%);pointer-events:none}.hero-cms-copy p{max-width:48rem;margin:18px 0 0;font-size:clamp(14px,1.15vw,20px);line-height:1.6}.hero-cms-copy a{display:inline-flex;margin-top:24px;padding:11px 18px;background:var(--ruijun-red);color:#fff;text-decoration:none;pointer-events:auto}
 .reason-intro{position:relative;min-height:100svh;display:grid;grid-template-columns:48% 52%;align-items:center;padding:105px max(6vw,calc((100vw - var(--ruijun-max))/2));overflow:hidden;background:#f3f3f1;color:#131313}.intro-machine-stage{position:relative;width:min(520px,39vw);aspect-ratio:1;display:grid;place-items:center;overflow:hidden;background:#0b0b0c;border-radius:5px}.intro-machine-stage span{position:absolute;inset:18%;background:rgb(255 255 255/15%);filter:blur(70px)}.intro-machine{position:relative;width:94%;max-height:92%;object-fit:contain}.intro-copy{padding-left:8vw}.intro-copy>p,.product-heading>div>p,.contact-panel>div>p{margin:0;color:var(--ruijun-red);font-size:12px}.intro-copy h2{max-width:570px;margin:16px 0 38px;white-space:pre-line;font-size:clamp(48px,6vw,82px);line-height:1.04;font-weight:500}.intro-copy h2::first-line{color:#161719}.intro-copy ol{max-width:560px;margin:0;padding:0;list-style:none}.intro-copy li{display:grid;grid-template-columns:38px 1fr;gap:12px;padding:13px 0;border-top:1px solid rgb(19 19 19/20%)}.intro-copy li>b{color:var(--ruijun-red);font-size:10px}.intro-copy li div{display:grid;grid-template-columns:145px 1fr;gap:18px}.intro-copy strong{font-size:17px}.intro-copy li span{color:#74777b;font-size:12px}
 .reason-showcase{position:relative;height:100svh;overflow:hidden;background:#09090a}.reason-card{position:absolute;inset:0;overflow:hidden;color:#fff;background:#09090a;clip-path:inset(0 0 0 100%)}.reason-card:first-child{clip-path:inset(0)}.reason-card>img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.reason-machine>img{inset:auto 12% 10% auto;width:25vw;max-width:360px;height:auto;max-height:50vh;object-fit:contain}.scene-shade{position:absolute;inset:0;background:rgb(3 8 11/20%)}.reason-card nav{position:absolute;z-index:3;top:84px;right:7%;left:7%;display:grid;grid-template-columns:repeat(3,1fr)}.reason-card nav span{padding:15px 0;color:rgb(255 255 255/36%);border-bottom:1px solid rgb(255 255 255/18%);font-size:16px;font-weight:600}.reason-card nav span.active{color:#fff;border-color:var(--ruijun-red)}.reason-card nav b{margin-right:10px;color:var(--ruijun-red);font-size:9px}.reason-copy{position:absolute;z-index:3;top:48%;left:11%;max-width:680px;transform:translateY(-50%)}.reason-photo .reason-copy{left:50%;width:min(980px,86vw);max-width:none;transform:translate(-50%,-50%);text-align:center}.reason-copy p{margin:0 0 20px;color:#fff;font-size:12px}.reason-copy h2{margin:0 0 24px;color:var(--ruijun-red);white-space:pre-line;font-size:clamp(48px,5vw,76px);line-height:1.08;font-weight:500}.reason-photo .reason-copy h2{color:#fff}.reason-copy>span{display:block;max-width:680px;color:rgb(255 255 255/76%);font-size:16px;line-height:1.8}.reason-photo .reason-copy>span{margin:0 auto}.reason-copy small{display:block;margin-top:22px;color:rgb(255 255 255/45%);font-size:11px}
-.products{min-height:100svh;display:flex;align-items:center;padding:98px 6.2% 54px;background:var(--ruijun-paper);color:var(--ruijun-ink)}.product-shell{width:min(var(--ruijun-max),100%);margin:0 auto}.product-heading{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:26px}.product-heading h2{margin:0;font-size:38px;line-height:1;font-weight:600}.product-heading h2 span{margin-left:6px;color:var(--ruijun-red);font-size:17px;font-weight:500}.product-heading>p{max-width:430px;margin:0;color:var(--ruijun-muted);font-size:13px}.product-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.product-card{position:relative;min-width:0;aspect-ratio:1.63;overflow:hidden;background:#e5eaec;border-radius:4px;text-decoration:none;transition:transform .25s ease,box-shadow .25s ease}.product-card:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgb(20 28 34/13%)}.product-card img{width:100%;height:100%;object-fit:cover}.product-card>div{position:absolute;right:0;bottom:14%;min-width:37%;padding:10px 13px;color:#fff;background:rgb(48 52 55/78%)}.product-card small{display:block;color:rgb(255 255 255/70%);font-size:8px}.product-card h3{margin:2px 0 0;font-size:16px;font-weight:600}
+.products{min-height:100svh;display:flex;align-items:center;padding:98px 6.2% 54px;background:var(--ruijun-paper);color:var(--ruijun-ink)}.product-shell{width:min(var(--ruijun-max),100%);margin:0 auto}.product-heading{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:26px}.product-heading h2{margin:0;font-size:38px;line-height:1;font-weight:600}.product-heading h2 span{margin-left:6px;color:var(--ruijun-red);font-size:17px;font-weight:500}.product-heading>p{max-width:430px;margin:0;color:var(--ruijun-muted);font-size:13px}.product-draft-note{margin:0 0 16px;padding:10px 14px;color:#8a4b00;background:#fff6e6;border:1px dashed #e0b45c;font-size:13px;line-height:1.6}.product-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}.product-card{position:relative;min-width:0;aspect-ratio:1.63;overflow:hidden;background:#e5eaec;border-radius:4px;text-decoration:none;transition:transform .25s ease,box-shadow .25s ease}.product-card:hover{transform:translateY(-4px);box-shadow:0 14px 30px rgb(20 28 34/13%)}.product-card img{width:100%;height:100%;object-fit:cover}.product-card>div{position:absolute;right:0;bottom:14%;min-width:37%;padding:10px 13px;color:#fff;background:rgb(48 52 55/78%)}.product-card small{display:block;color:rgb(255 255 255/70%);font-size:8px}.product-card h3{margin:2px 0 0;font-size:16px;font-weight:600}
+.product-cta-card{display:flex;flex-direction:column;justify-content:center;gap:10px;padding:30px;background:#17191b;color:#fff}.product-cta-kicker{color:#ff9a9e;font-size:11px;font-weight:700;letter-spacing:.08em}.product-cta-card strong{font-size:22px;font-weight:600;line-height:1.25}.product-cta-card>span:not(.product-cta-kicker){color:rgb(255 255 255/68%);font-size:13px;line-height:1.6}.product-cta-card b{margin-top:6px;color:#fff;font-size:13px;font-weight:600}.product-cta-card:hover b{color:#ff5252}
+@media(max-width:1050px){.product-cta-card{padding:20px;gap:6px}.product-cta-card>span:not(.product-cta-kicker){display:none}.product-cta-card strong{font-size:18px}.product-cta-card b{font-size:12px}}
+@media(max-width:760px){.product-cta-card{aspect-ratio:auto;min-height:210px}.product-cta-card>span:not(.product-cta-kicker){display:block}}
 .history{position:relative;height:100svh;min-height:660px;overflow:hidden;color:#444649;background:#f3f2ee}.history::before{content:"";position:absolute;inset:12px;border:1px solid rgb(255 255 255/70%);box-shadow:inset 0 0 110px rgb(119 113 103/8%)}.history-copy{position:absolute;z-index:4;top:24%;right:6.2%;width:45%}.history-copy p{display:grid;row-gap:10px;margin:0;font-size:clamp(48px,5vw,72px);line-height:1.08;font-weight:600}.history-copy p span{color:rgb(61 63 66/20%)}.history-copy small{display:block;margin-top:24px;color:#77797c;font-size:16px}.history-viewport{position:absolute;z-index:2;inset:100px 0 50px;overflow:hidden}.history-track{position:relative;width:3000px;height:100%}.history-track article{position:absolute;width:280px}.history-track article:nth-child(1){top:10%;left:220px}.history-track article:nth-child(2){top:57%;left:700px}.history-track article:nth-child(3){top:18%;left:1180px}.history-track article:nth-child(4){top:62%;left:1660px}.history-track article:nth-child(5){top:12%;left:2140px}.history-track article:nth-child(6){top:55%;left:2620px}.history-track b{display:block;color:var(--ruijun-red);font-size:90px;line-height:1;font-weight:700}.history-track strong,.history-track span{display:block;color:#24262a;font-size:22px}.history>i{position:absolute;z-index:6;top:calc(50% + 20px);left:18%;width:44px;height:13px;background:var(--ruijun-red)}.history>i::after{content:"";position:absolute;top:-11px;right:-25px;border-top:18px solid transparent;border-bottom:18px solid transparent;border-left:26px solid var(--ruijun-red)}.history-hint{position:absolute;z-index:5;bottom:27px;left:6.2%;margin:0;color:#999b9e;font-size:9px}.history-hint span{margin-left:10px;color:var(--ruijun-red);font-size:18px}
 .contact-panel{color:#fff;background:#0b0b0c}.contact-panel>div{min-height:42svh;padding:9vh 7% 5vh;background:#131416}.contact-panel h2{margin:8px 0 26px;font-size:42px;line-height:1.2;font-weight:500}.contact-panel a{display:inline-flex;align-items:center;min-height:44px;padding:0 18px;color:#fff;background:var(--ruijun-red);border-radius:2px;font-size:12px;font-weight:600;text-decoration:none}
 @media(max-width:760px){.home-page{overflow:visible}.hero{height:calc(100svh - 58px)}.hero-stage img{top:28%;left:-7%;width:98vw}.hero-next{right:20px;bottom:20px}.reason-intro{min-height:auto;display:block;padding:52px 20px 62px}.intro-machine-stage{width:100%;aspect-ratio:1.12;margin-bottom:34px}.intro-copy{padding:0}.intro-copy h2{margin:10px 0 26px;font-size:42px}.intro-copy li div{grid-template-columns:1fr;gap:3px}.intro-copy li span{font-size:11px}.reason-showcase{height:auto}.reason-card{position:relative;min-height:78svh;clip-path:none!important}.reason-card+article{border-top:1px solid rgb(255 255 255/20%)}.reason-card nav{top:26px;right:20px;left:20px}.reason-card nav span{font-size:10px}.reason-card nav b{display:block;margin:0 0 5px}.reason-copy,.reason-photo .reason-copy{top:auto;right:20px;bottom:8%;left:20px;width:auto;transform:none;text-align:left}.reason-copy h2{font-size:38px}.reason-copy>span,.reason-photo .reason-copy>span{margin:0;font-size:13px}.reason-machine>img{right:9%;bottom:26%;width:50vw;max-height:38vh}.products{min-height:auto;padding:62px 20px}.product-heading{display:block}.product-heading>p{margin-top:18px}.product-grid{grid-template-columns:1fr}.history{height:auto;min-height:0;padding:72px 20px}.history::before{inset:4px}.history-copy{position:relative;top:auto;right:auto;width:auto}.history-copy p{font-size:31px}.history-viewport{position:relative;inset:auto;margin-top:58px;overflow-x:auto}.history-track{display:flex;gap:50px;width:max-content;height:auto;padding:0 40px 15px 0;transform:none!important}.history-track article,.history-track article:nth-child(n){position:static;width:220px}.history-track b{font-size:54px}.history-track strong,.history-track span{font-size:16px}.history>i{display:none}.history-hint{position:static;margin-top:30px}.contact-panel>div{min-height:340px;padding:70px 20px}.contact-panel h2{font-size:34px}}

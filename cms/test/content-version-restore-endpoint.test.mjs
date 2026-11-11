@@ -156,3 +156,36 @@ test('restore endpoint refuses to silently discard newer changes', async () => {
   assert.match(response.errors[0].message, /confirmDiscardNewer/);
   assert.equal(updated, false, 'nothing may be written when confirmation is missing');
 });
+
+test('restore endpoint drops snapshot fields that no longer exist in the schema', async () => {
+  let handler;
+  const updates = [];
+  const router = { get() {}, post: (_path, callback) => { handler = callback; } };
+  const database = (table) => ({
+    where() { return this; },
+    count() { return this; },
+    async first() {
+      if (table === 'directus_roles') return { name: '发布人员' };
+      if (table === 'content_versions') {
+        return {
+          id: 9, content_collection: 'product_parameters', content_item_id: '42',
+          snapshot: JSON.stringify({ model_code: 'FR400XS', group_name: '运动参数', field_name: 'XY 行程', value: '400*290', status: 'published', publication_state: 'published' })
+        };
+      }
+      return { id: 42, status: 'published', publication_state: 'published', publication_log: [] };
+    },
+    async columnInfo() {
+      return { id: {}, model_code: {}, field_name: {}, value: {}, status: {}, publication_state: {}, published_at: {}, review_note: {}, publication_log: {} };
+    },
+    update(value) { updates.push({ table, value }); return Promise.resolve(1); }
+  });
+  registerContentVersionRestoreEndpoint(router, { database });
+  let response;
+  await handler({ params: { versionId: '9' }, body: { restoreNote: 'Restore after column removal.' }, accountability: { user: 'publisher-1', role: 'role-1' } }, { status(code) { assert.equal(code, 200); return this; }, json(value) { response = value; } }, (error) => { throw error; });
+
+  assert.equal(response.data.status, 'draft');
+  assert.equal(updates[0].table, 'product_parameters');
+  assert.equal(Object.hasOwn(updates[0].value, 'group_name'), false);
+  assert.equal(updates[0].value.field_name, 'XY 行程');
+  assert.equal(updates[0].value.value, '400*290');
+});

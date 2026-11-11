@@ -5,7 +5,7 @@ type CmsPreviewPayload = {
   target?: { path: string; hash?: string; label?: string; selector?: string };
 };
 
-import { acceptCmsLivePreviewCommand, acceptCmsLivePreviewMediaReplaceMessage, acceptCmsLivePreviewMessage, applyCmsLivePreviewMediaElement, CMS_LIVE_PREVIEW_COMMAND, CMS_LIVE_PREVIEW_EXPIRED, CMS_LIVE_PREVIEW_MEDIA_REPLACE as CMS_LIVE_PREVIEW_MEDIA_REPLACE_MESSAGE, CMS_LIVE_PREVIEW_READY, CMS_LIVE_PREVIEW_EDIT_REQUEST, CMS_LIVE_PREVIEW_EDIT_COMMIT, CMS_LIVE_PREVIEW_READONLY, cmsPreviewScrollOptions, cmsPreviewSectionSelector, cmsPreviewStatusLabel, createCmsVisualEditRequest, isCmsLivePreviewSessionExpired, makeCmsPreviewRecordRenderable, normalizeCmsLivePreviewOrigins, resolveCmsLivePreviewParentOrigin, resolveCmsVisualElementBinding, resolveCmsVisualRootBinding } from '~/utils/cms-live-preview.mjs';
+import { acceptCmsLivePreviewCommand, acceptCmsLivePreviewMediaReplaceMessage, acceptCmsLivePreviewMessage, applyCmsLivePreviewMediaElement, CMS_LIVE_PREVIEW_COMMAND, CMS_LIVE_PREVIEW_EXPIRED, CMS_LIVE_PREVIEW_MEDIA_REPLACE as CMS_LIVE_PREVIEW_MEDIA_REPLACE_MESSAGE, CMS_LIVE_PREVIEW_PAGE_ACTION, CMS_LIVE_PREVIEW_REQUEST_UPDATE, CMS_LIVE_PREVIEW_SESSION_MISSING, CMS_LIVE_PREVIEW_READY, CMS_LIVE_PREVIEW_EDIT_REQUEST, CMS_LIVE_PREVIEW_EDIT_COMMIT, CMS_LIVE_PREVIEW_READONLY, cmsPageActionFor, cmsPreviewScrollOptions, cmsPreviewSectionSelector, cmsPreviewStatusLabel, createCmsVisualEditRequest, isCmsLivePreviewSessionExpired, makeCmsPreviewRecordRenderable, normalizeCmsLivePreviewOrigins, resolveCmsLivePreviewParentOrigin, resolveCmsVisualElementBinding, resolveCmsVisualRootBinding } from '~/utils/cms-live-preview.mjs';
 
 const CMS_LIVE_PREVIEW_MEDIA_REPLACE = 'ruijun:cms-preview:media-replace';
 const visualBindingAttributes = ['data-cms-preview-collection', 'data-cms-preview-item-id'];
@@ -13,7 +13,7 @@ const visualBindingAttributes = ['data-cms-preview-collection', 'data-cms-previe
 const naturalKeys: Record<string, string[]> = {
   pages: ['slug'], articles: ['slug'], product_series: ['series_code', 'slug'], product_models: ['model_code', 'slug'],
   homepage_sections: ['page_key', 'section_key', 'language'],
-  product_parameters: ['model_code', 'group_name', 'field_name'], case_studies: ['slug'], manufacturing_evidence: ['source_key'],
+  product_parameters: ['model_code', 'field_name'], case_studies: ['slug'], manufacturing_evidence: ['source_key'],
   qualifications: ['source_key'], milestones: ['source_key'], service_resources: ['source_key'], service_locations: ['source_key'],
   knowledge_items: ['source_key'], external_service_entries: ['entry_type'], repair_page_configs: ['page_key'], site_settings: ['setting_key']
 };
@@ -125,11 +125,24 @@ export function useCmsDraftPreview() {
       ...item,
       ...(item.id != null ? liveRelatedRecords.value[`${collection}:${String(item.id)}`] || {} : {})
     })) : [];
-    if (session.value.collection !== collection) return relatedRecords;
+    // 列表里编辑的可能是已发布记录：它不在 session.related（那里只有草稿），
+    // 但工作台会把它作为 live related record 推过来。不合并的话，画布上
+    // 已发布卡片的修改（例如换视频）永远不显示。
+    const records = [...relatedRecords];
+    for (const [key, live] of Object.entries(liveRelatedRecords.value)) {
+      if (!key.startsWith(`${collection}:`) || !live || typeof live !== 'object') continue;
+      // 防御错配：liveRelatedRecords 的键必须与记录 id 一致，否则宁可丢弃，
+      // 也不能把某张卡片的快照合并到另一条记录上。
+      if (live.id != null && key !== `${collection}:${String(live.id)}`) continue;
+      const index = records.findIndex((item) => sameRecord(collection, item, live));
+      if (index >= 0) records[index] = { ...records[index], ...live };
+      else records.push(live);
+    }
+    if (session.value.collection !== collection) return records;
     const primary = makeCmsPreviewRecordRenderable({ ...session.value.preview, ...(liveRecord.value || {}) });
-    const primaryIndex = relatedRecords.findIndex((item) => sameRecord(collection, item, primary));
-    if (primaryIndex < 0) return [primary, ...relatedRecords];
-    return relatedRecords.map((item, index) => index === primaryIndex ? { ...item, ...primary } : item);
+    const primaryIndex = records.findIndex((item) => sameRecord(collection, item, primary));
+    if (primaryIndex < 0) return [primary, ...records];
+    return records.map((item, index) => index === primaryIndex ? { ...item, ...primary } : item);
   }
   const record = computed(() => currentPreviewRecord());
   const livePreviewRecord = computed(() => {
@@ -231,8 +244,34 @@ export function useCmsDraftPreview() {
   }
 
   let liveCoverReceiveSequence = 0;
+  // The workbench re-opens the canvas after switching to the block that owns a
+  // clicked element. It asks for that exact field once the frame is ready, so
+  // the operator does not have to find the same word twice.
+  const FOCUS_FIELD_MESSAGE = 'ruijun:cms-preview:focus-field';
+  function focusPreviewField(event: MessageEvent) {
+    const data = event?.data;
+    if (data?.type !== FOCUS_FIELD_MESSAGE) return false;
+    if (event.source !== window.parent) return false;
+    const allowed = normalizeCmsLivePreviewOrigins(allowedOrigins);
+    if (!allowed.includes(event.origin)) return false;
+    const sectionKey = String(data.sectionKey || '').trim();
+    const fieldPath = String(data.fieldPath || '').trim();
+    if (!/^[a-z0-9][a-z0-9_-]{0,79}$/i.test(sectionKey) || !fieldPath) return false;
+    const root = document.querySelector<HTMLElement>(cmsPreviewSectionSelector(sectionKey));
+    const target = root
+      ? [...root.querySelectorAll<HTMLElement>('[data-cms-preview-field-path]')]
+        .find((element) => element.dataset.cmsPreviewFieldPath === fieldPath
+          && element.dataset.cmsPreviewEditable === 'true')
+      : null;
+    if (!target) return false;
+    target.scrollIntoView(cmsPreviewScrollOptions({ visualEditMode: true }));
+    requestVisualSelection({ element: target, sectionKey }, new MouseEvent('click'));
+    return true;
+  }
+
   const receiveLivePreview = async (event: MessageEvent) => {
       if (event.source !== window.parent) return;
+      if (focusPreviewField(event)) { liveConnected.value = true; return; }
       const previewSession = session.value ? { ...session.value, expiresAt: data.value?.expires_at } : null;
       if (reportExpiredLivePreviewSession(event, previewSession)) return;
       const command = acceptCmsLivePreviewCommand({
@@ -289,16 +328,10 @@ export function useCmsDraftPreview() {
       document.documentElement.dataset.cmsPreviewEditMode = visualEditMode.value ? 'true' : 'false';
       document.documentElement.dataset.cmsPreviewEditTool = visualTool.value;
       nextTick(decorateVisualEditing);
-      // A canvas click is echoed by the workbench as a snapshot. Do not
-      // navigate to the first occurrence of a shared section key on that echo.
-      // Selecting an element is not a navigation request. Preserve the
-      // editor's scroll position; explicit alignment/drag commands remain
-      // responsible for bringing their target into view.
-      if (event.data?.type !== 'ruijun:cms-preview:edit-request' && event.data?.type !== 'ruijun:cms-preview:edit-commit'
-        && (!locallySelectedSectionKey || locallySelectedSectionKey !== String(event.data?.sectionKey || ''))) {
-        locallySelectedSectionKey = '';
-        requestPreviewTarget(cmsPreviewSectionSelector(event.data?.sectionKey));
-      }
+      // 选中元素会以快照形式回传，每次都给 sectionKey 做 scrollIntoView 会把
+      // 画布拉回区块顶部（新闻页的视频分享区块就在顶部，看起来像“回到顶部”）。
+      // 滚动只由显式的 focus-field / 对齐命令负责。
+      locallySelectedSectionKey = String(event.data?.sectionKey || '');
   };
 
   function postEditMessage(payload: Record<string, any>) {
@@ -311,6 +344,82 @@ export function useCmsDraftPreview() {
     window.parent?.postMessage({ ...payload, collection: payload.collection || session.value?.collection || '', itemId: payload.itemId || session.value?.itemId || '' }, origin);
   }
 
+  // A canvas frame that loses its session silently turns into the public page:
+  // edit markers and canvas controls disappear and a card click navigates away,
+  // which also drops ?cmsPreview=1. The session store uses a 15-minute sliding
+  // expiry but the page only reads it once, so an idle canvas lapses. Report the
+  // state to the workbench (it re-issues a token) and ping the session while the
+  // canvas stays open so it does not lapse mid-edit.
+  function insidePreviewFrame() {
+    return typeof window !== 'undefined' && window.parent !== window;
+  }
+  function reportMissingSession() {
+    if (!insidePreviewFrame()) return;
+    postEditMessage({ type: CMS_LIVE_PREVIEW_SESSION_MISSING });
+  }
+  // A framed preview is an editing surface by design. The workbench still sends
+  // its mode with every update, but waiting for that first message left the page
+  // inert (no markers, no action handling, clicks fell through to the public
+  // page) whenever the activation message was dropped or delayed. Enable locally
+  // and let an explicit workbench message override it.
+  watch(session, (value) => {
+    if (!value || !insidePreviewFrame()) return;
+    if (document.documentElement.dataset.cmsPreviewEditMode) return;
+    visualEditMode.value = true;
+    document.documentElement.dataset.cmsPreviewEditMode = 'true';
+    nextTick(decorateVisualEditing);
+  }, { immediate: true });
+  // The workbench pushes its first update when it believes the frame is ready.
+  // That handshake message can be lost (origin mismatch, reload, throttling), and
+  // then the canvas never activates and every edit looks ignored. Ask again until
+  // an update actually arrives.
+  let updateRequestTimer: number | undefined;
+  let updateRequestAttempts = 0;
+  function requestPreviewUpdate() {
+    if (!insidePreviewFrame() || !enabled.value) return;
+    if (document.documentElement.dataset.cmsPreviewEditTool) return;
+    if (updateRequestAttempts >= 5) return;
+    updateRequestAttempts += 1;
+    postEditMessage({ type: CMS_LIVE_PREVIEW_REQUEST_UPDATE });
+    updateRequestTimer = window.setTimeout(requestPreviewUpdate, 2000);
+  }
+  let sessionKeepAliveTimer: number | undefined;
+  onMounted(() => {
+    if (!insidePreviewFrame()) return;
+    // The route can be a plain page even inside the canvas: the probe below still
+    // tells the workbench to reopen it with a fresh token.
+    if (!enabled.value || error.value) {
+      reportMissingSession();
+      // The workbench may not receive the probe (frame reload race). Reload once
+      // ourselves: a page served with ?cmsPreview=1 re-establishes the session,
+      // and a plain page is replaced by the workbench's fresh token. Without this
+      // the canvas silently degrades to the public page ("老版本") with no
+      // edit markers and a stale selection in the property panel.
+      try {
+        if (!sessionStorage.getItem('cms-preview-self-heal')) {
+          sessionStorage.setItem('cms-preview-self-heal', '1');
+          window.setTimeout(() => { window.location.reload(); }, 2500);
+        }
+      } catch { /* private mode: the probe alone has to do */ }
+      return;
+    }
+    updateRequestTimer = window.setTimeout(requestPreviewUpdate, 1500);
+    sessionKeepAliveTimer = window.setInterval(() => {
+      $fetch('/api/preview/session').catch(() => {
+        if (sessionKeepAliveTimer) window.clearInterval(sessionKeepAliveTimer);
+        sessionKeepAliveTimer = undefined;
+        reportMissingSession();
+      });
+    }, 5 * 60 * 1000);
+  });
+  watch(error, (value) => { if (value) reportMissingSession(); });
+  onBeforeUnmount(() => {
+    if (sessionKeepAliveTimer) window.clearInterval(sessionKeepAliveTimer);
+    sessionKeepAliveTimer = undefined;
+    if (updateRequestTimer) window.clearTimeout(updateRequestTimer);
+    updateRequestTimer = undefined;
+  });
+
   function visualElementMeta(element: HTMLElement) {
     const rect = element.getBoundingClientRect();
     const computedStyle = window.getComputedStyle(element);
@@ -320,13 +429,13 @@ export function useCmsDraftPreview() {
     const toHex = (value: string) => Number(value).toString(16).padStart(2, '0');
     const textColor = rgb ? `#${toHex(rgb[1])}${toHex(rgb[2])}${toHex(rgb[3])}`.toUpperCase() : '#000000';
     return {
-      label: String(element.dataset.cmsPreviewFieldPath || element.dataset.cmsPreviewField || element.getAttribute('aria-label') || element.textContent || '画布元素').trim().slice(0, 80),
+      label: String(element.dataset.cmsPreviewLabel || element.dataset.cmsPreviewFieldPath || element.dataset.cmsPreviewField || element.getAttribute('aria-label') || element.textContent || '画布元素').trim().slice(0, 80),
       elementType: element.matches('video') ? 'video' : element.dataset.cmsPreviewMediaRole ? 'image' : element.matches('button,a') ? 'button' : 'text',
       mediaRole: String(element.dataset.cmsPreviewMediaRole || ''),
       mediaSlot: String(element.dataset.cmsPreviewMediaSlot || ''),
+      mediaAssetId: String(element.dataset.cmsPreviewMediaAssetId || ''),
       allowDefaultMedia: element.dataset.cmsPreviewAllowDefault === 'true',
       placementKey: String(element.dataset.cmsPreviewPlacementKey || ''),
-      groupRecordIds: String(element.dataset.cmsPreviewGroupRecordIds || '').split(',').map((value) => value.trim()).filter(Boolean),
       fieldPath: String(element.dataset.cmsPreviewFieldPath || element.dataset.cmsPreviewField || ''),
       linkFieldPath: String(element.dataset.cmsPreviewLinkFieldPath || ''),
       positionFieldPath: String(element.dataset.cmsPreviewPositionFieldPath || element.dataset.cmsPreviewFieldPath || element.dataset.cmsPreviewField || ''),
@@ -364,72 +473,118 @@ export function useCmsDraftPreview() {
     for (const root of [...document.querySelectorAll<HTMLElement>('[data-cms-preview-key]')]) {
       const key = String(root.dataset.cmsPreviewKey || '').trim();
       if (!key) continue;
-      // A page preview can contain independently editable business records
-      // (for example a milestones node inside the About page). The root
-      // resolver intentionally rejects a cross-record root; use the element
-      // resolver for an explicit nested collection/id while keeping the same
-      // strict validation for missing or malformed bindings.
-      const binding = resolveCmsVisualRootBinding({ rootCollection: root.dataset.cmsPreviewCollection, rootItemId: root.dataset.cmsPreviewItemId, sessionCollection: session.value?.collection, sessionItemId: session.value?.itemId }) || resolveCmsVisualElementBinding({
-        elementCollection: root.dataset.cmsPreviewCollection,
-        elementItemId: root.dataset.cmsPreviewItemId,
+      // One canvas decorates every section at once, so a single unresolvable
+      // binding must not abort the whole pass. Before this guard the failure
+      // threw out of the loop and left every section after it without edit
+      // markers: the canvas rendered those blocks but ignored every click,
+      // which read as "the canvas is read-only, edit it in the left form".
+      try {
+        decorateVisualRoot(root);
+      } catch (error) {
+        console.warn(`[cms-preview] section "${key}" could not be decorated`, error);
+      }
+    }
+  }
+
+  // Page-driven canvas state changes (opening a detail panel, switching the
+  // displayed model) replace DOM nodes without any update message from the
+  // workbench. Re-run decoration once the DOM settles so the new elements can be
+  // selected immediately instead of staying inert until the next sync.
+  function refreshVisualDecorations() {
+    return nextTick(decorateVisualEditing);
+  }
+
+  function decorateVisualRoot(root: HTMLElement) {
+    // A page preview can contain independently editable business records
+    // (for example a milestones node inside the About page). The root
+    // resolver intentionally rejects a cross-record root; use the element
+    // resolver for an explicit nested collection/id while keeping the same
+    // strict validation for missing or malformed bindings.
+    const binding = resolveCmsVisualRootBinding({ rootCollection: root.dataset.cmsPreviewCollection, rootItemId: root.dataset.cmsPreviewItemId, sessionCollection: session.value?.collection, sessionItemId: session.value?.itemId }) || resolveCmsVisualElementBinding({
+      elementCollection: root.dataset.cmsPreviewCollection,
+      elementItemId: root.dataset.cmsPreviewItemId,
+      sessionCollection: session.value?.collection,
+      sessionItemId: session.value?.itemId
+    });
+    if (!binding) return;
+    root.setAttribute(visualBindingAttributes[0], binding.collection);
+    root.setAttribute(visualBindingAttributes[1], binding.itemId);
+    const candidates = [root, ...root.querySelectorAll<HTMLElement>('h1,h2,h3,h4,h5,h6,p,b,strong,em,small,span,time,button,a,input,textarea,li,div[data-cms-preview-field-path],img,video,dt,dd,summary,[data-cms-preview-field-path],[data-cms-preview-field]')];
+    for (const element of candidates) {
+      const ownerRoot = element.closest<HTMLElement>('[data-cms-preview-key]') || root;
+      const elementBinding = resolveCmsVisualElementBinding({
+        elementCollection: element.dataset.cmsPreviewCollection,
+        elementItemId: element.dataset.cmsPreviewItemId,
+        rootCollection: ownerRoot.dataset.cmsPreviewCollection,
+        rootItemId: ownerRoot.dataset.cmsPreviewItemId,
         sessionCollection: session.value?.collection,
         sessionItemId: session.value?.itemId
-      });
-      if (!binding) continue;
-      root.setAttribute(visualBindingAttributes[0], binding.collection);
-      root.setAttribute(visualBindingAttributes[1], binding.itemId);
-      const candidates = [root, ...root.querySelectorAll<HTMLElement>('h1,h2,h3,h4,h5,h6,p,b,strong,em,small,span,time,button,a,input,textarea,li,div[data-cms-preview-field-path],img,video,dt,dd,summary,[data-cms-preview-field-path],[data-cms-preview-field]')];
-      for (const element of candidates) {
-        const ownerRoot = element.closest<HTMLElement>('[data-cms-preview-key]') || root;
-        const elementBinding = resolveCmsVisualElementBinding({
-          elementCollection: element.dataset.cmsPreviewCollection,
-          elementItemId: element.dataset.cmsPreviewItemId,
-          rootCollection: ownerRoot.dataset.cmsPreviewCollection,
-          rootItemId: ownerRoot.dataset.cmsPreviewItemId,
-          sessionCollection: session.value?.collection,
-          sessionItemId: session.value?.itemId
-        }) || binding;
-        element.dataset.cmsPreviewCollection = elementBinding.collection;
-        element.dataset.cmsPreviewItemId = elementBinding.itemId;
-        element.setAttribute(visualBindingAttributes[0], element.dataset.cmsPreviewCollection);
-        element.setAttribute(visualBindingAttributes[1], element.dataset.cmsPreviewItemId);
-        promoteUniqueVisualTextBinding(element);
-        const fieldPath = String(element.dataset.cmsPreviewFieldPath || element.dataset.cmsPreviewField || '').trim();
-        const mediaRole = String(element.dataset.cmsPreviewMediaRole || '').trim();
-        if (!fieldPath && !mediaRole) continue;
-        if (!fieldPath && mediaRole) {
-          element.removeAttribute('data-cms-preview-editable');
+      }) || binding;
+      // The element resolver and the root fallback can both come back empty
+      // for a nested section root that carries no collection of its own.
+      // Skipping the element keeps the rest of the section editable instead
+      // of throwing on the first one.
+      if (!elementBinding) continue;
+      element.dataset.cmsPreviewCollection = elementBinding.collection;
+      element.dataset.cmsPreviewItemId = elementBinding.itemId;
+      element.setAttribute(visualBindingAttributes[0], element.dataset.cmsPreviewCollection);
+      element.setAttribute(visualBindingAttributes[1], element.dataset.cmsPreviewItemId);
+      promoteUniqueVisualTextBinding(element);
+      const fieldPath = String(element.dataset.cmsPreviewFieldPath || element.dataset.cmsPreviewField || '').trim();
+      const mediaRole = String(element.dataset.cmsPreviewMediaRole || '').trim();
+      if (!fieldPath && !mediaRole) continue;
+      if (!fieldPath && mediaRole) {
+        // 视频分享卡片这类元素没有页面字段路径，而是直接由 media_assets 记录
+        // 驱动（mediaAssetId）；它可以用画布媒体工具替换/删除，不能按“无绑定
+        // 的静态版式素材”标记为只读，否则鼠标会变成禁止图标且无法选中。
+        if (element.dataset.cmsPreviewMediaAssetId) {
+          element.removeAttribute('data-cms-preview-readonly');
+          element.removeAttribute('aria-disabled');
           element.removeAttribute('data-cms-preview-text');
-          element.dataset.cmsPreviewReadonly = 'media-pending';
-          // aria-disabled is inherited by descendant controls. A static
-          // background may still contain independently editable copy or a CTA.
-          if (hasBoundVisualDescendant(element)) {
-            element.removeAttribute('aria-disabled');
-          } else {
-            element.setAttribute('aria-disabled', 'true');
-          }
-          // Tell the two reasons apart, because only one of them is something an
-          // operator can fix: a registered placement means the slot is meant to
-          // be managed and merely has no asset bound yet, while no placement
-          // means the element is part of the fixed layout.
-          const placement = String(element.dataset.cmsPreviewPlacementKey || '').trim();
-          const fallbackReason = placement
-            ? `尚未绑定受管素材。请在所在段落的「图片与背景」中添加素材，并把展示位置填写为 ${placement.split('.').pop()}。`
-            : '此素材是版式的组成部分，不能单独替换。如需更换，请在 Nuxt 模板中新增经确认的版式位置。';
-          const reason = String(element.dataset.cmsPreviewReadonlyReason || '').trim() || fallbackReason;
-          // Publish the resolved reason so the workbench panel shows the same
-          // text instead of its own generic fallback.
-          element.dataset.cmsPreviewReadonlyReason = reason;
-          element.setAttribute('title', reason);
+          element.dataset.cmsPreviewEditable = 'true';
           continue;
         }
-        element.removeAttribute('data-cms-preview-readonly');
-        element.removeAttribute('aria-disabled');
-        element.dataset.cmsPreviewEditable = 'true';
-        if (element.matches('img,video') && !mediaRole) element.dataset.cmsPreviewMediaRole = element.matches('video') ? 'video' : 'image';
-        if (fieldPath && !element.dataset.cmsPreviewMediaRole) element.dataset.cmsPreviewText = 'true';
-        else element.removeAttribute('data-cms-preview-text');
+        element.removeAttribute('data-cms-preview-editable');
+        element.removeAttribute('data-cms-preview-text');
+        element.dataset.cmsPreviewReadonly = 'media-pending';
+        // aria-disabled is inherited by descendant controls. A static
+        // background may still contain independently editable copy or a CTA.
+        if (hasBoundVisualDescendant(element)) {
+          element.removeAttribute('aria-disabled');
+        } else {
+          element.setAttribute('aria-disabled', 'true');
+        }
+        // Tell the two reasons apart, because only one of them is something an
+        // operator can fix: a registered placement means the slot is meant to
+        // be managed and merely has no asset bound yet, while no placement
+        // means the element is part of the fixed layout.
+        const placement = String(element.dataset.cmsPreviewPlacementKey || '').trim();
+        const fallbackReason = placement
+          ? `尚未绑定受管素材。请在所在段落的「图片与背景」中添加素材，并把展示位置填写为 ${placement.split('.').pop()}。`
+          : '此素材是版式的组成部分，不能单独替换。如需更换，请在 Nuxt 模板中新增经确认的版式位置。';
+        const reason = String(element.dataset.cmsPreviewReadonlyReason || '').trim() || fallbackReason;
+        // Publish the resolved reason so the workbench panel shows the same
+        // text instead of its own generic fallback.
+        element.dataset.cmsPreviewReadonlyReason = reason;
+        element.setAttribute('title', reason);
+        continue;
       }
+      // The page can declare a field read-only because nothing is stored behind
+      // it yet (product detail still rendering the template fallback). Honour it
+      // before the generic "has a field path → editable" rule.
+      if (String(element.dataset.cmsPreviewReadonly || '').trim() === 'uninitialized') {
+        element.removeAttribute('data-cms-preview-editable');
+        element.removeAttribute('data-cms-preview-text');
+        if (element.dataset.cmsPreviewReadonlyReason) element.setAttribute('title', element.dataset.cmsPreviewReadonlyReason);
+        element.setAttribute('aria-disabled', 'true');
+        continue;
+      }
+      element.removeAttribute('data-cms-preview-readonly');
+      element.removeAttribute('aria-disabled');
+      element.dataset.cmsPreviewEditable = 'true';
+      if (element.matches('img,video') && !mediaRole) element.dataset.cmsPreviewMediaRole = element.matches('video') ? 'video' : 'image';
+      if (fieldPath && !element.dataset.cmsPreviewMediaRole) element.dataset.cmsPreviewText = 'true';
+      else element.removeAttribute('data-cms-preview-text');
     }
   }
 
@@ -441,7 +596,7 @@ export function useCmsDraftPreview() {
     if (editable) return null;
     const element = source?.closest?.<HTMLElement>('[data-cms-preview-readonly]');
     const section = element?.closest<HTMLElement>('[data-cms-preview-key]');
-    const sectionKey = String(section?.dataset.cmsPreviewKey || '').trim();
+    const sectionKey = String(section?.dataset.cmsPreviewKey || '').trim() || 'home';
     return element && sectionKey ? { element, sectionKey } : null;
   }
   function mediaBindingInInteractiveContainer(source: HTMLElement | null) {
@@ -466,9 +621,29 @@ export function useCmsDraftPreview() {
       .sort((left, right) => left.rect.width * left.rect.height - right.rect.width * right.rect.height)[0]?.element || null;
   }
 
+  // 播放按钮、整卡链接这类覆盖层会把点击重定向到卡片根节点。仅靠 click target
+  // 永远选不中下面的视频，所以再按坐标做一次命中：覆盖层下面只要有可编辑的
+  // img/video，就优先选它。文字绑定（例如压在视频上的标题）仍然优先给文字。
+  function mediaElementUnderPoint(clientX: number, clientY: number) {
+    if (!Number.isFinite(clientX) || !Number.isFinite(clientY) || typeof document.elementsFromPoint !== 'function') return null;
+    const stack = document.elementsFromPoint(clientX, clientY);
+    return stack.find((node) => {
+      const element = node as HTMLElement;
+      return (element.matches?.('img,video') || Boolean(element.dataset?.cmsPreviewMediaRole))
+        && Boolean(element.closest('[data-cms-preview-key]'));
+    }) as HTMLElement | null || null;
+  }
+
   function editableTarget(node: EventTarget | null, clientX = NaN, clientY = NaN) {
     const source = node as HTMLElement | null;
     let element = source?.closest?.<HTMLElement>('[data-cms-preview-editable="true"]');
+    // 覆盖层（播放按钮、整卡链接）会把点击重定向到卡片根节点；若命中的不是媒体
+    // 也不是文字绑定，再按坐标找下面的可编辑媒体，避免永远选中卡片的文字属性。
+    if (!element || (!element.matches('img,video') && !element.dataset.cmsPreviewMediaRole && !element.dataset.cmsPreviewText && !element.dataset.cmsPreviewFieldPath)) {
+      const pointMedia = mediaElementUnderPoint(clientX, clientY);
+      const mediaCandidate = pointMedia?.closest<HTMLElement>('[data-cms-preview-editable="true"]') || pointMedia;
+      if (mediaCandidate && (mediaCandidate.matches('img,video') || mediaCandidate.dataset.cmsPreviewMediaRole)) element = mediaCandidate;
+    }
     if (!element) element = controlledVisualElementAtPoint(clientX, clientY);
     // Some native controls own their click target while only their label has
     // the explicit CMS field binding. Select that label only when it is unique
@@ -490,25 +665,70 @@ export function useCmsDraftPreview() {
     // Images commonly cover an entire interactive card. In selection and text
     // modes, choose the card's nearest text binding so the card title can be
     // edited; the media tool deliberately keeps the image as the target.
-    const preferredElement = visualTool.value === 'media'
+    // Explicitly governed media (mediaRole/mediaAssetId) must win over a parent
+    // rich-text container: the article body has data-cms-preview-text=true, and
+    // climbing to it made every inline image select the whole body instead.
+    const elementIsGovernedMedia = Boolean(
+      element?.matches('img,video')
+      && (element.dataset.cmsPreviewMediaRole || element.dataset.cmsPreviewMediaAssetId)
+    );
+    const preferredElement = visualTool.value === 'media' || elementIsGovernedMedia
       ? element
       : element?.closest<HTMLElement>('[data-cms-preview-text="true"]') || element;
     // A milestone record owns its field binding, but visually belongs to the
     // surrounding history section. Keep those responsibilities separate.
     const timelineSection = preferredElement?.closest<HTMLElement>('#history[data-cms-preview-key]');
-    const section = timelineSection || (preferredElement?.matches('[data-cms-preview-key]') ? preferredElement : preferredElement?.closest<HTMLElement>('[data-cms-preview-key]'));
+    const section = timelineSection || (preferredElement?.matches('[data-cms-preview-key]') ? preferredElement : preferredElement?.closest<HTMLElement>('[data-cms-preview-key]')) || source?.closest<HTMLElement>('[data-cms-preview-key]');
     const sectionKey = String(section?.dataset.cmsPreviewKey || '').trim();
+    // Some legacy/fallback homepage blocks render dynamic copy without the
+    // explicit binding attributes. Keep the canvas usable by treating the
+    // clicked text or media inside a known CMS section as an editable target.
+    if (!preferredElement && source && sectionKey && visualTool.value === 'text') {
+      const fallback = source.closest<HTMLElement>('h1,h2,h3,h4,h5,h6,p,b,strong,span,small,li,div');
+      if (fallback && String(fallback.textContent || '').trim()) {
+        fallback.dataset.cmsPreviewEditable = 'true';
+        fallback.dataset.cmsPreviewText = 'true';
+        if (!fallback.dataset.cmsPreviewFieldPath) fallback.dataset.cmsPreviewFieldPath = 'body';
+        return { element: fallback, sectionKey };
+      }
+    }
+    if (!preferredElement && source && sectionKey && visualTool.value === 'media') {
+      const fallback = source.closest<HTMLElement>('img,video');
+      if (fallback) {
+        fallback.dataset.cmsPreviewEditable = 'true';
+        if (!fallback.dataset.cmsPreviewFieldPath) fallback.dataset.cmsPreviewFieldPath = 'image';
+        return { element: fallback, sectionKey };
+      }
+    }
     return preferredElement && sectionKey ? { element: preferredElement, sectionKey } : null;
   }
   function requestVisualSelection(target: { element: HTMLElement; sectionKey: string }, event: MouseEvent | PointerEvent) {
+    const targetIsMedia = target.element.matches('img,video') || Boolean(target.element.dataset.cmsPreviewMediaRole);
+    const targetIsText = target.element.matches('[data-cms-preview-text="true"]') || Boolean(target.element.dataset.cmsPreviewFieldPath);
+    const tool = visualTool.value === 'select'
+      ? 'select'
+      : targetIsMedia
+        ? 'media'
+        : targetIsText
+          ? 'text'
+          : visualTool.value;
     const request = createCmsVisualEditRequest({
       editMode: visualEditMode.value && desktopVisualEditingAvailable(),
       device: visualDevice.value,
-      tool: visualTool.value,
+      tool,
       sectionKey: target.sectionKey,
       meta: visualElementMeta(target.element)
     });
     if (!request) return false;
+    // Spec rows carry the full official table so the workbench can seed the model
+    // draft before applying the first per-row edit.
+    const parameterRowsRaw = target.element.getAttribute('data-cms-parameter-rows');
+    if (parameterRowsRaw) {
+      try {
+        const rows = JSON.parse(parameterRowsRaw);
+        if (Array.isArray(rows) && rows.length) request.parameterRows = rows;
+      } catch { /* ignore malformed payloads */ }
+    }
     locallySelectedSectionKey = target.sectionKey;
     if (targetRetryTimer) window.clearTimeout(targetRetryTimer);
     document.documentElement.dataset.cmsPreviewTargetKey = target.sectionKey;
@@ -517,7 +737,137 @@ export function useCmsDraftPreview() {
     postEditMessage(request);
     return true;
   }
+  // A section can be rendered with CMS field bindings but carry no resolved
+  // record (the workbench is currently editing another record, or the page is
+  // still showing its static fallback). Nothing in it gets an editable marker,
+  // so clicks used to be swallowed without a word and the canvas looked broken.
+  function blockedVisualSection(node: EventTarget | null) {
+    const source = node as HTMLElement | null;
+    const root = source?.closest?.<HTMLElement>('[data-cms-preview-key]');
+    if (!root) return null;
+    if (!root.querySelector('[data-cms-preview-field-path]')) return null;
+    if (root.querySelector('[data-cms-preview-editable="true"]')) return null;
+    return root;
+  }
+
   function handleVisualClick(event: MouseEvent) {
+    // The same bridge is installed on the public site so a preview session can be
+    // started later. Without this guard every click inside a CMS-bound section
+    // was swallowed on the live page — product cards and header links stopped
+    // navigating entirely.
+    if (!visualEditMode.value || !desktopVisualEditingAvailable()) return;
+    // 画布内的“新增/删除”是动作按钮，不参与元素选中：直接转成工作台命令。
+    const actionElement = (event.target as HTMLElement | null)?.closest?.<HTMLElement>('[data-cms-preview-action]');
+    if (actionElement) {
+      const action = String(actionElement.dataset.cmsPreviewAction || '');
+      const sectionKey = String(actionElement.closest('[data-cms-preview-key]')?.dataset.cmsPreviewKey || '');
+      const base = {
+        sectionKey,
+        collection: String(session.value?.collection || ''),
+        itemId: String(session.value?.itemId ?? '')
+      };
+      if (action === 'select-model-target') {
+        // A model chip owns two behaviours: the workbench opens that model's
+        // form, and the page's own click handler switches the displayed model.
+        // Swallowing the click here froze the panel on the previous model while
+        // the workbench opened the clicked one.
+        postEditMessage({
+          type: 'ruijun:cms-preview:select-model-target',
+          ...base,
+          modelCode: String(actionElement.dataset.cmsModelCode || ''),
+          modelName: String(actionElement.dataset.cmsModelName || ''),
+          modelId: String(actionElement.dataset.cmsModelId || ''),
+          seriesCode: String(actionElement.dataset.cmsListSeries || '')
+        });
+        return;
+      }
+      event.preventDefault();
+      event.stopPropagation();
+      if (action === 'create-article') {
+        postEditMessage({ type: 'ruijun:cms-preview:create-article', category: String(actionElement.dataset.cmsCategory || 'news'), ...base });
+      } else if (action === 'delete-article') {
+        postEditMessage({
+          type: 'ruijun:cms-preview:delete-article',
+          ...base,
+          collection: String(actionElement.dataset.cmsCollection || 'articles'),
+          targetItemId: String(actionElement.dataset.cmsItemId || ''),
+          label: String(actionElement.getAttribute('aria-label') || '')
+        });
+      } else if (action === 'delete-media') {
+        // The capture-phase canvas action handler runs before the button's own
+        // click listener and stops propagation. Media delete therefore has to
+        // be translated here too, or the red × silently does nothing.
+        postEditMessage({
+          type: 'ruijun:cms-preview:delete-media',
+          ...base,
+          mediaAssetId: String(actionElement.dataset.cmsMediaId || ''),
+          label: String(actionElement.getAttribute('aria-label') || '')
+        });
+      } else if (action === 'list-add' || action === 'list-remove') {
+        // List buttons name the array they belong to (for example
+        // configuration.features) instead of a field, so the workbench can add
+        // or remove an entry before any item has been selected. The owning record
+        // travels with the button: a page session can render a product detail
+        // panel whose list belongs to a different collection.
+        postEditMessage({
+          type: `ruijun:cms-preview:${action}`,
+          ...base,
+          collection: String(actionElement.dataset.cmsListCollection || base.collection),
+          itemId: String(actionElement.dataset.cmsListItemId || base.itemId),
+          seriesCode: String(actionElement.dataset.cmsListSeries || ''),
+          listPath: String(actionElement.dataset.cmsListPath || ''),
+          listIndex: String(actionElement.dataset.cmsListIndex || ''),
+          listLabel: String(actionElement.dataset.cmsListLabel || ''),
+          label: String(actionElement.getAttribute('aria-label') || '')
+        });
+      } else if (action === 'series-select') {
+        // Open the draft series in the workbench form so its name/cover can be filled.
+        postEditMessage({
+          type: 'ruijun:cms-preview:series-select',
+          ...base,
+          seriesRecordId: String(actionElement.dataset.cmsSeriesRecordId || '')
+        });
+      } else if (action === 'series-add' || action === 'series-remove') {
+        // A whole product-series card is its own record; the card button names it.
+        postEditMessage({
+          type: `ruijun:cms-preview:${action}`,
+          ...base,
+          seriesRecordId: String(actionElement.dataset.cmsSeriesRecordId || '')
+        });
+      } else if (action === 'model-add' || action === 'model-remove') {
+        // Model records live in their own collection; the button carries the
+        // series code (and the model id when deleting) because a page session
+        // points at the page record, not at the model.
+        postEditMessage({
+          type: `ruijun:cms-preview:${action}`,
+          ...base,
+          seriesCode: String(actionElement.dataset.cmsListSeries || ''),
+          modelId: String(actionElement.dataset.cmsModelId || ''),
+          modelCode: String(actionElement.dataset.cmsModelCode || '')
+        });
+      } else if (action === 'parameter-add' || action === 'parameter-remove') {
+        // Parameter rows are separate records, so the workbench creates or
+        // deletes them through the API instead of rewriting a JSON array.
+        postEditMessage({
+          type: `ruijun:cms-preview:${action}`,
+          ...base,
+          modelCode: String(actionElement.dataset.cmsModelCode || ''),
+          parameterId: String(actionElement.dataset.cmsParameterId || '')
+        });
+      }
+      return;
+    }
+    // Page-owned affordances such as "open this series detail" or "switch the
+    // displayed model" must not become field selections: hand the click back to
+    // the page so it can update its own state without navigating the iframe. The
+    // page's own handler runs as well (these are plain buttons): if the dispatched
+    // payload is ever stale, the detail panel still switches instead of freezing
+    // on whichever card was opened last.
+    const pageAction = cmsPageActionFor(event.target);
+    if (pageAction) {
+      window.dispatchEvent(new CustomEvent(CMS_LIVE_PREVIEW_PAGE_ACTION, { detail: pageAction }));
+      return;
+    }
     const readonly = readonlyVisualTarget(event.target);
     if (readonly) {
       event.preventDefault();
@@ -533,15 +883,44 @@ export function useCmsDraftPreview() {
       return;
     }
     const target = editableTarget(event.target, event.clientX, event.clientY);
-    if (!target) return;
+    if (!target) {
+      const blocked = blockedVisualSection(event.target);
+      if (blocked) {
+        event.preventDefault();
+        event.stopPropagation();
+        const sectionKey = String(blocked.dataset.cmsPreviewKey || '').trim();
+        const clickedField = String((event.target as HTMLElement | null)?.closest?.<HTMLElement>('[data-cms-preview-field-path]')?.dataset.cmsPreviewFieldPath || '');
+        // Keep the record ids explicit: the workbench resolves them before it
+        // shows the reason, and an empty pair makes it drop the message.
+        postEditMessage({
+          type: CMS_LIVE_PREVIEW_READONLY,
+          sectionKey,
+          label: sectionKey,
+          elementType: 'text',
+          fieldPath: clickedField,
+          collection: String(session.value?.collection || ''),
+          itemId: String(session.value?.itemId ?? ''),
+          blockedSection: true,
+          readonly: true,
+          readonlyReason: `这段内容属于「${sectionKey}」区块，当前画布没有它的编辑权。请在左侧先选中这个区块，再回到画布上修改。`
+        });
+      }
+      // 编辑模式下点击画布内任何位置都不应该跳走。即使这一下没有解析到可编辑
+      // 目标（例如覆盖层、未绑定元素），也拦住默认导航，避免误进详情页。
+      if ((event.target as HTMLElement | null)?.closest?.('[data-cms-preview-key]')) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      return;
+    }
     requestVisualSelection(target, event);
   }
   function handleVisualDoubleClick(event: MouseEvent) {
     if (!visualEditMode.value || !desktopVisualEditingAvailable()) return;
     const target = editableTarget(event.target, event.clientX, event.clientY);
     if (!target) return;
-    if (visualTool.value === 'media' && target.element.matches('[data-cms-preview-text="true"]')) return;
-    if (visualTool.value === 'text' && !target.element.matches('[data-cms-preview-text="true"]')) return;
+    // A visible bound target is authoritative. Users may double-click a text
+    // node after leaving the media tool active; do not silently drop the edit.
     event.preventDefault();
     event.stopPropagation();
       const field = String(target.element.dataset.cmsPreviewFieldPath || target.element.dataset.cmsPreviewField || '').trim();
@@ -567,8 +946,17 @@ export function useCmsDraftPreview() {
     }
     postEditMessage({ type: CMS_LIVE_PREVIEW_EDIT_REQUEST, sectionKey: target.sectionKey, field, fieldPath: field, ...meta });
   }
+  // Canvas buttons ("＋/×", 详情, 删除…) live inside decorated containers. The
+  // drag helper captures the pointer on the container, which retargets the
+  // follow-up `click` and meant a real mouse press never reached the action
+  // branch (synthetic .click() worked, which is why it passed tests). Leave
+  // action elements entirely to the click handler.
+  function isCanvasActionTarget(node: EventTarget | null) {
+    return Boolean((node as HTMLElement | null)?.closest?.('[data-cms-preview-action], [data-cms-preview-page-action]'));
+  }
   function handleVisualPointerDown(event: PointerEvent) {
     if (!visualEditMode.value || !desktopVisualEditingAvailable() || event.button !== 0) return;
+    if (isCanvasActionTarget(event.target)) return;
     const target = editableTarget(event.target, event.clientX, event.clientY);
     if (!target || target.element.matches('[data-cms-preview-text="true"]')) return;
     if (visualTool.value === 'text') return;
@@ -695,5 +1083,30 @@ export function useCmsDraftPreview() {
     return result;
   }
 
-  return { enabled, session, record, error, liveConnected, livePreviewLabel, visualEditMode, visualMediaReplacement, recordFor, recordsFor: currentPreviewRecords, overlayRecord, overlayList };
+  // 删除按钮直接调用，避免依赖 document 级点击命中判断（元素被浮层覆盖时
+  // 点击会落到卡片链接上，删除永远不触发）。
+  function requestArticleDelete(itemId: string, label = '') {
+    const id = String(itemId || '').trim();
+    if (!id) return;
+    postEditMessage({
+      type: 'ruijun:cms-preview:delete-article',
+      collection: 'articles',
+      targetItemId: id,
+      label: label ? `删除 ${label}` : '',
+      sectionKey: ''
+    });
+  }
+
+  function requestMediaDelete(mediaAssetId: string, label = '') {
+    const id = String(mediaAssetId || '').trim();
+    if (!id) return;
+    postEditMessage({
+      type: 'ruijun:cms-preview:delete-media',
+      mediaAssetId: id,
+      label: label ? `删除 ${label}` : '',
+      sectionKey: ''
+    });
+  }
+
+  return { enabled, session, record, error, liveConnected, livePreviewLabel, visualEditMode, visualMediaReplacement, recordFor, recordsFor: currentPreviewRecords, overlayRecord, overlayList, refreshVisualDecorations, insidePreviewFrame, requestArticleDelete, requestMediaDelete };
 }

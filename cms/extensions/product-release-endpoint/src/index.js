@@ -6,6 +6,7 @@ import {
   validateProductReleaseSnapshot
 } from '../../../product-release/product-release-snapshot.mjs';
 import { invalidateProductReleaseCache } from '../../../product-release/product-release-cache-invalidation.mjs';
+import { databaseDateTime } from '../../../content-workflow/content-versioning.mjs';
 
 const allowedRoleNames = new Set(['系统管理员']);
 const releaseKey = 'main';
@@ -84,6 +85,23 @@ async function productRows(database) {
     database('product_series').select('*'), database('product_models').select('*'), database('product_parameters').select('*')
   ]);
   return { series, models, parameters };
+}
+
+// Approval freezes products at `scheduled`. The product release is the publisher
+// action, so publish those approved rows in the same transaction before taking
+// the snapshot; otherwise they can never reach the public release.
+async function publishScheduledProducts(database, publishedAt, actorId) {
+  for (const collection of ['product_series', 'product_models', 'product_parameters']) {
+    const rows = await database(collection).where({ status: 'scheduled' }).select('id', 'publication_log');
+    for (const row of rows) {
+      const log = publicationLog(row.publication_log);
+      log.push({ action: 'published', actor: actorId, at: publishedAt, changed_fields: ['status', 'publication_state', 'published_at'] });
+      await database(collection).where({ id: row.id }).update({
+        status: 'published', publication_state: 'published', published_at: publishedAt,
+        published_by: actorId, publication_log: JSON.stringify(log.slice(-200))
+      });
+    }
+  }
 }
 
 async function activeRelease(database) {
@@ -190,6 +208,8 @@ export function registerProductReleaseEndpoint(router, { database, env = process
       const result = await database.transaction(async (trx) => {
         const previous = await activeRelease(trx);
         const latest = await latestRelease(trx);
+        const publishedAt = databaseDateTime(new Date());
+        await publishScheduledProducts(trx, publishedAt, actor.id);
         const rows = await productRows(trx);
         const built = buildProductReleaseSnapshot({ ...rows, version: Number(latest?.version || 0) + 1 });
         if (built.issues.length) {
@@ -201,7 +221,6 @@ export function registerProductReleaseEndpoint(router, { database, env = process
         await trx('product_release_snapshots')
           .where({ release_key: releaseKey, status: 'published', publication_state: 'published' })
           .update({ status: 'archived', publication_state: 'private' });
-        const publishedAt = new Date().toISOString();
         const inserted = await trx('product_release_snapshots').insert({
           release_key: releaseKey, version: built.snapshot.version, source_hash: built.sourceHash,
           snapshot: JSON.stringify(built.snapshot), release_note: note || null, published_by: actor.id,
@@ -267,7 +286,7 @@ export function registerProductReleaseEndpoint(router, { database, env = process
           error.issues = built.issues;
           throw error;
         }
-        const publishedAt = new Date().toISOString();
+        const publishedAt = databaseDateTime(new Date());
         const changeSummary = diffProductReleaseSnapshots(current?.snapshot, built.snapshot);
         if (current) {
           await trx('product_release_snapshots').where({ id: current.id }).update({ status: 'archived', publication_state: 'private' });

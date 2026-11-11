@@ -127,7 +127,10 @@ test('Nuxt home freezes the opening video on its final frame and exposes the emb
   assert.doesNotMatch(page, /data-cms-preview-field-path="'hero_video_asset_id'"/);
   assert.match(page, /const value = String\(heroContent\.value\?\.hero_video_asset_id \|\| ''\)\.trim\(\);/);
   assert.match(page, /const previewUrl = String\(heroContent\.value\?\.hero_video_asset_url \|\| ''\)\.trim\(\);/);
-    assert.match(page, /if \(\/\^\(\?:\\\/api\\\/preview\\\/media\\\/\[1-9\]\\d\*\|\\\/assets\\\/\|https\?:\\\/\\\/\)\/i\.test\(previewUrl\)\) return previewUrl;/);
+  // Both governed media paths are accepted: the preview session serves
+  // /api/preview/media/<id>, the public BFF serves /api/public/v1/media/asset/<file>.
+  assert.ok(page.includes('/api\\/preview\\/media\\/[1-9]\\d*'), 'preview media path must stay accepted');
+  assert.ok(page.includes('/api\\/public\\/v1\\/media\\/asset\\/[A-Za-z0-9-]+'), 'public media path must be accepted');
   assert.match(page, /class="hero-video(?:\s[^\"]*)?"[^>]* autoplay playsinline/);
   assert.match(page, /class="hero-sound-toggle"/);
   assert.match(page, /function toggleHeroSound\(\)/);
@@ -142,7 +145,11 @@ test('Nuxt home freezes the opening video on its final frame and exposes the emb
   assert.match(page, /video\.muted = true/);
   assert.match(page, /function restoreHeroSoundAfterInteraction\(\)/);
   assert.match(page, /addEventListener\('pointerdown', restoreHeroSoundAfterInteraction/);
-  assert.match(page, /const heroEndFrame = computed\(\(\) => heroStill\.value\?\.path \|\| heroContent\.value\.image \|\| heroMedia\.value\?\.posterPath/);
+  // The end frame must be a real final frame, not the video's cover image: a
+  // cover is often an unrelated still (it showed up as a shopping-cart photo in
+  // the canvas). Fall back to the bundled sharpened end frame instead.
+  assert.match(page, /const heroEndFrame = computed\(\(\) => heroStill\.value\?\.path \|\| heroContent\.value\.image \|\| '\/assets\/home-intro-end-video-sharpened\.png/);
+  assert.match(page, /const heroPosterSource = computed\(\(\) => heroPoster\.value\?\.path \|\| heroMedia\.value\?\.posterPath/);
   assert.match(page, /<img class="hero-end-frame cms-media" :src="heroEndFrame"/);
   assert.doesNotMatch(page, /hero-cms-title|<h1 v-if="heroContent\.title"/);
   assert.match(page, /v-if="heroContent\.body \|\| heroContent\.label" class="hero-cms-copy cms-positioned"/);

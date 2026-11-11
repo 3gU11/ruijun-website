@@ -2,7 +2,7 @@ import { buildDirectusSchemaPlan } from '../schema/directus-schema-plan.mjs';
 
 const editableContentCollections = new Set([
   'homepage_sections', 'pages', 'repair_page_configs', 'product_series', 'product_models', 'product_parameters', 'case_studies', 'articles', 'manufacturing_evidence', 'qualifications',
-  'milestones', 'service_resources', 'service_locations', 'knowledge_items'
+  'milestones', 'service_resources', 'service_locations', 'knowledge_items', 'content_submissions'
 ]);
 
 // Directus roles have no stable machine key. Keep old display names only as a
@@ -35,9 +35,13 @@ const bffPublicReadFields = Object.freeze({
   homepage_sections: ['page_key', 'section_key', 'title', 'kicker', 'body', 'content', 'media', 'sort_order', 'enabled', 'language', 'status', 'publication_state', 'published_at'],
   pages: ['slug', 'title', 'language', 'sections', 'seo', 'status', 'publication_state', 'published_at'],
   repair_page_configs: ['page_key', 'title', 'intro', 'hero_asset', 'model_cards', 'action_cards', 'process_steps', 'notices', 'faq_refs', 'seo', 'language', 'status', 'publication_state', 'published_at'],
-  product_series: ['series_code', 'slug', 'name', 'positioning', 'presentation', 'scenarios', 'capabilities', 'cover_asset', 'sort_order', 'language', 'status', 'publication_state', 'published_at'],
-  product_models: ['series_code', 'model_code', 'slug', 'name', 'parameters', 'configuration', 'media', 'resources', 'case_studies', 'status', 'publication_state', 'published_at'],
-  product_parameters: ['model_code', 'group_name', 'field_name', 'value', 'unit', 'presentation', 'sort_order', 'status', 'publication_state', 'published_at'],
+  product_series: ['id', 'series_code', 'slug', 'name', 'positioning', 'presentation', 'scenarios', 'capabilities', 'cover_asset', 'sort_order', 'language', 'status', 'publication_state', 'published_at'],
+  // `id` and `presentation` are required by the public BFF: the reader requests
+  // both, and a missing field makes Directus answer 403. The reader then falls
+  // back to an empty static catalog, so the site shows the PSD copy instead of
+  // the published models.
+  product_models: ['id', 'series_code', 'model_code', 'slug', 'name', 'parameters', 'configuration', 'presentation', 'media', 'resources', 'case_studies', 'status', 'publication_state', 'published_at'],
+  product_parameters: ['model_code', 'field_name', 'value', 'unit', 'presentation', 'sort_order', 'status', 'publication_state', 'published_at'],
   product_release_snapshots: [
     'release_key', 'version', 'source_hash', 'snapshot', 'release_note', 'published_by', 'published_at',
     'status', 'publication_state', 'restored_from_release_id', 'restored_from_version', 'restore_note'
@@ -94,7 +98,7 @@ const bffServiceEntryClickFields = Object.freeze(['entry_type', 'source_page']);
 const contentAuditReadFields = Object.freeze({
   product_series: ['id', 'series_code', 'name', 'source_url', 'source_document', 'review_note', 'import_evidence', 'status', 'publication_state'],
   product_models: ['id', 'series_code', 'model_code', 'name', 'parameters', 'source_url', 'source_document', 'review_note', 'import_evidence', 'status', 'publication_state'],
-  product_parameters: ['id', 'model_code', 'group_name', 'field_name', 'value', 'unit', 'presentation', 'sort_order', 'test_conditions', 'source_url', 'source_document', 'review_note', 'import_evidence', 'status', 'publication_state'],
+  product_parameters: ['id', 'model_code', 'field_name', 'value', 'unit', 'presentation', 'sort_order', 'test_conditions', 'source_url', 'source_document', 'review_note', 'import_evidence', 'status', 'publication_state'],
   service_resources: ['id', 'source_key', 'type', 'title', 'summary', 'body', 'applicable_models', 'version', 'language', 'asset', 'cover_asset', 'display_date', 'sort_order', 'updated_at', 'source_url', 'source_document', 'review_note', 'status', 'publication_state'],
   knowledge_items: ['id', 'source_key', 'visibility', 'channel', 'category', 'question_title', 'applicable_models', 'error_codes', 'symptoms', 'troubleshooting_steps', 'risk_level', 'safety_preconditions', 'media', 'version', 'display_date', 'sort_order', 'source_url', 'source_document', 'review_note', 'status', 'publication_state'],
   service_locations: ['id', 'source_key', 'region', 'city', 'service_scope', 'contact', 'business_status', 'valid_until', 'source_url', 'source_document', 'review_note', 'status', 'publication_state'],
@@ -134,6 +138,12 @@ function permissionSpecs(roleKey, policyId) {
       { policy: policyId, collection: 'lead_upload_sessions', action: 'create', permissions: {}, validation: {}, fields: bffUploadSessionFields },
       { policy: policyId, collection: 'lead_upload_sessions', action: 'update', permissions: {}, validation: {}, fields: ['file_id', 'lead_reference', 'status'] },
       { policy: policyId, collection: 'service_entry_clicks', action: 'create', permissions: {}, validation: {}, fields: bffServiceEntryClickFields },
+      // The site streams CMS media bytes through this server-side token
+      // (`/api/public/v1/media/asset/<fileId>` and `/api/preview/media/<assetId>`).
+      // Without a `directus_files` read grant Directus answers 403 and every
+      // managed image/video renders blank. The token never reaches the browser,
+      // and both routes re-check the media asset's published state first.
+      { policy: policyId, collection: 'directus_files', action: 'read', permissions: {}, validation: {}, fields: bffPrivateFileFields },
       { policy: policyId, collection: 'directus_files', action: 'create', permissions: {}, validation: {}, fields: bffPrivateFileFields }
     ];
   }

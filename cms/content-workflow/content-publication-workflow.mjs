@@ -15,7 +15,7 @@ const reviewManagerCollections = new Set([...editorCollections, 'media_assets'])
 
 const finalStatuses = new Set(['archived']);
 const controlledFields = new Set(['status', 'publication_state', 'published_at', 'reviewed_by', 'reviewed_at', 'published_by', 'publication_log']);
-const transitionMetadataFields = new Set([...controlledFields, 'review_note']);
+const transitionMetadataFields = new Set([...controlledFields, 'review_note', 'submission_name']);
 
 export class ContentPublicationError extends Error {
   constructor(code, message) {
@@ -42,19 +42,21 @@ function activityLog(value) {
 }
 
 function safePayload(input) {
-  return Object.fromEntries(Object.entries(input).filter(([key]) => !controlledFields.has(key)));
+  return Object.fromEntries(Object.entries(input).filter(([key]) => !controlledFields.has(key) && !transitionMetadataFields.has(key)));
 }
 
-function audit(current, action, actor, timestamp, changedFields) {
+function audit(current, action, actor, timestamp, changedFields, extra = {}) {
   return [...activityLog(current.publication_log), {
-    action, actor, at: timestamp.toISOString(), ...(changedFields.length ? { changed_fields: changedFields.slice(0, 30) } : {})
+    action, actor, at: timestamp.toISOString(),
+    ...(text(extra.submission_name) ? { submission_name: text(extra.submission_name, 160) } : {}),
+    ...(changedFields.length ? { changed_fields: changedFields.slice(0, 30) } : {})
   }];
 }
 
 function validActor(actor) {
   const id = text(actor?.id, 128);
   const role = text(actor?.role, 64);
-  if (!id || !role) throw new ContentPublicationError('ACTOR_REQUIRED', 'An authenticated content role is required');
+  if (!id || !role) throw new ContentPublicationError('ACTOR_REQUIRED', '需要已登录且具备内容权限的账号');
   return { id, role };
 }
 
@@ -96,6 +98,7 @@ function normalizeReadinessRecord(collection, value) {
     record.import_evidence = json(record.import_evidence, {});
   }
   if (collection === 'manufacturing_evidence') record.media = json(record.media, []);
+  if (collection === 'articles') record.media = json(record.media, []);
   if (collection === 'qualifications') record.assets = json(record.assets, []);
   if (collection === 'service_locations') record.contact = json(record.contact, {});
   if (collection === 'knowledge_items') {
@@ -139,13 +142,13 @@ function finalPublicationIssues(collection, value) {
 function assertFinalPublicationReadiness(collection, current, input) {
   const candidate = { ...current, ...input, status: 'published', publication_state: 'published' };
   const issues = [...new Set(finalPublicationIssues(collection, candidate))];
-  if (issues.length) throw new ContentPublicationError('CONTENT_NOT_READY', `Content is not ready for publication: ${issues.join(', ')}`);
+  if (issues.length) throw new ContentPublicationError('CONTENT_NOT_READY', `内容尚未达到发布条件：${issues.join('、')}`);
 }
 
 function assertTransitionDoesNotMutateContent(input) {
   const contentFields = Object.keys(input).filter((field) => !transitionMetadataFields.has(field));
   if (contentFields.length) {
-    throw new ContentPublicationError('CONTENT_MUTATION_FORBIDDEN', `Lifecycle transitions cannot modify content fields: ${contentFields.sort().join(', ')}`);
+    throw new ContentPublicationError('CONTENT_MUTATION_FORBIDDEN', `状态流转不能同时修改内容字段：${contentFields.sort().join('、')}`);
   }
 }
 
@@ -153,8 +156,8 @@ function resolveContentPublicationUpdate({ collection, current, input, actor, no
   const existing = current && typeof current === 'object' ? current : null;
   const payload = input && typeof input === 'object' ? input : {};
   const actorInfo = validActor(actor);
-  if (!collection || !existing || typeof existing.status !== 'string') throw new ContentPublicationError('CONTENT_NOT_FOUND', 'The content record is unavailable');
-  if (finalStatuses.has(existing.status)) throw new ContentPublicationError('FINALIZED_CONTENT', 'Archived content cannot be changed through this workflow');
+  if (!collection || !existing || typeof existing.status !== 'string') throw new ContentPublicationError('CONTENT_NOT_FOUND', '找不到这条内容记录');
+  if (finalStatuses.has(existing.status)) throw new ContentPublicationError('FINALIZED_CONTENT', '已归档的内容不能通过此流程修改');
   const timestamp = now();
   if (!(timestamp instanceof Date) || Number.isNaN(timestamp.getTime())) throw new TypeError('now must return a valid Date');
 
@@ -164,13 +167,43 @@ function resolveContentPublicationUpdate({ collection, current, input, actor, no
   const base = { ...content };
   const unpublished = { publication_state: 'unpublished', published_at: null };
 
+  // 媒体素材不参与内容审核：上传即发布，编辑已发布素材也只更新内容字段，
+  // 不再生成“新草稿”，否则运营改一次标题就会让官网图片/视频消失。
+  if (collection === 'media_assets') {
+    if (Object.hasOwn(payload, 'status') && target !== existing.status) {
+      throw new ContentPublicationError('INVALID_TRANSITION', '媒体素材已取消审核，不再支持送审/发布状态流转');
+    }
+    return {
+      ...base,
+      status: existing.status,
+      publication_state: existing.publication_state,
+      published_at: existing.published_at ?? null,
+      publication_log: audit(existing, 'content_updated', actorInfo.id, timestamp, changedFields, { submission_name: payload.submission_name })
+    };
+  }
+
+  // Editing an already published record creates the next draft in place. The
+  // public API continues serving the previous published snapshot until this
+  // new draft completes review and publication.
+  if (existing.status === 'published' && !Object.hasOwn(payload, 'status')) {
+    if (actorInfo.role !== 'content_editor' && actorInfo.role !== 'system_admin') {
+      throw new ContentPublicationError('ROLE_SCOPE', '当前角色不能编辑已发布内容');
+    }
+    return {
+      ...base,
+      status: 'draft',
+      ...unpublished,
+      publication_log: audit(existing, 'published_revision_started', actorInfo.id, timestamp, changedFields, { submission_name: payload.submission_name })
+    };
+  }
+
   if (actorInfo.role === 'system_admin' && (!Object.hasOwn(payload, 'status') || target === existing.status)) {
     return {
       ...base,
       status: existing.status,
       publication_state: existing.publication_state,
       published_at: existing.published_at ?? null,
-      publication_log: audit(existing, 'content_updated', actorInfo.id, timestamp, changedFields)
+      publication_log: audit(existing, 'content_updated', actorInfo.id, timestamp, changedFields, { submission_name: payload.submission_name })
     };
   }
 
@@ -181,7 +214,7 @@ function resolveContentPublicationUpdate({ collection, current, input, actor, no
     assertKnowledgeReadiness(collection, existing, payload, target);
     return {
       ...base, status: 'review', ...unpublished,
-      publication_log: audit(existing, 'submitted_for_review', actorInfo.id, timestamp, changedFields)
+      publication_log: audit(existing, 'submitted_for_review', actorInfo.id, timestamp, changedFields, { submission_name: payload.submission_name })
     };
   }
 
@@ -197,25 +230,33 @@ function resolveContentPublicationUpdate({ collection, current, input, actor, no
 
   if (actorInfo.role === 'content_editor') {
     if (existing.status === 'draft' && target === 'draft') {
-      return { ...base, status: 'draft', ...unpublished, publication_log: audit(existing, 'draft_updated', actorInfo.id, timestamp, changedFields) };
+      return { ...base, status: 'draft', ...unpublished, publication_log: audit(existing, 'draft_updated', actorInfo.id, timestamp, changedFields, { submission_name: payload.submission_name }) };
     }
     if (existing.status === 'draft' && target === 'review') {
       assertKnowledgeReadiness(collection, existing, payload, target);
-      return { ...base, status: 'review', ...unpublished, publication_log: audit(existing, 'submitted_for_review', actorInfo.id, timestamp, changedFields) };
+      return { ...base, status: 'review', ...unpublished, publication_log: audit(existing, 'submitted_for_review', actorInfo.id, timestamp, changedFields, { submission_name: payload.submission_name }) };
     }
     if ((existing.status === 'rejected' || existing.status === 'unpublished') && target === 'draft') {
       return { ...base, status: 'draft', ...unpublished, publication_log: audit(existing, 'reopened_as_draft', actorInfo.id, timestamp, changedFields) };
     }
-    throw new ContentPublicationError('INVALID_TRANSITION', 'Editors may only edit drafts or submit drafts for review');
+    throw new ContentPublicationError('INVALID_TRANSITION', '内容编辑只能编辑草稿，或把草稿提交审核');
   }
 
   if ((actorInfo.role === 'review_manager' || actorInfo.role === 'system_admin') && existing.status === 'review') {
-    if (!reviewerCanHandle(actorInfo.role, collection, existing, payload)) throw new ContentPublicationError('ROLE_SCOPE', 'This reviewer role cannot review this content type');
+    if (!reviewerCanHandle(actorInfo.role, collection, existing, payload)) throw new ContentPublicationError('ROLE_SCOPE', '当前审核角色不能审核这类内容');
     if (existing.status !== 'review' || !['scheduled', 'rejected'].includes(target)) {
-      throw new ContentPublicationError('INVALID_TRANSITION', 'Reviewers may only approve or reject content awaiting review');
+      throw new ContentPublicationError('INVALID_TRANSITION', '审核人员只能批准或退回「审核中」的内容');
     }
     assertTransitionDoesNotMutateContent(payload);
-    if (target === 'scheduled') assertKnowledgeReadiness(collection, existing, payload, target);
+    if (target === 'scheduled') {
+      assertKnowledgeReadiness(collection, existing, payload, target);
+      // Approval is the last moment a human looks at this content, and the record
+      // freezes here — it can no longer be edited while it waits to be published.
+      // Running the final gate now reports SEO/media gaps to the reviewer instead
+      // of letting a page be approved and then fail at the publish button, where
+      // the only way out is to send it all the way back.
+      assertFinalPublicationReadiness(collection, existing, payload);
+    }
     const action = target === 'scheduled' ? 'approved_for_publication' : 'rejected';
     return {
       ...base, status: target, ...unpublished, reviewed_by: actorInfo.id, reviewed_at: timestamp.toISOString(),
@@ -224,6 +265,17 @@ function resolveContentPublicationUpdate({ collection, current, input, actor, no
   }
 
   if (actorInfo.role === 'review_manager' || actorInfo.role === 'system_admin') {
+    // Approved content can still be wrong. Without this, `scheduled` was a dead
+    // end: the only route back to an editable draft was to publish the page
+    // first, which is exactly what a reviewer wants to avoid. Content stays
+    // frozen here, so the change is a pure lifecycle transition.
+    if (existing.status === 'scheduled' && target === 'rejected') {
+      assertTransitionDoesNotMutateContent(payload);
+      return {
+        ...base, status: 'rejected', ...unpublished, reviewed_by: actorInfo.id, reviewed_at: timestamp.toISOString(),
+        publication_log: audit(existing, 'rejected', actorInfo.id, timestamp, changedFields)
+      };
+    }
     if (existing.status === 'scheduled' && target === 'published') {
       assertTransitionDoesNotMutateContent(payload);
       assertKnowledgeReadiness(collection, existing, payload, target);
@@ -241,10 +293,10 @@ function resolveContentPublicationUpdate({ collection, current, input, actor, no
       assertTransitionDoesNotMutateContent(payload);
       return { ...base, status: 'archived', ...unpublished, publication_log: audit(existing, 'archived', actorInfo.id, timestamp, changedFields) };
     }
-    throw new ContentPublicationError('INVALID_TRANSITION', 'Publishers may publish approved content, unpublish it, or archive withdrawn content');
+    throw new ContentPublicationError('INVALID_TRANSITION', '发布人员只能发布已批准的内容、下线已发布内容，或归档已撤回内容');
   }
 
-  throw new ContentPublicationError('ROLE_SCOPE', 'This role cannot change publication state');
+  throw new ContentPublicationError('ROLE_SCOPE', '当前角色不能修改发布状态');
 }
 
 // `publication_state` is derived by the lifecycle and is never set directly.
@@ -269,14 +321,21 @@ export function applyContentPublicationUpdate(options) {
 export function applyContentPublicationCreate({ collection, input, actor, now = () => new Date() }) {
   const payload = input && typeof input === 'object' ? input : {};
   const actorInfo = validActor(actor);
-  if (!publicationWorkflowCollections.includes(collection)) throw new ContentPublicationError('CONTENT_NOT_FOUND', 'The content collection is unavailable');
+  if (!publicationWorkflowCollections.includes(collection)) throw new ContentPublicationError('CONTENT_NOT_FOUND', '找不到内容所属的集合');
   if (!['content_editor', 'system_admin'].includes(actor?.role) || (actor?.role === 'content_editor' && !editorCreateCollections.has(collection))) {
-    throw new ContentPublicationError('ROLE_SCOPE', 'This role cannot create publishable content');
+    throw new ContentPublicationError('ROLE_SCOPE', '当前角色不能创建可发布的内容');
   }
   const timestamp = now();
   if (!(timestamp instanceof Date) || Number.isNaN(timestamp.getTime())) throw new TypeError('now must return a valid Date');
   const content = safePayload(payload);
   const changedFields = Object.keys(content).filter((key) => key !== 'review_note').sort();
+  if (collection === 'media_assets') {
+    // 媒体素材取消审核：上传成功即公开可用，避免内容引用被素材状态拦住。
+    return {
+      ...content, status: 'published', publication_state: 'published', published_at: timestamp.toISOString(),
+      publication_log: [{ action: 'created_as_published', actor: actorInfo.id, at: timestamp.toISOString(), ...(changedFields.length ? { changed_fields: changedFields.slice(0, 30) } : {}) }]
+    };
+  }
   return {
     ...content, status: 'draft', publication_state: 'unpublished', published_at: null,
     publication_log: [{ action: 'created_as_draft', actor: actorInfo.id, at: timestamp.toISOString(), ...(changedFields.length ? { changed_fields: changedFields.slice(0, 30) } : {}) }]

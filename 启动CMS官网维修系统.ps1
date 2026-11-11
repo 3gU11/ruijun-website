@@ -7,6 +7,16 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+# Windows PowerShell 5.1 builds a case-insensitive environment dictionary for
+# Start-Process, so a host that exports both `http_proxy` and `HTTP_PROXY` (common
+# with proxy-aware shells) makes every Start-Process call throw
+# "关键字 http_proxy 与关键字 HTTP_PROXY 冲突". Drop the lower-case copies; the
+# upper-case ones keep proxy behaviour unchanged.
+foreach ($proxyName in @('http_proxy', 'https_proxy', 'all_proxy', 'no_proxy')) {
+  if (Test-Path -Path "Env:$proxyName") {
+    Remove-Item -Path "Env:$proxyName" -ErrorAction SilentlyContinue
+  }
+}
 $root = $PSScriptRoot
 $outputRoot = Join-Path $root 'output\launcher'
 New-Item -ItemType Directory -Path $outputRoot -Force | Out-Null
@@ -119,10 +129,16 @@ function Wait-Service {
     [string]$Name,
     [int]$Port,
     [string]$HealthUrl,
-    [int]$TimeoutSeconds = 90
+    [int]$TimeoutSeconds = 240
   )
 
-  $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
+  # A cold Directus boot on this host has been measured at ~127s (26 extensions,
+  # database checks and the CLI update check). The old 90s default reported a
+  # healthy CMS as failed, which then skipped the self-check and the browser
+  # hand-off. Keep a heartbeat so a long first boot does not look frozen.
+  $started = Get-Date
+  $deadline = $started.AddSeconds($TimeoutSeconds)
+  $lastNotice = -1
   while ((Get-Date) -lt $deadline) {
     if (Test-LocalPort -Port $Port) {
       try {
@@ -136,6 +152,11 @@ function Wait-Service {
         # The port can start listening before the application is ready to serve requests.
       }
     }
+    $elapsed = [int]((Get-Date) - $started).TotalSeconds
+    if ($elapsed -ge ($lastNotice + 10)) {
+      $lastNotice = $elapsed
+      Write-Host "[Waiting] $Name : $Port (${elapsed}s / ${TimeoutSeconds}s)" -ForegroundColor DarkGray
+    }
     Start-Sleep -Seconds 1
   }
 
@@ -143,40 +164,26 @@ function Wait-Service {
   return $false
 }
 
-function Wait-MySql {
-  param(
-    [string]$AdminPath,
-    [string]$DefaultsFile,
-    [int]$TimeoutSeconds = 90
-  )
-
-  $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
-  while ((Get-Date) -lt $deadline) {
-    if (Test-LocalPort -Port 3307) {
-      & $AdminPath --defaults-file=$DefaultsFile --host=127.0.0.1 ping --silent 2>$null
-      if ($LASTEXITCODE -eq 0) {
-        Write-Host '[Ready] MySQL : 3307' -ForegroundColor Green
-        return $true
-      }
-    }
-    Start-Sleep -Seconds 1
-  }
-
-  Write-Warning "MySQL did not become healthy on port 3307 within $TimeoutSeconds seconds."
-  return $false
-}
-
 $cmsRoot = Join-Path $root 'cms'
 $websiteRoot = Join-Path $root 'website'
 $repairRoot = Join-Path $root 'repairsys'
-$cmsNode = Join-Path $cmsRoot '.tools\node-v22.23.2-win-x64\node.exe'
-$projectNpm = Join-Path $cmsRoot '.tools\node-v22.23.2-win-x64\npm.cmd'
+# Node comes from the bundled toolchain when it is still unpacked, otherwise from
+# the machine PATH — this host runs the managed Node 22 LTS from PATH.
+$bundledNode = Join-Path $cmsRoot '.tools\node-v22.23.2-win-x64\node.exe'
+if (Test-Path -LiteralPath $bundledNode) {
+  $cmsNode = $bundledNode
+  $projectNpm = Join-Path (Split-Path -Parent $bundledNode) 'npm.cmd'
+}
+else {
+  $cmsNode = (Get-Command node.exe -ErrorAction SilentlyContinue).Source
+  $projectNpm = (Get-Command npm.cmd -ErrorAction SilentlyContinue).Source
+}
+if (-not $cmsNode -or -not $projectNpm) {
+  throw 'Node.js 22 was not found. Install it or restore cms/.tools/node-v22.23.2-win-x64.'
+}
 $projectNodeBin = Split-Path -Parent $cmsNode
 $directusCli = Join-Path $cmsRoot 'node_modules\directus\cli.js'
 $cmsEnv = Join-Path $cmsRoot '.env.local'
-$mysqlIni = Join-Path $cmsRoot 'mysql-cms.ini'
-$minioExe = Join-Path $root 'tools\minio.exe'
-$minioData = Join-Path $cmsRoot 'minio-data'
 $websitePackage = Join-Path $websiteRoot 'package.json'
 $repairPackage = Join-Path $repairRoot 'package.json'
 $repairEnv = Join-Path $repairRoot '.env'
@@ -199,44 +206,31 @@ $cspHosts = (@('http://127.0.0.1', 'http://localhost') + ($lanAddresses | ForEac
 $cspChildSrc = 'array:' + ((($cspHosts | ForEach-Object { "$_`:8055"; "$_`:4175" }) + @('blob:') | Select-Object -Unique) -join ',')
 $cspFormAction = "array:'self'," + (($cspHosts | ForEach-Object { "$_`:4175" }) -join ',')
 
-foreach ($path in @($cmsRoot, $websiteRoot, $repairRoot, $cmsNode, $projectNpm, $directusCli, $cmsEnv, $mysqlIni, $minioExe, $websitePackage, $repairPackage, $repairEnv, $workbenchRoot, $workbenchSourceRoot)) {
+foreach ($path in @($cmsRoot, $websiteRoot, $repairRoot, $cmsNode, $projectNpm, $directusCli, $cmsEnv, $websitePackage, $repairPackage, $repairEnv, $workbenchRoot, $workbenchSourceRoot)) {
   if (-not (Test-Path -LiteralPath $path)) {
     throw "Required startup path is missing: $path"
   }
 }
 
-$mysqlBaseDirLine = Get-Content -LiteralPath $mysqlIni | Where-Object { $_ -match '^basedir=(.+)$' } | Select-Object -First 1
-if (-not $mysqlBaseDirLine -or $mysqlBaseDirLine -notmatch '^basedir=(.+)$') {
-  throw "MySQL basedir is missing from $mysqlIni"
-}
-$mysqlBaseDir = $matches[1].Trim().Replace('/', '\')
-$mysqlExe = Join-Path $mysqlBaseDir 'bin\mysqld.exe'
-$mysqlAdmin = Join-Path $mysqlBaseDir 'bin\mysqladmin.exe'
-foreach ($path in @($mysqlExe, $mysqlAdmin)) {
-  if (-not (Test-Path -LiteralPath $path)) {
-    throw "Required MySQL binary is missing: $path"
+# The CMS database is the machine-wide MySQL service on 3306 (see cms/.env.local).
+# mysql-cms.ini still describes a portable instance that points at another
+# project's datadir, so it is deliberately not used here.
+$dbPort = 3306
+if (-not (Test-LocalPort -Port $dbPort)) {
+  $mysqlService = Get-Service -Name 'MySQL*' -ErrorAction SilentlyContinue | Select-Object -First 1
+  if ($mysqlService) {
+    Write-Host "[Starting] MySQL service $($mysqlService.Name)" -ForegroundColor Cyan
+    Start-Service -Name $mysqlService.Name -ErrorAction SilentlyContinue
   }
 }
-
-$mysqlCommand = "& '$mysqlExe' --defaults-file='$mysqlIni' --console"
-Start-IfStopped -Name 'MySQL' -Port 3307 -WorkingDirectory $cmsRoot -Command $mysqlCommand
-$mysqlReady = Wait-MySql -AdminPath $mysqlAdmin -DefaultsFile $mysqlIni
-if (-not $mysqlReady) {
-  throw 'CMS startup stopped because MySQL is unavailable.'
+$mysqlDeadline = (Get-Date).AddSeconds(60)
+while (-not (Test-LocalPort -Port $dbPort) -and (Get-Date) -lt $mysqlDeadline) {
+  Start-Sleep -Seconds 1
 }
-
-$minioCommand = @"
-Get-Content -LiteralPath '.env.local' | ForEach-Object { if (`$_ -match '^([^#=]+)=(.*)$') { Set-Item -Path "Env:`$(`$matches[1].Trim())" -Value `$matches[2] } }
-if (-not `$env:STORAGE_S3_KEY -or -not `$env:STORAGE_S3_SECRET) { throw 'MinIO credentials are missing from .env.local' }
-Set-Item -Path 'Env:MINIO_ROOT_USER' -Value `$env:STORAGE_S3_KEY
-Set-Item -Path 'Env:MINIO_ROOT_PASSWORD' -Value `$env:STORAGE_S3_SECRET
-& '$minioExe' server '$minioData' --address '127.0.0.1:9000' --console-address '127.0.0.1:9001'
-"@
-Start-IfStopped -Name 'MinIO' -Port 9000 -WorkingDirectory $cmsRoot -Command $minioCommand
-$minioReady = Wait-Service -Name 'MinIO' -Port 9000 -HealthUrl 'http://127.0.0.1:9000/minio/health/ready'
-if (-not $minioReady) {
-  throw 'CMS startup stopped because MinIO is unavailable.'
+if (-not (Test-LocalPort -Port $dbPort)) {
+  throw "CMS startup stopped: MySQL is not listening on port $dbPort. Start the MySQL service, then rerun."
 }
+Write-Host "[Ready] MySQL : $dbPort" -ForegroundColor Green
 
 # Directus loads compiled extensions from dist/. Rebuild only when source files
 # are newer, and reload the listener so a rerun cannot keep serving stale UI.
@@ -299,13 +293,27 @@ Set-Item -Path 'Env:CONTENT_SECURITY_POLICY_DIRECTIVES__FORM_ACTION' -Value "$cs
 & '$cmsNode' '$directusCli' start
 "@
 Start-IfStopped -Name 'CMS (Directus)' -Port 8055 -WorkingDirectory $cmsRoot -Command $cmsCommand
-$cmsReady = Wait-Service -Name 'CMS (Directus)' -Port 8055 -HealthUrl 'http://127.0.0.1:8055/server/health'
+$cmsReady = Wait-Service -Name 'CMS (Directus)' -Port 8055 -HealthUrl 'http://127.0.0.1:8055/server/health' -TimeoutSeconds 240
 
 $nodePathCommand = "`$env:Path = '$projectNodeBin;' + `$env:Path"
 # The canvas validates the postMessage origin against this allowlist, so it must
 # cover every address an operator could use to reach the CMS - not just the
 # default-route address.
-$websiteCommand = "$nodePathCommand; Set-Item -Path 'Env:NUXT_PUBLIC_CMS_PREVIEW_ORIGINS' -Value '$previewOrigins'; & '$projectNpm' run dev -- --force --dotenv .env.local --host 0.0.0.0 --port 4175"
+#
+# Nuxt is started directly instead of through `npm run dev`: npm.cmd spawned in a
+# hidden window with redirected output hangs before Nuxt ever binds a port here.
+# The dev script's only other job is the demo-asset sync, which runs inline below.
+$websiteNuxt = Join-Path $websiteRoot 'node_modules\nuxt\bin\nuxt.mjs'
+$websiteSync = Join-Path $websiteRoot 'scripts\sync-demo-assets.mjs'
+if (Test-Path -LiteralPath $websiteSync) {
+  try {
+    & $cmsNode $websiteSync
+  }
+  catch {
+    Write-Warning "Demo asset sync failed: $($_.Exception.Message)"
+  }
+}
+$websiteCommand = "$nodePathCommand; Set-Item -Path 'Env:NUXT_PUBLIC_CMS_PREVIEW_ORIGINS' -Value '$previewOrigins'; & '$cmsNode' '$websiteNuxt' dev --dotenv .env.local --host 0.0.0.0 --port 4175"
 Clear-StaleNuxtDevLock -WebsiteRoot $websiteRoot -Port 4175
 Start-IfStopped -Name 'Website (Nuxt)' -Port 4175 -WorkingDirectory $websiteRoot -Command $websiteCommand
 $repairEnvLoader = 'Get-Content -LiteralPath ''.env'' | ForEach-Object { if ($_ -match ''^([^#=]+)=(.*)$'') { Set-Item -Path "Env:$($matches[1].Trim())" -Value $matches[2] } }'
@@ -319,13 +327,26 @@ $repairAdminReady = Wait-Service -Name 'Repair Admin' -Port 1888 -HealthUrl 'htt
 Start-IfStopped -Name 'Repair Client' -Port 2888 -WorkingDirectory $repairRoot -Command $repairClientCommand
 $repairClientReady = Wait-Service -Name 'Repair Client' -Port 2888 -HealthUrl 'http://127.0.0.1:2888/' -TimeoutSeconds 30
 
+# Even with the longer initial window, re-check the CMS once the other services
+# are up. Otherwise a slow-but-successful Directus boot still skips the
+# self-check and the browser hand-off, which reads as "nothing started".
+if (-not $cmsReady) {
+  Write-Host '[Recheck] CMS (Directus) after the other services started' -ForegroundColor Cyan
+  $cmsReady = Wait-Service -Name 'CMS (Directus)' -Port 8055 -HealthUrl 'http://127.0.0.1:8055/server/health' -TimeoutSeconds 5
+}
+
 $ready = @(
   $cmsReady
-  Wait-Service -Name 'Website (Nuxt)' -Port 4175 -HealthUrl 'http://127.0.0.1:4175/'
-  $repairApiReady
-  $repairAdminReady
-  $repairClientReady
+  Wait-Service -Name 'Website (Nuxt)' -Port 4175 -HealthUrl 'http://127.0.0.1:4175/' -TimeoutSeconds 180
 )
+# The repair suite is a separate application: when it cannot boot, CMS and website
+# work is unaffected, so it must not block the launcher or the self-check.
+if ($repairApiReady -and $repairAdminReady -and $repairClientReady) {
+  Write-Host '[Ready] Repair suite : 3101 / 1888 / 2888' -ForegroundColor Green
+}
+else {
+  Write-Warning 'Repair suite is not fully up (3101 / 1888 / 2888). CMS and website are unaffected.'
+}
 
 function Start-AcceptanceSelfCheck {
   # The only question that matters after a boot is whether the operator's work is

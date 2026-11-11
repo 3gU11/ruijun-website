@@ -43,7 +43,7 @@ function publicRecord(collection, record) {
     };
   }
   return {
-    model_code: text(record.model_code, 80), group_name: text(record.group_name, 200), field_name: text(record.field_name, 200),
+    model_code: text(record.model_code, 80), field_name: text(record.field_name, 200),
     value: text(record.value, 500), unit: text(record.unit, 80), sort_order: Number.isFinite(Number(record.sort_order)) ? Number(record.sort_order) : 0,
     test_conditions: text(record.test_conditions, 1000)
   };
@@ -110,16 +110,20 @@ export function buildProductReleaseSnapshot({ series = [], models = [], paramete
   const publishedParameters = parameters.filter((record) => published(record, now)).map((record) => publicRecord('product_parameters', record)).filter((record) => record?.model_code && record?.field_name && record?.value);
   const seriesCodes = new Set(publishedSeries.map((record) => record.series_code));
   const modelCodes = new Set(publishedModels.map((record) => record.model_code));
+  // A model edited after publication becomes a draft revision while its
+  // published parameter rows remain public. Those rows have no published model
+  // to attach to, so they are not part of this snapshot; blocking the whole
+  // release made one edited model freeze every product update.
+  const attachedParameters = publishedParameters.filter((record) => modelCodes.has(record.model_code));
   const issues = [];
   if (!publishedModels.length) issues.push('NO_PUBLISHED_MODELS');
   for (const model of publishedModels) if (!seriesCodes.has(model.series_code)) issues.push(`MODEL_SERIES_MISSING:${model.model_code}`);
-  for (const parameter of publishedParameters) if (!modelCodes.has(parameter.model_code)) issues.push(`PARAMETER_MODEL_MISSING:${parameter.model_code}`);
   const snapshot = {
     schema_version: 1, release_key: text(releaseKey, 80) || 'main', version: Number(version) || 1,
     generated_at: now.toISOString(), series: publishedSeries.sort((a, b) => a.sort_order - b.sort_order || a.series_code.localeCompare(b.series_code)),
     models: publishedModels.sort((a, b) => a.model_code.localeCompare(b.model_code)),
-    parameters: publishedParameters.sort((a, b) => a.model_code.localeCompare(b.model_code) || a.sort_order - b.sort_order || a.field_name.localeCompare(b.field_name)),
-    counts: { series: publishedSeries.length, models: publishedModels.length, parameters: publishedParameters.length }
+    parameters: attachedParameters.sort((a, b) => a.model_code.localeCompare(b.model_code) || a.sort_order - b.sort_order || a.field_name.localeCompare(b.field_name)),
+    counts: { series: publishedSeries.length, models: publishedModels.length, parameters: attachedParameters.length }
   };
   return { snapshot, issues: [...new Set(issues)], sourceHash: hashSnapshot(snapshot) };
 }

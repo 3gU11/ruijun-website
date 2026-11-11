@@ -13,6 +13,9 @@ import { previewContentRecord } from '../../../content-preview/content-preview-c
 import { createPreviewMediaGrantStore } from '../../../content-preview/preview-media-grants.mjs';
 
 const editableStatuses = new Set(['draft', 'rejected', 'unpublished']);
+// Scheduled/review content is approved or awaiting review; it is read-only, yet
+// reviewers still need to inspect it before publishing.
+const previewableStatuses = new Set([...editableStatuses, 'scheduled', 'review']);
 const pagePreviewRelations = Object.freeze({
   product: ['product_series', 'product_models', 'product_parameters', 'site_settings'],
   manufacturing: ['manufacturing_evidence', 'site_settings'],
@@ -165,8 +168,11 @@ async function issuePreview({ database, accountability, input, now, randomBytes,
   if (!ttlSeconds) return { error: [400, '预览有效期必须为 60 至 1800 秒。', 'PREVIEW_TTL_INVALID'] };
   const record = await database(target.contentCollection).where({ id: target.contentItemId }).first();
   if (!record) return { error: [404, '预览内容不存在。', 'PREVIEW_CONTENT_NOT_FOUND'] };
-  if (!editableStatuses.has(record.status) || record.publication_state === 'published') {
-    return { error: [409, '只有未公开草稿内容可以创建预览。', 'PREVIEW_CONTENT_NOT_DRAFT'] };
+  // Published records need a preview too: the CMS preview action is also the
+  // canonical way to inspect the currently published page. Keep rejecting
+  // unrelated workflow states, while allowing both drafts and published data.
+  if (!previewableStatuses.has(record.status) && record.publication_state !== 'published') {
+    return { error: [409, '当前内容状态不支持预览。', 'PREVIEW_CONTENT_NOT_PREVIEWABLE'] };
   }
   const createdAt = nowIso(now);
   const expiresAt = new Date(Date.parse(createdAt) + ttlSeconds * 1000).toISOString();
@@ -186,7 +192,15 @@ async function issuePreview({ database, accountability, input, now, randomBytes,
   return { data: { token: generated.token, preview_open_url: resolvePreviewOpenUrl(websitePreviewOpenUrl, requestHostname, websitePreviewAllowedHosts), ...previewTokenView({ id, content_collection: target.contentCollection, content_item_id: target.contentItemId, issued_by: user.id, created_at: createdAt, expires_at: expiresAt, use_count: 0, status: 'active' }) } };
 }
 
-export function registerContentPreviewTokenEndpoint(router, { database, now = () => new Date(), randomBytes, websitePreviewOpenUrl, websitePreviewAllowedHosts } = {}) {
+export function registerContentPreviewTokenEndpoint(router, {
+  database,
+  now = () => new Date(),
+  randomBytes,
+  websitePreviewOpenUrl = process.env.WEBSITE_PREVIEW_OPEN_URL,
+  websitePreviewAllowedHosts = process.env.WEBSITE_PREVIEW_ALLOWED_HOSTS
+} = {}) {
+  websitePreviewOpenUrl = websitePreviewOpenUrl || process.env.WEBSITE_PREVIEW_OPEN_URL || '';
+  websitePreviewAllowedHosts = websitePreviewAllowedHosts || process.env.WEBSITE_PREVIEW_ALLOWED_HOSTS || '';
   if (!database) throw new TypeError('database is required');
   const mediaGrants = createPreviewMediaGrantStore();
   router.post('/media/issue', async (req, res, next) => {

@@ -6,6 +6,14 @@ import { normalizeArticleBodyMedia } from '~/shared/article-body-media.mjs';
 
 const bodyMediaEntries = (article: any) => normalizeArticleBodyMedia(article?.body_media);
 
+// The stored value is an internal enum (`video` / `news`); the page must show the
+// same Chinese label the news list uses instead of leaking it to readers.
+const articleCategoryLabels: Record<string, string> = { video: '视频分享', news: '动态新闻' };
+const articleCategoryLabel = (value: unknown) => {
+  const key = String(value || '').trim().toLowerCase();
+  return articleCategoryLabels[key] || '动态新闻';
+};
+
 function isArticleVideoMedia(media: Record<string, any>) {
   const mediaType = String(
     media?.mediaType || media?.media_type || '',
@@ -14,6 +22,14 @@ function isArticleVideoMedia(media: Record<string, any>) {
     media?.mimeType || media?.mime_type || '',
   ).trim().toLowerCase();
   return mediaType === 'video' || mimeType.startsWith('video/');
+}
+
+// 预览会话里的草稿媒体只带 path，没有类型信息；视频分类的文章必须回退为视频，
+// 否则详情画布会把草稿视频渲染成空图片。
+function articleMediaIsVideo(media: Record<string, any>) {
+  if (isArticleVideoMedia(media)) return true;
+  const typed = media?.mediaType || media?.media_type || media?.mimeType || media?.mime_type;
+  return !typed && String(article.value?.category || '').trim().toLowerCase() === 'video';
 }
 
 function articleMediaPoster(
@@ -26,6 +42,13 @@ function articleMediaPoster(
 }
 
 const route = useRoute();
+const router = useRouter();
+// Go back one level: use the real previous page when the reader navigated here,
+// and fall back to the news list for direct visits (shared link, refresh, search).
+function goBackFromArticle() {
+  if (import.meta.client && window.history.state?.back) router.back();
+  else router.push('/news');
+}
 const slug = computed(() => String(route.params.slug || ''));
 const { data: response, error: responseError } = await useFetch(
   () => `/api/public/v1/articles/${encodeURIComponent(slug.value)}`,
@@ -43,18 +66,22 @@ if (responseError.value?.statusCode === 410 && route.query.cmsPreview !== '1')
     statusMessage: 'Article is no longer published',
     fatal: true,
   });
-const { overlayRecord, visualEditMode: cmsVisualEditMode } = useCmsDraftPreview();
-const article = computed(() =>
-  overlayRecord(
+const { overlayList, overlayRecord, visualEditMode: cmsVisualEditMode } = useCmsDraftPreview();
+// 预览会话可能来自新闻列表（session 目标是 pages），此时 related.articles 里
+// 可能有多条草稿。按 slug 精确取，避免详情页叠上另一篇草稿。
+const article = computed(() => {
+  const draft = overlayList('articles', []).find((item: any) => item?.slug === slug.value);
+  if (draft) return draft;
+  return overlayRecord(
     'articles',
     response.value?.data || null,
-    (draft) => draft.slug === slug.value,
-  ),
-);
+    (draftRecord) => draftRecord.slug === slug.value,
+  );
+});
 useSeoMeta({
-  title: () => String(article.value?.title || '文章详情'),
+  title: () => String(article.value?.seo?.title || article.value?.title || '文章详情'),
   description: () =>
-    String(article.value?.summary || '瑞钧智科新闻与技术媒体信息。'),
+    String(article.value?.seo?.description || article.value?.summary || '瑞钧智科新闻与技术媒体信息。'),
 });
 </script>
 
@@ -69,13 +96,16 @@ useSeoMeta({
       data-cms-preview-collection="articles"
       :data-cms-preview-item-id="article?.id"
     >
+      <button v-if="!cmsVisualEditMode" type="button" class="article-back" @click="goBackFromArticle">
+        <span aria-hidden="true">←</span> 返回
+      </button>
       <NuxtLink to="/news">新闻媒体</NuxtLink>
       <p
         v-bind="fieldPresentationAttributes(article, 'category')"
         data-cms-preview-field-path="category"
         data-cms-preview-position-field-path="field_presentation.category"
       >
-        {{ article.category || 'news' }}
+        {{ articleCategoryLabel(article.category) }}
       </p>
       <h1
         v-bind="fieldPresentationAttributes(article, 'title')"
@@ -95,20 +125,12 @@ useSeoMeta({
           )
         }}</time
       >
-      <p
-        v-if="article.summary"
-        class="summary"
-        v-bind="fieldPresentationAttributes(article, 'summary')"
-        data-cms-preview-field-path="summary"
-        data-cms-preview-position-field-path="field_presentation.summary"
-      >
-        {{ article.summary }}
-      </p>
       <div
         class="body"
         v-bind="fieldPresentationAttributes(article, 'body')"
         data-cms-preview-field-path="body"
         data-cms-preview-position-field-path="field_presentation.body"
+        data-cms-preview-inline-edit="false"
         v-html="renderSafeRichText(article.body || '该文章正文正在准备中。')"
       ></div>
       <div v-if="bodyMediaEntries(article).length" class="article-body-media" data-cms-preview-field-path="body_media">
@@ -117,7 +139,7 @@ useSeoMeta({
         </figure>
       </div>
       <div
-        v-if="Array.isArray(article.media)"
+        v-if="Array.isArray(article.media) || (cmsVisualEditMode && article.category === 'video')"
         class="article-media"
         data-cms-preview-field-path="media"
       >
@@ -126,7 +148,7 @@ useSeoMeta({
           :key="`${media.path}-${index}`"
         >
           <video
-            v-if="isArticleVideoMedia(media)"
+            v-if="articleMediaIsVideo(media)"
             :src="String(media.path)"
             :poster="articleMediaPoster(media, article) || undefined"
             controls
@@ -136,7 +158,7 @@ useSeoMeta({
             data-cms-preview-media-role="video"
           ></video
           ><figure
-            v-if="cmsVisualEditMode && isArticleVideoMedia(media)"
+            v-if="cmsVisualEditMode && articleMediaIsVideo(media)"
             class="cms-hidden-media-preview"
           >
             <figcaption>视频封面（与视频分开编辑）</figcaption>
@@ -149,16 +171,27 @@ useSeoMeta({
             />
           </figure
           ><img
-            v-else
+            v-if="!articleMediaIsVideo(media)"
             :src="String(media.path)"
             :alt="String(media.alt || article.title)"
             :data-cms-preview-field-path="`media.${index}.path`"
             data-cms-preview-media-role="image"
           />
-          <figcaption v-if="media.description || media.title" :data-cms-preview-field-path="media.description ? `media.${index}.description` : `media.${index}.title`">
+          <!-- The edit-only poster figure above sits between the video and this
+               image, so `v-else` used to pair with it and painted every video
+               entry as a broken <img> on the published page. -->
+          <figcaption v-if="!articleMediaIsVideo(media) && (media.description || media.title)" :data-cms-preview-field-path="media.description ? `media.${index}.description` : `media.${index}.title`">
             {{ media.description || media.title }}
           </figcaption>
         </figure>
+        <!-- 空视频文章在画布上需要一个可点击的落点，否则无法给它补上第一条视频。 -->
+        <video
+          v-if="cmsVisualEditMode && article.category === 'video' && !(Array.isArray(article.media) && article.media.length)"
+          class="article-media-empty"
+          data-cms-preview-field-path="media.0.media_asset_id"
+          data-cms-preview-media-role="video"
+          data-cms-preview-editable="true"
+        ></video>
       </div>
       <section
         v-if="article.transcript"
@@ -278,6 +311,31 @@ useSeoMeta({
 .article > a:hover {
   color: var(--ruijun-red);
 }
+.article-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 14px 16px 0;
+  padding: 7px 14px;
+  border: 1px solid var(--ruijun-line);
+  border-radius: 999px;
+  background: transparent;
+  color: #676b6f;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  transition: color .2s ease, border-color .2s ease, background-color .2s ease;
+}
+.article-back:hover {
+  color: var(--ruijun-red);
+  border-color: var(--ruijun-red);
+  background: rgb(211 34 34 / 6%);
+}
+.article-back:focus-visible {
+  outline: 2px solid var(--ruijun-red);
+  outline-offset: 2px;
+}
 .article > p:first-of-type,
 .not-found > p {
   color: var(--ruijun-red);
@@ -298,10 +356,50 @@ useSeoMeta({
   color: #3d4145;
   border-color: var(--ruijun-line);
 }
+.body :deep(img) {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 24px auto;
+  border-radius: 4px;
+}
+.body :deep(table) {
+  width: 100%;
+  margin: 24px 0;
+  border-collapse: collapse;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.body :deep(th),
+.body :deep(td) {
+  border: 1px solid var(--ruijun-line);
+  padding: 8px 10px;
+  text-align: left;
+  vertical-align: top;
+}
+.body :deep(th) {
+  background: rgb(0 0 0 / 4%);
+  font-weight: 600;
+}
+.body :deep(h2),
+.body :deep(h3),
+.body :deep(h4) {
+  margin: 28px 0 10px;
+  line-height: 1.4;
+}
 .article-media {
   display: grid;
   gap: 24px;
   margin-top: 36px;
+}
+.article-media-empty {
+  display: block;
+  width: 100%;
+  min-height: 260px;
+  border: 2px dashed #c62828;
+  border-radius: 4px;
+  background: rgb(198 40 40 / 4%);
+  cursor: pointer;
 }
 .article-media figure {
   margin: 0;

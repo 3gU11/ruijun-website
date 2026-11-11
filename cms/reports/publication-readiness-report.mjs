@@ -65,7 +65,6 @@ export function assessPage(page) {
   if (!text(page?.slug)) issues.push('页面标识');
   if (!text(page?.title)) issues.push('页面标题');
   if (!text(page?.language)) issues.push('语言');
-  if (!text(page?.source_document) && !text(page?.source_url)) issues.push('来源文件或地址');
   const sections = list(parsed(page?.sections, []));
   if (!sections.length) issues.push('页面段落');
   const sectionIds = new Set();
@@ -90,7 +89,6 @@ export function assessSiteSettings(settings) {
   if (!hasRecordValues(settings?.footer)) issues.push('页脚信息');
   if (!text(record(settings?.brand).display_name) || !text(record(settings?.brand).logo_asset)) issues.push('品牌信息');
   if (!hasRecordValues(settings?.contacts)) issues.push('联系方式');
-  if (!text(settings?.source_document) && !text(settings?.source_url)) issues.push('来源文件或地址');
   if (record(settings?.footer).requires_business_review === true) issues.push('页脚业务信息待审核');
   return issues;
 }

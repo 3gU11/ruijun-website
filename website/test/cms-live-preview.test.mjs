@@ -12,6 +12,16 @@ test('article cover live updates preserve the asset identity needed by the previ
   assert.deepEqual(result, { id: 42, cover_asset: '/api/preview/media/98', cover_media_asset_id: '98' });
 });
 
+test('article live updates keep same-day sort_order so selecting a card cannot reorder the list', () => {
+  // 选中卡片会推送该文章的实时快照；若快照丢掉 sort_order，同一天里
+  // 这张卡会被按 Infinity 排到最后，看起来就是“一点击顺序就变”。
+  const result = sanitizeCmsLivePreviewRecord('articles', {
+    id: 7, title: '测试2', display_date: '2026-11-03', sort_order: 0, media: []
+  });
+  assert.equal(result.sort_order, 0);
+  assert.equal(result.display_date, '2026-11-03');
+});
+
 test('live preview status follows the currently selected related record instead of the token-start label', () => {
   assert.equal(cmsPreviewStatusLabel({
     collection: 'milestones',
@@ -59,14 +69,18 @@ test('live preview accepts matching messages and strips private fields', () => {
   assert.deepEqual(preview, { id: 42, title: '未保存标题' });
 });
 
-test('page preview accepts only related records issued in the same preview session', () => {
+test('page preview accepts records of collections issued in the same preview session', () => {
   const pageSession = {
     collection: 'pages', itemId: '7', expiresAt: '2030-01-01T00:00:00.000Z',
     preview: { related: { product_parameters: [{ id: 1, model_code: 'fr400xs-auto', value: '400*290' }] } }
   };
   const message = { type: CMS_LIVE_PREVIEW_UPDATE, collection: 'product_parameters', itemId: '1', preview: { id: 1, model_code: 'fr400xs-auto', value: 'TDD' } };
   assert.deepEqual(acceptCmsLivePreviewMessage({ event: { origin: 'http://127.0.0.1:8055', data: message }, allowedOrigin: 'http://127.0.0.1:8055', session: pageSession, now: Date.parse('2029-01-01') }), { id: 1, model_code: 'fr400xs-auto', value: 'TDD' });
-  assert.equal(acceptCmsLivePreviewMessage({ event: { origin: 'http://127.0.0.1:8055', data: { ...message, itemId: '2', preview: { ...message.preview, id: 2 } } }, allowedOrigin: 'http://127.0.0.1:8055', session: pageSession, now: Date.parse('2029-01-01') }), null);
+  // 已发布记录不在 related 草稿列表里，但集合本身由会话公开（新闻页的 articles），
+  // 列表画布编辑它时必须允许更新，否则换视频等修改不会显示。
+  assert.deepEqual(acceptCmsLivePreviewMessage({ event: { origin: 'http://127.0.0.1:8055', data: { ...message, itemId: '2', preview: { ...message.preview, id: 2 } } }, allowedOrigin: 'http://127.0.0.1:8055', session: pageSession, now: Date.parse('2029-01-01') }), { id: 2, model_code: 'fr400xs-auto', value: 'TDD' });
+  // 会话没有公开过的集合仍然拒绝。
+  assert.equal(acceptCmsLivePreviewMessage({ event: { origin: 'http://127.0.0.1:8055', data: { ...message, collection: 'articles', itemId: '9', preview: { id: 9 } } }, allowedOrigin: 'http://127.0.0.1:8055', session: pageSession, now: Date.parse('2029-01-01') }), null);
 });
 
 test('visual media replacement accepts only a matching controlled asset request', () => {
@@ -505,6 +519,11 @@ test('visual editing binding metadata supports exact nested fields and governed 
   assert.doesNotMatch(source, /document\.addEventListener\('click', handleVisualClick, true\)/);
 });
 
+test('canvas media delete action is translated before the capture handler swallows the click', async () => {
+  const source = await (await import('node:fs/promises')).readFile(new URL('../composables/useCmsDraftPreview.ts', import.meta.url), 'utf8');
+  assert.match(source, /action === 'delete-media'[\s\S]*?type: 'ruijun:cms-preview:delete-media'[\s\S]*?mediaAssetId: String\(actionElement\.dataset\.cmsMediaId/);
+});
+
 test('visual editing captures legacy card interactions and prefers a text binding outside media mode', async () => {
   const source = await (await import('node:fs/promises')).readFile(new URL('../composables/useCmsDraftPreview.ts', import.meta.url), 'utf8');
   assert.match(source, /function editableTarget\(node: EventTarget \| null, clientX = NaN, clientY = NaN\)[\s\S]*visualTool\.value === 'media'/);
@@ -569,6 +588,11 @@ test('homepage hero CMS copy becomes clickable only while the preview canvas is 
   assert.match(source, /html\[data-cms-preview-edit-mode="true"\] \.hero-cms-copy \[data-cms-preview-editable="true"\]\{pointer-events:auto;cursor:text\}/);
 });
 
+test('homepage reasons heading is directly selectable and editable on the canvas', async () => {
+  const source = await (await import('node:fs/promises')).readFile(new URL('../pages/index.vue', import.meta.url), 'utf8');
+  assert.match(source, /<h2 id="reasons-title"[^>]*data-cms-preview-editable="true" data-cms-preview-text="true"[^>]*data-cms-preview-field-path="title"/);
+});
+
 test('canvas pointer capture treats an unmoved media press as a selection', async () => {
   const preview = await (await import('node:fs/promises')).readFile(new URL('../composables/useCmsDraftPreview.ts', import.meta.url), 'utf8');
   assert.match(preview, /if \(Math\.abs\(dx\) < 2 && Math\.abs\(dy\) < 2\) \{\s*requestVisualSelection\(\{ element: state\.element, sectionKey: state\.sectionKey \}, event\);\s*return;/);
@@ -621,7 +645,7 @@ test('about timeline declares the visible kicker and hint fields in its section 
 
 test('product hero title and kicker have separate direct canvas bindings', async () => {
   const source = await (await import('node:fs/promises')).readFile(new URL('../pages/product/[slug].vue', import.meta.url), 'utf8');
-  assert.match(source, /<h1 id="product-overview-title"[^>]*>\s*<span[^>]*data-cms-preview-field-path="title"[^>]*>\{\{ overviewCopy\.title \}\}<\/span>\s*<span[^>]*data-cms-preview-field-path="kicker"[^>]*>\{\{ overviewCopy\.kicker \}\}<\/span>\s*<\/h1>/);
+  assert.match(source, /<h1 id="product-overview-title"[^>]*>(?:\s*<span[^>]*class="sr-only"[^>]*>\{\{ seoDisplayName \}\}<\/span>)?\s*<span[^>]*data-cms-preview-field-path="title"[^>]*>\{\{ overviewCopy\.title \}\}<\/span>\s*<span[^>]*data-cms-preview-field-path="kicker"[^>]*>\{\{ overviewCopy\.kicker \}\}<\/span>\s*<\/h1>/);
 });
 
 test('product hero title and kicker keep independent field-level presentation bindings', async () => {
@@ -643,7 +667,7 @@ test('product categories kicker keeps an independent field-level presentation bi
 test('product dimensions notice keeps an independent field-level presentation binding', async () => {
   const source = await (await import('node:fs/promises')).readFile(new URL('../pages/product/[slug].vue', import.meta.url), 'utf8');
   assert.match(source, /const dimensionsCopy = computed\(\(\) => productSection\('dimensions', \{ title: '尺寸与资料', body: '注：1\.表中所述加工性能参数/);
-  assert.match(source, /<p v-bind="fieldPresentationAttributes\(dimensionsCopy, 'body'\)" data-cms-preview-field-path="body" data-cms-preview-position-field-path="field_presentation\.body">\{\{ dimensionsCopy\.body \|\| '注：1\.表中所述加工性能参数/);
+  assert.match(source, /<p v-if="parameterGroups\.length" v-bind="fieldPresentationAttributes\(dimensionsCopy, 'body'\)" data-cms-preview-field-path="body" data-cms-preview-position-field-path="field_presentation\.body">\{\{ dimensionsCopy\.body \|\| '注：1\.表中所述加工性能参数/);
 });
 
 test('product technical parameter side label declares the same governed media placement as product dimensions', async () => {
@@ -699,10 +723,12 @@ test('visual editing marks fieldless static media as read-only instead of presen
   ]);
   assert.match(preview, /data-cms-preview-readonly/);
   assert.match(preview, /media-pending/);
+  assert.match(preview, /element\.dataset\.cmsPreviewMediaAssetId/);
+  assert.match(preview, /视频分享卡片这类元素没有页面字段路径/);
   assert.match(preview, /CMS_LIVE_PREVIEW_READONLY/);
   assert.match(workbench, /ruijun:cms-preview:readonly/);
   assert.match(workbench, /selectedVisualElement\.readonly/);
-  assert.match(workbench, /请先在媒体资产中导入、审核并发布后再替换/);
+  assert.match(workbench, /请先在媒体资产中导入并发布后再替换/);
   assert.match(app, /data-cms-preview-readonly="media-pending"/);
 });
 
@@ -819,6 +845,16 @@ test('visual media requests preserve an explicit default-media restore capabilit
   })?.allowDefaultMedia, undefined);
 });
 
+test('visual media requests carry the media asset id for card-level panels', () => {
+  const meta = {
+    label: '测试视频', collection: 'pages', itemId: '4', fieldPath: 'media',
+    elementType: 'video', mediaRole: 'video', mediaAssetId: '23'
+  };
+  const request = createCmsVisualEditRequest({ editMode: true, device: 'desktop', tool: 'select', sectionKey: 'video-sharing', meta });
+  assert.equal(request?.mediaAssetId, '23');
+  assert.equal(createCmsVisualEditRequest({ editMode: true, device: 'desktop', tool: 'select', sectionKey: 'video-sharing', meta: { ...meta, mediaAssetId: '../23' } }), null);
+});
+
 test('visual button selections carry only an explicitly safe destination field path', () => {
   const button = {
     collection: 'pages', itemId: '1', fieldPath: 'label', linkFieldPath: 'href',
@@ -829,14 +865,12 @@ test('visual button selections carry only an explicitly safe destination field p
   assert.equal(createCmsVisualEditRequest({ editMode: true, device: 'desktop', tool: 'select', sectionKey: 'hero', meta: { ...button, elementType: 'text' } }), null);
 });
 
-test('visual parameter-group selections carry only a bounded list of related record ids', () => {
+test('visual parameter selections no longer carry grouping metadata', () => {
   const meta = {
-    collection: 'product_parameters', itemId: '8', fieldPath: 'group_name', elementType: 'text', label: '基础参数',
+    collection: 'product_parameters', itemId: '8', fieldPath: 'field_name', elementType: 'text', label: 'XY 行程',
     groupRecordIds: ['8', '9']
   };
-  assert.deepEqual(createCmsVisualEditRequest({ editMode: true, device: 'desktop', tool: 'select', sectionKey: 'parameters', meta })?.groupRecordIds, ['8', '9']);
-  assert.equal(createCmsVisualEditRequest({ editMode: true, device: 'desktop', tool: 'select', sectionKey: 'parameters', meta: { ...meta, groupRecordIds: ['8', '../9'] } }), null);
-  assert.equal(createCmsVisualEditRequest({ editMode: true, device: 'desktop', tool: 'select', sectionKey: 'parameters', meta: { ...meta, groupRecordIds: Array.from({ length: 33 }, (_, index) => String(index + 1)) } }), null);
+  assert.equal(createCmsVisualEditRequest({ editMode: true, device: 'desktop', tool: 'select', sectionKey: 'parameters', meta })?.groupRecordIds, undefined);
 });
 
 test('visual click selection respects text and media tools', () => {
@@ -901,7 +935,11 @@ test('every content overlay directly tracks the Nuxt live preview state', async 
 
 test('a collection-rooted preview retains its related record list so the canvas can switch records', async () => {
   const source = await (await import('node:fs/promises')).readFile(new URL('../composables/useCmsDraftPreview.ts', import.meta.url), 'utf8');
-  assert.match(source, /function currentPreviewRecords\(collection: string\) \{[\s\S]*const related = session\.value\.preview\.related\?\.\[collection\];[\s\S]*if \(session\.value\.collection !== collection\) return relatedRecords;/);
+  assert.match(source, /function currentPreviewRecords\(collection: string\) \{[\s\S]*const related = session\.value\.preview\.related\?\.\[collection\];/);
+  // 已发布记录被列表画布编辑时不在 session.related 里，必须合并工作台推来的
+  // live related record，否则换视频等修改不会显示。
+  assert.match(source, /for \(const \[key, live\] of Object\.entries\(liveRelatedRecords\.value\)\)/);
+  assert.match(source, /if \(session\.value\.collection !== collection\) return records;/);
   assert.match(source, /sameRecord\(collection, item, primary\)/);
   assert.match(source, /if \(String\(event\.data\?\.collection \|\| ''\) === String\(session\.value\?\.collection \|\| ''\)\) \{\s*liveRecord\.value = preview;/);
 });
@@ -957,6 +995,9 @@ test('about timeline keeps editable milestone text above the history title only 
   assert.match(preview, /function requestVisualSelection\(target: \{ element: HTMLElement; sectionKey: string \}, event: MouseEvent \| PointerEvent\) \{[\s\S]*document\.documentElement\.dataset\.cmsPreviewTargetKey = target\.sectionKey;/);
   assert.match(preview, /function handleVisualClick\(event: MouseEvent\) \{[\s\S]*requestVisualSelection\(target, event\);/);
   assert.match(preview, /const timelineSection = preferredElement\?\.closest<HTMLElement>\('#history\[data-cms-preview-key\]'\);/);
+  // 受控媒体不能被父级正文 text 绑定“吸走”，否则正文图片会选中整个 body。
+  assert.match(preview, /elementIsGovernedMedia/);
+  assert.match(preview, /visualTool\.value === 'media' \|\| elementIsGovernedMedia/);
   assert.match(preview, /function controlledVisualElementAtPoint\(clientX: number, clientY: number\)/);
   assert.match(preview, /const target = editableTarget\(event\.target, event\.clientX, event\.clientY\);/);
   assert.match(source, /html\[data-cms-preview-edit-mode="true"\] \.about-history\{z-index:20\}/);

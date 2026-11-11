@@ -67,7 +67,7 @@ try {
     status: 'published', publication_state: 'published', published_at: publishedAt, publication_log: '[]'
   });
   await database('product_parameters').insert({
-    model_code: modelCode, group_name: 'E2E', field_name: 'XY 行程', value: '1*1', unit: 'mm', sort_order: 1,
+    model_code: modelCode, field_name: 'XY 行程', value: '1*1', unit: 'mm', sort_order: 1,
     source_document: sourceDocument, import_evidence: JSON.stringify({ source_key: `e2e:${suffix}` }),
     status: 'published', publication_state: 'published', published_at: publishedAt, publication_log: '[]'
   });
