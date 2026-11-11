@@ -38,6 +38,7 @@ docx_unpack*/
 Thumbs.db
 
 # Local services, credentials, and generated verification artifacts
+/.local/
 /cms/mysql-data/
 /cms/minio-data/
 /cms/uploads/
@@ -57,9 +58,6 @@ output-*-snapshot.txt
 /pw-*.txt
 /tmp-playwright-*.js
 /.codex-products-current.json
-/({html
-/({tag
-/el.outerHTML
 /fl1390-feature-live-style.png
 /website/product-copy-*.png
 /website/product-reasons-*.png
@@ -74,3 +72,20 @@ output-*-snapshot.txt
 *.pid
 /test-fixes.mjs
 /website/test-cms-scroll.mjs
+
+# Local one-off edit backups and scratch screenshots
+/.codex-backup-*/
+/website/login-check*.png
+
+# Extension-level lockfiles; dependencies are managed from cms/package-lock.json
+/cms/extensions/*/package-lock.json
+
+# Local tool binaries
+/ffmpeg-local.exe
+
+# SSH 私钥/公钥不要入库
+/id_ed25519
+/id_ed25519.pub
+/key.txt
+/*_ed25519
+/*.pem
