@@ -128,6 +128,38 @@ export function buildProductReleaseSnapshot({ series = [], models = [], paramete
   return { snapshot, issues: [...new Set(issues)], sourceHash: hashSnapshot(snapshot) };
 }
 
+// A published record being edited becomes a draft revision. The public snapshot
+// must keep serving its last published version until the revision is approved and
+// published again; otherwise the product simply disappears from the website.
+// Only draft/review/scheduled revisions are retained; an explicit unpublish or
+// archive is a deliberate removal and is not carried over.
+export function preservePublishedRevisions(snapshot, previousSnapshot, revisionModelCodes) {
+  const codes = revisionModelCodes instanceof Set ? revisionModelCodes : new Set(revisionModelCodes || []);
+  if (!previousSnapshot || !codes.size) return { snapshot, sourceHash: hashSnapshot(snapshot) };
+  const currentModels = new Set(snapshot.models.map((model) => model.model_code));
+  const retainedModels = (previousSnapshot.models || []).filter((model) => codes.has(model.model_code) && !currentModels.has(model.model_code));
+  if (!retainedModels.length) return { snapshot, sourceHash: hashSnapshot(snapshot) };
+  const retainedCodes = new Set(retainedModels.map((model) => model.model_code));
+  const currentSeries = new Set(snapshot.series.map((series) => series.series_code));
+  const retainedSeries = (previousSnapshot.series || []).filter((series) => !currentSeries.has(series.series_code)
+    && retainedModels.some((model) => model.series_code === series.series_code));
+  const currentParameters = new Set(snapshot.parameters.map((parameter) => `${parameter.model_code}\u0000${parameter.field_name}`));
+  const retainedParameters = (previousSnapshot.parameters || []).filter((parameter) => retainedCodes.has(parameter.model_code)
+    && !currentParameters.has(`${parameter.model_code}\u0000${parameter.field_name}`));
+  const merged = {
+    ...snapshot,
+    series: [...snapshot.series, ...retainedSeries].sort((a, b) => a.sort_order - b.sort_order || a.series_code.localeCompare(b.series_code)),
+    models: [...snapshot.models, ...retainedModels].sort((a, b) => a.model_code.localeCompare(b.model_code)),
+    parameters: [...snapshot.parameters, ...retainedParameters].sort((a, b) => a.model_code.localeCompare(b.model_code) || a.sort_order - b.sort_order || a.field_name.localeCompare(b.field_name)),
+    counts: {
+      series: snapshot.series.length + retainedSeries.length,
+      models: snapshot.models.length + retainedModels.length,
+      parameters: snapshot.parameters.length + retainedParameters.length
+    }
+  };
+  return { snapshot: merged, sourceHash: hashSnapshot(merged) };
+}
+
 export function parseProductReleaseSnapshot(value) {
   const snapshot = parseJson(value, null);
   if (!snapshot || snapshot.schema_version !== 1 || !Array.isArray(snapshot.series) || !Array.isArray(snapshot.models) || !Array.isArray(snapshot.parameters)) return null;

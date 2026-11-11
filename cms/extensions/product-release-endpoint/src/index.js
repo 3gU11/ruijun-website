@@ -3,10 +3,19 @@ import {
   buildRestoredProductReleaseSnapshot,
   diffProductReleaseSnapshots,
   parseProductReleaseSnapshot,
+  preservePublishedRevisions,
   validateProductReleaseSnapshot
 } from '../../../product-release/product-release-snapshot.mjs';
 import { invalidateProductReleaseCache } from '../../../product-release/product-release-cache-invalidation.mjs';
-import { databaseDateTime } from '../../../content-workflow/content-versioning.mjs';
+
+function utcDateTime(value = new Date()) {
+  const date = value instanceof Date ? value : new Date(value);
+  const pad = (part) => String(part).padStart(2, '0');
+  // Directus stores DATETIME as UTC and serializes it with a trailing Z. Writing
+  // local wall-clock time made every release look 8 hours in the future, so the
+  // public reader rejected it as not yet published.
+  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())} ${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:${pad(date.getUTCSeconds())}`;
+}
 
 const allowedRoleNames = new Set(['系统管理员']);
 const releaseKey = 'main';
@@ -102,6 +111,34 @@ async function publishScheduledProducts(database, publishedAt, actorId) {
       });
     }
   }
+}
+
+// A draft revision may already have been missing from the immediately previous
+// snapshot. Walk back through recent releases so its last public version can
+// still be served while the revision is edited/reviewed.
+async function revisionFallbackSnapshot(database, currentSnapshot, revisionCodes) {
+  const currentModels = new Set(currentSnapshot.models.map((model) => model.model_code));
+  const missing = [...revisionCodes].filter((code) => !currentModels.has(code));
+  const fallback = { series: [], models: [], parameters: [] };
+  if (!missing.length) return fallback;
+  const rows = await database('product_release_snapshots')
+    .where({ release_key: releaseKey })
+    .orderBy('version', 'desc').limit(20).select('snapshot');
+  for (const code of missing) {
+    for (const row of rows) {
+      const snapshot = parseProductReleaseSnapshot(row.snapshot);
+      const model = snapshot?.models?.find((item) => item.model_code === code);
+      if (!model) continue;
+      fallback.models.push(model);
+      for (const parameter of snapshot.parameters || []) {
+        if (parameter.model_code === code) fallback.parameters.push(parameter);
+      }
+      const series = (snapshot.series || []).find((item) => item.series_code === model.series_code);
+      if (series && !fallback.series.some((item) => item.series_code === series.series_code)) fallback.series.push(series);
+      break;
+    }
+  }
+  return fallback;
 }
 
 async function activeRelease(database) {
@@ -208,7 +245,7 @@ export function registerProductReleaseEndpoint(router, { database, env = process
       const result = await database.transaction(async (trx) => {
         const previous = await activeRelease(trx);
         const latest = await latestRelease(trx);
-        const publishedAt = databaseDateTime(new Date());
+        const publishedAt = utcDateTime(new Date());
         await publishScheduledProducts(trx, publishedAt, actor.id);
         const rows = await productRows(trx);
         const built = buildProductReleaseSnapshot({ ...rows, version: Number(latest?.version || 0) + 1 });
@@ -218,6 +255,13 @@ export function registerProductReleaseEndpoint(router, { database, env = process
           error.issues = built.issues;
           throw error;
         }
+        const revisionCodes = new Set(rows.models
+          .filter((model) => ['draft', 'review', 'scheduled'].includes(String(model.status || '')) && String(model.publication_state || '') !== 'published')
+          .map((model) => model.model_code));
+        const fallbackSnapshot = await revisionFallbackSnapshot(trx, built.snapshot, revisionCodes);
+        const preserved = preservePublishedRevisions(built.snapshot, fallbackSnapshot, revisionCodes);
+        built.snapshot = preserved.snapshot;
+        built.sourceHash = preserved.sourceHash;
         await trx('product_release_snapshots')
           .where({ release_key: releaseKey, status: 'published', publication_state: 'published' })
           .update({ status: 'archived', publication_state: 'private' });
@@ -286,7 +330,7 @@ export function registerProductReleaseEndpoint(router, { database, env = process
           error.issues = built.issues;
           throw error;
         }
-        const publishedAt = databaseDateTime(new Date());
+        const publishedAt = utcDateTime(new Date());
         const changeSummary = diffProductReleaseSnapshots(current?.snapshot, built.snapshot);
         if (current) {
           await trx('product_release_snapshots').where({ id: current.id }).update({ status: 'archived', publication_state: 'private' });

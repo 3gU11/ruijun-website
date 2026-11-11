@@ -104,7 +104,8 @@ test('product catalog keeps six desktop families in one viewport with single-lin
   assert.match(page, /return realModels\.length \? realModels : templateModels;/);
   // Series-level detail wins only when it exists, so sites without it keep
   // rendering the model configuration and the PSD fallback exactly as before.
-  assert.match(page, /const seriesDetail = computed\(\(\) => normalizeSeriesDetail\(/);
+  assert.match(page, /const seriesDetail = computed\(\(\) => \{/);
+  assert.match(page, /if \(key !== 'workstation'\) return null;/);
   assert.match(page, /\{ keepEmpty: Boolean\(previewSession\.value\) \}/);
   assert.match(page, /if \(seriesDetail\.value\?\.intro\) return \{/);
   assert.match(page, /if \(seriesDetail\.value\?\.features\?\.length\) return seriesDetail\.value\.features;/);

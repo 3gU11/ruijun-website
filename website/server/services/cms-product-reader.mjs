@@ -262,6 +262,18 @@ function configurationAssetIds(value) {
   return [...new Set(entries.map((id) => safeText(id)).filter(Boolean))];
 }
 
+function publishedSnapshotSeries(snapshot) {
+  const series = Array.isArray(snapshot?.series) ? snapshot.series : [];
+  const models = Array.isArray(snapshot?.models) ? snapshot.models : [];
+  const modelSeries = new Set(models.map((model) => model.series_code));
+  // Legacy snapshots without models are kept as-is; once models exist, an empty
+  // family would render an empty catalog card and is hidden.
+  if (!models.length) return series;
+  return series.filter((record) => modelSeries.has(record?.series_code)
+    || record?.series_code === 'workstation'
+    || Boolean(record?.presentation?.detail));
+}
+
 function resourceAssetIds(value) {
   if (!Array.isArray(value)) return [];
   return [...new Set(value.map((entry) => safeText(entry?.media_asset_id)).filter(Boolean))];
@@ -403,7 +415,7 @@ export function createCmsProductReader({ seriesEndpoint, modelsEndpoint, paramet
       (Array.isArray(snapshot.models) ? snapshot.models : []).map((record) => sanitizeModelRecord(record, assets)),
       Array.isArray(snapshot.parameters) ? snapshot.parameters : []
     );
-    return { ...release, series: (Array.isArray(snapshot.series) ? snapshot.series : []).map((record) => sanitizeSeriesRecord(record, assets)), models };
+    return { ...release, series: publishedSnapshotSeries(snapshot).map((record) => sanitizeSeriesRecord(record, assets)), models };
   }
 
   async function list({ cacheKey, endpoint, fields, filters = {}, predicate = () => true, limit, sort, sanitize = sanitizeProductRecord }) {

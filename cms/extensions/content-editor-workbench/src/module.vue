@@ -3531,6 +3531,33 @@ function parameterPayload(parameter) {
   };
 }
 
+// The public product reader and the approval gate use the model's top-level
+// `parameters` object; the workbench table edits product_parameters rows. Keep
+// the standard fields in sync on save so a newly created model is not blocked by
+// "结构化参数" even though its spec table is filled.
+const structuredParameterKeys = Object.freeze({
+  'XY 行程': 'xyTravelMm',
+  'Z 轴行程': 'zAxisTravelMm',
+  '最大工件尺寸': 'maxWorkpieceMm',
+  '最大工件重量': 'maxWorkpieceWeightKg',
+  '最大锥度': 'maxTaperDegrees',
+  '最大切割厚度': 'maxCuttingHeightMm',
+  '机床外形尺寸': 'machineDimensionsMm',
+  '机床重量': 'machineWeightKg'
+});
+
+function structuredModelParameters() {
+  const existing = parseObject(modelDraft.value?.parameters) || {};
+  const merged = { ...existing };
+  for (const row of parameters.value) {
+    if (String(row.model_code || '') !== String(modelDraft.value?.model_code || '')) continue;
+    const label = String(row.field_name || '').replace(/\s+/g, ' ').trim();
+    const key = structuredParameterKeys[label];
+    if (key && String(row.value || '').trim()) merged[key] = String(row.value).trim();
+  }
+  return Object.keys(merged).length ? merged : null;
+}
+
 function upsertParameter(record) {
   if (!record?.id) return;
   const row = { ...record, sort_order: Number.isFinite(Number(record.sort_order)) ? Number(record.sort_order) : 0 };
@@ -5933,7 +5960,7 @@ async function loadSeries() {
 }
 
 async function loadModels() {
-  const response = await api.get('/items/product_models?fields=id,series_code,model_code,slug,name,configuration,media,resources,status,publication_state,source_document,source_url,review_note&sort=series_code,model_code&limit=-1');
+  const response = await api.get('/items/product_models?fields=id,series_code,model_code,slug,name,parameters,configuration,media,resources,status,publication_state,source_document,source_url,review_note&sort=series_code,model_code&limit=-1');
   models.value = Array.isArray(response.data?.data) ? response.data.data : [];
   // Keep the model form inside the selected series: a global first-model
   // selection made the left form show another family's model after a reload.
@@ -6626,6 +6653,10 @@ function seedCanvasListDetail(collection, record) {
   }
   if (collection === 'product_series') {
     if (Array.isArray(record.detail?.features) && record.detail.features.length) return true;
+    if (!seriesSupportsDetail.value) {
+      error.value = '该系列属于型号型系列，没有系列级详情；请先选中具体型号再编辑它的介绍与特点。';
+      return false;
+    }
     initializeSeriesDetail();
     if (Array.isArray(record.detail?.features) && record.detail.features.length) return true;
     error.value = '该系列没有可初始化的官网原版详情，请先在左侧表单新增。';
@@ -7547,7 +7578,7 @@ async function saveModel() {
       ...(Object.keys(fieldPresentation).length ? { field_presentation: fieldPresentation } : {})
     };
     const resources = modelDraft.value.resources.map((item) => ({ title: item.title.trim(), type: item.type.trim(), url: item.url.trim(), media_asset_id: item.media_asset_id || null }));
-    await api.patch(`/items/product_models/${encodeURIComponent(modelDraft.value.id)}`, { series_code: modelDraft.value.series_code, model_code: modelDraft.value.model_code, slug: modelDraft.value.slug || null, name: modelDraft.value.name, configuration, media: modelDraft.value.mediaReferences, resources });
+    await api.patch(`/items/product_models/${encodeURIComponent(modelDraft.value.id)}`, { series_code: modelDraft.value.series_code, model_code: modelDraft.value.model_code, slug: modelDraft.value.slug || null, name: modelDraft.value.name, parameters: structuredModelParameters(), configuration, media: modelDraft.value.mediaReferences, resources });
     // The top save button owns the whole model form, including its parameter
     // rows. Flush the edited rows before reloading, otherwise the reload below
     // replaces them with the server's old values.

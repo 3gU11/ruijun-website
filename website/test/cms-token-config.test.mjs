@@ -21,7 +21,8 @@ test('Nuxt BFF configuration uses a dedicated private service token rather than 
   assert.doesNotMatch(config, /public:\s*\{[^}]*cmsMediaAssetsUrl/s);
   assert.match(config, /buildDir: process\.env\.NUXT_BUILD_DIR \|\| '\.nuxt'/);
   assert.doesNotMatch(config, /cmsWriteToken:/);
-  assert.ok(sources.every((source) => source.includes('config.cmsBffToken')));
+  assert.ok(sources.slice(0, 4).every((source) => source.includes('config.cmsBffToken')));
+  assert.match(sources[4], /process\.env\.CMS_PUBLIC_API_TOKEN/);
   assert.ok(sources.every((source) => !source.includes('config.cmsWriteToken')));
   assert.match(readme, /CMS_BFF_TOKEN/);
   assert.match(readme, /CMS_WEBHOOK_SECRET/);

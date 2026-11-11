@@ -14,7 +14,10 @@ export function useCmsProductReader(config: ReturnType<typeof useRuntimeConfig>)
   const releaseEndpoint = String(config.cmsProductReleasesUrl || process.env.CMS_PRODUCT_RELEASES_URL || '');
   const mediaAssetsEndpoint = String(config.cmsMediaAssetsUrl || process.env.CMS_MEDIA_ASSETS_URL || '');
   const publicAssetBaseUrl = String(config.cmsPublicAssetBaseUrl || process.env.CMS_PUBLIC_ASSET_BASE_URL || '');
-  const accessToken = String(config.cmsBffToken || process.env.CMS_PUBLIC_API_TOKEN || process.env.CMS_PREVIEW_ACCESS_TOKEN || process.env.NUXT_CMS_BFF_TOKEN || process.env.CMS_BFF_TOKEN || '');
+  // Product reads include the release snapshot collection. The BFF service
+  // account is intentionally scoped to media/leads and cannot read snapshots, so
+  // use the read-only public token for the product reader when available.
+  const accessToken = String(process.env.CMS_PRODUCT_RELEASES_TOKEN || process.env.CMS_PUBLIC_API_TOKEN || config.cmsBffToken || process.env.CMS_PREVIEW_ACCESS_TOKEN || process.env.NUXT_CMS_BFF_TOKEN || process.env.CMS_BFF_TOKEN || '');
   const cacheTtlMs = Number(config.cmsPublicContentCacheTtlMs || 30_000);
   const key = `${seriesEndpoint}:${modelsEndpoint}:${parametersEndpoint}:${releaseEndpoint}:${mediaAssetsEndpoint}:${publicAssetBaseUrl}:${Boolean(accessToken)}:${cacheTtlMs}`;
   let reader = readers.get(key);

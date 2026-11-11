@@ -6,6 +6,7 @@ const {
   buildRestoredProductReleaseSnapshot,
   diffProductReleaseSnapshots,
   parseProductReleaseSnapshot,
+  preservePublishedRevisions,
   validateProductReleaseSnapshot
 } = await import('../product-release/product-release-snapshot.mjs');
 
@@ -89,4 +90,20 @@ test('restoring a historical product snapshot creates a new version and retains 
     models: { added: 0, removed: 0, changed: 1, fields: ['name'], fields_truncated: false },
     parameters: { added: 0, removed: 1, changed: 0, fields: [], fields_truncated: false }
   });
+});
+
+test('a published model being edited keeps its last public version in the next snapshot', () => {
+  const previous = {
+    schema_version: 1, release_key: 'main', version: 7,
+    series: [{ series_code: 'fr-pro', name: 'FR (pro)', sort_order: 5 }],
+    models: [{ model_code: 'fr8060xs-pro', series_code: 'fr-pro', name: 'FR8060XS (Pro)' }],
+    parameters: [{ model_code: 'fr8060xs-pro', field_name: 'XY 行程', value: '850*600', sort_order: 1 }],
+    counts: { series: 1, models: 1, parameters: 1 }
+  };
+  const current = { ...previous, series: [], models: [], parameters: [], counts: { series: 0, models: 0, parameters: 0 } };
+  const { snapshot } = preservePublishedRevisions(current, previous, new Set(['fr8060xs-pro']));
+  assert.deepEqual(snapshot.models.map((model) => model.model_code), ['fr8060xs-pro']);
+  assert.deepEqual(snapshot.parameters.map((parameter) => parameter.field_name), ['XY 行程']);
+  assert.equal(snapshot.series[0].series_code, 'fr-pro');
+  assert.deepEqual(snapshot.counts, { series: 1, models: 1, parameters: 1 });
 });

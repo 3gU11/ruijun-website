@@ -108,7 +108,14 @@ function applyCanvasSeriesSelection(data: { itemId?: string; seriesCode?: string
     if (apply(findCard())) return;
     // A brand-new draft card can arrive in the same tick as this notice, and the
     // live overlay may need another frame or two to materialize it.
-    if (attempt < 4) window.setTimeout(() => applyWhenReady(attempt + 1), 150);
+    if (attempt < 4) { window.setTimeout(() => applyWhenReady(attempt + 1), 150); return; }
+    // Never leave the previous family's detail on screen after a failed switch:
+    // that made the canvas look like FR-XS but show FL-XS models.
+    if (String(selectedCard.value) !== String(seriesCode || slug || recordId)) {
+      detailsOpen.value = false;
+      selectedCard.value = '';
+      seriesNotice.value = '未能定位到所选系列卡片，请刷新实时预览。';
+    }
   };
   applyWhenReady();
 }
@@ -524,12 +531,23 @@ const activeSeriesRecord = computed(() => sortedCatalogSeries.value.find((series
 // as the workstation, which has no product model record of its own. It only
 // becomes active once an editor materializes it in the CMS, so a site without
 // that data keeps rendering the model configuration exactly as before.
-const seriesDetail = computed(() => normalizeSeriesDetail(
-  activeSeriesRecord.value?.presentation?.detail,
-  // A canvas "＋" adds a blank row; keep it so the editor can fill it in. Public
-  // payloads never contain blank rows (the reader drops them).
-  { keepEmpty: Boolean(previewSession.value) }
-));
+const seriesDetail = computed(() => {
+  // Series-level detail only belongs to solution-type/workstation families.
+  // Machine families keep their detail on the model; a stray detail record must
+  // not switch the panel into series mode and offer series-only list actions.
+  const key = seriesDetailKeyExact({
+    id: activeCard.value?.id,
+    slug: activeSeriesRecord.value?.slug,
+    series_code: activeSeriesRecord.value?.series_code
+  });
+  if (key !== 'workstation') return null;
+  return normalizeSeriesDetail(
+    activeSeriesRecord.value?.presentation?.detail,
+    // A canvas "＋" adds a blank row; keep it so the editor can fill it in. Public
+    // payloads never contain blank rows (the reader drops them).
+    { keepEmpty: Boolean(previewSession.value) }
+  );
+});
 const detailMode = computed<'series' | 'model'>(() => (seriesDetail.value ? 'series' : 'model'));
 // True while the panel is still rendering the template fallback: there is no CMS
 // record to write canvas edits to until the editor initializes the detail.
