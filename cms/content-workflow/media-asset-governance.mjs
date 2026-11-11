@@ -341,7 +341,11 @@ const referenceFieldPattern = /(^|_)(media_asset_id|poster_asset_id|cover_asset|
 const referenceScanCollections = Object.freeze([
   'articles', 'pages', 'homepage_sections', 'product_series', 'product_models', 'service_resources',
   'knowledge_items', 'manufacturing_evidence', 'qualifications', 'milestones',
-  'repair_page_configs', 'site_settings', 'media_assets'
+  'repair_page_configs', 'site_settings', 'media_assets',
+  // Product release snapshots are what the public product page actually renders,
+  // so deleting an asset they reference would break the live page even though the
+  // current product records no longer point at it.
+  'product_release_snapshots'
 ]);
 
 function collectFieldReferences(value, assetId, path, out, depth = 0) {
